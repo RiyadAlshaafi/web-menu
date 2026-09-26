@@ -10,8 +10,14 @@ class AppDatabase {
   AppDatabase._();
   static final AppDatabase instance = AppDatabase._();
 
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const _rawSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  static String get supabaseUrl {
+    final uri = Uri.tryParse(_rawSupabaseUrl.trim());
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) return '';
+    return uri.origin;
+  }
 
   bool _ready = false;
   bool _listening = false;

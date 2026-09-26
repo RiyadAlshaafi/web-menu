@@ -226,9 +226,16 @@ class CafeStore extends ChangeNotifier {
     if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
     if (password != confirm) return l10n.errPasswordsMismatch;
     if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
-    final response = await db.client?.auth.signUp(email: trimmed, password: password);
     if (db.client == null) return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before creating an admin.';
-    if (response?.session == null) {
+    final AuthResponse response;
+    try {
+      response = await db.client!.auth.signUp(email: trimmed, password: password);
+    } on AuthException catch (error) {
+      return error.message;
+    } catch (error) {
+      return 'Could not reach Supabase: $error';
+    }
+    if (response.session == null) {
       return 'Confirm the account from the email Supabase sent, then sign in. In Supabase Auth, turn off Confirm email if you want to enter immediately.';
     }
     await db.refreshFromDisk();
@@ -242,8 +249,12 @@ class CafeStore extends ChangeNotifier {
     if (db.client == null) return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before signing in.';
     try {
       await db.client!.auth.signInWithPassword(email: email.trim().toLowerCase(), password: password);
-    } on AuthException {
-      adminError = l10n.errBadCredentials;
+    } on AuthException catch (error) {
+      adminError = error.statusCode == '400' ? l10n.errBadCredentials : error.message;
+      notifyListeners();
+      return adminError;
+    } catch (error) {
+      adminError = 'Could not reach Supabase: $error';
       notifyListeners();
       return adminError;
     }
