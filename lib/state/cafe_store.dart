@@ -262,7 +262,11 @@ class CafeStore extends ChangeNotifier {
     }
     await db.refreshFromDisk();
     admin = db.admin;
-    if (admin == null) return l10n.errNoAdmin;
+    if (admin == null) {
+      adminError = l10n.errNoAdmin;
+      notifyListeners();
+      return adminError;
+    }
     authKind = AuthKind.admin;
     adminError = null;
     await db.writeRememberAdmin(remember);

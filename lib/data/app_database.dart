@@ -120,18 +120,14 @@ class AppDatabase {
   }
 
   void _applyHeaders() {
-    final headers = client?.headers;
-    if (headers == null) return;
-    if (guestSlug == null) {
-      headers.remove('x-qr-slug');
-    } else {
-      headers['x-qr-slug'] = guestSlug!;
-    }
-    if (cashierToken == null) {
-      headers.remove('x-cashier-token');
-    } else {
-      headers['x-cashier-token'] = cashierToken!;
-    }
+    final current = client;
+    if (current == null) return;
+    final headers = Map<String, String>.from(current.headers)
+      ..remove('x-qr-slug')
+      ..remove('x-cashier-token');
+    if (guestSlug != null) headers['x-qr-slug'] = guestSlug!;
+    if (cashierToken != null) headers['x-cashier-token'] = cashierToken!;
+    current.headers = headers;
   }
 
   Future<void> setGuestSlug(String? slug) async {
