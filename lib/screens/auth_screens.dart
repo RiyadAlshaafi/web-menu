@@ -327,7 +327,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final setup = widget.setup || !store.hasAdmin;
+    final setup = widget.setup;
 
     return CafeAuthFrame(
       child: Column(

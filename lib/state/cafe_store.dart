@@ -236,6 +236,8 @@ class CafeStore extends ChangeNotifier {
       return 'Could not reach Supabase: $error';
     }
     if (response.session == null) {
+      await db.refreshFromDisk();
+      notifyListeners();
       return 'Confirm the account from the email Supabase sent, then sign in. In Supabase Auth, turn off Confirm email if you want to enter immediately.';
     }
     await db.refreshFromDisk();
