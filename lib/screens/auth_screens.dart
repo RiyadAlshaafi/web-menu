@@ -459,6 +459,16 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                     }
                   },
                 ),
+                if (setup) ...[
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () => context.go('/admin/login'),
+                    child: Text(
+                      context.l10n.authHaveAccountSignIn,
+                      style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

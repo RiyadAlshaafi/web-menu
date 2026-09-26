@@ -189,6 +189,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignInCta => 'Sign In  →';
 
   @override
+  String get authHaveAccountSignIn => 'Already have an account? Sign in';
+
+  @override
   String get authForgotPasswordTitle => 'Forgot Password';
 
   @override

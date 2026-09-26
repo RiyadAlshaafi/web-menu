@@ -446,6 +446,12 @@ abstract class AppLocalizations {
   /// **'Sign In  →'**
   String get authSignInCta;
 
+  /// No description provided for @authHaveAccountSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get authHaveAccountSignIn;
+
   /// No description provided for @authForgotPasswordTitle.
   ///
   /// In en, this message translates to:

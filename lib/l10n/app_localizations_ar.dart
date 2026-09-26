@@ -189,6 +189,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authSignInCta => 'تسجيل الدخول  ←';
 
   @override
+  String get authHaveAccountSignIn => 'لديك حساب بالفعل؟ سجّل الدخول';
+
+  @override
   String get authForgotPasswordTitle => 'نسيت كلمة المرور';
 
   @override

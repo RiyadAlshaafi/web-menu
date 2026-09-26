@@ -58,6 +58,7 @@
   "authKeepSignedIn": "إبقائي مسجلاً للدخول",
   "authCreateAccessCta": "إنشاء الحساب  ←",
   "authSignInCta": "تسجيل الدخول  ←",
+  "authHaveAccountSignIn": "لديك حساب بالفعل؟ سجّل الدخول",
   "authForgotPasswordTitle": "نسيت كلمة المرور",
   "authForgotPasswordSubtitle": "أدخل رمز الأمان لتتمكن من تغيير كلمة المرور",
   "authSafeCodeSent": "تم إرسال رمز أمان إلى جهاز المدير المسجل أو بريده الإلكتروني.",

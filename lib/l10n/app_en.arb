@@ -71,6 +71,7 @@
   "authKeepSignedIn": "Keep me signed in",
   "authCreateAccessCta": "Create Access  →",
   "authSignInCta": "Sign In  →",
+  "authHaveAccountSignIn": "Already have an account? Sign in",
   "authForgotPasswordTitle": "Forgot Password",
   "authForgotPasswordSubtitle": "Enter the safe code to change your password",
   "authSafeCodeSent": "A security safe code was sent to the registered manager device / email.",
