@@ -1,0 +1,603 @@
+{
+  "@@locale": "en",
+  "helloWorld": "Hello World",
+  "@helloWorld": {
+    "description": "Sample greeting"
+  },
+  "welcomeMessage": "Welcome to Café Italiano",
+  "@welcomeMessage": {
+    "description": "Welcome line shown when a locale is active"
+  },
+  "noTables": "No tables have been created yet.",
+  "noOrders": "No active orders.",
+  "noCalls": "No assistance calls.",
+  "noBills": "No pending bill requests.",
+  "noMenu": "No menu items available.",
+  "menuSoon": "Menu coming soon",
+  "noSales": "No sales recorded yet.",
+  "noCashiers": "No cashiers have been created yet.",
+  "noTransactions": "No transactions yet.",
+  "insufficientCash": "Insufficient cash.",
+  "createCategoryFirst": "Create a category first.",
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "navMenuCatalogLabel": "Menu Catalog &\nLayout",
+  "navMenuCatalog": "Menu Catalog & Layout",
+  "navDiscounts": "Discounts",
+  "navTablesQr": "Tables & QR Hub",
+  "navSettings": "Settings",
+  "navLiveAlerts": "Live Alerts & Queue",
+  "navFloorOverview": "Floor Overview",
+  "navShiftSales": "Shift Sales & Logs",
+  "errAdminExists": "Admin already exists.",
+  "errInvalidEmail": "Enter a valid email.",
+  "errPasswordsMismatch": "Passwords must match exactly.",
+  "errWeakPassword": "Password must include 8+ characters, a capital letter, a number, and a special symbol.",
+  "errNoAdmin": "No admin account exists yet.",
+  "errBadCredentials": "Invalid email or password.",
+  "errBadCode": "Invalid or expired code.",
+  "errVerifyCodeFirst": "Verify the safe code first.",
+  "errSelectCashier": "Select a cashier profile.",
+  "errEnterPin": "Enter the 4-digit PIN.",
+  "errPinMismatch": "PIN does not match {name}.",
+  "@errPinMismatch": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errCashierSignInFirst": "Sign in as a cashier first.",
+  "errNoOpenBill": "No open bill for this table.",
+  "errNoOpenShift": "No open shift.",
+  "authGuestCashier": "Guest Cashier",
+  "authPosTerminalSubtitle": "Point of Sale\nTerminal",
+  "authSwitchToAdminSignIn": "Switch to Admin Sign In",
+  "authCashierSignInTitle": "Cashier Sign In",
+  "authCashierSignInSubtitle": "Select cashier profile and enter 4-digit PIN",
+  "authAuthenticatingAs": "Authenticating as ",
+  "authSignIn": "Sign In",
+  "authPosFooter": "Café Italiano POS System  •  Terminal Station 04  •  Secure Hospitality Gateway",
+  "authPinClear": "Clear",
+  "authStaffPos": "Staff POS  →",
+  "authCreateAdminAccess": "Create Admin Access",
+  "authAdminSignIn": "Admin Sign In",
+  "authManagerEmail": "Manager Email",
+  "authPassword": "Password",
+  "authForgotPasswordLink": "Forgot password?",
+  "authCreateStrongPassword": "Create a strong password",
+  "authConfirmPassword": "Confirm Password",
+  "authRepeatPassword": "Repeat password",
+  "authKeepSignedIn": "Keep me signed in",
+  "authCreateAccessCta": "Create Access  →",
+  "authSignInCta": "Sign In  →",
+  "authForgotPasswordTitle": "Forgot Password",
+  "authForgotPasswordSubtitle": "Enter the safe code to change your password",
+  "authSafeCodeSent": "A security safe code was sent to the registered manager device / email.",
+  "authDidntReceive": "Didn't receive it?  ",
+  "authResendCodeIn": "Resend safe code ({time})",
+  "@authResendCodeIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "authResendCode": "Resend safe code",
+  "authVerifyCodeCta": "Verify Code & Continue  →",
+  "authBackToSignIn": "←  Back to Sign In",
+  "authForgotFooter": "Station #POS-01   •   256-Bit Cryptographic Vault",
+  "authHospitalityCoreAdmin": "HOSPITALITY CORE • ADMIN",
+  "authSetNewPasswordTitle": "Set New Password",
+  "authSetNewPasswordSubtitle": "Enter your new password to regain access to your admin account and management console.",
+  "authNewPassword": "New Password",
+  "authConfirmNewPassword": "Confirm New Password",
+  "authPasswordsMustMatch": "Passwords must match exactly",
+  "authPasswordRequirements": "PASSWORD REQUIREMENTS",
+  "authReqMinLength": "8+ characters",
+  "authReqNumber": "At least 1 number",
+  "authReqCapital": "Capital letter",
+  "authReqSymbol": "Special symbol",
+  "authUpdatePasswordCta": "Update Password & Continue  →",
+  "authReturnToStaffSignIn": "←  Return to Staff Sign In",
+  "authChangePasswordFooter": "© Café Italiano Firenze 1984   •   Terminal Auth Gateway v4.9",
+  "adminConsoleLabel": "ADMIN CONSOLE",
+  "adminManagementHeading": "MANAGEMENT",
+  "adminDefaultName": "Admin",
+  "adminGeneralManager": "General Manager",
+  "adminWorkspace": "Workspace",
+  "adminTerminalBadge": "●  Terminal #01  ·  Secure Node",
+  "adminCustomerView": "Customer View",
+  "adminFloorOrderingHeading": "FLOOR & ORDERING",
+  "adminTablesQrHub": "Tables & QR Hub",
+  "adminStations": "Stations",
+  "adminSessions": "Sessions",
+  "adminSearchTableHint": "Search table or zone...",
+  "adminAddTableButton": "+ Add Table",
+  "adminTableNumber": "Table {number}",
+  "@adminTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "adminTableAvailable": "Available",
+  "adminTableOccupied": "Occupied",
+  "adminScanToOrderPay": "Scan to Order & Pay",
+  "adminNoAppInstall": "No app install required",
+  "adminPrintStandCard": "Print Stand Card (PDF)",
+  "adminAddTableTitle": "Add Table",
+  "adminTableNumberLabel": "Table number / name",
+  "adminCreate": "Create",
+  "adminDeleteTableTitle": "Delete Table?",
+  "adminDeleteTableMessage": "Do you want to delete this table? This action cannot be undone and will permanently remove it from the floor plan and ordering system.",
+  "adminDeleteTableConfirm": "Delete Table",
+  "layoutTitle": "Menu Layout & Display Editor",
+  "layoutSavedSnack": "Menu layout saved.",
+  "layoutSaveMenu": "Save Menu Layout",
+  "layoutSequencingHeading": "CATEGORY SEQUENCING & DISHES TREE",
+  "layoutReorderHint": "Use arrows to reorder",
+  "layoutClose": "Close",
+  "layoutNewCategory": "New Category",
+  "layoutCategoryNameHint": "Enter Category Name (e.g. Bevande & Wines, Desserts)",
+  "layoutCreateCategory": "Create Category",
+  "layoutSpotlight": "SPOTLIGHT",
+  "layoutOneDish": "1 Dish",
+  "layoutDishCount": "{count} Dishes",
+  "@layoutDishCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutItemCount": "{count} items",
+  "@layoutItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutCurrentlyInspecting": "Currently Inspecting",
+  "layoutAddDish": "Add Dish",
+  "layoutDishesInCategory": "DISHES IN {category} ({count} ACTIVE)",
+  "@layoutDishesInCategory": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutDropDishHint": "Drop dish here to reorder or reassign to {category}",
+  "@layoutDropDishHint": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutDeleteCategoryTitle": "Delete Category?",
+  "layoutDeleteCategoryMessage": "Do you want to delete this category? This action cannot be undone and will permanently remove it and its associated items from the menu system.",
+  "layoutDeleteCategoryConfirm": "Delete Category",
+  "layoutHeroCard": "HERO CARD",
+  "layoutActive": "Active",
+  "layoutHero": "Hero",
+  "layoutList": "List",
+  "layoutDeleteDishTitle": "Delete dish?",
+  "layoutDeleteDishMessage": "Remove {name} from the digital menu?",
+  "@layoutDeleteDishMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutAddNewDish": "Add New Dish",
+  "layoutAddDishSubtitle": "Enter dish details to add to digital menu catalog.",
+  "layoutDishNameLabel": "DISH NAME (ITALIAN / ENGLISH) *",
+  "layoutDishNameHint": "e.g., Pappardelle ai Funghi Porcini",
+  "layoutPriceLabel": "PRICE (€ EUR) *",
+  "layoutDishPictureLabel": "DISH PICTURE",
+  "layoutImageTooLarge": "Image must be 10MB or smaller.",
+  "layoutUploadPrompt": "Click or drag image to upload",
+  "layoutUploadHint": "Optional · JPG, PNG up to 10MB",
+  "layoutEnterDishName": "Enter a dish name.",
+  "layoutSaveAndAddDish": "Save & Add Dish",
+  "layoutSaveDish": "Save Dish",
+  "layoutSaveDishError": "Could not save dish: {error}",
+  "@layoutSaveDishError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogNewDiscount": "New Discount",
+  "catalogAllCategoriesCount": "All Categories ({count})",
+  "@catalogAllCategoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogSearchDishesHint": "Search dishes...",
+  "catalogNoDishesHint": "No dishes yet. Add dishes from Menu Layout, then apply discounts here.",
+  "catalogApplyDiscountPromo": "Apply Discount Promo",
+  "catalogTargetCategory": "TARGET CATEGORY",
+  "catalogAllCategories": "All Categories",
+  "catalogDiscountRate": "DISCOUNT RATE (%)",
+  "catalogPromoLabel": "PROMO LABEL / DESCRIPTION (OPTIONAL)",
+  "catalogPromoLabelHint": "e.g. Happy Hour Special",
+  "catalogActivateImmediately": "Activate Immediately",
+  "catalogActivateImmediatelyDesc": "Sync instantly to active tables and digital order catalog",
+  "catalogApplyDiscount": "Apply Discount",
+  "catalogPercentOff": "{percent}% Off",
+  "@catalogPercentOff": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogNoPromo": "No Promo",
+  "catalogDiscount": "Discount",
+  "catalogApply": "Apply",
+  "catalogSystemLanguage": "System Language",
+  "catalogSystemLanguageDesc": "Choose the default language for the admin portal and customer digital menus.",
+  "catalogEnglishUs": "English (US)",
+  "catalogLangDefault": "Default",
+  "catalogLangRegional": "Regional",
+  "catalogApplyLanguageToQr": "Apply language to customer QR menus automatically",
+  "catalogSaveLanguage": "Save Language",
+  "catalogChangePassword": "Change Password",
+  "catalogCurrentPassword": "Current Password",
+  "catalogNewPassword": "New Password",
+  "catalogPasswordUpdated": "Password updated.",
+  "catalogUpdatePassword": "Update Password",
+  "catalogCashierStaffAccess": "Cashier & Staff Access",
+  "catalogCashierNameHint": "e.g. Luca Neri",
+  "catalogCashierName": "Cashier name",
+  "catalogCashierPinLabel": "4-digit secret passcode",
+  "catalogSaveCashier": "Save Cashier",
+  "cashierLanguage": "Language",
+  "cashierPosTerminal": "POS TERMINAL 01",
+  "cashierSoloShiftLive": "Solo Shift Live",
+  "cashierAllInOne": "ALL-IN-ONE",
+  "cashierRole": "Cashier",
+  "cashierSoloCashier": "Solo Cashier",
+  "cashierStationFrontCounter": "Station 1: Front Counter",
+  "cashierAudioOn": "Audio On",
+  "cashierAssistanceCalls": "Assistance Calls",
+  "cashierCallsCount": "{count} Calls",
+  "@cashierCallsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierNeedsAttend": "Needs Attend",
+  "cashierIncomingOrders": "Incoming Orders",
+  "cashierOrdersCount": "{count} Orders",
+  "@cashierOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierNeedsAccept": "Needs Accept",
+  "cashierBillOutRequests": "Bill Out Requests",
+  "cashierCheckoutsCount": "{count} Checkouts",
+  "@cashierCheckoutsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierDueNow": "Due now",
+  "cashierFilterAllAlerts": "All Alerts ({count})",
+  "@cashierFilterAllAlerts": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFilterCallStaff": "Call Staff ({count})",
+  "@cashierFilterCallStaff": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFilterNewOrders": "New Orders ({count})",
+  "@cashierFilterNewOrders": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFilterBillRequests": "Bill Requests ({count})",
+  "@cashierFilterBillRequests": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierInstantAlerts": "Instant Alerts",
+  "cashierBillRequest": "Bill Request",
+  "cashierItemsCount": "{count} items",
+  "@cashierItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierSettleBill": "Settle Bill",
+  "cashierCallStaff": "Call Staff",
+  "cashierAssistanceRequested": "Assistance requested",
+  "cashierAttended": "Attended",
+  "cashierNewOrder": "New Order",
+  "cashierAcceptOrder": "Accept Order",
+  "cashierQuickTableStatus": "Quick Table Status ({count})",
+  "@cashierQuickTableStatus": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierTableShort": "T-{number}",
+  "@cashierTableShort": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFree": "Free",
+  "cashierTableNumber": "Table {number}",
+  "@cashierTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierOrderNumber": "Order #{id}",
+  "@cashierOrderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierActiveBillOutRequest": "Active Bill Out Request  •  Table {number}",
+  "@cashierActiveBillOutRequest": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierItemsToSettle": "Items to Settle",
+  "cashierTotalToCharge": "Total to Charge",
+  "cashierSettleCloseBill": "Settle & Close Bill ({amount})",
+  "@cashierSettleCloseBill": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierCashPayment": "Cash Payment",
+  "cashierTotalDue": "Total Due",
+  "cashierCashReceived": "Cash Received",
+  "cashierChangeDue": "Change Due",
+  "cashierConfirmCash": "Confirm Cash",
+  "cashierFloorManagement": "FLOOR MANAGEMENT",
+  "cashierFloorOverviewTitle": "Floor Overview & Tables",
+  "cashierTablesCount": "{count} TABLES",
+  "@cashierTablesCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFloorAll": "All ({count})",
+  "@cashierFloorAll": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFloorOccupied": "Occupied ({count})",
+  "@cashierFloorOccupied": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFloorBillDue": "Bill Due ({count})",
+  "@cashierFloorBillDue": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierFloorAvailable": "Available ({count})",
+  "@cashierFloorAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierStatusCleanReady": "Clean & Ready",
+  "cashierStatusBillRequested": "Bill Requested",
+  "cashierStatusStaffCall": "Staff Call",
+  "cashierStatusDining": "Dining",
+  "cashierAvailable": "Available",
+  "cashierDiningActive": "Dining active",
+  "cashierBillPending": "Bill pending",
+  "cashierTotalPayable": "Total Payable",
+  "cashierSoloStationSync": "SOLO STATION  •  Live Register Sync",
+  "cashierShiftSalesTitle": "Shift Sales & Register Logs",
+  "cashierExportSummary": "Export Summary (PDF/CSV)",
+  "cashierTotalShiftGrossSales": "Total Shift Gross Sales",
+  "cashierSettledOrders": "Settled Orders",
+  "cashierActivePendingBalance": "Active Pending Balance",
+  "cashierColOrderTable": "Order & Table",
+  "cashierColTime": "Time",
+  "cashierColAmount": "Amount",
+  "cashierTillBalance": "Till Balance & Drawer #01",
+  "cashierActive": "ACTIVE",
+  "cashierOpeningFloat": "Opening Float",
+  "cashierOpeningFloatRow": "Opening Float:",
+  "cashierCashCollected": "Cash Collected:",
+  "cashierCardDigitalPayments": "Card / Digital Payments:",
+  "cashierExpectedInDrawer": "Expected in Drawer:",
+  "cashierToleranceNote": "Counting discrepancy tolerance is ±€2.00. Please ensure all dining table chits are settled before closing register.",
+  "cashierActualCashCounted": "Actual Cash Counted",
+  "cashierCloseRegister": "Close Register / End Shift",
+  "cashierDifference": "Difference: {amount}",
+  "@cashierDifference": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cashierMidShiftChit": "Mid-Shift Cash Count Chit",
+  "guestNavMenu": "Menu",
+  "guestTableBill": "Table Bill",
+  "guestRequestSent": "Request sent",
+  "guestCallStaff": "Call Staff",
+  "guestTableNumber": "Table {number}",
+  "@guestTableNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "guestDineInOrder": "Dine-in Order",
+  "guestMenuTitle": "Mezzogiorno Menu",
+  "guestChefsSpecials": "Chef's Specials",
+  "guestCategoryAll": "All",
+  "guestSpotlight": "Spotlight",
+  "guestItemCount": "{count} items",
+  "@guestItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "guestCartItemCount": "{count} items • Cart",
+  "@guestCartItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "guestViewOrder": "View Order",
+  "guestOrderButton": "Order",
+  "guestTableDineIn": "Table {number} • Dine-in",
+  "@guestTableDineIn": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "guestChefsPick": "CHEF'S PICK",
+  "guestQuantity": "QUANTITY",
+  "guestPortionServing": "Portion serving",
+  "guestAddToOrder": "Add to Order • {amount}",
+  "@guestAddToOrder": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "guestLiveTab": "Live Tab",
+  "guestOrderNumber": "Order #{id}",
+  "@guestOrderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "guestSentToKitchenAt": "Sent to the hearth at {time}",
+  "@guestSentToKitchenAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "guestKitchenPreparing": "Kitchen is preparing your order\nEstimated delivery in 10–15 mins",
+  "guestNewAdditions": "New Additions",
+  "guestTicketSummary": "Ticket Summary",
+  "guestKitchenTicketTotal": "Kitchen Ticket Total",
+  "guestCallServer": "Call Server",
+  "guestRequestBill": "Request Bill",
+  "guestPlaceOrder": "Place Order • {amount}",
+  "@guestPlaceOrder": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "guestOrdersSentInstantly": "Orders are sent instantly to the kitchen",
+  "guestStatusReceived": "Received",
+  "guestStatusPreparing": "Preparing",
+  "guestStatusReady": "Ready",
+  "guestStatusServed": "Served",
+  "guestFinalTab": "Final Tab",
+  "guestOrderSummary": "Order Summary",
+  "guestRefNumber": "Ref #{id}",
+  "@guestRefNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "guestPaid": "PAID",
+  "guestPaymentSuccessful": "Payment Successful",
+  "guestThankYou": "Thank you for dining with Cafe Italiano!",
+  "guestSubtotal": "Subtotal",
+  "guestServiceCharge": "Service Charge ({percent}%)",
+  "@guestServiceCharge": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "guestVatIncluded": "Hospitality & VAT (Included)",
+  "guestTotalDue": "Total Due",
+  "guestWannaCheckIn": "Wanna Check In"
+}
