@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
@@ -60,12 +60,16 @@ class AppDatabase {
       _clear();
       return;
     }
-    if (!_ready) {
-      await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-      _ready = true;
+    try {
+      if (!_ready) {
+        await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+        _ready = true;
+      }
+      _listen();
+      await refreshFromDisk();
+    } catch (error, stack) {
+      debugPrint('Supabase startup failed: $error\n$stack');
     }
-    _listen();
-    await refreshFromDisk();
   }
 
   Future<void> resetEmpty() async {
@@ -94,14 +98,19 @@ class AppDatabase {
 
   void _listen() {
     if (_listening || client == null) return;
-    _listening = true;
-    client!
-        .channel('cafe-sync')
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'orders', callback: (_) => refreshFromDisk())
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => refreshFromDisk())
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => refreshFromDisk())
-        .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => refreshFromDisk())
-        .subscribe();
+    try {
+      _listening = true;
+      client!
+          .channel('cafe-sync')
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'orders', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => refreshFromDisk())
+          .subscribe();
+    } catch (error, stack) {
+      _listening = false;
+      debugPrint('Realtime setup failed: $error\n$stack');
+    }
   }
 
   void _applyHeaders() {
@@ -127,6 +136,14 @@ class AppDatabase {
 
   Future<void> refreshFromDisk() async {
     if (client == null) return;
+    try {
+      await _refreshFromDisk();
+    } catch (error, stack) {
+      debugPrint('Supabase refresh failed: $error\n$stack');
+    }
+  }
+
+  Future<void> _refreshFromDisk() async {
     _applyHeaders();
     anyAdmin = await client!.rpc('has_any_admin') as bool? ?? false;
     final user = client!.auth.currentUser;
@@ -150,8 +167,9 @@ class AppDatabase {
         };
       }
     }
-    final staff = await client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId});
-    _cashiers = (staff as List<dynamic>? ?? []).map((row) {
+    final staffRaw = await client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId});
+    final staff = staffRaw is List ? staffRaw : <dynamic>[];
+    _cashiers = staff.map((row) {
       final map = row as Map<String, dynamic>;
       return Cashier(id: map['id'] as String, name: map['name'] as String, pinHash: '', pinSalt: '', initials: map['initials'] as String? ?? 'C');
     }).toList();

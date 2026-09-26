@@ -17,7 +17,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   final store = CafeStore(AppDatabase.instance);
-  await store.load();
+  try {
+    await store.load();
+  } catch (error, stack) {
+    debugPrint('Startup failed: $error\n$stack');
+  }
   runApp(CafeItalianoApp(store: store));
 }
 
