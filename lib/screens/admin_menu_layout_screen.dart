@@ -272,8 +272,7 @@ class _CategoryCardState extends State<_CategoryCard> {
     return Material(
       color: inspecting ? const Color(0xFFFFF6F1) : Colors.white,
       borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+      child: Container(
         decoration: BoxDecoration(
           color: inspecting ? const Color(0xFFFFF6F1) : Colors.white,
           borderRadius: BorderRadius.circular(20),

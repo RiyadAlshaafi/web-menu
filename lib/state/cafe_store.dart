@@ -190,8 +190,15 @@ class CafeStore extends ChangeNotifier {
 
   List<StaffCall> get openCalls => calls.where((call) => !call.resolved).toList();
 
-  List<CafeTable> get billTables =>
-      tables.where((table) => table.status == TableStatus.billRequested).toList();
+  List<CafeTable> get billTables {
+    final requested = <String>{
+      for (final table in tables)
+        if (table.status == TableStatus.billRequested) table.id,
+      for (final call in openCalls)
+        if (call.kind == 'bill') call.tableId,
+    };
+    return tables.where((table) => requested.contains(table.id)).toList();
+  }
 
   double tabSubtotal(String tableId) =>
       (openOrderFor(tableId)?.subtotal ?? 0) + cartFor(tableId).total;
@@ -610,13 +617,25 @@ class CafeStore extends ChangeNotifier {
       );
 
   final Set<String> _sendingTables = {};
+  final Set<String> _confirmingOrders = {};
+
+  bool isSendingOrder(String tableId) => _sendingTables.contains(tableId);
+
+  bool tryBeginOrderConfirm(String tableId) {
+    if (_sendingTables.contains(tableId)) return false;
+    return _confirmingOrders.add(tableId);
+  }
+
+  void endOrderConfirm(String tableId) => _confirmingOrders.remove(tableId);
 
   Future<CafeOrder?> sendCartToKitchen(String tableId) async {
     if (!_sendingTables.add(tableId)) return openOrderFor(tableId);
+    notifyListeners();
     final table = tableById(tableId);
     final cart = cartFor(tableId);
     if (cart.lines.isEmpty) {
       _sendingTables.remove(tableId);
+      notifyListeners();
       return openOrderFor(tableId);
     }
     var order = openOrderFor(tableId);
@@ -659,18 +678,30 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> requestBill(String tableId) async {
-    await sendCartToKitchen(tableId);
-    tableById(tableId).status = TableStatus.billRequested;
-    calls.add(
-      StaffCall(
-        id: Secrets.id('call'),
-        tableId: tableId,
-        tableNumber: tableById(tableId).number,
-        createdAt: DateTime.now(),
-        kind: 'bill',
-      ),
-    );
-    await db.writeTables(tables);
+    try {
+      await sendCartToKitchen(tableId);
+    } catch (error, stack) {
+      debugPrint('Kitchen send before bill request failed: $error\n$stack');
+    }
+    final table = tableById(tableId);
+    table.status = TableStatus.billRequested;
+    final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);
+    if (!openBill) {
+      calls.add(
+        StaffCall(
+          id: Secrets.id(),
+          tableId: tableId,
+          tableNumber: table.number,
+          createdAt: DateTime.now(),
+          kind: 'bill',
+        ),
+      );
+    }
+    try {
+      await db.updateTableStatus(table);
+    } catch (error, stack) {
+      debugPrint('Table bill status was not saved: $error\n$stack');
+    }
     await db.writeCalls(calls);
     notifyListeners();
   }

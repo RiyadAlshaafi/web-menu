@@ -286,15 +286,19 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
                       ),
                       FilledButton(
-                        onPressed: () async {
-                          await store.sendCartToKitchen(table.id);
-                          if (context.mounted) context.go('/t/${widget.tableSlug}/cart');
-                        },
+                        onPressed: store.isSendingOrder(table.id)
+                            ? null
+                            : () async {
+                                final sent = await confirmAndSendOrder(context, store, table.id);
+                                if (sent && context.mounted) context.go('/t/${widget.tableSlug}/cart');
+                              },
                         style: FilledButton.styleFrom(
                           backgroundColor: CafeColors.terracottaDark,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: Text(context.l10n.guestOrderButton),
+                        child: store.isSendingOrder(table.id)
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Text(context.l10n.guestOrderButton),
                       ),
                     ],
                   ),
@@ -577,6 +581,214 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 }
 
+Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String tableId, {String? menuRoute}) async {
+  if (store.isSendingOrder(tableId) || !store.tryBeginOrderConfirm(tableId)) return false;
+  try {
+    final cart = store.cartFor(tableId);
+    if (cart.lines.isEmpty) return false;
+    final table = store.tableById(tableId);
+    final lines = [
+      for (final line in cart.lines)
+        OrderLine(menuItemId: line.menuItemId, name: line.name, qty: line.qty, unitPrice: line.unitPrice),
+    ];
+    final qty = {for (final line in lines) line.menuItemId: line.qty};
+    final sent = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        var sending = false;
+        return StatefulBuilder(
+          builder: (context, setLocal) {
+            final visible = lines.where((line) => (qty[line.menuItemId] ?? 0) > 0).toList();
+            final subtotal = visible.fold<double>(0, (sum, line) => sum + line.unitPrice * (qty[line.menuItemId] ?? 0));
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              child: Material(
+                color: CafeColors.paper,
+                elevation: 8,
+                borderRadius: BorderRadius.circular(20),
+                clipBehavior: Clip.antiAlias,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 420, maxHeight: MediaQuery.sizeOf(context).height * 0.85),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(width: 40, height: 4, decoration: BoxDecoration(color: CafeColors.line, borderRadius: BorderRadius.circular(4))),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(color: CafeColors.peach, borderRadius: BorderRadius.circular(20)),
+                                        child: Text(context.l10n.guestTableNumber(table.number), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: CafeColors.terracottaDark)),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Flexible(child: Text(context.l10n.guestDineInOrder, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12))),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(context.l10n.guestConfirmOrderTitle, style: CafeTheme.display.copyWith(fontSize: 26, fontWeight: FontWeight.w800)),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: context.l10n.guestCloseReview,
+                              onPressed: sending ? null : () => Navigator.pop(sheetContext, false),
+                              icon: const Icon(Icons.close, size: 18),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Flexible(
+                        child: ListView(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          children: [
+                            Text(context.l10n.guestItemsInOrder('${visible.fold<int>(0, (sum, line) => sum + (qty[line.menuItemId] ?? 0))}'), style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w700, letterSpacing: 0.4)),
+                            const SizedBox(height: 8),
+                            ...visible.map((line) {
+                              final count = qty[line.menuItemId] ?? line.qty;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(16)),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                            Text(store.currency.format(line.unitPrice * count), style: const TextStyle(fontWeight: FontWeight.w800)),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                                        child: Row(
+                                          children: [
+                                            IconButton(
+                                              visualDensity: VisualDensity.compact,
+                                              onPressed: sending || count <= 0 ? null : () => setLocal(() => qty[line.menuItemId] = count - 1),
+                                              icon: const Icon(Icons.remove, size: 16),
+                                            ),
+                                            Text('$count', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                            IconButton(
+                                              visualDensity: VisualDensity.compact,
+                                              onPressed: sending ? null : () => setLocal(() => qty[line.menuItemId] = count + 1),
+                                              icon: const Icon(Icons.add, size: 16),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(color: CafeColors.creamDark, borderRadius: BorderRadius.circular(16)),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(context.l10n.guestSubtotal, style: const TextStyle(color: CafeColors.inkMuted)),
+                                      const Spacer(),
+                                      Text(store.currency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(context.l10n.guestTotalDue, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                            Text(context.l10n.guestBilledToTable(table.number), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(store.currency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: CafeColors.terracotta)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: FilledButton.icon(
+                                onPressed: sending
+                                    ? null
+                                    : () async {
+                                        if (sending || store.isSendingOrder(tableId)) return;
+                                        sending = true;
+                                        setLocal(() {});
+                                        final navigator = Navigator.of(sheetContext);
+                                        for (final line in lines) {
+                                          store.setCartQty(tableId, line.menuItemId, qty[line.menuItemId] ?? line.qty);
+                                        }
+                                        if (store.cartFor(tableId).lines.isEmpty) {
+                                          navigator.pop(false);
+                                          return;
+                                        }
+                                        await store.sendCartToKitchen(tableId);
+                                        navigator.pop(true);
+                                      },
+                                style: FilledButton.styleFrom(backgroundColor: CafeColors.terracottaDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                                icon: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.restaurant, size: 18),
+                                label: Text(sending ? context.l10n.guestSendingOrder : context.l10n.guestConfirmSendKitchen),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: sending
+                                  ? null
+                                  : () {
+                                      Navigator.pop(sheetContext, false);
+                                      if (menuRoute != null && context.mounted) context.go(menuRoute);
+                                    },
+                              icon: const Icon(Icons.arrow_back, size: 16),
+                              label: Text(context.l10n.guestModifyOrder),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    return sent ?? false;
+  } finally {
+    store.endOrderConfirm(tableId);
+  }
+}
+
 class CustomerCartScreen extends StatelessWidget {
   const CustomerCartScreen({super.key, required this.tableSlug});
   final String tableSlug;
@@ -724,8 +936,10 @@ class CustomerCartScreen extends StatelessWidget {
                   if (cart.lines.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     TerracottaButton(
-                      label: context.l10n.guestPlaceOrder(store.currency.format(cart.total)),
-                      onPressed: () => store.sendCartToKitchen(table.id),
+                      label: store.isSendingOrder(table.id)
+                          ? context.l10n.guestSendingOrder
+                          : context.l10n.guestPlaceOrder(store.currency.format(cart.total)),
+                      onPressed: store.isSendingOrder(table.id) ? null : () => confirmAndSendOrder(context, store, table.id, menuRoute: '/t/$tableSlug'),
                     ),
                     const SizedBox(height: 6),
                     Center(

@@ -32,6 +32,15 @@ class CafeTheme {
         surface: CafeColors.cream,
       ),
       scaffoldBackgroundColor: CafeColors.cream,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        },
+      ),
       textTheme: textTheme,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

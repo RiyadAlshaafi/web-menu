@@ -152,25 +152,19 @@ class _SoftCardState extends State<SoftCard> {
   @override
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null || widget.hoverable;
-    final active = widget.selected || hover;
     final borderColor = widget.selected
         ? CafeColors.terracotta
         : hover
             ? CafeColors.terracotta.withValues(alpha: 0.35)
             : CafeColors.line;
-    final body = AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+    final body = Container(
       padding: widget.padding,
       decoration: BoxDecoration(
         color: widget.color,
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: borderColor, width: widget.selected ? 1.6 : 1),
-        boxShadow: [
-          BoxShadow(
-            color: Color(active ? 0x1A4A3B32 : 0x14000000),
-            blurRadius: active ? 28 : 24,
-            offset: Offset(0, active ? 10 : 12),
-          ),
+        boxShadow: const [
+          BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6)),
         ],
       ),
       child: widget.child,

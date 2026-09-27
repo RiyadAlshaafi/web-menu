@@ -995,6 +995,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestOrderButton => 'اطلب';
 
   @override
+  String get guestConfirmOrderTitle => 'راجع طلبك';
+
+  @override
+  String guestItemsInOrder(String count) {
+    return 'أصناف الطلب ($count)';
+  }
+
+  @override
+  String get guestConfirmSendKitchen => 'تأكيد وإرسال للمطبخ';
+
+  @override
+  String get guestModifyOrder => 'تعديل الطلب والعودة للقائمة';
+
+  @override
+  String guestBilledToTable(String table) {
+    return 'يُحسب على طاولة $table';
+  }
+
+  @override
+  String get guestCloseReview => 'إغلاق المراجعة';
+
+  @override
+  String get guestSendingOrder => 'جارٍ الإرسال…';
+
+  @override
   String guestTableDineIn(String number) {
     return 'طاولة $number • داخل المطعم';
   }

@@ -74,6 +74,42 @@ void main() {
     expect(store.payments, isEmpty);
   });
 
+  test('a second kitchen send while the first is in flight does not double the item', () async {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.menuItems = [
+      MenuItem(id: 'wine', nameIt: 'red wine', nameEn: 'red wine', price: 10, categoryId: 'c'),
+    ];
+    store.addToCart(table.id, store.menuItems.single);
+    expect(store.tryBeginOrderConfirm(table.id), isTrue);
+    expect(store.tryBeginOrderConfirm(table.id), isFalse);
+    store.endOrderConfirm(table.id);
+
+    final first = store.sendCartToKitchen(table.id);
+    final second = store.sendCartToKitchen(table.id);
+    expect(store.tryBeginOrderConfirm(table.id), isFalse);
+    await first;
+    await second;
+    final order = store.openOrderFor(table.id)!;
+    expect(order.lines, hasLength(1));
+    expect(order.lines.single.qty, 1);
+    expect(order.lines.single.total, 10);
+    expect(store.cartFor(table.id).lines, isEmpty);
+  });
+
+  test('two tables can request the bill without dropping either notice', () async {
+    final first = CafeTable(id: 'a', number: '1', qrSlug: 'a');
+    final second = CafeTable(id: 'b', number: '2', qrSlug: 'b');
+    store.tables = [first, second];
+    await store.requestBill(first.id);
+    await store.requestBill(second.id);
+    await store.requestBill(first.id);
+    final bills = store.openCalls.where((call) => call.kind == 'bill' && !call.resolved).toList();
+    expect(bills.map((call) => call.tableId).toSet(), {'a', 'b'});
+    expect(store.billTables.map((table) => table.id).toSet(), {'a', 'b'});
+    expect(store.payments, isEmpty);
+  });
+
   test('first launch is empty with no demo data', () {
     expect(store.hasAdmin, isFalse);
     expect(store.cashiers, isEmpty);

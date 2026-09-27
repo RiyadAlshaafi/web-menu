@@ -571,6 +571,24 @@
   },
   "guestViewOrder": "View Order",
   "guestOrderButton": "Order",
+  "guestConfirmOrderTitle": "Verify Your Order",
+  "guestDineInOrder": "Dine-in Order",
+  "guestItemsInOrder": "Items in order ({count})",
+  "@guestItemsInOrder": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "guestConfirmSendKitchen": "Confirm & Send to Kitchen",
+  "guestModifyOrder": "Modify Order & Back to Menu",
+  "guestBilledToTable": "Billed to table {table}",
+  "@guestBilledToTable": {
+    "placeholders": {
+      "table": {"type": "String"}
+    }
+  },
+  "guestCloseReview": "Close review",
+  "guestSendingOrder": "Sending…",
   "guestTableDineIn": "Table {number} • Dine-in",
   "@guestTableDineIn": {
     "placeholders": {

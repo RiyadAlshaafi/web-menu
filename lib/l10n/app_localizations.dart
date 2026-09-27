@@ -1880,6 +1880,48 @@ abstract class AppLocalizations {
   /// **'Order'**
   String get guestOrderButton;
 
+  /// No description provided for @guestConfirmOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Your Order'**
+  String get guestConfirmOrderTitle;
+
+  /// No description provided for @guestItemsInOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Items in order ({count})'**
+  String guestItemsInOrder(String count);
+
+  /// No description provided for @guestConfirmSendKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & Send to Kitchen'**
+  String get guestConfirmSendKitchen;
+
+  /// No description provided for @guestModifyOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify Order & Back to Menu'**
+  String get guestModifyOrder;
+
+  /// No description provided for @guestBilledToTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed to table {table}'**
+  String guestBilledToTable(String table);
+
+  /// No description provided for @guestCloseReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Close review'**
+  String get guestCloseReview;
+
+  /// No description provided for @guestSendingOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get guestSendingOrder;
+
   /// No description provided for @guestTableDineIn.
   ///
   /// In en, this message translates to:

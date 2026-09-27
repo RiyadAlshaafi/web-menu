@@ -527,6 +527,16 @@ class AppDatabase {
     }
   }
 
+  Future<void> updateTableStatus(CafeTable table) async {
+    final index = _tables.indexWhere((item) => item.id == table.id);
+    if (index >= 0) _tables[index] = table;
+    if (client == null || restaurantId == null) return;
+    await client!.from('dining_tables').update({
+      'status': table.status.name,
+      'guests': table.guests,
+    }).eq('id', table.id);
+  }
+
   Future<void> writeCalls(List<StaffCall> items) async {
     _calls = items;
     if (client == null || restaurantId == null) return;
@@ -540,7 +550,6 @@ class AppDatabase {
         'created_at': item.createdAt.toIso8601String(),
       });
     }
-    await _deleteMissing('staff_calls', items.map((item) => item.id).toList());
   }
 
   Future<void> _deleteMissing(String table, List<String> keep) async {
