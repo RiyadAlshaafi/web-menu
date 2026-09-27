@@ -169,7 +169,10 @@ class AppDatabase {
         };
       }
     }
-    final staffRaw = await client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId});
+    final staffRaw = await client!.rpc(
+      'list_pos_cashiers',
+      params: restaurantId == null ? null : {'p_restaurant_id': restaurantId},
+    );
     final staff = staffRaw is List ? staffRaw : <dynamic>[];
     _cashiers = staff.map((row) {
       final map = row as Map<String, dynamic>;
@@ -187,7 +190,11 @@ class AppDatabase {
       return;
     }
     final tableRows = await client!.from('dining_tables').select();
-    _tables = (tableRows as List).map((row) => CafeTable(
+    final tableList = tableRows as List;
+    if (restaurantId == null && tableList.isNotEmpty) {
+      restaurantId = tableList.first['restaurant_id'] as String?;
+    }
+    _tables = tableList.map((row) => CafeTable(
           id: row['id'] as String,
           number: row['number'] as String,
           qrSlug: row['qr_slug'] as String,
@@ -196,7 +203,6 @@ class AppDatabase {
           status: TableStatus.values.firstWhere((value) => value.name == row['status'], orElse: () => TableStatus.free),
           guests: row['guests'] as int? ?? 0,
         )).toList();
-    if (_tables.isNotEmpty && restaurantId == null) restaurantId = null;
     final categoryRows = await client!.from('menu_categories').select();
     _categories = (categoryRows as List).map((row) => MenuCategory(
           id: row['id'] as String,
@@ -328,16 +334,20 @@ class AppDatabase {
   }
 
   Future<Map<String, dynamic>> loginCashier(String cashierId, String pin) async {
-    if (client == null) return {'ok': false};
-    final raw = await client!.rpc('cashier_login', params: {'p_cashier_id': cashierId, 'p_pin': pin});
-    final result = Map<String, dynamic>.from(raw as Map);
-    if (result['ok'] == true) {
-      cashierToken = result['token'] as String?;
-      restaurantId = result['restaurant_id'] as String?;
-      _applyHeaders();
-      await refreshFromDisk();
+    if (client == null) return {'ok': false, 'error': 'Supabase is not configured.'};
+    try {
+      final raw = await client!.rpc('cashier_login', params: {'p_cashier_id': cashierId, 'p_pin': pin});
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        cashierToken = result['token'] as String?;
+        restaurantId = result['restaurant_id'] as String?;
+        _applyHeaders();
+        await refreshFromDisk();
+      }
+      return result;
+    } catch (error) {
+      return {'ok': false, 'error': '$error'};
     }
-    return result;
   }
 
   Future<String?> settleCash(String tableId, double cashReceived) async {

@@ -100,7 +100,10 @@ class CafeStore extends ChangeNotifier {
         'shifts': shifts.map((item) => item.toJson()).toList(),
       });
 
+  int _pendingWrites = 0;
+
   Future<void> syncFromDisk() async {
+    if (_pendingWrites > 0) return;
     await db.refreshFromDisk();
     final next = _stampFromDb();
     if (next == _syncStamp) return;
@@ -353,7 +356,7 @@ class CafeStore extends ChangeNotifier {
     if (result['ok'] != true) {
       final member = cashiers.where((item) => item.id == selectedCashierId);
       final name = member.isEmpty ? '' : member.first.name;
-      loginError = l10n.errPinMismatch(name);
+      loginError = result['error'] as String? ?? l10n.errPinMismatch(name);
       pinBuffer = '';
       notifyListeners();
       return false;
@@ -363,7 +366,13 @@ class CafeStore extends ChangeNotifier {
     authKind = AuthKind.cashier;
     pinBuffer = '';
     loginError = null;
-    await _ensureShift();
+    try {
+      await _ensureShift();
+    } catch (error) {
+      loginError = '$error';
+      notifyListeners();
+      return false;
+    }
     notifyListeners();
     return true;
   }
@@ -570,7 +579,10 @@ class CafeStore extends ChangeNotifier {
     } else {
       existing.first.qty += 1;
     }
-    db.writeCarts(carts);
+    db.writeCarts(carts).whenComplete(() {
+      if (_pendingWrites > 0) _pendingWrites -= 1;
+    });
+    _pendingWrites += 1;
     notifyListeners();
   }
 
@@ -580,7 +592,10 @@ class CafeStore extends ChangeNotifier {
     for (final line in cart.lines.where((line) => line.menuItemId == menuItemId)) {
       line.qty = qty;
     }
-    db.writeCarts(carts);
+    _pendingWrites += 1;
+    db.writeCarts(carts).whenComplete(() {
+      if (_pendingWrites > 0) _pendingWrites -= 1;
+    });
     notifyListeners();
   }
 
@@ -590,9 +605,8 @@ class CafeStore extends ChangeNotifier {
     if (cart.lines.isEmpty) return openOrderFor(tableId);
     var order = openOrderFor(tableId);
     if (order == null) {
-      final id = await db.takeNextOrderId();
       order = CafeOrder(
-        id: id.toString(),
+        id: Secrets.id(),
         tableId: tableId,
         tableNumber: table.number,
         status: OrderStatus.received,
@@ -614,10 +628,15 @@ class CafeStore extends ChangeNotifier {
       }
       if (order.status == OrderStatus.served) order.status = OrderStatus.preparing;
     }
-    cart.lines.clear();
-    await db.writeOrders(orders);
-    await db.writeTables(tables);
-    await db.writeCarts(carts);
+    _pendingWrites += 1;
+    try {
+      await db.writeOrders(orders);
+      await db.writeTables(tables);
+      cart.lines.clear();
+      await db.writeCarts(carts);
+    } finally {
+      if (_pendingWrites > 0) _pendingWrites -= 1;
+    }
     notifyListeners();
     return order;
   }
