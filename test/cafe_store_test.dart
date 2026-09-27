@@ -44,6 +44,36 @@ void main() {
     expect(store.chargeTotal(20, applyService: true), closeTo(22, 0.001));
   });
 
+  test('cashier cannot skip a new order straight to ready, and a bill request stays open', () async {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.orders = [
+      CafeOrder(
+        id: 'order-1',
+        tableId: table.id,
+        tableNumber: table.number,
+        status: OrderStatus.received,
+        createdAt: DateTime.utc(2026, 9, 28),
+        lines: [OrderLine(menuItemId: 'wine', name: 'red wine', qty: 1, unitPrice: 10)],
+      ),
+    ];
+    store.setOrderStatus('order-1', OrderStatus.ready);
+    expect(store.orders.single.status, OrderStatus.received);
+    store.setOrderStatus('order-1', OrderStatus.preparing);
+    expect(store.orders.single.status, OrderStatus.preparing);
+    store.setOrderStatus('order-1', OrderStatus.ready);
+    expect(store.orders.single.status, OrderStatus.ready);
+    store.setOrderStatus('order-1', OrderStatus.served);
+    expect(store.orders.single.status, OrderStatus.served);
+
+    store.orders.single.status = OrderStatus.received;
+    await store.requestBill(table.id);
+    expect(store.openOrderFor(table.id)!.status, OrderStatus.received);
+    expect(store.tables.single.status, TableStatus.billRequested);
+    expect(store.openCalls.where((call) => call.kind == 'bill'), isNotEmpty);
+    expect(store.payments, isEmpty);
+  });
+
   test('first launch is empty with no demo data', () {
     expect(store.hasAdmin, isFalse);
     expect(store.cashiers, isEmpty);

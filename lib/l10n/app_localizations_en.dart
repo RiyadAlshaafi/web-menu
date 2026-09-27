@@ -766,6 +766,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierReadyToServe => 'Ready to Serve';
 
   @override
+  String get cashierMarkServed => 'Mark served';
+
+  @override
   String get cashierWaitingForBill => 'Waiting for Bill';
 
   @override

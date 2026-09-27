@@ -699,6 +699,7 @@ class CafeStore extends ChangeNotifier {
 
   void setOrderStatus(String orderId, OrderStatus status) {
     final order = orders.firstWhere((item) => item.id == orderId);
+    if (order.status.next != status) return;
     order.status = status;
     db.writeOrders(orders);
     notifyListeners();

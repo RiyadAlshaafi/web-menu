@@ -228,7 +228,9 @@ class _PinPad extends StatelessWidget {
       '9': 'WXYZ',
       '0': '-',
     };
-    return Column(
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Column(
       children: keys.map((row) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -277,6 +279,7 @@ class _PinPad extends StatelessWidget {
           ),
         );
       }).toList(),
+      ),
     );
   }
 }

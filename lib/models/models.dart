@@ -1,4 +1,18 @@
-enum OrderStatus { received, preparing, ready, served, paid }
+enum OrderStatus {
+  received,
+  preparing,
+  ready,
+  served,
+  paid;
+
+  /// The next kitchen step. Paid and served do not skip ahead.
+  OrderStatus? get next => switch (this) {
+        OrderStatus.received => OrderStatus.preparing,
+        OrderStatus.preparing => OrderStatus.ready,
+        OrderStatus.ready => OrderStatus.served,
+        OrderStatus.served || OrderStatus.paid => null,
+      };
+}
 
 enum TableStatus { free, dining, billRequested }
 

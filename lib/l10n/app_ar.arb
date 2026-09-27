@@ -230,6 +230,7 @@
   "cashierIncludesSurcharge": "يشمل رسم الخدمة",
   "cashierApplyServiceCharge": "تطبيق رسم الخدمة",
   "cashierReadyToServe": "جاهز للتقديم",
+  "cashierMarkServed": "تم التقديم",
   "cashierWaitingForBill": "بانتظار الفاتورة",
   "cashierPrintReceipt": "طباعة الإيصال",
   "cashierSplitBill": "تقسيم الفاتورة",

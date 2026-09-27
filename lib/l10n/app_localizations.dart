@@ -1478,6 +1478,12 @@ abstract class AppLocalizations {
   /// **'Ready to Serve'**
   String get cashierReadyToServe;
 
+  /// No description provided for @cashierMarkServed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark served'**
+  String get cashierMarkServed;
+
   /// No description provided for @cashierWaitingForBill.
   ///
   /// In en, this message translates to:

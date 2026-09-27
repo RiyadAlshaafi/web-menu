@@ -2,6 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/models/models.dart';
 
 void main() {
+  test('kitchen status advances one step and does not skip to ready', () {
+    expect(OrderStatus.received.next, OrderStatus.preparing);
+    expect(OrderStatus.preparing.next, OrderStatus.ready);
+    expect(OrderStatus.ready.next, OrderStatus.served);
+    expect(OrderStatus.served.next, isNull);
+    expect(OrderStatus.received.next, isNot(OrderStatus.ready));
+  });
+
   test('settled line total is unit price times quantity', () {
     final wine = OrderLine(menuItemId: 'wine', name: 'Wine', qty: 3, unitPrice: 20);
     final bread = OrderLine(menuItemId: 'bread', name: 'Bread', qty: 1, unitPrice: 4);

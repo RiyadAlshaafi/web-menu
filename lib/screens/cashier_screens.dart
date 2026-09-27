@@ -289,6 +289,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               action: context.l10n.cashierSettleBill,
                               icon: Icons.payments_outlined,
                               onTap: () => showCashSettleDialog(context, store, table.id),
+                              onAction: () => showCashSettleDialog(context, store, table.id),
                             );
                           }),
                         if (filter == _AlertFilter.all || filter == _AlertFilter.calls)
@@ -301,23 +302,30 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               action: context.l10n.cashierAttended,
                               icon: Icons.done,
                               onTap: () => store.resolveCall(call.id),
+                              onAction: () => store.resolveCall(call.id),
                             ),
                           ),
                         if (filter == _AlertFilter.all || filter == _AlertFilter.orders || filter == _AlertFilter.ready)
                           ...orders.where((order) => filter != _AlertFilter.ready || order.status == OrderStatus.ready).map(
-                            (order) => _alert(
-                              table: order.tableNumber,
-                              title: context.l10n.cashierNewOrder,
-                              body: order.lines.map((line) => '${line.qty}× ${line.name}').join(', '),
-                              time: order.createdAt,
-                              amount: order.subtotal,
-                              action: context.l10n.cashierReadyToServe,
-                              icon: Icons.room_service_outlined,
-                              onTap: () {
-                                store.setOrderStatus(order.id, OrderStatus.ready);
-                                setState(() => selectedOrderId = order.id);
-                              },
-                            ),
+                            (order) {
+                              final next = order.status.next;
+                              return _alert(
+                                table: order.tableNumber,
+                                title: context.l10n.cashierNewOrder,
+                                body: '${_orderStatusLabel(context, order.status)} · ${order.lines.map((line) => '${line.qty}× ${line.name}').join(', ')}',
+                                time: order.createdAt,
+                                amount: order.subtotal,
+                                action: next == null ? null : _nextStatusAction(context, next),
+                                icon: Icons.room_service_outlined,
+                                onTap: () => setState(() => selectedOrderId = order.id),
+                                onAction: next == null
+                                    ? null
+                                    : () {
+                                        store.setOrderStatus(order.id, next);
+                                        setState(() => selectedOrderId = order.id);
+                                      },
+                              );
+                            },
                           ),
                       ],
                     ],
@@ -420,6 +428,25 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     );
   }
 
+  String _orderStatusLabel(BuildContext context, OrderStatus status) {
+    return switch (status) {
+      OrderStatus.received => context.l10n.guestStatusReceived,
+      OrderStatus.preparing => context.l10n.guestStatusPreparing,
+      OrderStatus.ready => context.l10n.guestStatusReady,
+      OrderStatus.served => context.l10n.guestStatusServed,
+      OrderStatus.paid => context.l10n.guestPaid,
+    };
+  }
+
+  String _nextStatusAction(BuildContext context, OrderStatus next) {
+    return switch (next) {
+      OrderStatus.preparing => context.l10n.cashierAcceptOrder,
+      OrderStatus.ready => context.l10n.cashierReadyToServe,
+      OrderStatus.served => context.l10n.cashierMarkServed,
+      OrderStatus.received || OrderStatus.paid => context.l10n.cashierAcceptOrder,
+    };
+  }
+
   Widget _chip(String label, bool selected, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -467,11 +494,12 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     required String table,
     required String title,
     required String body,
-    required String action,
     required IconData icon,
     DateTime? time,
     double? amount,
+    String? action,
     required VoidCallback onTap,
+    VoidCallback? onAction,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -500,17 +528,19 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               ),
             ),
             if (amount != null) MoneyText(context.read<CafeStore>().currency.format(amount)),
-            const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: onTap,
-              icon: Icon(icon, size: 16),
-              label: Text(action),
-              style: FilledButton.styleFrom(
-                backgroundColor: CafeColors.terracotta,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            if (action != null && onAction != null) ...[
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: onAction,
+                icon: Icon(icon, size: 16),
+                label: Text(action),
+                style: FilledButton.styleFrom(
+                  backgroundColor: CafeColors.terracotta,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -526,6 +556,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(order.id)}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
         if (waiting)
           Padding(
             padding: const EdgeInsets.only(top: 6),

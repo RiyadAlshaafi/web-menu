@@ -765,6 +765,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierReadyToServe => 'جاهز للتقديم';
 
   @override
+  String get cashierMarkServed => 'تم التقديم';
+
+  @override
   String get cashierWaitingForBill => 'بانتظار الفاتورة';
 
   @override

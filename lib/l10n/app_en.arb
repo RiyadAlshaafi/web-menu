@@ -414,6 +414,7 @@
   "cashierIncludesSurcharge": "Includes service charge",
   "cashierApplyServiceCharge": "Apply service charge",
   "cashierReadyToServe": "Ready to Serve",
+  "cashierMarkServed": "Mark served",
   "cashierWaitingForBill": "Waiting for Bill",
   "cashierPrintReceipt": "Print Receipt",
   "cashierSplitBill": "Split Bill",
