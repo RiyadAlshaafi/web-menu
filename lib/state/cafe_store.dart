@@ -599,6 +599,13 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  OrderLine _copyLine(OrderLine line) => OrderLine(
+        menuItemId: line.menuItemId,
+        name: line.name,
+        qty: line.qty,
+        unitPrice: line.unitPrice,
+      );
+
   Future<CafeOrder?> sendCartToKitchen(String tableId) async {
     final table = tableById(tableId);
     final cart = cartFor(tableId);
@@ -611,7 +618,7 @@ class CafeStore extends ChangeNotifier {
         tableNumber: table.number,
         status: OrderStatus.received,
         createdAt: DateTime.now(),
-        lines: [...cart.lines],
+        lines: cart.lines.map(_copyLine).toList(),
         cashierId: currentCashier?.id,
       );
       orders.add(order);
@@ -621,7 +628,7 @@ class CafeStore extends ChangeNotifier {
       for (final line in cart.lines) {
         final match = order.lines.where((existing) => existing.menuItemId == line.menuItemId);
         if (match.isEmpty) {
-          order.lines.add(line);
+          order.lines.add(_copyLine(line));
         } else {
           match.first.qty += line.qty;
         }

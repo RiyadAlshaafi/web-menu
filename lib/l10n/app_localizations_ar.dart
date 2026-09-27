@@ -747,6 +747,82 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierConfirmCash => 'تأكيد الدفع النقدي';
 
   @override
+  String get cashierOrderItems => 'أصناف الطلب';
+
+  @override
+  String get cashierAmount => 'المبلغ';
+
+  @override
+  String get cashierSubtotal => 'المجموع الفرعي';
+
+  @override
+  String get cashierIncludesSurcharge => 'يشمل رسم الخدمة';
+
+  @override
+  String get cashierReadyToServe => 'جاهز للتقديم';
+
+  @override
+  String get cashierWaitingForBill => 'بانتظار الفاتورة';
+
+  @override
+  String get cashierPrintReceipt => 'طباعة الإيصال';
+
+  @override
+  String get cashierSplitBill => 'تقسيم الفاتورة';
+
+  @override
+  String get cashierPrintChit => 'طباعة القسيمة';
+
+  @override
+  String get cashierSettled => 'مسوّاة';
+
+  @override
+  String cashierActiveTables(String active, String total) {
+    return '$active / $total نشطة';
+  }
+
+  @override
+  String cashierServiceCharge(String percent) {
+    return 'رسم الخدمة ($percent)';
+  }
+
+  @override
+  String get cashierBillRequestedBadge => 'طلب الفاتورة';
+
+  @override
+  String get cashierDineIn => 'تناول في المطعم';
+
+  @override
+  String cashierElapsedMinutes(String minutes) {
+    return '$minutes د';
+  }
+
+  @override
+  String cashierOrderItemsCount(String count) {
+    return 'أصناف الطلب ($count)';
+  }
+
+  @override
+  String get cashierTotalPayable => 'الإجمالي المستحق الدفع';
+
+  @override
+  String get cashierActionUnavailable => 'هذا الإجراء غير متاح في هذا الصندوق.';
+
+  @override
+  String get cashierColStatus => 'الحالة';
+
+  @override
+  String get cashierColActions => 'إجراءات سريعة';
+
+  @override
+  String cashierAvgTicket(String amount) {
+    return 'متوسط التذكرة $amount';
+  }
+
+  @override
+  String get cashierCall => 'نداء';
+
+  @override
   String get cashierFloorManagement => 'إدارة الصالة';
 
   @override
@@ -797,9 +873,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierBillPending => 'الفاتورة معلّقة';
-
-  @override
-  String get cashierTotalPayable => 'الإجمالي المستحق الدفع';
 
   @override
   String get cashierSoloStationSync => 'محطة فردية  •  مزامنة مباشرة للصندوق';

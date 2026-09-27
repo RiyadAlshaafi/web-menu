@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'models/models.dart';
 import 'screens/admin_screens.dart';
 import 'screens/auth_screens.dart';
 import 'screens/cashier_screens.dart';
@@ -172,6 +173,9 @@ class GuestSession extends StatefulWidget {
 }
 
 class _GuestSessionState extends State<GuestSession> {
+  CafeStore? _store;
+  bool _sawOpenOrder = false;
+
   @override
   void initState() {
     super.initState();
@@ -181,9 +185,48 @@ class _GuestSessionState extends State<GuestSession> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final store = context.read<CafeStore>();
+    if (_store == store) return;
+    _store?.removeListener(_onStore);
+    _store = store;
+    store.addListener(_onStore);
+  }
+
+  @override
   void didUpdateWidget(covariant GuestSession oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.slug != widget.slug) context.read<CafeStore>().ensureGuest(widget.slug);
+    if (oldWidget.slug != widget.slug) {
+      _sawOpenOrder = false;
+      context.read<CafeStore>().ensureGuest(widget.slug);
+    }
+  }
+
+  @override
+  void dispose() {
+    _store?.removeListener(_onStore);
+    super.dispose();
+  }
+
+  void _onStore() {
+    final store = _store;
+    if (store == null || !mounted) return;
+    final table = store.tableBySlug(widget.slug);
+    if (table == null) return;
+    if (store.openOrderFor(table.id) != null) {
+      _sawOpenOrder = true;
+      return;
+    }
+    if (!_sawOpenOrder || table.status != TableStatus.free) return;
+    if (store.cartFor(table.id).lines.isNotEmpty) return;
+    _sawOpenOrder = false;
+    final path = GoRouterState.of(context).uri.path;
+    final menu = '/t/${widget.slug}';
+    if (path == menu) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go(menu);
+    });
   }
 
   @override

@@ -408,6 +408,54 @@
   "cashierCashReceived": "Cash Received",
   "cashierChangeDue": "Change Due",
   "cashierConfirmCash": "Confirm Cash",
+  "cashierOrderItems": "Order items",
+  "cashierAmount": "Amount",
+  "cashierSubtotal": "Subtotal",
+  "cashierIncludesSurcharge": "Includes service charge",
+  "cashierReadyToServe": "Ready to Serve",
+  "cashierWaitingForBill": "Waiting for Bill",
+  "cashierPrintReceipt": "Print Receipt",
+  "cashierSplitBill": "Split Bill",
+  "cashierPrintChit": "Print Chit",
+  "cashierSettled": "Settled",
+  "cashierActiveTables": "{active} / {total} Active",
+  "@cashierActiveTables": {
+    "placeholders": {
+      "active": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+  "cashierServiceCharge": "Service charge ({percent})",
+  "@cashierServiceCharge": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "cashierBillRequestedBadge": "BILL REQUESTED",
+  "cashierDineIn": "Dine-in",
+  "cashierElapsedMinutes": "{minutes}m",
+  "@cashierElapsedMinutes": {
+    "placeholders": {
+      "minutes": {"type": "String"}
+    }
+  },
+  "cashierOrderItemsCount": "Order items ({count})",
+  "@cashierOrderItemsCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "cashierTotalPayable": "Total Payable",
+  "cashierActionUnavailable": "This action is not available on this register.",
+  "cashierColStatus": "Status",
+  "cashierColActions": "Quick Actions",
+  "cashierAvgTicket": "Avg ticket {amount}",
+  "@cashierAvgTicket": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "cashierCall": "Call",
   "cashierFloorManagement": "FLOOR MANAGEMENT",
   "cashierFloorOverviewTitle": "Floor Overview & Tables",
   "cashierTablesCount": "{count} TABLES",

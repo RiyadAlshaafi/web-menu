@@ -112,6 +112,8 @@ class AppDatabase {
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => refreshFromDisk())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => refreshFromDisk())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'carts', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'cart_lines', callback: (_) => refreshFromDisk())
           .subscribe();
     } catch (error, stack) {
       _listening = false;
@@ -242,7 +244,7 @@ class AppDatabase {
         lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
               menuItemId: line['menu_item_id'] as String? ?? '',
               name: line['name'] as String? ?? '',
-              qty: line['qty'] as int? ?? 1,
+              qty: (line['qty'] as num?)?.toInt() ?? 1,
               unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
             )).toList(),
       );
@@ -255,7 +257,7 @@ class AppDatabase {
           lines: ((row['cart_lines'] as List?) ?? []).map((line) => OrderLine(
                 menuItemId: line['menu_item_id'] as String? ?? '',
                 name: line['name'] as String? ?? '',
-                qty: line['qty'] as int? ?? 1,
+                qty: (line['qty'] as num?)?.toInt() ?? 1,
                 unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
               )).toList(),
         ),

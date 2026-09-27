@@ -748,6 +748,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierConfirmCash => 'Confirm Cash';
 
   @override
+  String get cashierOrderItems => 'Order items';
+
+  @override
+  String get cashierAmount => 'Amount';
+
+  @override
+  String get cashierSubtotal => 'Subtotal';
+
+  @override
+  String get cashierIncludesSurcharge => 'Includes service charge';
+
+  @override
+  String get cashierReadyToServe => 'Ready to Serve';
+
+  @override
+  String get cashierWaitingForBill => 'Waiting for Bill';
+
+  @override
+  String get cashierPrintReceipt => 'Print Receipt';
+
+  @override
+  String get cashierSplitBill => 'Split Bill';
+
+  @override
+  String get cashierPrintChit => 'Print Chit';
+
+  @override
+  String get cashierSettled => 'Settled';
+
+  @override
+  String cashierActiveTables(String active, String total) {
+    return '$active / $total Active';
+  }
+
+  @override
+  String cashierServiceCharge(String percent) {
+    return 'Service charge ($percent)';
+  }
+
+  @override
+  String get cashierBillRequestedBadge => 'BILL REQUESTED';
+
+  @override
+  String get cashierDineIn => 'Dine-in';
+
+  @override
+  String cashierElapsedMinutes(String minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String cashierOrderItemsCount(String count) {
+    return 'Order items ($count)';
+  }
+
+  @override
+  String get cashierTotalPayable => 'Total Payable';
+
+  @override
+  String get cashierActionUnavailable =>
+      'This action is not available on this register.';
+
+  @override
+  String get cashierColStatus => 'Status';
+
+  @override
+  String get cashierColActions => 'Quick Actions';
+
+  @override
+  String cashierAvgTicket(String amount) {
+    return 'Avg ticket $amount';
+  }
+
+  @override
+  String get cashierCall => 'Call';
+
+  @override
   String get cashierFloorManagement => 'FLOOR MANAGEMENT';
 
   @override
@@ -798,9 +875,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierBillPending => 'Bill pending';
-
-  @override
-  String get cashierTotalPayable => 'Total Payable';
 
   @override
   String get cashierSoloStationSync => 'SOLO STATION  •  Live Register Sync';

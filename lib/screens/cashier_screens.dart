@@ -175,7 +175,7 @@ class CashierShell extends StatelessWidget {
   }
 }
 
-enum _AlertFilter { all, calls, orders, bills }
+enum _AlertFilter { all, calls, orders, bills, ready }
 
 class CashierDashboardScreen extends StatefulWidget {
   const CashierDashboardScreen({super.key});
@@ -221,9 +221,29 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 900;
               final cards = [
-                _stat(context.l10n.cashierAssistanceCalls, context.l10n.cashierCallsCount('${calls.length}'), context.l10n.cashierNeedsAttend, context.l10n.noCalls, calls.isEmpty, expand: !stacked),
-                _stat(context.l10n.cashierIncomingOrders, context.l10n.cashierOrdersCount('${orders.length}'), context.l10n.cashierNeedsAccept, context.l10n.noOrders, orders.isEmpty, expand: !stacked),
-                _stat(context.l10n.cashierBillOutRequests, context.l10n.cashierCheckoutsCount('${bills.length}'), bills.isEmpty ? context.l10n.noBills : context.l10n.cashierDueNow, context.l10n.noBills, bills.isEmpty, expand: !stacked),
+                _stat(
+                  context.l10n.cashierAssistanceCalls,
+                  context.l10n.cashierCallsCount('${calls.length}'),
+                  calls.isEmpty ? context.l10n.noCalls : calls.map((call) => context.l10n.cashierTableShort(call.tableNumber)).join(' • '),
+                  Icons.notifications_active_outlined,
+                  expand: !stacked,
+                ),
+                _stat(
+                  context.l10n.cashierIncomingOrders,
+                  context.l10n.cashierOrdersCount('${orders.length}'),
+                  orders.isEmpty ? context.l10n.noOrders : orders.map((order) => context.l10n.cashierTableShort(order.tableNumber)).join(' • '),
+                  Icons.restaurant_outlined,
+                  expand: !stacked,
+                ),
+                _stat(
+                  context.l10n.cashierBillOutRequests,
+                  context.l10n.cashierCheckoutsCount('${bills.length}'),
+                  bills.isEmpty
+                      ? context.l10n.noBills
+                      : bills.map((table) => '${context.l10n.cashierTableShort(table.number)} ${store.currency.format(store.tabTotal(table.id))}').join(' • '),
+                  Icons.receipt_long_outlined,
+                  expand: !stacked,
+                ),
               ];
               if (stacked) {
                 return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 8), child: card)]);
@@ -241,6 +261,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               _chip(context.l10n.cashierFilterCallStaff('${calls.length}'), filter == _AlertFilter.calls, () => setState(() => filter = _AlertFilter.calls)),
               _chip(context.l10n.cashierFilterNewOrders('${orders.length}'), filter == _AlertFilter.orders, () => setState(() => filter = _AlertFilter.orders)),
               _chip(context.l10n.cashierFilterBillRequests('${bills.length}'), filter == _AlertFilter.bills, () => setState(() => filter = _AlertFilter.bills)),
+              _chip(context.l10n.cashierReadyToServe, filter == _AlertFilter.ready, () => setState(() => filter = _AlertFilter.ready)),
               Text(context.l10n.cashierInstantAlerts, style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w700)),
             ],
           ),
@@ -263,6 +284,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               table: table.number,
                               title: context.l10n.cashierBillRequest,
                               body: order == null ? context.l10n.noOrders : context.l10n.cashierItemsCount('${order.itemCount}'),
+                              time: order?.createdAt,
                               amount: store.tabTotal(table.id),
                               action: context.l10n.cashierSettleBill,
                               icon: Icons.payments_outlined,
@@ -275,22 +297,24 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               table: call.tableNumber,
                               title: context.l10n.cashierCallStaff,
                               body: context.l10n.cashierAssistanceRequested,
+                              time: call.createdAt,
                               action: context.l10n.cashierAttended,
                               icon: Icons.done,
                               onTap: () => store.resolveCall(call.id),
                             ),
                           ),
-                        if (filter == _AlertFilter.all || filter == _AlertFilter.orders)
-                          ...orders.map(
+                        if (filter == _AlertFilter.all || filter == _AlertFilter.orders || filter == _AlertFilter.ready)
+                          ...orders.where((order) => filter != _AlertFilter.ready || order.status == OrderStatus.ready).map(
                             (order) => _alert(
                               table: order.tableNumber,
                               title: context.l10n.cashierNewOrder,
                               body: order.lines.map((line) => '${line.qty}× ${line.name}').join(', '),
+                              time: order.createdAt,
                               amount: order.subtotal,
-                              action: context.l10n.cashierAcceptOrder,
-                              icon: Icons.send_outlined,
+                              action: context.l10n.cashierReadyToServe,
+                              icon: Icons.room_service_outlined,
                               onTap: () {
-                                store.setOrderStatus(order.id, OrderStatus.preparing);
+                                store.setOrderStatus(order.id, OrderStatus.ready);
                                 setState(() => selectedOrderId = order.id);
                               },
                             ),
@@ -312,7 +336,18 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.cashierQuickTableStatus('${store.tables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.4)),
+                          Row(
+                            children: [
+                              Expanded(child: Text(context.l10n.cashierQuickTableStatus('${store.tables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.4))),
+                              Text(
+                                context.l10n.cashierActiveTables(
+                                  '${store.tables.where((table) => table.status != TableStatus.free).length}',
+                                  '${store.tables.length}',
+                                ),
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: CafeColors.inkMuted),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 10),
                           if (store.tables.isEmpty)
                             EmptyHint(context.l10n.noTables)
@@ -323,18 +358,27 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               children: store.tables.map((table) {
                                 final due = store.tabTotal(table.id);
                                 final bill = table.status == TableStatus.billRequested;
+                                final calling = store.openCalls.any((call) => call.tableId == table.id);
+                                final label = table.status == TableStatus.free
+                                    ? context.l10n.cashierFree
+                                    : calling
+                                        ? context.l10n.cashierCall
+                                        : bill
+                                            ? '${context.l10n.cashierBillRequest} ${store.currency.format(due)}'
+                                            : store.currency.format(due);
                                 return SizedBox(
                                   width: 78,
                                   child: SoftCard(
                                     radius: 12,
                                     padding: const EdgeInsets.all(8),
-                                    selected: bill || table.status != TableStatus.free,
+                                    selected: bill || calling || table.status != TableStatus.free,
                                     onTap: () => context.go('/pos/tables'),
                                     child: Column(
                                       children: [
                                         Text(context.l10n.cashierTableShort(table.number), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
                                         Text(
-                                          table.status == TableStatus.free ? context.l10n.cashierFree : store.currency.format(due),
+                                          label,
+                                          textAlign: TextAlign.center,
                                           style: TextStyle(fontSize: 10, color: table.status == TableStatus.free ? CafeColors.success : CafeColors.inkMuted),
                                         ),
                                       ],
@@ -395,7 +439,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     );
   }
 
-  Widget _stat(String label, String value, String hint, String empty, bool isEmpty, {bool expand = true}) {
+  Widget _stat(String label, String value, String detail, IconData icon, {bool expand = true}) {
     final card = Padding(
       padding: const EdgeInsets.only(right: 10),
       child: SoftCard(
@@ -403,10 +447,15 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: CafeColors.inkMuted, fontWeight: FontWeight.w700)),
+            Row(
+              children: [
+                Expanded(child: Text(label, style: const TextStyle(fontSize: 12, color: CafeColors.inkMuted, fontWeight: FontWeight.w700))),
+                Icon(icon, size: 18, color: CafeColors.terracotta),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(value, style: CafeTheme.display.copyWith(fontSize: 26)),
-            Text(isEmpty ? empty : hint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+            Text(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
           ],
         ),
       ),
@@ -420,6 +469,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     required String body,
     required String action,
     required IconData icon,
+    DateTime? time,
     double? amount,
     required VoidCallback onTap,
   }) {
@@ -441,7 +491,10 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(
+                    time == null ? title : '$title • ${context.l10n.cashierElapsedMinutes('${DateTime.now().difference(time).inMinutes}')}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
                 ],
               ),
@@ -465,12 +518,23 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
   }
 
   Widget _detail(BuildContext context, CafeStore store, CafeOrder order) {
+    final subtotal = store.tabSubtotal(order.tableId);
+    final service = store.serviceCharge(subtotal);
     final total = store.tabTotal(order.tableId);
+    final waiting = store.tableById(order.tableId).status == TableStatus.billRequested;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(context.l10n.cashierOrderNumber(order.id), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-        Text(context.l10n.cashierActiveBillOutRequest(order.tableNumber), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+        Text('${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(order.id)}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        if (waiting)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: const Color(0x1ABA5333), borderRadius: BorderRadius.circular(8)),
+              child: Text(context.l10n.cashierWaitingForBill, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11)),
+            ),
+          ),
         const SizedBox(height: 12),
         Text(context.l10n.cashierItemsToSettle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
         const SizedBox(height: 8),
@@ -487,17 +551,33 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
           ),
         ),
         const Divider(),
-        Row(
-          children: [
-            Text(context.l10n.cashierTotalToCharge, style: const TextStyle(fontWeight: FontWeight.w800)),
-            const Spacer(),
-            MoneyText(store.currency.format(total), style: const TextStyle(fontSize: 20)),
-          ],
-        ),
+        _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
+        _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
+        _cashKv(context.l10n.cashierTotalToCharge, store.currency.format(total)),
         const SizedBox(height: 12),
         TerracottaButton(
           label: context.l10n.cashierSettleCloseBill(store.currency.format(total)),
           onPressed: () => showCashSettleDialog(context, store, order.tableId),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _cashierUnavailable(context),
+                icon: const Icon(Icons.print_outlined, size: 16),
+                label: Text(context.l10n.cashierPrintReceipt),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _cashierUnavailable(context),
+                icon: const Icon(Icons.call_split, size: 16),
+                label: Text(context.l10n.cashierSplitBill),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -505,58 +585,133 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
 }
 
 Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String tableId) async {
-  final due = store.tabTotal(tableId);
   final controller = TextEditingController();
   await showDialog<void>(
     context: context,
-    builder: (context) {
+    barrierDismissible: true,
+    builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
+          final table = store.tableById(tableId);
+          final order = store.openOrderFor(tableId);
+          final lines = <OrderLine>[
+            ...?order?.lines,
+            ...store.cartFor(tableId).lines,
+          ];
+          final subtotal = store.tabSubtotal(tableId);
+          final due = store.tabTotal(tableId);
           final received = double.tryParse(controller.text) ?? 0;
           final change = received - due;
-          return AlertDialog(
+          final minutes = order == null ? 0 : DateTime.now().difference(order.createdAt).inMinutes;
+          return Dialog(
             backgroundColor: CafeColors.paper,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Text(context.l10n.cashierCashPayment),
-            content: SizedBox(
-              width: 360,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _cashKv(context.l10n.cashierTotalDue, store.currency.format(due)),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: controller,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: context.l10n.cashierCashReceived),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: 10),
-                  _cashKv(context.l10n.cashierChangeDue, change < 0 ? context.l10n.insufficientCash : store.currency.format(change)),
-                ],
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: Text(context.l10n.cashierTableNumber(table.number), style: CafeTheme.display.copyWith(fontSize: 26))),
+                        IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                      ],
+                    ),
+                    if (table.status == TableStatus.billRequested)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: const Color(0x1ABA5333), borderRadius: BorderRadius.circular(8)),
+                        child: Text(context.l10n.cashierBillRequestedBadge, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.4)),
+                      ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${table.zone}  •  ${context.l10n.cashierDineIn}  •  ${context.l10n.cashierElapsedMinutes('$minutes')}',
+                      style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(child: Text(context.l10n.cashierOrderItemsCount('${lines.fold<int>(0, (sum, line) => sum + line.qty)}'), style: const TextStyle(fontWeight: FontWeight.w800))),
+                        Text(context.l10n.cashierAmount, style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: lines
+                            .map(
+                              (line) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
+                                      child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700))),
+                                    Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w800)),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    const Divider(),
+                    _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
+                    _cashKv(context.l10n.cashierIncludesSurcharge, store.currency.format(due - subtotal)),
+                    _cashKv(context.l10n.cashierTotalPayable, store.currency.format(due)),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(labelText: context.l10n.cashierCashReceived),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    _cashKv(context.l10n.cashierChangeDue, change < 0 ? context.l10n.insufficientCash : store.currency.format(change)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
+                        const Spacer(),
+                        TerracottaButton(
+                          expanded: false,
+                          label: context.l10n.cashierSettleCloseBill(store.currency.format(due)),
+                          onPressed: () async {
+                            final error = await store.settleCash(tableId: tableId, cashReceived: received);
+                            if (!context.mounted) return;
+                            if (error != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                              return;
+                            }
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
-              TerracottaButton(
-                expanded: false,
-                label: context.l10n.cashierConfirmCash,
-                onPressed: () async {
-                  final error = await store.settleCash(tableId: tableId, cashReceived: received);
-                  if (!context.mounted) return;
-                  if (error != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                    return;
-                  }
-                  Navigator.pop(context);
-                },
-              ),
-            ],
           );
         },
       );
     },
   );
+  controller.dispose();
+}
+
+void _cashierUnavailable(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.cashierActionUnavailable)));
 }
 
 Widget _cashKv(String label, String value) {
@@ -832,8 +987,20 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
               final stacked = constraints.maxWidth < 900;
               final cards = [
                 _mini(context.l10n.cashierTotalShiftGrossSales, store.currency.format(sales), expand: !stacked),
-                _mini(context.l10n.cashierSettledOrders, '$txs', expand: !stacked),
-                _mini(context.l10n.cashierActivePendingBalance, store.currency.format(pending), expand: !stacked),
+                _mini(
+                  context.l10n.cashierSettledOrders,
+                  '$txs',
+                  detail: txs == 0 ? null : context.l10n.cashierAvgTicket(store.currency.format(sales / txs)),
+                  expand: !stacked,
+                ),
+                _mini(
+                  context.l10n.cashierActivePendingBalance,
+                  store.currency.format(pending),
+                  detail: store.billTables.isEmpty
+                      ? null
+                      : store.billTables.map((table) => '${context.l10n.cashierTableShort(table.number)} ${store.currency.format(store.tabTotal(table.id))}').join(' • '),
+                  expand: !stacked,
+                ),
               ];
               if (stacked) {
                 return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 8), child: card)]);
@@ -857,8 +1024,10 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                 child: Row(
                                   children: [
                                     Expanded(child: Text(context.l10n.cashierColOrderTable, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
-                                    SizedBox(width: 80, child: Text(context.l10n.cashierColTime, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
-                                    SizedBox(width: 90, child: Text(context.l10n.cashierColAmount, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
+                                    SizedBox(width: 64, child: Text(context.l10n.cashierColTime, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
+                                    SizedBox(width: 80, child: Text(context.l10n.cashierColAmount, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
+                                    SizedBox(width: 72, child: Text(context.l10n.cashierColStatus, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
+                                    SizedBox(width: 88, child: Text(context.l10n.cashierColActions, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted))),
                                   ],
                                 ),
                               ),
@@ -873,10 +1042,25 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                           style: const TextStyle(fontWeight: FontWeight.w800),
                                         ),
                                       ),
-                                      SizedBox(width: 80, child: Text(DateFormat.Hm().format(payment.paidAt))),
+                                      SizedBox(width: 64, child: Text(DateFormat.Hm().format(payment.paidAt))),
                                       SizedBox(
-                                        width: 90,
+                                        width: 80,
                                         child: Text(store.currency.format(payment.totalDue), textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                      ),
+                                      SizedBox(
+                                        width: 72,
+                                        child: Text(context.l10n.cashierSettled, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: CafeColors.success)),
+                                      ),
+                                      SizedBox(
+                                        width: 88,
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton.icon(
+                                            onPressed: () => _cashierUnavailable(context),
+                                            icon: const Icon(Icons.print_outlined, size: 14),
+                                            label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 11)),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -991,7 +1175,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     );
   }
 
-  Widget _mini(String label, String value, {bool expand = true}) {
+  Widget _mini(String label, String value, {String? detail, bool expand = true}) {
     final card = Padding(
       padding: const EdgeInsets.only(right: 8),
       child: SoftCard(
@@ -1001,6 +1185,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
           children: [
             Text(label, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
             Text(value, style: CafeTheme.display.copyWith(fontSize: 24)),
+            if (detail != null) Text(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
           ],
         ),
       ),

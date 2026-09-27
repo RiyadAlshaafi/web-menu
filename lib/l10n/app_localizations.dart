@@ -1442,6 +1442,138 @@ abstract class AppLocalizations {
   /// **'Confirm Cash'**
   String get cashierConfirmCash;
 
+  /// No description provided for @cashierOrderItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Order items'**
+  String get cashierOrderItems;
+
+  /// No description provided for @cashierAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get cashierAmount;
+
+  /// No description provided for @cashierSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get cashierSubtotal;
+
+  /// No description provided for @cashierIncludesSurcharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes service charge'**
+  String get cashierIncludesSurcharge;
+
+  /// No description provided for @cashierReadyToServe.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Serve'**
+  String get cashierReadyToServe;
+
+  /// No description provided for @cashierWaitingForBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Bill'**
+  String get cashierWaitingForBill;
+
+  /// No description provided for @cashierPrintReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Receipt'**
+  String get cashierPrintReceipt;
+
+  /// No description provided for @cashierSplitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Bill'**
+  String get cashierSplitBill;
+
+  /// No description provided for @cashierPrintChit.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Chit'**
+  String get cashierPrintChit;
+
+  /// No description provided for @cashierSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get cashierSettled;
+
+  /// No description provided for @cashierActiveTables.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} / {total} Active'**
+  String cashierActiveTables(String active, String total);
+
+  /// No description provided for @cashierServiceCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Service charge ({percent})'**
+  String cashierServiceCharge(String percent);
+
+  /// No description provided for @cashierBillRequestedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'BILL REQUESTED'**
+  String get cashierBillRequestedBadge;
+
+  /// No description provided for @cashierDineIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Dine-in'**
+  String get cashierDineIn;
+
+  /// No description provided for @cashierElapsedMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String cashierElapsedMinutes(String minutes);
+
+  /// No description provided for @cashierOrderItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Order items ({count})'**
+  String cashierOrderItemsCount(String count);
+
+  /// No description provided for @cashierTotalPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Payable'**
+  String get cashierTotalPayable;
+
+  /// No description provided for @cashierActionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is not available on this register.'**
+  String get cashierActionUnavailable;
+
+  /// No description provided for @cashierColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get cashierColStatus;
+
+  /// No description provided for @cashierColActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get cashierColActions;
+
+  /// No description provided for @cashierAvgTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg ticket {amount}'**
+  String cashierAvgTicket(String amount);
+
+  /// No description provided for @cashierCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get cashierCall;
+
   /// No description provided for @cashierFloorManagement.
   ///
   /// In en, this message translates to:
@@ -1525,12 +1657,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bill pending'**
   String get cashierBillPending;
-
-  /// No description provided for @cashierTotalPayable.
-  ///
-  /// In en, this message translates to:
-  /// **'Total Payable'**
-  String get cashierTotalPayable;
 
   /// No description provided for @cashierSoloStationSync.
   ///

@@ -463,8 +463,9 @@ begin
   if not found then
     return jsonb_build_object('ok', false, 'error', 'no open bill');
   end if;
-  select coalesce(sum(qty * unit_price), 0) into due
-  from public.order_lines where order_id = ord.id;
+  select coalesce((select sum(qty * unit_price) from public.order_lines where order_id = ord.id), 0)
+    + coalesce((select sum(qty * unit_price) from public.cart_lines where table_id = p_table_id), 0)
+  into due;
   due := round(due * (1 + (select service_charge_rate from public.restaurants where id = actor)), 2);
   if p_cash_received < due then
     return jsonb_build_object('ok', false, 'error', 'insufficient cash');
@@ -496,6 +497,9 @@ begin
   );
   update public.orders set status = 'paid' where id = ord.id;
   update public.dining_tables set status = 'free', guests = 0 where id = p_table_id;
+  delete from public.cart_lines where table_id = p_table_id;
+  delete from public.carts where table_id = p_table_id;
+  update public.staff_calls set resolved = true where table_id = p_table_id and resolved = false;
   update public.shifts
     set cash_sales = cash_sales + due,
         transaction_count = transaction_count + 1

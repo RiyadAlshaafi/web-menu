@@ -60,16 +60,24 @@ void main() {
     expect(await store.signInCashier(), isTrue);
 
     final table = store.tables.first;
-    store.addToCart(table.id, store.menuItems.first);
+    final dish = store.menuItems.first;
+    store.addToCart(table.id, dish);
+    store.addToCart(table.id, dish);
+    store.addToCart(table.id, dish);
+    expect(store.cartFor(table.id).lines.single.total, 54);
     await store.sendCartToKitchen(table.id);
     await store.requestBill(table.id);
+    expect(store.openOrderFor(table.id)!.lines.single.qty, 3);
+    expect(store.openOrderFor(table.id)!.subtotal, 54);
 
     final due = store.tabTotal(table.id);
-    expect(due, closeTo(19.8, 0.01));
+    expect(due, closeTo(59.4, 0.01));
     expect(await store.settleCash(tableId: table.id, cashReceived: 10), isNotNull);
-    expect(await store.settleCash(tableId: table.id, cashReceived: 20), isNull);
+    expect(await store.settleCash(tableId: table.id, cashReceived: 60), isNull);
     expect(store.tables.first.status, TableStatus.free);
-    expect(store.currentShift!.expectedCash, closeTo(19.8, 0.01));
+    expect(store.openOrderFor(table.id), isNull);
+    expect(store.cartFor(table.id).lines, isEmpty);
+    expect(store.currentShift!.expectedCash, closeTo(59.4, 0.01));
   });
 
   test('supabase keeps admin after a fresh load', () async {
