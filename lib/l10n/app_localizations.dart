@@ -1466,6 +1466,12 @@ abstract class AppLocalizations {
   /// **'Includes service charge'**
   String get cashierIncludesSurcharge;
 
+  /// No description provided for @cashierApplyServiceCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply service charge'**
+  String get cashierApplyServiceCharge;
+
   /// No description provided for @cashierReadyToServe.
   ///
   /// In en, this message translates to:

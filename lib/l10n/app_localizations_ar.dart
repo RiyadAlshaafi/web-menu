@@ -759,6 +759,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierIncludesSurcharge => 'يشمل رسم الخدمة';
 
   @override
+  String get cashierApplyServiceCharge => 'تطبيق رسم الخدمة';
+
+  @override
   String get cashierReadyToServe => 'جاهز للتقديم';
 
   @override

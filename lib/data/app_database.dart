@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -21,6 +22,9 @@ class AppDatabase {
 
   bool _ready = false;
   bool _listening = false;
+  int _epoch = 0;
+  DateTime? _catalogAt;
+  Timer? _liveRefresh;
   String? restaurantId;
   String? cashierToken;
   String? guestSlug;
@@ -106,14 +110,21 @@ class AppDatabase {
     if (_listening || client == null) return;
     try {
       _listening = true;
+      void scheduleLive() {
+        _liveRefresh?.cancel();
+        _liveRefresh = Timer(const Duration(milliseconds: 400), () {
+          refreshFromDisk(liveOnly: true);
+        });
+      }
+
       client!
           .channel('cafe-sync')
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'orders', callback: (_) => refreshFromDisk())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => refreshFromDisk())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => refreshFromDisk())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => refreshFromDisk())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'carts', callback: (_) => refreshFromDisk())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'cart_lines', callback: (_) => refreshFromDisk())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'orders', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'carts', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'cart_lines', callback: (_) => scheduleLive())
           .subscribe();
     } catch (error, stack) {
       _listening = false;
@@ -138,16 +149,18 @@ class AppDatabase {
     await refreshFromDisk();
   }
 
-  Future<void> refreshFromDisk() async {
+  Future<void> refreshFromDisk({bool liveOnly = false}) async {
     if (client == null) return;
+    final catalogFresh = _catalogAt != null && DateTime.now().difference(_catalogAt!) < const Duration(seconds: 60);
     try {
-      await _refreshFromDisk();
+      await _refreshFromDisk(liveOnly: liveOnly && catalogFresh);
     } catch (error, stack) {
       debugPrint('Supabase refresh failed: $error\n$stack');
     }
   }
 
-  Future<void> _refreshFromDisk() async {
+  Future<void> _refreshFromDisk({bool liveOnly = false}) async {
+    final epoch = _epoch;
     _applyHeaders();
     anyAdmin = await client!.rpc('has_any_admin') as bool? ?? false;
     final user = client!.auth.currentUser;
@@ -160,7 +173,7 @@ class AppDatabase {
       _admin = null;
       _rememberAdmin = false;
     }
-    if (restaurantId != null) {
+    if (!liveOnly && restaurantId != null) {
       final restaurant = await client!.from('restaurants').select().eq('id', restaurantId!).maybeSingle();
       if (restaurant != null) {
         _locale = restaurant['locale'] as String? ?? 'en';
@@ -171,15 +184,17 @@ class AppDatabase {
         };
       }
     }
-    final staffRaw = await client!.rpc(
-      'list_pos_cashiers',
-      params: restaurantId == null ? null : {'p_restaurant_id': restaurantId},
-    );
-    final staff = staffRaw is List ? staffRaw : <dynamic>[];
-    _cashiers = staff.map((row) {
-      final map = row as Map<String, dynamic>;
-      return Cashier(id: map['id'] as String, name: map['name'] as String, pinHash: '', pinSalt: '', initials: map['initials'] as String? ?? 'C');
-    }).toList();
+    if (!liveOnly) {
+      final staffRaw = await client!.rpc(
+        'list_pos_cashiers',
+        params: restaurantId == null ? null : {'p_restaurant_id': restaurantId},
+      );
+      final staff = staffRaw is List ? staffRaw : <dynamic>[];
+      _cashiers = staff.map((row) {
+        final map = row as Map<String, dynamic>;
+        return Cashier(id: map['id'] as String, name: map['name'] as String, pinHash: '', pinSalt: '', initials: map['initials'] as String? ?? 'C');
+      }).toList();
+    }
     if (restaurantId == null && guestSlug == null) {
       _tables = [];
       _categories = [];
@@ -196,6 +211,7 @@ class AppDatabase {
     if (restaurantId == null && tableList.isNotEmpty) {
       restaurantId = tableList.first['restaurant_id'] as String?;
     }
+    if (epoch != _epoch) return;
     _tables = tableList.map((row) => CafeTable(
           id: row['id'] as String,
           number: row['number'] as String,
@@ -205,6 +221,7 @@ class AppDatabase {
           status: TableStatus.values.firstWhere((value) => value.name == row['status'], orElse: () => TableStatus.free),
           guests: row['guests'] as int? ?? 0,
         )).toList();
+    if (!liveOnly) {
     final categoryRows = await client!.from('menu_categories').select();
     _categories = (categoryRows as List).map((row) => MenuCategory(
           id: row['id'] as String,
@@ -230,6 +247,9 @@ class AppDatabase {
           discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
           discountApplied: row['discount_applied'] as bool? ?? false,
         )).toList();
+      _catalogAt = DateTime.now();
+    }
+    if (epoch != _epoch) return;
     final orderRows = await client!.from('orders').select('*, order_lines(*)');
     _orders = (orderRows as List).map((row) {
       final table = _tables.where((item) => item.id == row['table_id']);
@@ -352,10 +372,14 @@ class AppDatabase {
     }
   }
 
-  Future<String?> settleCash(String tableId, double cashReceived) async {
+  Future<String?> settleCash(String tableId, double cashReceived, {bool applyService = true}) async {
     if (client == null) return 'Supabase is not configured.';
     _applyHeaders();
-    final raw = await client!.rpc('settle_cash', params: {'p_table_id': tableId, 'p_cash_received': cashReceived});
+    final raw = await client!.rpc('settle_cash', params: {
+      'p_table_id': tableId,
+      'p_cash_received': cashReceived,
+      'p_apply_service': applyService,
+    });
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] == true) {
       await refreshFromDisk();
@@ -436,6 +460,7 @@ class AppDatabase {
   }
 
   Future<void> writeOrders(List<CafeOrder> items) async {
+    _epoch++;
     _orders = items;
     if (client == null || restaurantId == null) return;
     for (final item in items) {
@@ -463,6 +488,7 @@ class AppDatabase {
   }
 
   Future<void> writeCarts(Map<String, CartState> carts) async {
+    _epoch++;
     _carts = carts;
     if (client == null || restaurantId == null) return;
     for (final cart in carts.values) {

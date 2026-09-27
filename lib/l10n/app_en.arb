@@ -412,6 +412,7 @@
   "cashierAmount": "Amount",
   "cashierSubtotal": "Subtotal",
   "cashierIncludesSurcharge": "Includes service charge",
+  "cashierApplyServiceCharge": "Apply service charge",
   "cashierReadyToServe": "Ready to Serve",
   "cashierWaitingForBill": "Waiting for Bill",
   "cashierPrintReceipt": "Print Receipt",

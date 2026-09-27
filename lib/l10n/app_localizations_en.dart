@@ -760,6 +760,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierIncludesSurcharge => 'Includes service charge';
 
   @override
+  String get cashierApplyServiceCharge => 'Apply service charge';
+
+  @override
   String get cashierReadyToServe => 'Ready to Serve';
 
   @override

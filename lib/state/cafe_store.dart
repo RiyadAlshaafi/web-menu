@@ -104,7 +104,7 @@ class CafeStore extends ChangeNotifier {
 
   Future<void> syncFromDisk() async {
     if (_pendingWrites > 0) return;
-    await db.refreshFromDisk();
+    await db.refreshFromDisk(liveOnly: true);
     final next = _stampFromDb();
     if (next == _syncStamp) return;
     _hydrateOperational();
@@ -198,9 +198,12 @@ class CafeStore extends ChangeNotifier {
 
   double serviceCharge(double subtotal) => subtotal * serviceChargeRate;
 
-  double tabTotal(String tableId) {
-    final sub = tabSubtotal(tableId);
-    return sub + serviceCharge(sub);
+  /// One formula for the amount on screen and the amount sent to settlement.
+  double chargeTotal(double subtotal, {bool applyService = true}) =>
+      applyService ? subtotal + serviceCharge(subtotal) : subtotal;
+
+  double tabTotal(String tableId, {bool applyService = true}) {
+    return chargeTotal(tabSubtotal(tableId), applyService: applyService);
   }
 
   int tabItemCount(String tableId) =>
@@ -606,10 +609,16 @@ class CafeStore extends ChangeNotifier {
         unitPrice: line.unitPrice,
       );
 
+  final Set<String> _sendingTables = {};
+
   Future<CafeOrder?> sendCartToKitchen(String tableId) async {
+    if (!_sendingTables.add(tableId)) return openOrderFor(tableId);
     final table = tableById(tableId);
     final cart = cartFor(tableId);
-    if (cart.lines.isEmpty) return openOrderFor(tableId);
+    if (cart.lines.isEmpty) {
+      _sendingTables.remove(tableId);
+      return openOrderFor(tableId);
+    }
     var order = openOrderFor(tableId);
     if (order == null) {
       order = CafeOrder(
@@ -638,11 +647,12 @@ class CafeStore extends ChangeNotifier {
     _pendingWrites += 1;
     try {
       await db.writeOrders(orders);
-      await db.writeTables(tables);
       cart.lines.clear();
       await db.writeCarts(carts);
+      await db.writeTables(tables);
     } finally {
       if (_pendingWrites > 0) _pendingWrites -= 1;
+      _sendingTables.remove(tableId);
     }
     notifyListeners();
     return order;
@@ -697,15 +707,16 @@ class CafeStore extends ChangeNotifier {
   Future<String?> settleCash({
     required String tableId,
     required double cashReceived,
+    bool applyService = true,
   }) async {
     final cashier = currentCashier;
     final shift = currentShift ?? openShift;
     if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
     final order = openOrderFor(tableId);
     if (order == null) return l10n.errNoOpenBill;
-    final due = tabTotal(tableId);
+    final due = tabTotal(tableId, applyService: applyService);
     if (cashReceived < due) return l10n.insufficientCash;
-    final failure = await db.settleCash(tableId, cashReceived);
+    final failure = await db.settleCash(tableId, cashReceived, applyService: applyService);
     if (failure != null) return failure == 'insufficient cash' ? l10n.insufficientCash : failure;
     await syncFromDisk();
     notifyListeners();

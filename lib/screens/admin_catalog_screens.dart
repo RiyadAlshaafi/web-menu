@@ -344,11 +344,11 @@ class _DiscountDishCardState extends State<_DiscountDishCard> {
                   decoration: const InputDecoration(isDense: true, suffixText: '%', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10)),
                   onEditingComplete: () {
                     final percent = double.tryParse(percentController.text) ?? 0;
-                    store.setDishDiscount(dish, percent: percent, applied: dish.discountApplied || percent > 0);
+                    store.setDishDiscount(dish, percent: percent, applied: dish.discountApplied);
                   },
                   onSubmitted: (value) {
                     final percent = double.tryParse(value) ?? 0;
-                    store.setDishDiscount(dish, percent: percent, applied: dish.discountApplied || percent > 0);
+                    store.setDishDiscount(dish, percent: percent, applied: dish.discountApplied);
                   },
                 ),
               ),

@@ -586,6 +586,9 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
 
 Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String tableId) async {
   final controller = TextEditingController();
+  final navigator = Navigator.of(context, rootNavigator: true);
+  var applyService = store.serviceChargeRate > 0;
+  String? failure;
   await showDialog<void>(
     context: context,
     barrierDismissible: true,
@@ -599,7 +602,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
             ...store.cartFor(tableId).lines,
           ];
           final subtotal = store.tabSubtotal(tableId);
-          final due = store.tabTotal(tableId);
+          final due = store.chargeTotal(subtotal, applyService: applyService);
           final received = double.tryParse(controller.text) ?? 0;
           final change = received - due;
           final minutes = order == null ? 0 : DateTime.now().difference(order.createdAt).inMinutes;
@@ -666,7 +669,15 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                     ),
                     const Divider(),
                     _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
-                    _cashKv(context.l10n.cashierIncludesSurcharge, store.currency.format(due - subtotal)),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: applyService,
+                      activeColor: CafeColors.terracotta,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Text(context.l10n.cashierApplyServiceCharge),
+                      subtitle: Text(store.currency.format(store.serviceCharge(subtotal))),
+                      onChanged: (value) => setState(() => applyService = value ?? false),
+                    ),
                     _cashKv(context.l10n.cashierTotalPayable, store.currency.format(due)),
                     const SizedBox(height: 10),
                     TextField(
@@ -678,22 +689,30 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                     ),
                     const SizedBox(height: 8),
                     _cashKv(context.l10n.cashierChangeDue, change < 0 ? context.l10n.insufficientCash : store.currency.format(change)),
+                    if (failure != null) ...[
+                      const SizedBox(height: 8),
+                      Text(failure!, style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
+                    ],
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
+                        TextButton(onPressed: () => navigator.pop(), child: Text(context.l10n.commonCancel)),
                         const Spacer(),
                         TerracottaButton(
                           expanded: false,
                           label: context.l10n.cashierSettleCloseBill(store.currency.format(due)),
                           onPressed: () async {
-                            final error = await store.settleCash(tableId: tableId, cashReceived: received);
-                            if (!context.mounted) return;
+                            final error = await store.settleCash(
+                              tableId: tableId,
+                              cashReceived: received,
+                              applyService: applyService,
+                            );
                             if (error != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                              failure = error;
+                              if (context.mounted) setState(() {});
                               return;
                             }
-                            Navigator.pop(context);
+                            navigator.pop();
                           },
                         ),
                       ],

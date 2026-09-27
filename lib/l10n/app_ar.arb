@@ -228,6 +228,7 @@
   "cashierAmount": "المبلغ",
   "cashierSubtotal": "المجموع الفرعي",
   "cashierIncludesSurcharge": "يشمل رسم الخدمة",
+  "cashierApplyServiceCharge": "تطبيق رسم الخدمة",
   "cashierReadyToServe": "جاهز للتقديم",
   "cashierWaitingForBill": "بانتظار الفاتورة",
   "cashierPrintReceipt": "طباعة الإيصال",
