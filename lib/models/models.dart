@@ -239,12 +239,14 @@ class OrderLine {
     required this.name,
     required this.qty,
     required this.unitPrice,
+    this.round = 1,
   });
 
   final String menuItemId;
   final String name;
   int qty;
   final double unitPrice;
+  final int round;
 
   double get total => qty * unitPrice;
 
@@ -253,6 +255,7 @@ class OrderLine {
         name: json['name'] as String,
         qty: json['qty'] as int,
         unitPrice: (json['unitPrice'] as num).toDouble(),
+        round: json['round'] as int? ?? 1,
       );
 
   Map<String, dynamic> toJson() => {
@@ -260,6 +263,7 @@ class OrderLine {
         'name': name,
         'qty': qty,
         'unitPrice': unitPrice,
+        'round': round,
       };
 }
 
@@ -286,6 +290,8 @@ class CafeOrder {
 
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get subtotal => lines.fold(0, (sum, line) => sum + line.total);
+  int get latestRound => lines.fold(1, (latest, line) => line.round > latest ? line.round : latest);
+  List<OrderLine> linesInRound(int round) => lines.where((line) => line.round == round).toList();
 
   factory CafeOrder.fromJson(Map<String, dynamic> json) => CafeOrder(
         id: json['id'] as String,

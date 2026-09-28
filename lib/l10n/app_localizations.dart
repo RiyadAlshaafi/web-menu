@@ -1406,6 +1406,12 @@ abstract class AppLocalizations {
   /// **'Items to Settle'**
   String get cashierItemsToSettle;
 
+  /// No description provided for @orderRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Round {round}'**
+  String orderRound(int round);
+
   /// No description provided for @cashierTotalToCharge.
   ///
   /// In en, this message translates to:

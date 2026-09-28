@@ -317,7 +317,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                 id: 'order-${order.id}',
                                 table: order.tableNumber,
                                 title: context.l10n.cashierNewOrder,
-                                body: '${_orderStatusLabel(context, order.status)} · ${order.lines.map((line) => '${line.qty}× ${line.name}').join(', ')}',
+                                body: [
+                                  _orderStatusLabel(context, order.status),
+                                  if (order.latestRound > 1) context.l10n.orderRound(order.latestRound),
+                                  order.linesInRound(order.latestRound).map((line) => '${line.qty}× ${line.name}').join(', '),
+                                ].join(' · '),
                                 time: order.createdAt,
                                 amount: order.subtotal,
                                 action: next == null ? null : _nextStatusAction(context, next),
@@ -580,18 +584,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         const SizedBox(height: 12),
         Text(context.l10n.cashierItemsToSettle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
         const SizedBox(height: 8),
-        ...order.lines.map(
-          (line) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              children: [
-                Text('${line.qty}×  ${line.name}'),
-                const Spacer(),
-                Text(store.currency.format(line.total)),
-              ],
-            ),
-          ),
-        ),
+        ..._orderLineRows(context, store, order),
         const Divider(),
         _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
         _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
@@ -921,18 +914,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                                     if (order == null)
                                       EmptyHint(context.l10n.noOrders)
                                     else ...[
-                                      ...order.lines.map(
-                                        (line) => Padding(
-                                          padding: const EdgeInsets.only(bottom: 6),
-                                          child: Row(
-                                            children: [
-                                              Text('${line.qty}×  ${line.name}'),
-                                              const Spacer(),
-                                              Text(store.currency.format(line.total)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                                      ..._orderLineRows(context, store, order),
                                       const Divider(),
                                       Row(
                                         children: [
@@ -1273,6 +1255,34 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       ),
     );
   }
+}
+
+List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder order) {
+  final rounds = order.latestRound;
+  return [
+    for (var round = 1; round <= rounds; round++) ...[
+      if (rounds > 1)
+        Padding(
+          padding: EdgeInsets.only(top: round == 1 ? 0 : 6, bottom: 4),
+          child: Text(
+            context.l10n.orderRound(round),
+            style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11),
+          ),
+        ),
+      ...order.linesInRound(round).map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Text('${line.qty}×  ${line.name}'),
+                  const Spacer(),
+                  Text(store.currency.format(line.total)),
+                ],
+              ),
+            ),
+          ),
+    ],
+  ];
 }
 
 class _ArrivalFlash extends StatefulWidget {

@@ -266,6 +266,7 @@ class AppDatabase {
               name: line['name'] as String? ?? '',
               qty: (line['qty'] as num?)?.toInt() ?? 1,
               unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
+              round: (line['round'] as num?)?.toInt() ?? 1,
             )).toList(),
       );
     }).toList();
@@ -483,11 +484,31 @@ class AppDatabase {
             'name': line.name,
             'qty': line.qty,
             'unit_price': line.unitPrice,
+            'round': line.round,
           }).toList());
     }
   }
 
-  Future<void> writeCarts(Map<String, CartState> carts) async {
+  Future<void> _cartWrites = Future.value();
+
+  Future<void> writeCarts(Map<String, CartState> carts) {
+    final next = _cartWrites.then((_) => _writeCarts(carts));
+    _cartWrites = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<String?> sendTableCart() async {
+    if (client == null) return 'Supabase is not configured.';
+    await _cartWrites;
+    _applyHeaders();
+    final raw = await client!.rpc('send_table_cart');
+    final result = Map<String, dynamic>.from(raw as Map);
+    if (result['ok'] != true) return result['error'] as String? ?? 'Order was not sent.';
+    await refreshFromDisk();
+    return null;
+  }
+
+  Future<void> _writeCarts(Map<String, CartState> carts) async {
     _epoch++;
     _carts = carts;
     if (client == null || restaurantId == null) return;

@@ -405,6 +405,14 @@
     }
   },
   "cashierItemsToSettle": "Items to Settle",
+  "orderRound": "Round {round}",
+  "@orderRound": {
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
   "cashierTotalToCharge": "Total to Charge",
   "cashierSettleCloseBill": "Settle & Close Bill ({amount})",
   "@cashierSettleCloseBill": {

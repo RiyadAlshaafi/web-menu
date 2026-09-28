@@ -218,6 +218,7 @@
   "cashierOrderNumber": "الطلب #{id}",
   "cashierActiveBillOutRequest": "طلب فاتورة نشط  •  طاولة {number}",
   "cashierItemsToSettle": "الأصناف المطلوب تسويتها",
+  "orderRound": "الجولة {round}",
   "cashierTotalToCharge": "المبلغ المطلوب تحصيله",
   "cashierSettleCloseBill": "تسوية وإغلاق الفاتورة ({amount})",
   "cashierCashPayment": "دفع نقدي",

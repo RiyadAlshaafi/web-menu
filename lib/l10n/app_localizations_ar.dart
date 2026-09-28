@@ -729,6 +729,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierItemsToSettle => 'الأصناف المطلوب تسويتها';
 
   @override
+  String orderRound(int round) {
+    return 'الجولة $round';
+  }
+
+  @override
   String get cashierTotalToCharge => 'المبلغ المطلوب تحصيله';
 
   @override

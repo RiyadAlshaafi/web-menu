@@ -614,13 +614,6 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  OrderLine _copyLine(OrderLine line) => OrderLine(
-        menuItemId: line.menuItemId,
-        name: line.name,
-        qty: line.qty,
-        unitPrice: line.unitPrice,
-      );
-
   final Set<String> _sendingTables = {};
   final Set<String> _confirmingOrders = {};
 
@@ -636,50 +629,22 @@ class CafeStore extends ChangeNotifier {
   Future<CafeOrder?> sendCartToKitchen(String tableId) async {
     if (!_sendingTables.add(tableId)) return openOrderFor(tableId);
     notifyListeners();
-    final table = tableById(tableId);
-    final cart = cartFor(tableId);
-    if (cart.lines.isEmpty) {
+    if (cartFor(tableId).lines.isEmpty) {
       _sendingTables.remove(tableId);
       notifyListeners();
       return openOrderFor(tableId);
     }
-    var order = openOrderFor(tableId);
-    if (order == null) {
-      order = CafeOrder(
-        id: Secrets.id(),
-        tableId: tableId,
-        tableNumber: table.number,
-        status: OrderStatus.received,
-        createdAt: DateTime.now(),
-        lines: cart.lines.map(_copyLine).toList(),
-        cashierId: currentCashier?.id,
-      );
-      orders.add(order);
-      table.status = TableStatus.dining;
-      if (table.guests == 0) table.guests = table.seats;
-    } else {
-      for (final line in cart.lines) {
-        final match = order.lines.where((existing) => existing.menuItemId == line.menuItemId);
-        if (match.isEmpty) {
-          order.lines.add(_copyLine(line));
-        } else {
-          match.first.qty += line.qty;
-        }
-      }
-      if (order.status == OrderStatus.served) order.status = OrderStatus.preparing;
-    }
     _pendingWrites += 1;
     try {
-      await db.writeOrders(orders);
-      cart.lines.clear();
-      await db.writeCarts(carts);
-      await db.writeTables(tables);
+      final error = await db.sendTableCart();
+      if (error != null) throw StateError(error);
+      _hydrateOperational();
     } finally {
       if (_pendingWrites > 0) _pendingWrites -= 1;
       _sendingTables.remove(tableId);
     }
     notifyListeners();
-    return order;
+    return openOrderFor(tableId);
   }
 
   Future<void> requestBill(String tableId) async {

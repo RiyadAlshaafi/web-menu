@@ -730,6 +730,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierItemsToSettle => 'Items to Settle';
 
   @override
+  String orderRound(int round) {
+    return 'Round $round';
+  }
+
+  @override
   String get cashierTotalToCharge => 'Total to Charge';
 
   @override
