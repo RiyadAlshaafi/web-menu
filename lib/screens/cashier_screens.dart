@@ -281,6 +281,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                           ...bills.map((table) {
                             final order = store.openOrderFor(table.id);
                             return _alert(
+                              id: 'bill-${table.id}',
+                              arrivedAt: store.openCalls.where((c) => c.kind == 'bill' && c.tableId == table.id).firstOrNull?.createdAt,
                               table: table.number,
                               title: context.l10n.cashierBillRequest,
                               body: order == null ? context.l10n.noOrders : context.l10n.cashierItemsCount('${order.itemCount}'),
@@ -295,6 +297,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                         if (filter == _AlertFilter.all || filter == _AlertFilter.calls)
                           ...calls.map(
                             (call) => _alert(
+                              id: 'call-${call.id}',
+                              arrivedAt: call.createdAt,
                               table: call.tableNumber,
                               title: context.l10n.cashierCallStaff,
                               body: context.l10n.cashierAssistanceRequested,
@@ -310,6 +314,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                             (order) {
                               final next = order.status.next;
                               return _alert(
+                                id: 'order-${order.id}',
                                 table: order.tableNumber,
                                 title: context.l10n.cashierNewOrder,
                                 body: '${_orderStatusLabel(context, order.status)} · ${order.lines.map((line) => '${line.qty}× ${line.name}').join(', ')}',
@@ -491,6 +496,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
   }
 
   Widget _alert({
+    required Object id,
+    DateTime? arrivedAt,
     required String table,
     required String title,
     required String body,
@@ -502,46 +509,50 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     VoidCallback? onAction,
   }) {
     return Padding(
+      key: ValueKey(id),
       padding: const EdgeInsets.only(bottom: 8),
-      child: SoftCard(
-        radius: 16,
-        padding: const EdgeInsets.all(12),
-        onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: CafeColors.terracotta, borderRadius: BorderRadius.circular(8)),
-              child: Text(context.l10n.cashierTableNumber(table), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    time == null ? title : '$title • ${context.l10n.cashierElapsedMinutes('${DateTime.now().difference(time).inMinutes}')}',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-                ],
+      child: _ArrivalFlash(
+        arrivedAt: arrivedAt,
+        child: SoftCard(
+          radius: 16,
+          padding: const EdgeInsets.all(12),
+          onTap: onTap,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: CafeColors.terracotta, borderRadius: BorderRadius.circular(8)),
+                child: Text(context.l10n.cashierTableNumber(table), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
               ),
-            ),
-            if (amount != null) MoneyText(context.read<CafeStore>().currency.format(amount)),
-            if (action != null && onAction != null) ...[
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: onAction,
-                icon: Icon(icon, size: 16),
-                label: Text(action),
-                style: FilledButton.styleFrom(
-                  backgroundColor: CafeColors.terracotta,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      time == null ? title : '$title • ${context.l10n.cashierElapsedMinutes('${DateTime.now().difference(time).inMinutes}')}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                  ],
                 ),
               ),
+              if (amount != null) MoneyText(context.read<CafeStore>().currency.format(amount)),
+              if (action != null && onAction != null) ...[
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: onAction,
+                  icon: Icon(icon, size: 16),
+                  label: Text(action),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: CafeColors.terracotta,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1260,6 +1271,54 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ArrivalFlash extends StatefulWidget {
+  const _ArrivalFlash({required this.arrivedAt, required this.child});
+
+  final DateTime? arrivedAt;
+  final Widget child;
+
+  @override
+  State<_ArrivalFlash> createState() => _ArrivalFlashState();
+}
+
+class _ArrivalFlashState extends State<_ArrivalFlash> with SingleTickerProviderStateMixin {
+  late final AnimationController fade = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+  late final Animation<double> tint = CurvedAnimation(parent: fade, curve: const Interval(0.3, 1.0, curve: CafeMotion.easeInOut));
+
+  @override
+  void initState() {
+    super.initState();
+    final at = widget.arrivedAt;
+    if (at != null && DateTime.now().difference(at) < const Duration(seconds: 20)) {
+      fade.forward(from: 0);
+    } else {
+      fade.value = 1;
+    }
+  }
+
+  @override
+  void dispose() {
+    fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: tint,
+      builder: (context, child) => DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          color: Color.lerp(const Color(0x33BA5333), const Color(0x00BA5333), tint.value),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: child,
+      ),
+      child: widget.child,
     );
   }
 }

@@ -17,8 +17,13 @@ class PinLoginScreen extends StatefulWidget {
   State<PinLoginScreen> createState() => _PinLoginScreenState();
 }
 
-class _PinLoginScreenState extends State<PinLoginScreen> {
+class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProviderStateMixin {
   final focusNode = FocusNode();
+  late final AnimationController shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 360));
+  late final Animation<double> shakeOffset = TweenSequence<double>([
+    for (final (from, to) in const [(0.0, -8.0), (-8.0, 8.0), (8.0, -6.0), (-6.0, 6.0), (6.0, -3.0), (-3.0, 0.0)])
+      TweenSequenceItem(tween: Tween(begin: from, end: to).chain(CurveTween(curve: Curves.easeInOut)), weight: 1),
+  ]).animate(shake);
 
   @override
   void initState() {
@@ -29,6 +34,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   @override
   void dispose() {
     focusNode.dispose();
+    shake.dispose();
     super.dispose();
   }
 
@@ -145,20 +151,24 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                           }).toList(),
                         ),
                       const SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (index) {
-                          final filled = index < store.pinBuffer.length;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: filled ? CafeColors.terracotta : const Color(0xFFD9D0C8),
-                            ),
-                          );
-                        }),
+                      AnimatedBuilder(
+                        animation: shakeOffset,
+                        builder: (context, child) => Transform.translate(offset: Offset(shakeOffset.value, 0), child: child),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(4, (index) {
+                            final filled = index < store.pinBuffer.length;
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 6),
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: filled ? CafeColors.terracotta : const Color(0xFFD9D0C8),
+                              ),
+                            );
+                          }),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text.rich(
@@ -199,7 +209,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   }
 
   Future<void> _submit(CafeStore store) async {
-    if (!await store.signInCashier()) return;
+    if (!await store.signInCashier()) {
+      if (mounted && !MediaQuery.disableAnimationsOf(context)) shake.forward(from: 0);
+      return;
+    }
     if (!mounted) return;
     context.go('/pos');
   }

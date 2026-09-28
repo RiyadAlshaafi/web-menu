@@ -254,57 +254,98 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               ],
             ),
           ),
-          if (cartCount > 0)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Material(
-                color: Colors.white,
-                elevation: 8,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(color: Color(0x1A9A3C1D), borderRadius: BorderRadius.all(Radius.circular(8))),
-                        child: const Icon(Icons.receipt, color: CafeColors.terracottaDark, size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(context.l10n.guestCartItemCount('$cartCount'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                            Text(store.currency.format(store.cartFor(table.id).total), style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: 16)),
-                          ],
+          AnimatedSwitcher(
+            duration: CafeMotion.medium,
+            reverseDuration: const Duration(milliseconds: 200),
+            switchInCurve: CafeMotion.easeOut,
+            switchOutCurve: CafeMotion.easeOut.flipped,
+            transitionBuilder: (child, animation) {
+              final faded = FadeTransition(opacity: animation, child: child);
+              if (MediaQuery.disableAnimationsOf(context)) return faded;
+              return SizeTransition(sizeFactor: animation, alignment: AlignmentDirectional.bottomStart, child: faded);
+            },
+            child: cartCount > 0
+                ? KeyedSubtree(
+                    key: const ValueKey('cart-bar'),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                      child: Material(
+                        color: Colors.white,
+                        elevation: 8,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: const BoxDecoration(color: Color(0x1A9A3C1D), borderRadius: BorderRadius.all(Radius.circular(8))),
+                                child: const Icon(Icons.receipt, color: CafeColors.terracottaDark, size: 18),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    AnimatedSwitcher(
+                                      duration: CafeMotion.quick,
+                                      switchInCurve: CafeMotion.easeOut,
+                                      switchOutCurve: CafeMotion.easeOut.flipped,
+                                      layoutBuilder: (current, previous) => Stack(
+                                        alignment: AlignmentDirectional.centerStart,
+                                        children: [...previous, ?current],
+                                      ),
+                                      child: Text(
+                                        context.l10n.guestCartItemCount('$cartCount'),
+                                        key: ValueKey('count-$cartCount'),
+                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                                      ),
+                                    ),
+                                    AnimatedSwitcher(
+                                      duration: CafeMotion.quick,
+                                      switchInCurve: CafeMotion.easeOut,
+                                      switchOutCurve: CafeMotion.easeOut.flipped,
+                                      layoutBuilder: (current, previous) => Stack(
+                                        alignment: AlignmentDirectional.centerStart,
+                                        children: [...previous, ?current],
+                                      ),
+                                      child: Text(
+                                        store.currency.format(store.cartFor(table.id).total),
+                                        key: ValueKey(store.currency.format(store.cartFor(table.id).total)),
+                                        style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => context.go('/t/${widget.tableSlug}/cart'),
+                                child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
+                              ),
+                              FilledButton(
+                                onPressed: store.isSendingOrder(table.id)
+                                    ? null
+                                    : () async {
+                                        final sent = await confirmAndSendOrder(context, store, table.id);
+                                        if (sent && context.mounted) context.go('/t/${widget.tableSlug}/cart');
+                                      },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: CafeColors.terracottaDark,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: store.isSendingOrder(table.id)
+                                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                    : Text(context.l10n.guestOrderButton),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/t/${widget.tableSlug}/cart'),
-                        child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
-                      ),
-                      FilledButton(
-                        onPressed: store.isSendingOrder(table.id)
-                            ? null
-                            : () async {
-                                final sent = await confirmAndSendOrder(context, store, table.id);
-                                if (sent && context.mounted) context.go('/t/${widget.tableSlug}/cart');
-                              },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: CafeColors.terracottaDark,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: store.isSendingOrder(table.id)
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : Text(context.l10n.guestOrderButton),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
+                  )
+                : const SizedBox.shrink(key: ValueKey('cart-bar-empty')),
+          ),
           CustomerShell.nav(context, widget.tableSlug, '/t/${widget.tableSlug}'),
         ],
       ),

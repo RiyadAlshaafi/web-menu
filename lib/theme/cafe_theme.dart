@@ -19,6 +19,37 @@ class CafeColors {
   static const sidebar = Color(0xFFFFFFFF);
 }
 
+class CafeMotion {
+  static const easeOut = Cubic(0.23, 1, 0.32, 1);
+  static const easeInOut = Cubic(0.77, 0, 0.175, 1);
+  static const quick = Duration(milliseconds: 150);
+  static const medium = Duration(milliseconds: 250);
+}
+
+class CafePageTransitionsBuilder extends PageTransitionsBuilder {
+  const CafePageTransitionsBuilder();
+
+  static final _rise = Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero);
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: CafeMotion.easeOut,
+      reverseCurve: CafeMotion.easeOut.flipped,
+    );
+    final faded = FadeTransition(opacity: curved, child: child);
+    if (MediaQuery.disableAnimationsOf(context)) return faded;
+    return SlideTransition(position: _rise.animate(curved), child: faded);
+  }
+}
+
 class CafeTheme {
   static ThemeData get light {
     final textTheme = GoogleFonts.plusJakartaSansTextTheme().apply(
@@ -34,11 +65,12 @@ class CafeTheme {
       scaffoldBackgroundColor: CafeColors.cream,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.android: CafePageTransitionsBuilder(),
+          TargetPlatform.iOS: CafePageTransitionsBuilder(),
+          TargetPlatform.macOS: CafePageTransitionsBuilder(),
+          TargetPlatform.windows: CafePageTransitionsBuilder(),
+          TargetPlatform.linux: CafePageTransitionsBuilder(),
+          TargetPlatform.fuchsia: CafePageTransitionsBuilder(),
         },
       ),
       textTheme: textTheme,

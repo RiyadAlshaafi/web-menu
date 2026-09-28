@@ -100,19 +100,40 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
         ShellRoute(
           builder: (context, state, child) => CashierShell(location: state.uri.path, child: child),
           routes: [
-            GoRoute(path: '/pos', builder: (_, _) => const CashierDashboardScreen()),
-            GoRoute(path: '/pos/tables', builder: (_, _) => const CashierFloorScreen()),
-            GoRoute(path: '/pos/shifts', builder: (_, _) => const CashierShiftsScreen()),
+            GoRoute(
+              path: '/pos',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierDashboardScreen()),
+            ),
+            GoRoute(
+              path: '/pos/tables',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierFloorScreen()),
+            ),
+            GoRoute(
+              path: '/pos/shifts',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierShiftsScreen()),
+            ),
           ],
         ),
         ShellRoute(
           builder: (context, state, child) => AdminShell(location: state.uri.path, child: child),
           routes: [
-            GoRoute(path: '/admin/menu', builder: (_, _) => const AdminMenuScreen()),
-            GoRoute(path: '/admin/discounts', builder: (_, _) => const AdminCategoriesScreen()),
+            GoRoute(
+              path: '/admin/menu',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminMenuScreen()),
+            ),
+            GoRoute(
+              path: '/admin/discounts',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminCategoriesScreen()),
+            ),
             GoRoute(path: '/admin/categories', redirect: (_, _) => '/admin/discounts'),
-            GoRoute(path: '/admin/tables', builder: (_, _) => const AdminTablesScreen()),
-            GoRoute(path: '/admin/settings', builder: (_, _) => const AdminSettingsScreen()),
+            GoRoute(
+              path: '/admin/tables',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminTablesScreen()),
+            ),
+            GoRoute(
+              path: '/admin/settings',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminSettingsScreen()),
+            ),
           ],
         ),
       ],
