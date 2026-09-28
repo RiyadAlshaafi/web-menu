@@ -974,19 +974,6 @@ class CustomerCartScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (cart.lines.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    TerracottaButton(
-                      label: store.isSendingOrder(table.id)
-                          ? context.l10n.guestSendingOrder
-                          : context.l10n.guestPlaceOrder(store.currency.format(cart.total)),
-                      onPressed: store.isSendingOrder(table.id) ? null : () => confirmAndSendOrder(context, store, table.id, menuRoute: '/t/$tableSlug'),
-                    ),
-                    const SizedBox(height: 6),
-                    Center(
-                      child: Text(context.l10n.guestOrdersSentInstantly, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-                    ),
-                  ],
                 ],
               ],
             ),
