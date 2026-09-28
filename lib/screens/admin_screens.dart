@@ -10,6 +10,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/table_qr.dart';
 
 export 'admin_menu_layout_screen.dart';
 export 'admin_catalog_screens.dart';
@@ -28,12 +29,13 @@ class AdminShell extends StatelessWidget {
     final compact = AppSections.compact(width);
     final railWidth = compact ? 76.0 : 220.0;
 
+    final surfaces = CafeSurfaces.of(context);
     return Scaffold(
-      backgroundColor: CafeColors.cream,
+      backgroundColor: surfaces.background,
       body: Row(
         children: [
           Material(
-            color: Colors.white,
+            color: surfaces.sidebar,
             child: SizedBox(
               width: railWidth,
               child: Column(
@@ -59,11 +61,11 @@ class AdminShell extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Café Italiano',
+                                Text(
+                                  store.cafeName,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: surfaces.onSidebar),
                                 ),
                                 Text(
                                   context.l10n.adminConsoleLabel,
@@ -276,7 +278,6 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final origin = Uri.base.origin;
     final filtered = store.tables.where((table) {
       if (query.isEmpty) return true;
       return table.number.toLowerCase().contains(query.toLowerCase());
@@ -335,7 +336,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
-                          final url = '$origin/#/t/${item.qrSlug}';
+                          final url = store.guestLink(item.qrSlug);
                           final selected = item.id == selectedId;
                           return SoftCard(
                             selected: selected,
@@ -361,7 +362,9 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                 const SizedBox(height: 8),
                                 Expanded(
                                   child: Center(
-                                    child: QrImageView(data: url, size: constraints.maxWidth < 600 ? 80 : 110, backgroundColor: Colors.white),
+                                    child: url.isEmpty
+                                        ? const Icon(Icons.qr_code_2, color: CafeColors.inkMuted)
+                                        : QrImageView(data: url, size: constraints.maxWidth < 600 ? 80 : 110, backgroundColor: Colors.white),
                                   ),
                                 ),
                                 Text('/t/${item.qrSlug}', style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
@@ -385,17 +388,45 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                   Text(context.l10n.adminTableNumber(table.number), style: CafeTheme.display.copyWith(fontSize: 28)),
                                   const SizedBox(height: 8),
                                   Flexible(
-                                    child: QrImageView(data: '$origin/#/t/${table.qrSlug}', size: 180, backgroundColor: Colors.white),
+                                    child: store.guestLink(table.qrSlug).isEmpty
+                                        ? const Icon(Icons.qr_code_2, size: 72, color: CafeColors.inkMuted)
+                                        : QrImageView(data: store.guestLink(table.qrSlug), size: 180, backgroundColor: Colors.white),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(context.l10n.adminScanToOrderPay, style: const TextStyle(fontWeight: FontWeight.w700)),
-                                  Text(context.l10n.adminNoAppInstall, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                                  Text(
+                                    store.guestLink(table.qrSlug).isEmpty ? 'Set the public menu URL in Settings so phones can open this QR.' : context.l10n.adminNoAppInstall,
+                                    style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
+                                    textAlign: TextAlign.center,
+                                  ),
                                   const Spacer(),
-                                  SelectableText('$origin/#/t/${table.qrSlug}', style: const TextStyle(fontSize: 12)),
+                                  SelectableText(store.guestLink(table.qrSlug), style: const TextStyle(fontSize: 12)),
                                   const SizedBox(height: 8),
                                   TerracottaButton(
                                     label: context.l10n.adminPrintStandCard,
-                                    onPressed: () => context.go('/t/${table.qrSlug}'),
+                                    onPressed: store.guestLink(table.qrSlug).isEmpty
+                                        ? null
+                                        : () async {
+                                            final error = await printTableQr(
+                                              url: store.guestLink(table.qrSlug),
+                                              tableNumber: table.number,
+                                              cafeName: store.cafeName,
+                                            );
+                                            if (error != null && context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                            }
+                                          },
+                                  ),
+                                  TextButton(
+                                    onPressed: store.guestLink(table.qrSlug).isEmpty
+                                        ? null
+                                        : () async {
+                                            final error = await saveTableQr(url: store.guestLink(table.qrSlug), tableNumber: table.number);
+                                            if (error != null && context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                            }
+                                          },
+                                    child: const Text('Save PNG'),
                                   ),
                                 ],
                               ),

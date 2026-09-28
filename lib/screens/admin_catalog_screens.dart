@@ -7,6 +7,7 @@ import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
+import 'admin_brand_settings.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -405,6 +406,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       children: [
         Text(context.l10n.navSettings, style: CafeTheme.display.copyWith(fontSize: 36)),
         const SizedBox(height: 18),
+        const AdminBrandSettings(),
+        const SizedBox(height: 16),
         SoftCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

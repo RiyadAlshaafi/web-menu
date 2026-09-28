@@ -546,6 +546,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogApply => 'تطبيق';
 
   @override
+  String get catalogCompanyInfo => 'معلومات المقهى';
+
+  @override
+  String get catalogCafeName => 'اسم المقهى';
+
+  @override
+  String get catalogPublicMenuUrl => 'رابط القائمة العام';
+
+  @override
+  String get catalogPublicMenuUrlHint => 'https://your-cafe.vercel.app';
+
+  @override
+  String get catalogChooseLogo => 'اختيار الشعار';
+
+  @override
+  String get catalogRemoveLogo => 'إزالة الشعار';
+
+  @override
+  String get catalogSaveCompany => 'حفظ معلومات المقهى';
+
+  @override
+  String get catalogAppearance => 'المظهر / ألوان السمة';
+
+  @override
+  String get catalogHeaderColor => 'لون الترويسة';
+
+  @override
+  String get catalogSidebarColor => 'لون الشريط الجانبي';
+
+  @override
+  String get catalogBackgroundColor => 'لون الخلفية';
+
+  @override
+  String get catalogSaveColors => 'حفظ الألوان';
+
+  @override
+  String get catalogResetColors => 'إعادة الضبط';
+
+  @override
   String get catalogSystemLanguage => 'لغة النظام';
 
   @override

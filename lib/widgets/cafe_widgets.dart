@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 
 class CafeLogo extends StatelessWidget {
@@ -25,6 +27,14 @@ class CafeLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    CafeStore? store;
+    try {
+      store = Provider.of<CafeStore>(context);
+    } on ProviderNotFoundException {
+      store = null;
+    }
+    final title = store?.cafeName ?? 'Café Italiano';
+    final logo = store?.logoUrl ?? '';
     final titleColor = light ? Colors.white : CafeColors.ink;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -38,7 +48,17 @@ class CafeLogo extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(mark ?? Icons.local_cafe, color: light ? Colors.white : CafeColors.terracottaDark, size: size * 0.52),
+            child: logo.isEmpty
+                ? Icon(mark ?? Icons.local_cafe, color: light ? Colors.white : CafeColors.terracottaDark, size: size * 0.52)
+                : ClipOval(
+                    child: Image.network(
+                      logo,
+                      width: size,
+                      height: size,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(mark ?? Icons.local_cafe, color: light ? Colors.white : CafeColors.terracottaDark, size: size * 0.52),
+                    ),
+                  ),
           ),
         if (showWordmark) ...[
           if (size > 0) SizedBox(width: compact ? 8 : 10),
@@ -48,7 +68,7 @@ class CafeLogo extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Café Italiano',
+                title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: CafeTheme.brand.copyWith(

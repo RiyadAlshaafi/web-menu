@@ -17,6 +17,72 @@ class CafeColors {
   static const success = Color(0xFF4F7A45);
   static const alert = Color(0xFFBA1A1A);
   static const sidebar = Color(0xFFFFFFFF);
+
+  static const defaultHeader = Color(0xFF9A3C1D);
+  static const defaultSidebar = Color(0xFFFFFFFF);
+  static const defaultBackground = Color(0xFFFDF9F2);
+
+  static Color contrastOn(Color color) => color.computeLuminance() > 0.55 ? ink : const Color(0xFFFFFFFF);
+
+  static Color parseHex(String? value, Color fallback) {
+    final raw = (value ?? '').trim().replaceFirst('#', '');
+    if (raw.length != 6 && raw.length != 8) return fallback;
+    final parsed = int.tryParse(raw, radix: 16);
+    if (parsed == null) return fallback;
+    return Color(raw.length == 6 ? 0xFF000000 | parsed : parsed);
+  }
+
+  static String toHex(Color color) {
+    final argb = color.toARGB32();
+    return '#${(argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+  }
+}
+
+class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
+  const CafeSurfaces({
+    required this.header,
+    required this.sidebar,
+    required this.background,
+  });
+
+  final Color header;
+  final Color sidebar;
+  final Color background;
+
+  Color get onHeader => CafeColors.contrastOn(header);
+  Color get onSidebar => CafeColors.contrastOn(sidebar);
+  Color get onBackground => CafeColors.contrastOn(background);
+
+  static const defaults = CafeSurfaces(
+    header: CafeColors.defaultHeader,
+    sidebar: CafeColors.defaultSidebar,
+    background: CafeColors.defaultBackground,
+  );
+
+  static CafeSurfaces of(BuildContext context) => Theme.of(context).extension<CafeSurfaces>() ?? defaults;
+
+  factory CafeSurfaces.fromCafe(Map<String, dynamic> cafe) => CafeSurfaces(
+        header: CafeColors.parseHex(cafe['headerColor'] as String?, CafeColors.defaultHeader),
+        sidebar: CafeColors.parseHex(cafe['sidebarColor'] as String?, CafeColors.defaultSidebar),
+        background: CafeColors.parseHex(cafe['backgroundColor'] as String?, CafeColors.defaultBackground),
+      );
+
+  @override
+  CafeSurfaces copyWith({Color? header, Color? sidebar, Color? background}) => CafeSurfaces(
+        header: header ?? this.header,
+        sidebar: sidebar ?? this.sidebar,
+        background: background ?? this.background,
+      );
+
+  @override
+  CafeSurfaces lerp(ThemeExtension<CafeSurfaces>? other, double t) {
+    if (other is! CafeSurfaces) return this;
+    return CafeSurfaces(
+      header: Color.lerp(header, other.header, t) ?? header,
+      sidebar: Color.lerp(sidebar, other.sidebar, t) ?? sidebar,
+      background: Color.lerp(background, other.background, t) ?? background,
+    );
+  }
 }
 
 class CafeMotion {
@@ -51,7 +117,9 @@ class CafePageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 class CafeTheme {
-  static ThemeData get light {
+  static ThemeData get light => forSurfaces(CafeSurfaces.defaults);
+
+  static ThemeData forSurfaces(CafeSurfaces surfaces) {
     final textTheme = GoogleFonts.plusJakartaSansTextTheme().apply(
       bodyColor: CafeColors.ink,
       displayColor: CafeColors.ink,
@@ -62,7 +130,8 @@ class CafeTheme {
         seedColor: CafeColors.terracotta,
         surface: CafeColors.cream,
       ),
-      scaffoldBackgroundColor: CafeColors.cream,
+      scaffoldBackgroundColor: surfaces.background,
+      extensions: [surfaces],
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CafePageTransitionsBuilder(),

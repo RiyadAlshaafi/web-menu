@@ -183,9 +183,13 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           GlobalCupertinoLocalizations.delegate,
         ],
         builder: (context, child) {
-          return Directionality(
-            textDirection: locale == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-            child: child ?? const SizedBox.shrink(),
+          final surfaces = CafeSurfaces.fromCafe(context.watch<CafeStore>().cafe);
+          return Theme(
+            data: CafeTheme.forSurfaces(surfaces),
+            child: Directionality(
+              textDirection: locale == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+              child: child ?? const SizedBox.shrink(),
+            ),
           );
         },
         routerConfig: router,

@@ -1094,6 +1094,84 @@ abstract class AppLocalizations {
   /// **'Apply'**
   String get catalogApply;
 
+  /// No description provided for @catalogCompanyInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Company / Cafe Info'**
+  String get catalogCompanyInfo;
+
+  /// No description provided for @catalogCafeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe name'**
+  String get catalogCafeName;
+
+  /// No description provided for @catalogPublicMenuUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Public menu URL'**
+  String get catalogPublicMenuUrl;
+
+  /// No description provided for @catalogPublicMenuUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://your-cafe.vercel.app'**
+  String get catalogPublicMenuUrlHint;
+
+  /// No description provided for @catalogChooseLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose logo'**
+  String get catalogChooseLogo;
+
+  /// No description provided for @catalogRemoveLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove logo'**
+  String get catalogRemoveLogo;
+
+  /// No description provided for @catalogSaveCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Save cafe info'**
+  String get catalogSaveCompany;
+
+  /// No description provided for @catalogAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance / Theme Colors'**
+  String get catalogAppearance;
+
+  /// No description provided for @catalogHeaderColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Header color'**
+  String get catalogHeaderColor;
+
+  /// No description provided for @catalogSidebarColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Sidebar color'**
+  String get catalogSidebarColor;
+
+  /// No description provided for @catalogBackgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Background color'**
+  String get catalogBackgroundColor;
+
+  /// No description provided for @catalogSaveColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Save colors'**
+  String get catalogSaveColors;
+
+  /// No description provided for @catalogResetColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get catalogResetColors;
+
   /// No description provided for @catalogSystemLanguage.
   ///
   /// In en, this message translates to:

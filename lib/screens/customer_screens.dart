@@ -83,9 +83,9 @@ class CustomerShell {
     );
   }
 
-  static Widget phone({required Widget child}) {
+  static Widget phone(BuildContext context, {required Widget child}) {
     return Scaffold(
-      backgroundColor: CafeColors.cream,
+      backgroundColor: CafeSurfaces.of(context).background,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 430),
@@ -113,7 +113,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     final store = context.watch<CafeStore>();
     final table = store.tableBySlug(widget.tableSlug);
     if (table == null) {
-      return CustomerShell.phone(
+      return CustomerShell.phone(context,
         child: Column(
           children: [
             _guestHeader(CafeTable(id: 'missing', number: widget.tableSlug, qrSlug: widget.tableSlug)),
@@ -139,7 +139,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     }
     final cartCount = store.cartFor(table.id).itemCount;
 
-    return CustomerShell.phone(
+    return CustomerShell.phone(context,
       child: Column(
         children: [
           _guestHeader(table),
@@ -368,10 +368,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xE6FDF9F2),
-        border: Border(bottom: BorderSide(color: Color(0x66E6E2DC))),
-      ),
+      decoration: guestHeaderDecoration(context),
       child: Row(
         children: [
           Container(
@@ -389,7 +386,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Cafe Italiano', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
                 Row(
                   children: [
                     Container(width: 6, height: 6, decoration: const BoxDecoration(color: CafeColors.terracottaDark, shape: BoxShape.circle)),
@@ -859,7 +856,7 @@ class CustomerCartScreen extends StatelessWidget {
     final store = context.watch<CafeStore>();
     final table = store.tableBySlug(tableSlug);
     if (table == null) {
-      return CustomerShell.phone(
+      return CustomerShell.phone(context,
         child: Column(
           children: [
             _cartHeader(context, CafeTable(id: 'missing', number: tableSlug, qrSlug: tableSlug)),
@@ -872,7 +869,7 @@ class CustomerCartScreen extends StatelessWidget {
     final order = store.openOrderFor(table.id);
     final cart = store.cartFor(table.id);
 
-    return CustomerShell.phone(
+    return CustomerShell.phone(context,
       child: Column(
         children: [
           _cartHeader(context, table),
@@ -1012,10 +1009,7 @@ class CustomerCartScreen extends StatelessWidget {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xE6FDF9F2),
-        border: Border(bottom: BorderSide(color: Color(0x66E6E2DC))),
-      ),
+      decoration: guestHeaderDecoration(context),
       child: Row(
         children: [
           Container(
@@ -1030,7 +1024,7 @@ class CustomerCartScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Cafe Italiano', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
                 Text(context.l10n.guestTableDineIn(table.number), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
               ],
             ),
@@ -1093,16 +1087,13 @@ class CustomerBillScreen extends StatelessWidget {
     final store = context.watch<CafeStore>();
     final table = store.tableBySlug(tableSlug);
     if (table == null) {
-      return CustomerShell.phone(
+      return CustomerShell.phone(context,
         child: Column(
           children: [
             Container(
               height: 64,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: const BoxDecoration(
-                color: Color(0xE6FDF9F2),
-                border: Border(bottom: BorderSide(color: Color(0x66E6E2DC))),
-              ),
+              decoration: guestHeaderDecoration(context),
               child: Row(
                 children: [
                   Container(
@@ -1112,7 +1103,7 @@ class CustomerBillScreen extends StatelessWidget {
                     child: const Icon(Icons.restaurant, color: CafeColors.terracottaDark, size: 22),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Cafe Italiano', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                  Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
                 ],
               ),
             ),
@@ -1128,16 +1119,13 @@ class CustomerBillScreen extends StatelessWidget {
     final total = store.tabTotal(table.id);
     final paid = order == null && store.cartFor(table.id).lines.isEmpty && table.status == TableStatus.free;
 
-    return CustomerShell.phone(
+    return CustomerShell.phone(context,
       child: Column(
         children: [
           Container(
             height: 64,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: const BoxDecoration(
-              color: Color(0xE6FDF9F2),
-              border: Border(bottom: BorderSide(color: Color(0x66E6E2DC))),
-            ),
+            decoration: guestHeaderDecoration(context),
             child: Row(
               children: [
                 Container(
@@ -1152,7 +1140,7 @@ class CustomerBillScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Cafe Italiano', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                      Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
                       Text(context.l10n.guestTableDineIn(table.number), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
                     ],
                   ),
@@ -1272,4 +1260,12 @@ class CustomerBillScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+BoxDecoration guestHeaderDecoration(BuildContext context) {
+  final surfaces = CafeSurfaces.of(context);
+  return BoxDecoration(
+    color: surfaces.header,
+    border: Border(bottom: BorderSide(color: surfaces.onHeader.withValues(alpha: 0.18))),
+  );
 }

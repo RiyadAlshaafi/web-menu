@@ -47,12 +47,13 @@ class CashierShell extends StatelessWidget {
     final compact = AppSections.compact(MediaQuery.sizeOf(context).width);
     final railWidth = compact ? 84.0 : 250.0;
 
+    final surfaces = CafeSurfaces.of(context);
     return Scaffold(
-      backgroundColor: CafeColors.cream,
+      backgroundColor: surfaces.background,
       body: Row(
         children: [
           Material(
-            color: Colors.white,
+            color: surfaces.sidebar,
             child: SizedBox(
               width: railWidth,
               child: Padding(

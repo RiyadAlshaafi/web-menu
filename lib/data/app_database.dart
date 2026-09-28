@@ -6,13 +6,38 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
 
 class AppDatabase {
   AppDatabase._();
   static final AppDatabase instance = AppDatabase._();
 
-  static const _rawSupabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const _compiledUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: String.fromEnvironment('NEXT_PUBLIC_SUPABASE_URL'),
+  );
+  static const _compiledAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: String.fromEnvironment(
+      'SUPABASE_PUBLISHABLE_KEY',
+      defaultValue: String.fromEnvironment(
+        'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+        defaultValue: String.fromEnvironment('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+      ),
+    ),
+  );
+  static String _fileUrl = '';
+  static String _fileAnonKey = '';
+
+  static String get _rawSupabaseUrl {
+    if (_compiledUrl.trim().isNotEmpty) return _compiledUrl.trim();
+    return _fileUrl.trim();
+  }
+
+  static String get supabaseAnonKey {
+    if (_compiledAnonKey.trim().isNotEmpty) return _compiledAnonKey.trim();
+    return _fileAnonKey.trim();
+  }
 
   static String get supabaseUrl {
     final uri = Uri.tryParse(_rawSupabaseUrl.trim());
@@ -66,7 +91,21 @@ class AppDatabase {
   int get nextOrderId => 1001;
 
   Future<void> init({bool memory = false}) async {
-    if (!isConfigured || memory) {
+    if (memory) {
+      _clear();
+      return;
+    }
+    if (_compiledUrl.trim().isEmpty || _compiledAnonKey.trim().isEmpty) {
+      final env = await loadLocalEnv();
+      _fileUrl = env['SUPABASE_URL'] ?? env['NEXT_PUBLIC_SUPABASE_URL'] ?? '';
+      _fileAnonKey = env['SUPABASE_ANON_KEY'] ??
+          env['SUPABASE_PUBLISHABLE_KEY'] ??
+          env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'] ??
+          env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] ??
+          '';
+    }
+    if (!isConfigured) {
+      debugPrint('Supabase is not configured. For Windows, put SUPABASE_URL and SUPABASE_ANON_KEY in .env or build with tool/build_windows.ps1.');
       _clear();
       return;
     }
@@ -179,6 +218,11 @@ class AppDatabase {
         _locale = restaurant['locale'] as String? ?? 'en';
         _cafe = {
           'name': restaurant['name'] ?? '',
+          'logoUrl': restaurant['logo_url'] ?? '',
+          'publicMenuUrl': restaurant['public_menu_url'] ?? '',
+          'headerColor': restaurant['header_color'] ?? '',
+          'sidebarColor': restaurant['sidebar_color'] ?? '',
+          'backgroundColor': restaurant['background_color'] ?? '',
           'serviceChargeRate': (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
           'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
         };
@@ -343,6 +387,11 @@ class AppDatabase {
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({
       'name': cafe['name'] ?? '',
+      'logo_url': cafe['logoUrl'] ?? '',
+      'public_menu_url': cafe['publicMenuUrl'] ?? '',
+      'header_color': cafe['headerColor'] ?? '',
+      'sidebar_color': cafe['sidebarColor'] ?? '',
+      'background_color': cafe['backgroundColor'] ?? '',
       'service_charge_rate': cafe['serviceChargeRate'] ?? 0.10,
       'tax_rate': cafe['taxRate'] ?? 0,
       'locale': _locale,
@@ -589,6 +638,8 @@ class AppDatabase {
       if (!keep.contains(id)) await client!.from(table).delete().eq('id', id);
     }
   }
+
+  Future<String> storeLogo(String value) => _storeImage('logo', value);
 
   Future<String> _storeImage(String itemId, String value) async {
     if (client == null || restaurantId == null || !value.startsWith('data:')) return value;

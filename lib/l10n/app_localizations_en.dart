@@ -547,6 +547,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogApply => 'Apply';
 
   @override
+  String get catalogCompanyInfo => 'Company / Cafe Info';
+
+  @override
+  String get catalogCafeName => 'Cafe name';
+
+  @override
+  String get catalogPublicMenuUrl => 'Public menu URL';
+
+  @override
+  String get catalogPublicMenuUrlHint => 'https://your-cafe.vercel.app';
+
+  @override
+  String get catalogChooseLogo => 'Choose logo';
+
+  @override
+  String get catalogRemoveLogo => 'Remove logo';
+
+  @override
+  String get catalogSaveCompany => 'Save cafe info';
+
+  @override
+  String get catalogAppearance => 'Appearance / Theme Colors';
+
+  @override
+  String get catalogHeaderColor => 'Header color';
+
+  @override
+  String get catalogSidebarColor => 'Sidebar color';
+
+  @override
+  String get catalogBackgroundColor => 'Background color';
+
+  @override
+  String get catalogSaveColors => 'Save colors';
+
+  @override
+  String get catalogResetColors => 'Reset to default';
+
+  @override
   String get catalogSystemLanguage => 'System Language';
 
   @override
