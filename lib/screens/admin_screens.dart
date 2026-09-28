@@ -148,15 +148,12 @@ class AdminShell extends StatelessWidget {
                 Container(
                   height: 64,
                   padding: const EdgeInsets.symmetric(horizontal: 22),
-                  decoration: const BoxDecoration(
-                    color: CafeColors.cream,
-                    border: Border(bottom: BorderSide(color: Color(0x00FFFFFF))),
-                  ),
+                  color: surfaces.header,
                   child: Row(
                     children: [
-                      Text(context.l10n.adminWorkspace, style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w600)),
-                      const Text('  /  ', style: TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w600)),
-                      Text(section.crumb(context), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.terracottaDark)),
+                      Text(context.l10n.adminWorkspace, style: TextStyle(color: surfaces.onHeader.withValues(alpha: 0.75), fontWeight: FontWeight.w600)),
+                      Text('  /  ', style: TextStyle(color: surfaces.onHeader.withValues(alpha: 0.75), fontWeight: FontWeight.w600)),
+                      Text(section.crumb(context), style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader)),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -210,26 +207,7 @@ class AdminShell extends StatelessWidget {
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Material(
-                        color: surfaces.header,
-                        child: SizedBox(
-                          height: 56,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: Text(store.cafeName, style: TextStyle(color: surfaces.onHeader, fontWeight: FontWeight.w800, fontSize: 18)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(child: ColoredBox(color: surfaces.background, child: child)),
-                    ],
-                  ),
-                ),
+                Expanded(child: ColoredBox(color: surfaces.background, child: child)),
               ],
             ),
           ),

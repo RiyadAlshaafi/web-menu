@@ -151,26 +151,7 @@ class CashierShell extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Material(
-                  color: surfaces.header,
-                  child: SizedBox(
-                    height: 56,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(store.cafeName, style: TextStyle(color: surfaces.onHeader, fontWeight: FontWeight.w800, fontSize: 18)),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(child: ColoredBox(color: surfaces.background, child: child)),
-              ],
-            ),
-          ),
+          Expanded(child: ColoredBox(color: surfaces.background, child: child)),
         ],
       ),
     );
@@ -223,11 +204,23 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
       child: Column(
         children: [
-          Row(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            decoration: BoxDecoration(
+              color: CafeSurfaces.of(context).header,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
             children: [
               const Icon(Icons.circle, size: 10, color: CafeColors.success),
               const SizedBox(width: 8),
-              Text(context.l10n.cashierStationFrontCounter, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width, min: 18, max: 22))),
+              Text(
+                context.l10n.cashierStationFrontCounter,
+                style: CafeTheme.display.copyWith(
+                  fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width, min: 18, max: 22),
+                  color: CafeSurfaces.of(context).onHeader,
+                ),
+              ),
               const Spacer(),
               GhostChip(label: clock, icon: Icons.schedule),
               const SizedBox(width: 8),
@@ -235,6 +228,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               const SizedBox(width: 8),
               GhostChip(label: context.l10n.cashierAudioOn, icon: Icons.volume_up_outlined),
             ],
+            ),
           ),
           const SizedBox(height: 16),
           LayoutBuilder(
