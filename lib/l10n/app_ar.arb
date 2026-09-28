@@ -38,6 +38,7 @@
   "errCashierSignInFirst": "سجّل الدخول كأمين صندوق أولاً.",
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",
   "guestOrderFirst": "اطلب أولاً.",
+  "guestBillAfterServed": "يمكنك طلب الفاتورة بعد أن يعلّم النادل الطلب كمقدَّم.",
   "errNoOpenShift": "لا توجد وردية مفتوحة.",
   "authGuestCashier": "كاشير ضيف",
   "authPosTerminalSubtitle": "نقطة البيع\nالطرفية",

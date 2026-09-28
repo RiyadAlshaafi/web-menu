@@ -984,10 +984,14 @@ class CustomerCartScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () async {
-                            await store.requestBill(table.id);
-                            if (context.mounted) context.go('/t/$tableSlug/bill');
-                          },
+                          onPressed: store.canRequestBill(table.id)
+                              ? () async {
+                                  await store.requestBill(table.id);
+                                  if (context.mounted) context.go('/t/$tableSlug/bill');
+                                }
+                              : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
+                                },
                           icon: const Icon(Icons.receipt_long),
                           label: Text(context.l10n.guestRequestBill),
                         ),
@@ -1223,7 +1227,11 @@ class CustomerBillScreen extends StatelessWidget {
                 if (order != null)
                   TerracottaButton(
                     label: context.l10n.guestWannaCheckIn,
-                    onPressed: () => store.requestBill(table.id),
+                    onPressed: store.canRequestBill(table.id)
+                        ? () => store.requestBill(table.id)
+                        : () {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
+                          },
                   ),
               ],
             ),

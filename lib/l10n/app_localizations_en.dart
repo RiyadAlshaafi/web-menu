@@ -129,6 +129,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestOrderFirst => 'Place an order first.';
 
   @override
+  String get guestBillAfterServed =>
+      'You can request the bill after the waiter marks your order served.';
+
+  @override
   String get errNoOpenShift => 'No open shift.';
 
   @override

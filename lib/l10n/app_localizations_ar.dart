@@ -129,6 +129,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestOrderFirst => 'اطلب أولاً.';
 
   @override
+  String get guestBillAfterServed =>
+      'يمكنك طلب الفاتورة بعد أن يعلّم النادل الطلب كمقدَّم.';
+
+  @override
   String get errNoOpenShift => 'لا توجد وردية مفتوحة.';
 
   @override

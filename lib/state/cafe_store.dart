@@ -647,15 +647,13 @@ class CafeStore extends ChangeNotifier {
     return openOrderFor(tableId);
   }
 
+  bool canRequestBill(String tableId) {
+    final order = openOrderFor(tableId);
+    return order != null && order.status == OrderStatus.served && cartFor(tableId).lines.isEmpty;
+  }
+
   Future<void> requestBill(String tableId) async {
-    if (cartFor(tableId).lines.isNotEmpty) {
-      try {
-        await sendCartToKitchen(tableId);
-      } catch (error, stack) {
-        debugPrint('Kitchen send before bill request failed: $error\n$stack');
-      }
-    }
-    if (openOrderFor(tableId) == null) return;
+    if (!canRequestBill(tableId)) return;
     final table = tableById(tableId);
     table.status = TableStatus.billRequested;
     final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);

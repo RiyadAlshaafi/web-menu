@@ -326,6 +326,12 @@ abstract class AppLocalizations {
   /// **'Place an order first.'**
   String get guestOrderFirst;
 
+  /// No description provided for @guestBillAfterServed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can request the bill after the waiter marks your order served.'**
+  String get guestBillAfterServed;
+
   /// No description provided for @errNoOpenShift.
   ///
   /// In en, this message translates to:
