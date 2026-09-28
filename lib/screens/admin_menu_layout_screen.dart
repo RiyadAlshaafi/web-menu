@@ -70,8 +70,6 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                 icon: const Icon(Icons.save_outlined, size: 16),
                 label: Text(context.l10n.layoutSaveMenu, style: const TextStyle(fontWeight: FontWeight.w700)),
                 style: FilledButton.styleFrom(
-                  backgroundColor: CafeColors.terracotta,
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 ),
@@ -187,8 +185,6 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
               icon: const Icon(Icons.check, size: 16),
               label: Text(context.l10n.layoutCreateCategory, style: const TextStyle(fontWeight: FontWeight.w700)),
               style: FilledButton.styleFrom(
-                backgroundColor: CafeColors.terracotta,
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -429,8 +425,6 @@ class _CategoryCardState extends State<_CategoryCard> {
                     icon: const Icon(Icons.add, size: 14),
                     label: Text(context.l10n.layoutAddDish, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                     style: FilledButton.styleFrom(
-                      backgroundColor: inspecting ? CafeColors.terracotta : const Color(0xFFF8EFEA),
-                      foregroundColor: inspecting ? Colors.white : CafeColors.terracotta,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -844,8 +838,6 @@ Future<void> showAddDishDialog(
                           icon: const Icon(Icons.add, size: 16),
                           label: Text(existing == null ? context.l10n.layoutSaveAndAddDish : context.l10n.layoutSaveDish, style: const TextStyle(fontWeight: FontWeight.w700)),
                           style: FilledButton.styleFrom(
-                            backgroundColor: CafeColors.terracotta,
-                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),

@@ -152,20 +152,22 @@ class CafeStore extends ChangeNotifier {
 
   String get logoUrl => (cafe['logoUrl'] as String?)?.trim() ?? '';
 
+  static const defaultMenuOrigin = 'https://web-menu-akakus.vercel.app';
+
   String guestLink(String slug) {
-    var base = (cafe['publicMenuUrl'] as String?)?.trim() ?? '';
-    if (base.isEmpty && kIsWeb) {
+    var base = '';
+    if (kIsWeb) {
       final origin = Uri.base.origin;
       if (origin.startsWith('http')) base = origin;
     }
-    if (base.isEmpty) base = const String.fromEnvironment('PUBLIC_MENU_URL');
+    if (base.isEmpty) base = const String.fromEnvironment('PUBLIC_MENU_URL', defaultValue: defaultMenuOrigin);
     base = base.trim().replaceFirst(RegExp(r'/+$'), '');
     if (base.endsWith('/rest/v1')) base = base.substring(0, base.length - 7).replaceFirst(RegExp(r'/+$'), '');
-    if (base.isEmpty || !base.startsWith('http')) return '';
+    if (!base.startsWith('http')) return '';
     return '$base/#/t/$slug';
   }
 
-  Future<void> saveCompany({required String name, String? logoDataUrl, bool removeLogo = false, String? publicMenuUrl}) async {
+  Future<void> saveCompany({required String name, String? logoDataUrl, bool removeLogo = false}) async {
     var logo = logoUrl;
     if (removeLogo) {
       logo = '';
@@ -176,18 +178,18 @@ class CafeStore extends ChangeNotifier {
       ...cafe,
       'name': name.trim(),
       'logoUrl': logo,
-      if (publicMenuUrl != null) 'publicMenuUrl': publicMenuUrl.trim(),
     };
     await db.writeCafe(cafe);
     notifyListeners();
   }
 
-  Future<void> saveAppearance({required Color header, required Color sidebar, required Color background}) async {
+  Future<void> saveAppearance({required Color header, required Color sidebar, required Color background, required Color button}) async {
     cafe = {
       ...cafe,
       'headerColor': CafeColors.toHex(header),
       'sidebarColor': CafeColors.toHex(sidebar),
       'backgroundColor': CafeColors.toHex(background),
+      'buttonColor': CafeColors.toHex(button),
     };
     await db.writeCafe(cafe);
     notifyListeners();
@@ -197,6 +199,7 @@ class CafeStore extends ChangeNotifier {
         header: CafeColors.defaultHeader,
         sidebar: CafeColors.defaultSidebar,
         background: CafeColors.defaultBackground,
+        button: CafeColors.defaultButton,
       );
   String get databasePath => db.databasePath;
   bool get isSqlite => db.isSqlite;

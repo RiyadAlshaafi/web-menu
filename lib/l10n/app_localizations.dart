@@ -1160,6 +1160,12 @@ abstract class AppLocalizations {
   /// **'Background color'**
   String get catalogBackgroundColor;
 
+  /// No description provided for @catalogButtonColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Button color'**
+  String get catalogButtonColor;
+
   /// No description provided for @catalogSaveColors.
   ///
   /// In en, this message translates to:

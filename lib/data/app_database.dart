@@ -219,10 +219,10 @@ class AppDatabase {
         _cafe = {
           'name': restaurant['name'] ?? '',
           'logoUrl': restaurant['logo_url'] ?? '',
-          'publicMenuUrl': restaurant['public_menu_url'] ?? '',
           'headerColor': restaurant['header_color'] ?? '',
           'sidebarColor': restaurant['sidebar_color'] ?? '',
           'backgroundColor': restaurant['background_color'] ?? '',
+          'buttonColor': restaurant['button_color'] ?? '',
           'serviceChargeRate': (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
           'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
         };
@@ -388,10 +388,10 @@ class AppDatabase {
     await client!.from('restaurants').update({
       'name': cafe['name'] ?? '',
       'logo_url': cafe['logoUrl'] ?? '',
-      'public_menu_url': cafe['publicMenuUrl'] ?? '',
       'header_color': cafe['headerColor'] ?? '',
       'sidebar_color': cafe['sidebarColor'] ?? '',
       'background_color': cafe['backgroundColor'] ?? '',
+      'button_color': cafe['buttonColor'] ?? '',
       'service_charge_rate': cafe['serviceChargeRate'] ?? 0.10,
       'tax_rate': cafe['taxRate'] ?? 0,
       'locale': _locale,

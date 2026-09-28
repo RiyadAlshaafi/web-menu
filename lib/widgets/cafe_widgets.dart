@@ -131,8 +131,8 @@ class TerracottaButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: CafeColors.terracotta,
-          foregroundColor: Colors.white,
+          backgroundColor: CafeSurfaces.of(context).button,
+          foregroundColor: CafeSurfaces.of(context).onButton,
           disabledBackgroundColor: CafeColors.terracottaSoft,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),

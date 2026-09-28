@@ -19,29 +19,28 @@ class AdminBrandSettings extends StatefulWidget {
 
 class _AdminBrandSettingsState extends State<AdminBrandSettings> {
   late final TextEditingController name;
-  late final TextEditingController publicUrl;
   String? pendingLogo;
   bool removeLogo = false;
   late Color header;
   late Color sidebar;
   late Color background;
+  late Color button;
 
   @override
   void initState() {
     super.initState();
     final store = context.read<CafeStore>();
     name = TextEditingController(text: (store.cafe['name'] as String?) ?? '');
-    publicUrl = TextEditingController(text: (store.cafe['publicMenuUrl'] as String?) ?? '');
     final surfaces = CafeSurfaces.fromCafe(store.cafe);
     header = surfaces.header;
     sidebar = surfaces.sidebar;
     background = surfaces.background;
+    button = surfaces.button;
   }
 
   @override
   void dispose() {
     name.dispose();
-    publicUrl.dispose();
     super.dispose();
   }
 
@@ -81,8 +80,6 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
               ),
               const SizedBox(height: 12),
               TextField(controller: name, decoration: InputDecoration(labelText: context.l10n.catalogCafeName)),
-              const SizedBox(height: 8),
-              TextField(controller: publicUrl, decoration: InputDecoration(labelText: context.l10n.catalogPublicMenuUrl, hintText: context.l10n.catalogPublicMenuUrlHint)),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
@@ -92,11 +89,9 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
                       name: name.text,
                       logoDataUrl: pendingLogo != null && pendingLogo!.startsWith('data:') ? pendingLogo : null,
                       removeLogo: removeLogo,
-                      publicMenuUrl: publicUrl.text,
                     );
                     if (mounted) setState(() => pendingLogo = null);
                   },
-                  style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                   child: Text(context.l10n.catalogSaveCompany),
                 ),
               ),
@@ -113,6 +108,7 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
               _swatch(context.l10n.catalogHeaderColor, header, (color) => setState(() => header = color)),
               _swatch(context.l10n.catalogSidebarColor, sidebar, (color) => setState(() => sidebar = color)),
               _swatch(context.l10n.catalogBackgroundColor, background, (color) => setState(() => background = color)),
+              _swatch(context.l10n.catalogButtonColor, button, (color) => setState(() => button = color)),
               const SizedBox(height: 8),
               Container(
                 height: 72,
@@ -126,11 +122,19 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
                       child: Text('Aa', style: TextStyle(color: CafeColors.contrastOn(sidebar), fontWeight: FontWeight.w800)),
                     ),
                     Expanded(
-                      child: Container(
+                      child: ColoredBox(
                         color: header,
-                        alignment: Alignment.center,
-                        child: Text(name.text.trim().isEmpty ? store.cafeName : name.text.trim(), style: TextStyle(color: CafeColors.contrastOn(header), fontWeight: FontWeight.w800)),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(name.text.trim().isEmpty ? store.cafeName : name.text.trim(), style: TextStyle(color: CafeColors.contrastOn(header), fontWeight: FontWeight.w800)),
+                        ),
                       ),
+                    ),
+                    Container(
+                      width: 72,
+                      color: button,
+                      alignment: Alignment.center,
+                      child: Text('Aa', style: TextStyle(color: CafeColors.contrastOn(button), fontWeight: FontWeight.w800)),
                     ),
                   ],
                 ),
@@ -147,14 +151,14 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
                         header = CafeColors.defaultHeader;
                         sidebar = CafeColors.defaultSidebar;
                         background = CafeColors.defaultBackground;
+                        button = CafeColors.defaultButton;
                       });
                     },
                     child: Text(context.l10n.catalogResetColors),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: () => store.saveAppearance(header: header, sidebar: sidebar, background: background),
-                    style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
+                    onPressed: () => store.saveAppearance(header: header, sidebar: sidebar, background: background, button: button),
                     child: Text(context.l10n.catalogSaveColors),
                   ),
                 ],

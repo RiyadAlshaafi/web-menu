@@ -177,6 +177,7 @@
   "catalogHeaderColor": "لون الترويسة",
   "catalogSidebarColor": "لون الشريط الجانبي",
   "catalogBackgroundColor": "لون الخلفية",
+  "catalogButtonColor": "لون الأزرار",
   "catalogSaveColors": "حفظ الألوان",
   "catalogResetColors": "إعادة الضبط",
   "catalogSystemLanguage": "لغة النظام",

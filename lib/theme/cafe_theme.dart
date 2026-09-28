@@ -18,9 +18,10 @@ class CafeColors {
   static const alert = Color(0xFFBA1A1A);
   static const sidebar = Color(0xFFFFFFFF);
 
-  static const defaultHeader = Color(0xFF9A3C1D);
+  static const defaultHeader = Color(0xFF1B3A4B);
   static const defaultSidebar = Color(0xFFFFFFFF);
-  static const defaultBackground = Color(0xFFFDF9F2);
+  static const defaultBackground = Color(0xFFE7EEF2);
+  static const defaultButton = Color(0xFFBA5333);
 
   static Color contrastOn(Color color) => color.computeLuminance() > 0.55 ? ink : const Color(0xFFFFFFFF);
 
@@ -43,20 +44,24 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
     required this.header,
     required this.sidebar,
     required this.background,
+    required this.button,
   });
 
   final Color header;
   final Color sidebar;
   final Color background;
+  final Color button;
 
   Color get onHeader => CafeColors.contrastOn(header);
   Color get onSidebar => CafeColors.contrastOn(sidebar);
   Color get onBackground => CafeColors.contrastOn(background);
+  Color get onButton => CafeColors.contrastOn(button);
 
   static const defaults = CafeSurfaces(
     header: CafeColors.defaultHeader,
     sidebar: CafeColors.defaultSidebar,
     background: CafeColors.defaultBackground,
+    button: CafeColors.defaultButton,
   );
 
   static CafeSurfaces of(BuildContext context) => Theme.of(context).extension<CafeSurfaces>() ?? defaults;
@@ -65,13 +70,15 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
         header: CafeColors.parseHex(cafe['headerColor'] as String?, CafeColors.defaultHeader),
         sidebar: CafeColors.parseHex(cafe['sidebarColor'] as String?, CafeColors.defaultSidebar),
         background: CafeColors.parseHex(cafe['backgroundColor'] as String?, CafeColors.defaultBackground),
+        button: CafeColors.parseHex(cafe['buttonColor'] as String?, CafeColors.defaultButton),
       );
 
   @override
-  CafeSurfaces copyWith({Color? header, Color? sidebar, Color? background}) => CafeSurfaces(
+  CafeSurfaces copyWith({Color? header, Color? sidebar, Color? background, Color? button}) => CafeSurfaces(
         header: header ?? this.header,
         sidebar: sidebar ?? this.sidebar,
         background: background ?? this.background,
+        button: button ?? this.button,
       );
 
   @override
@@ -81,6 +88,7 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
       header: Color.lerp(header, other.header, t) ?? header,
       sidebar: Color.lerp(sidebar, other.sidebar, t) ?? sidebar,
       background: Color.lerp(background, other.background, t) ?? background,
+      button: Color.lerp(button, other.button, t) ?? button,
     );
   }
 }
@@ -124,14 +132,38 @@ class CafeTheme {
       bodyColor: CafeColors.ink,
       displayColor: CafeColors.ink,
     );
+    final onButton = surfaces.onButton;
+    final scheme = ColorScheme.fromSeed(seedColor: surfaces.button, surface: CafeColors.paper).copyWith(
+      primary: surfaces.button,
+      onPrimary: onButton,
+    );
+    final buttonShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: CafeColors.terracotta,
-        surface: CafeColors.cream,
-      ),
+      colorScheme: scheme,
       scaffoldBackgroundColor: surfaces.background,
+      canvasColor: surfaces.background,
       extensions: [surfaces],
+      appBarTheme: AppBarTheme(
+        backgroundColor: surfaces.header,
+        foregroundColor: surfaces.onHeader,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: onButton, shape: buttonShape),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: onButton, shape: buttonShape),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(backgroundColor: surfaces.button, foregroundColor: onButton),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(foregroundColor: surfaces.button, side: BorderSide(color: surfaces.button), shape: buttonShape),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: surfaces.button),
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CafePageTransitionsBuilder(),

@@ -49,7 +49,6 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                 onPressed: () => _showCreateDiscount(context, store),
                 icon: const Icon(Icons.add, size: 16),
                 label: Text(context.l10n.catalogNewDiscount),
-                style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
               ),
             ],
           ),
@@ -226,7 +225,6 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                           },
                           icon: const Icon(Icons.check, size: 16),
                           label: Text(context.l10n.catalogApplyDiscount),
-                          style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                         ),
                       ),
                     ],
@@ -434,7 +432,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 alignment: Alignment.centerRight,
                 child: FilledButton(
                   onPressed: () {},
-                  style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                   child: Text(context.l10n.catalogSaveLanguage),
                 ),
               ),
@@ -456,7 +453,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 alignment: Alignment.centerRight,
                 child: FilledButton(
                   onPressed: () => context.mounted ? ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.catalogPasswordUpdated))) : null,
-                  style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                   child: Text(context.l10n.catalogUpdatePassword),
                 ),
               ),
@@ -520,7 +516,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     cashierName.clear();
                     cashierPin.clear();
                   },
-                  style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                   child: Text(context.l10n.catalogSaveCashier),
                 ),
               ),

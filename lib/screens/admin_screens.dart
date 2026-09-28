@@ -210,7 +210,26 @@ class AdminShell extends StatelessWidget {
                     ],
                   ),
                 ),
-                Expanded(child: child),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Material(
+                        color: surfaces.header,
+                        child: SizedBox(
+                          height: 56,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(store.cafeName, style: TextStyle(color: surfaces.onHeader, fontWeight: FontWeight.w800, fontSize: 18)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(child: ColoredBox(color: surfaces.background, child: child)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -395,7 +414,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                   const SizedBox(height: 8),
                                   Text(context.l10n.adminScanToOrderPay, style: const TextStyle(fontWeight: FontWeight.w700)),
                                   Text(
-                                    store.guestLink(table.qrSlug).isEmpty ? 'Set the public menu URL in Settings so phones can open this QR.' : context.l10n.adminNoAppInstall,
+                                    context.l10n.adminNoAppInstall,
                                     style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
                                     textAlign: TextAlign.center,
                                   ),

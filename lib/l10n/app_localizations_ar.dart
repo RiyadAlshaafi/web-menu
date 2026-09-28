@@ -579,6 +579,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogBackgroundColor => 'لون الخلفية';
 
   @override
+  String get catalogButtonColor => 'لون الأزرار';
+
+  @override
   String get catalogSaveColors => 'حفظ الألوان';
 
   @override

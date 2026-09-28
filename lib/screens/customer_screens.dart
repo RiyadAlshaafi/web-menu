@@ -53,7 +53,7 @@ class CustomerShell {
       height: 64,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       decoration: BoxDecoration(
-        color: CafeColors.cream.withValues(alpha: 0.92),
+        color: CafeSurfaces.of(context).sidebar,
         border: const Border(top: BorderSide(color: Color(0x66E6E2DC))),
       ),
       child: Row(
@@ -343,7 +343,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                         if (sent && context.mounted) context.go('/t/${widget.tableSlug}/cart');
                                       },
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: CafeColors.terracottaDark,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: store.isSendingOrder(table.id)
@@ -814,7 +813,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                           }
                                         }
                                       },
-                                style: FilledButton.styleFrom(backgroundColor: CafeColors.terracottaDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                                style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                                 icon: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.restaurant, size: 18),
                                 label: Text(sending ? context.l10n.guestSendingOrder : context.l10n.guestConfirmSendKitchen),
                               ),

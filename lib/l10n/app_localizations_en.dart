@@ -580,6 +580,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogBackgroundColor => 'Background color';
 
   @override
+  String get catalogButtonColor => 'Button color';
+
+  @override
   String get catalogSaveColors => 'Save colors';
 
   @override

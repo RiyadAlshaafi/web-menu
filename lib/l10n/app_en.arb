@@ -273,6 +273,7 @@
   "catalogHeaderColor": "Header color",
   "catalogSidebarColor": "Sidebar color",
   "catalogBackgroundColor": "Background color",
+  "catalogButtonColor": "Button color",
   "catalogSaveColors": "Save colors",
   "catalogResetColors": "Reset to default",
   "catalogSystemLanguage": "System Language",
