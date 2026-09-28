@@ -34,6 +34,7 @@
   "errSelectCashier": "اختر ملف أمين الصندوق.",
   "errEnterPin": "أدخل رمز PIN المكوّن من 4 أرقام.",
   "errPinMismatch": "رمز PIN لا يطابق {name}.",
+  "errPinLocked": "محاولات PIN خاطئة كثيرة لـ {name}. حاول مرة أخرى بعد {minutes} دقيقة.",
   "errCashierSignInFirst": "سجّل الدخول كأمين صندوق أولاً.",
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",
   "errNoOpenShift": "لا توجد وردية مفتوحة.",

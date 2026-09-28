@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'PIN does not match {name}.'**
   String errPinMismatch(String name);
 
+  /// No description provided for @errPinLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong PINs for {name}. Try again in {minutes} min.'**
+  String errPinLocked(String name, int minutes);
+
   /// No description provided for @errCashierSignInFirst.
   ///
   /// In en, this message translates to:

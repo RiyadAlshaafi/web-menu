@@ -115,6 +115,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String errPinLocked(String name, int minutes) {
+    return 'Too many wrong PINs for $name. Try again in $minutes min.';
+  }
+
+  @override
   String get errCashierSignInFirst => 'Sign in as a cashier first.';
 
   @override

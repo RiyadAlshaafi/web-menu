@@ -366,7 +366,12 @@ class CafeStore extends ChangeNotifier {
     if (result['ok'] != true) {
       final member = cashiers.where((item) => item.id == selectedCashierId);
       final name = member.isEmpty ? '' : member.first.name;
-      loginError = result['error'] as String? ?? l10n.errPinMismatch(name);
+      if (result['code'] == 'locked') {
+        final seconds = (result['retry_after_seconds'] as num?)?.toInt() ?? 900;
+        loginError = l10n.errPinLocked(name, (seconds / 60).ceil());
+      } else {
+        loginError = result['error'] as String? ?? l10n.errPinMismatch(name);
+      }
       pinBuffer = '';
       notifyListeners();
       return false;

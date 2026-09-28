@@ -47,6 +47,17 @@
       }
     }
   },
+  "errPinLocked": "Too many wrong PINs for {name}. Try again in {minutes} min.",
+  "@errPinLocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "errCashierSignInFirst": "Sign in as a cashier first.",
   "errNoOpenBill": "No open bill for this table.",
   "errNoOpenShift": "No open shift.",

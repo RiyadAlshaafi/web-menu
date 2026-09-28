@@ -115,6 +115,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String errPinLocked(String name, int minutes) {
+    return 'محاولات PIN خاطئة كثيرة لـ $name. حاول مرة أخرى بعد $minutes دقيقة.';
+  }
+
+  @override
   String get errCashierSignInFirst => 'سجّل الدخول كأمين صندوق أولاً.';
 
   @override
