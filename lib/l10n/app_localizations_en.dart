@@ -126,6 +126,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errNoOpenBill => 'No open bill for this table.';
 
   @override
+  String get guestOrderFirst => 'Place an order first.';
+
+  @override
   String get errNoOpenShift => 'No open shift.';
 
   @override

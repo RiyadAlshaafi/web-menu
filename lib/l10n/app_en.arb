@@ -60,6 +60,7 @@
   },
   "errCashierSignInFirst": "Sign in as a cashier first.",
   "errNoOpenBill": "No open bill for this table.",
+  "guestOrderFirst": "Place an order first.",
   "errNoOpenShift": "No open shift.",
   "authGuestCashier": "Guest Cashier",
   "authPosTerminalSubtitle": "Point of Sale\nTerminal",

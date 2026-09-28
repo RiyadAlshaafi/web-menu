@@ -497,11 +497,19 @@ class AppDatabase {
     return next;
   }
 
-  Future<String?> sendTableCart() async {
+  Future<String?> sendTableCart(String tableId) async {
     if (client == null) return 'Supabase is not configured.';
     await _cartWrites;
     _applyHeaders();
-    final raw = await client!.rpc('send_table_cart');
+    final cart = _carts[tableId];
+    final raw = await client!.rpc('send_table_cart', params: {
+      'p_qr_slug': guestSlug,
+      'p_lines': [
+        for (final line in cart?.lines ?? const <OrderLine>[])
+          if (line.menuItemId.isNotEmpty && line.qty > 0)
+            {'menu_item_id': line.menuItemId, 'qty': line.qty},
+      ],
+    });
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] != true) return result['error'] as String? ?? 'Order was not sent.';
     await refreshFromDisk();

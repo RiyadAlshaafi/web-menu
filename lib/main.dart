@@ -57,7 +57,18 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
             path.startsWith('/admin/setup') ||
             path.startsWith('/admin/forgot') ||
             path.startsWith('/admin/password');
-        if (guest || auth) return null;
+        if (guest) {
+          final slug = state.pathParameters['tableId'] ??
+              (path.startsWith('/t/') && path.length > 3 ? path.split('/')[2] : null);
+          if (slug != null && slug.isNotEmpty && (path.endsWith('/cart') || path.endsWith('/bill'))) {
+            final table = widget.store.tableBySlug(slug);
+            if (table != null && widget.store.openOrderFor(table.id) == null) {
+              return '/t/$slug';
+            }
+          }
+          return null;
+        }
+        if (auth) return null;
         if (path.startsWith('/pos') && widget.store.authKind != AuthKind.cashier) {
           return '/login';
         }

@@ -636,7 +636,7 @@ class CafeStore extends ChangeNotifier {
     }
     _pendingWrites += 1;
     try {
-      final error = await db.sendTableCart();
+      final error = await db.sendTableCart(tableId);
       if (error != null) throw StateError(error);
       _hydrateOperational();
     } finally {
@@ -648,11 +648,14 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> requestBill(String tableId) async {
-    try {
-      await sendCartToKitchen(tableId);
-    } catch (error, stack) {
-      debugPrint('Kitchen send before bill request failed: $error\n$stack');
+    if (cartFor(tableId).lines.isNotEmpty) {
+      try {
+        await sendCartToKitchen(tableId);
+      } catch (error, stack) {
+        debugPrint('Kitchen send before bill request failed: $error\n$stack');
+      }
     }
+    if (openOrderFor(tableId) == null) return;
     final table = tableById(tableId);
     table.status = TableStatus.billRequested;
     final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);

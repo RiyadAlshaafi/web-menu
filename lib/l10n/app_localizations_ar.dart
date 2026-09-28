@@ -126,6 +126,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errNoOpenBill => 'لا توجد فاتورة مفتوحة لهذه الطاولة.';
 
   @override
+  String get guestOrderFirst => 'اطلب أولاً.';
+
+  @override
   String get errNoOpenShift => 'لا توجد وردية مفتوحة.';
 
   @override

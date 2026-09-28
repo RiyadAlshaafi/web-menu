@@ -37,6 +37,7 @@
   "errPinLocked": "محاولات PIN خاطئة كثيرة لـ {name}. حاول مرة أخرى بعد {minutes} دقيقة.",
   "errCashierSignInFirst": "سجّل الدخول كأمين صندوق أولاً.",
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",
+  "guestOrderFirst": "اطلب أولاً.",
   "errNoOpenShift": "لا توجد وردية مفتوحة.",
   "authGuestCashier": "كاشير ضيف",
   "authPosTerminalSubtitle": "نقطة البيع\nالطرفية",

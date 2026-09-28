@@ -11,21 +11,30 @@ import '../widgets/cafe_widgets.dart';
 
 class CustomerShell {
   static Widget nav(BuildContext context, String tableId, String current) {
-    Widget item(IconData icon, String label, String path) {
+    final store = context.watch<CafeStore>();
+    final table = store.tableBySlug(tableId);
+    final hasOrder = table != null && store.openOrderFor(table.id) != null;
+    Widget item(IconData icon, String label, String path, {bool enabled = true}) {
       final active = current == path;
       return InkWell(
-        onTap: () => context.go(path),
+        onTap: () {
+          if (!enabled) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderFirst)));
+            return;
+          }
+          context.go(path);
+        },
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: active ? CafeColors.terracottaDark : CafeColors.inkMuted),
+            Icon(icon, size: 22, color: !enabled ? CafeColors.line : (active ? CafeColors.terracottaDark : CafeColors.inkMuted)),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: active ? FontWeight.w800 : FontWeight.w500,
-                color: active ? CafeColors.terracottaDark : CafeColors.inkMuted,
+                color: !enabled ? CafeColors.line : (active ? CafeColors.terracottaDark : CafeColors.inkMuted),
               ),
             ),
             if (active)
@@ -51,10 +60,11 @@ class CustomerShell {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           item(Icons.restaurant_menu, context.l10n.guestNavMenu, '/t/$tableId'),
-          item(Icons.receipt_long, context.l10n.guestTableBill, '/t/$tableId/cart'),
+          item(Icons.receipt_long, context.l10n.guestTableBill, '/t/$tableId/cart', enabled: hasOrder),
           InkWell(
             onTap: () {
-              context.read<CafeStore>().callStaff(tableId);
+              if (table == null) return;
+              store.callStaff(table.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(context.l10n.guestRequestSent)),
               );
@@ -320,7 +330,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () => context.go('/t/${widget.tableSlug}/cart'),
+                                onPressed: store.openOrderFor(table.id) == null
+                                    ? null
+                                    : () => context.go('/t/${widget.tableSlug}/cart'),
                                 child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
                               ),
                               FilledButton(
@@ -794,8 +806,16 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                           navigator.pop(false);
                                           return;
                                         }
-                                        await store.sendCartToKitchen(tableId);
-                                        navigator.pop(true);
+                                        try {
+                                          await store.sendCartToKitchen(tableId);
+                                          navigator.pop(true);
+                                        } catch (error) {
+                                          sending = false;
+                                          setLocal(() {});
+                                          if (sheetContext.mounted) {
+                                            ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text('$error')));
+                                          }
+                                        }
                                       },
                                 style: FilledButton.styleFrom(backgroundColor: CafeColors.terracottaDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                                 icon: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.restaurant, size: 18),
@@ -1200,10 +1220,11 @@ class CustomerBillScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                TerracottaButton(
-                  label: context.l10n.guestWannaCheckIn,
-                  onPressed: () => store.requestBill(table.id),
-                ),
+                if (order != null)
+                  TerracottaButton(
+                    label: context.l10n.guestWannaCheckIn,
+                    onPressed: () => store.requestBill(table.id),
+                  ),
               ],
             ),
           ),

@@ -320,6 +320,12 @@ abstract class AppLocalizations {
   /// **'No open bill for this table.'**
   String get errNoOpenBill;
 
+  /// No description provided for @guestOrderFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Place an order first.'**
+  String get guestOrderFirst;
+
   /// No description provided for @errNoOpenShift.
   ///
   /// In en, this message translates to:
