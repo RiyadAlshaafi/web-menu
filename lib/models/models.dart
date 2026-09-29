@@ -239,6 +239,7 @@ class OrderLine {
     required this.name,
     required this.qty,
     required this.unitPrice,
+    this.listUnitPrice,
     this.round = 1,
   });
 
@@ -246,15 +247,27 @@ class OrderLine {
   final String name;
   int qty;
   final double unitPrice;
+  final double? listUnitPrice;
   final int round;
 
   double get total => qty * unitPrice;
+
+  /// Cash taken off this line. Uses the menu price frozen when the line was saved
+  /// and the charged unit price from the same stamp as checkout.
+  double get discountAmount {
+    final list = listUnitPrice;
+    if (list == null) return 0;
+    final off = (list - unitPrice) * qty;
+    if (off <= 0) return 0;
+    return (off * 100).round() / 100;
+  }
 
   factory OrderLine.fromJson(Map<String, dynamic> json) => OrderLine(
         menuItemId: json['menuItemId'] as String,
         name: json['name'] as String,
         qty: json['qty'] as int,
         unitPrice: (json['unitPrice'] as num).toDouble(),
+        listUnitPrice: (json['listUnitPrice'] as num?)?.toDouble(),
         round: json['round'] as int? ?? 1,
       );
 
@@ -263,6 +276,7 @@ class OrderLine {
         'name': name,
         'qty': qty,
         'unitPrice': unitPrice,
+        if (listUnitPrice != null) 'listUnitPrice': listUnitPrice,
         'round': round,
       };
 }

@@ -14,7 +14,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
 
-enum _Sort { when, table, cashier, items, subtotal, discount, tax, total, method, status }
+enum _Sort { when, table, cashier, items, subtotal, discount, total, method, status }
 
 class SalesLogScreen extends StatefulWidget {
   const SalesLogScreen({super.key, this.ownSalesOnly = false});
@@ -169,7 +169,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         cell(context.l10n.salesColItems, _Sort.items),
         cell(context.l10n.salesColSubtotal, _Sort.subtotal),
         cell(context.l10n.salesColDiscount, _Sort.discount),
-        cell(context.l10n.salesColTax, _Sort.tax),
         cell(context.l10n.salesColTotal, _Sort.total),
         cell(context.l10n.salesColMethod, _Sort.method),
         cell(context.l10n.salesColStatus, _Sort.status),
@@ -189,7 +188,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
           cell('${row.itemCount}'),
           cell(store.currency.format(row.subtotal)),
           cell(store.currency.format(row.discount)),
-          cell(store.currency.format(row.tax)),
           cell(store.currency.format(row.total)),
           cell(row.payment.method),
           Expanded(
@@ -253,7 +251,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         _Sort.items => a.itemCount.compareTo(b.itemCount),
         _Sort.subtotal => a.subtotal.compareTo(b.subtotal),
         _Sort.discount => a.discount.compareTo(b.discount),
-        _Sort.tax => a.tax.compareTo(b.tax),
         _Sort.total => a.total.compareTo(b.total),
         _Sort.method => a.payment.method.compareTo(b.payment.method),
         _Sort.status => 0,
@@ -266,16 +263,17 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   _Sale _sale(CafeStore store, Payment payment) {
     final table = store.tables.where((item) => item.id == payment.tableId);
     final order = store.orders.where((item) => item.id == payment.orderId);
-    final subtotal = order.isEmpty ? payment.totalDue : order.first.subtotal;
+    final lines = order.isEmpty ? const <OrderLine>[] : order.first.lines;
+    final discount = lines.fold<double>(0, (sum, line) => sum + line.discountAmount);
+    final charged = lines.fold<double>(0, (sum, line) => sum + line.total);
     return _Sale(
       payment: payment,
       tableNumber: table.isEmpty ? '' : table.first.number,
       cashierName: _cashierName(store, payment.cashierId),
       itemCount: order.isEmpty ? 0 : order.first.itemCount,
-      items: order.isEmpty ? '' : order.first.lines.map((line) => '${line.qty}× ${line.name}').join(', '),
-      subtotal: subtotal,
-      discount: 0,
-      tax: 0,
+      lines: lines,
+      subtotal: charged + discount,
+      discount: discount,
       total: payment.totalDue,
     );
   }
@@ -300,11 +298,20 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
               Text(row.payment.id, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
               const SizedBox(height: 8),
-              Text(row.items.isEmpty ? '${row.itemCount}' : row.items),
+              if (row.lines.isEmpty)
+                Text('${row.itemCount}')
+              else
+                ...row.lines.map((line) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        '${line.qty}× ${line.name}  ${store.currency.format(line.unitPrice)}'
+                        '${line.discountAmount > 0 ? '  −${store.currency.format(line.discountAmount)}' : ''}'
+                        '  ${store.currency.format(line.total)}',
+                      ),
+                    )),
               const Divider(),
               Text('${context.l10n.salesColSubtotal}: ${store.currency.format(row.subtotal)}'),
               Text('${context.l10n.salesColDiscount}: ${store.currency.format(row.discount)}'),
-              Text('${context.l10n.salesColTax}: ${store.currency.format(row.tax)}'),
               Text('${context.l10n.salesColTotal}: ${store.currency.format(row.total)}', style: const TextStyle(fontWeight: FontWeight.w800)),
               Text('${context.l10n.salesColMethod}: ${row.payment.method}'),
               Text('${context.l10n.salesColStatus}: ${context.l10n.salesPaid}'),
@@ -317,7 +324,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<_Sale> rows) async {
-    final buffer = StringBuffer('date,table,cashier,items,subtotal,discount,tax,total,method,status,id\n');
+    final buffer = StringBuffer('date,table,cashier,items,subtotal,discount,total,method,status,id\n');
     for (final row in rows) {
       buffer.writeln([
         DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
@@ -326,7 +333,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.itemCount,
         row.subtotal,
         row.discount,
-        row.tax,
         row.total,
         row.payment.method,
         'paid',
@@ -348,7 +354,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               pw.Text('Sales Log', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 8),
               pw.TableHelper.fromTextArray(
-                headers: const ['When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Tax', 'Total', 'Method', 'Status'],
+                headers: const ['When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
                 data: rows
                     .map((row) => [
                           DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
@@ -357,7 +363,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                           '${row.itemCount}',
                           store.currency.format(row.subtotal),
                           store.currency.format(row.discount),
-                          store.currency.format(row.tax),
                           store.currency.format(row.total),
                           row.payment.method,
                           'Paid',
@@ -379,10 +384,9 @@ class _Sale {
     required this.tableNumber,
     required this.cashierName,
     required this.itemCount,
-    required this.items,
+    required this.lines,
     required this.subtotal,
     required this.discount,
-    required this.tax,
     required this.total,
   });
 
@@ -390,9 +394,8 @@ class _Sale {
   final String tableNumber;
   final String cashierName;
   final int itemCount;
-  final String items;
+  final List<OrderLine> lines;
   final double subtotal;
   final double discount;
-  final double tax;
   final double total;
 }

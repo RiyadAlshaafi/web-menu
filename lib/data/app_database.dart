@@ -310,6 +310,7 @@ class AppDatabase {
               name: line['name'] as String? ?? '',
               qty: (line['qty'] as num?)?.toInt() ?? 1,
               unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
+              listUnitPrice: (line['list_unit_price'] as num?)?.toDouble(),
               round: (line['round'] as num?)?.toInt() ?? 1,
             )).toList(),
       );
