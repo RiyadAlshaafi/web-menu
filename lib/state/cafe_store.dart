@@ -215,6 +215,16 @@ class CafeStore extends ChangeNotifier {
 
   bool canOrderItem(MenuItem item) => item.available && !item.soldOut;
 
+  Future<String?> setItemsAvailable(Iterable<String> ids, bool available) async {
+    String? error;
+    for (final id in ids) {
+      error = await db.setItemAvailable(id, available);
+      if (error != null) break;
+    }
+    notifyListeners();
+    return error;
+  }
+
   Future<String?> setItemAvailable(String itemId, bool available) async {
     final error = await db.setItemAvailable(itemId, available);
     notifyListeners();
@@ -222,8 +232,12 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<String?> refuseOrderLine(CafeOrder order, OrderLine line) async {
+    final name = line.name;
     order.lines.remove(line);
     await db.writeOrders(orders);
+    await db.noteOrderRefusal(order.id, name);
+    order.awaitingCustomerConfirmation = true;
+    order.refusalNotice = order.refusalNotice.trim().isEmpty ? name : '${order.refusalNotice} $name';
     String? error;
     if (line.menuItemId.isNotEmpty) {
       error = await setItemAvailable(line.menuItemId, false);
@@ -231,6 +245,15 @@ class CafeStore extends ChangeNotifier {
       notifyListeners();
     }
     return error;
+  }
+
+  Future<void> confirmRefusedOrder(String tableId) async {
+    final order = openOrderFor(tableId);
+    if (order == null) return;
+    await db.confirmOrderRefusal(order.id);
+    order.awaitingCustomerConfirmation = false;
+    order.refusalNotice = '';
+    await requestBill(tableId, force: true);
   }
 
   List<MenuItem> get liveMenu {
@@ -751,8 +774,8 @@ class CafeStore extends ChangeNotifier {
     return order != null && order.status == OrderStatus.served && cartFor(tableId).lines.isEmpty;
   }
 
-  Future<void> requestBill(String tableId) async {
-    if (!canRequestBill(tableId)) return;
+  Future<void> requestBill(String tableId, {bool force = false}) async {
+    if (!force && !canRequestBill(tableId)) return;
     final table = tableById(tableId);
     table.status = TableStatus.billRequested;
     final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);

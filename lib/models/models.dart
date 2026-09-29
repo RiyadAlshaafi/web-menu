@@ -291,6 +291,8 @@ class CafeOrder {
     required this.lines,
     this.notes = '',
     this.cashierId,
+    this.awaitingCustomerConfirmation = false,
+    this.refusalNotice = '',
   });
 
   final String id;
@@ -301,6 +303,8 @@ class CafeOrder {
   final List<OrderLine> lines;
   final String notes;
   String? cashierId;
+  bool awaitingCustomerConfirmation;
+  String refusalNotice;
 
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get subtotal => lines.fold(0, (sum, line) => sum + line.total);
@@ -318,6 +322,8 @@ class CafeOrder {
         createdAt: DateTime.parse(json['createdAt'] as String),
         notes: json['notes'] as String? ?? '',
         cashierId: json['cashierId'] as String?,
+        awaitingCustomerConfirmation: json['awaitingCustomerConfirmation'] as bool? ?? false,
+        refusalNotice: json['refusalNotice'] as String? ?? '',
         lines: (json['lines'] as List<dynamic>)
             .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
             .toList(),
@@ -331,6 +337,8 @@ class CafeOrder {
         'createdAt': createdAt.toIso8601String(),
         'notes': notes,
         'cashierId': cashierId,
+        'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
+        'refusalNotice': refusalNotice,
         'lines': lines.map((line) => line.toJson()).toList(),
       };
 }

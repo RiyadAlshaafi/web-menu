@@ -73,6 +73,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSalesLog => 'Sales Log';
 
   @override
+  String get navDishAvailability => 'Dish availability';
+
+  @override
+  String get dishSearchHint => 'Search dishes';
+
+  @override
+  String get dishFilterAll => 'All';
+
+  @override
+  String get dishFilterActive => 'Active';
+
+  @override
+  String get dishFilterInactive => 'Inactive';
+
+  @override
+  String get dishAllCategories => 'All categories';
+
+  @override
+  String get dishInactive => 'Inactive';
+
+  @override
+  String get dishActivateAll => 'Activate all';
+
+  @override
+  String get dishDeactivateAll => 'Deactivate all';
+
+  @override
+  String get dishBulkTitle => 'Update this category?';
+
+  @override
+  String dishBulkMessage(String category) {
+    return 'This changes every dish in $category.';
+  }
+
+  @override
   String get salesSearchHint => 'Search table, cashier, or transaction';
 
   @override
@@ -960,6 +995,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierItemRefused => 'Item removed — marked as unavailable';
+
+  @override
+  String guestItemRemoved(String name) {
+    return 'Item removed: $name — currently unavailable.';
+  }
+
+  @override
+  String get guestConfirmRequestBill => 'Confirm and request bill';
+
+  @override
+  String get cashierWaitingCustomerConfirm =>
+      'Waiting for the table to confirm the updated order.';
+
+  @override
+  String get cashierSettleAnyway => 'Settle anyway';
+
+  @override
+  String get cashierSettleAnywayMessage =>
+      'The customer has not confirmed the updated order. Settle anyway?';
 
   @override
   String get cashierNotAvailable => 'Not available';

@@ -306,6 +306,8 @@ class AppDatabase {
         createdAt: DateTime.parse(row['created_at'] as String),
         notes: row['notes'] as String? ?? '',
         cashierId: row['cashier_id'] as String?,
+        awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
+        refusalNotice: row['refusal_notice'] as String? ?? '',
         lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
               menuItemId: line['menu_item_id'] as String? ?? '',
               name: line['name'] as String? ?? '',
@@ -652,6 +654,27 @@ class AppDatabase {
     } catch (error) {
       if (match.isNotEmpty && previous != null) match.first.available = previous;
       return '$error';
+    }
+  }
+
+  Future<void> noteOrderRefusal(String orderId, String itemName) async {
+    if (client == null) return;
+    await client!.rpc('note_order_refusal', params: {'p_order_id': orderId, 'p_item_name': itemName});
+    final match = _orders.where((order) => order.id == orderId);
+    if (match.isNotEmpty) {
+      match.first.awaitingCustomerConfirmation = true;
+      final notice = match.first.refusalNotice.trim();
+      match.first.refusalNotice = notice.isEmpty ? itemName : '$notice $itemName';
+    }
+  }
+
+  Future<void> confirmOrderRefusal(String orderId) async {
+    if (client == null) return;
+    await client!.rpc('confirm_order_refusal', params: {'p_order_id': orderId});
+    final match = _orders.where((order) => order.id == orderId);
+    if (match.isNotEmpty) {
+      match.first.awaitingCustomerConfirmation = false;
+      match.first.refusalNotice = '';
     }
   }
 

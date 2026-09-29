@@ -73,6 +73,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navSalesLog => 'سجل المبيعات';
 
   @override
+  String get navDishAvailability => 'توفر الأطباق';
+
+  @override
+  String get dishSearchHint => 'ابحث عن طبق';
+
+  @override
+  String get dishFilterAll => 'الكل';
+
+  @override
+  String get dishFilterActive => 'نشط';
+
+  @override
+  String get dishFilterInactive => 'غير نشط';
+
+  @override
+  String get dishAllCategories => 'كل الفئات';
+
+  @override
+  String get dishInactive => 'غير نشط';
+
+  @override
+  String get dishActivateAll => 'تفعيل الكل';
+
+  @override
+  String get dishDeactivateAll => 'إيقاف الكل';
+
+  @override
+  String get dishBulkTitle => 'تحديث هذه الفئة؟';
+
+  @override
+  String dishBulkMessage(String category) {
+    return 'سيغيّر هذا كل أطباق $category.';
+  }
+
+  @override
   String get salesSearchHint => 'ابحث بالطاولة أو الكاشير أو رقم العملية';
 
   @override
@@ -958,6 +993,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierItemRefused => 'تمت إزالة الصنف وتمييزه كغير متاح';
+
+  @override
+  String guestItemRemoved(String name) {
+    return 'تمت إزالة الصنف: $name — غير متاح حالياً.';
+  }
+
+  @override
+  String get guestConfirmRequestBill => 'تأكيد وطلب الفاتورة';
+
+  @override
+  String get cashierWaitingCustomerConfirm =>
+      'بانتظار تأكيد الطاولة للطلب المحدّث.';
+
+  @override
+  String get cashierSettleAnyway => 'تسوية على أي حال';
+
+  @override
+  String get cashierSettleAnywayMessage =>
+      'لم يؤكد الزبون الطلب المحدّث. هل تريد التسوية على أي حال؟';
 
   @override
   String get cashierNotAvailable => 'غير متاح';

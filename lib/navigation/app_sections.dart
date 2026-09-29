@@ -51,6 +51,12 @@ class AppSections {
       icon: Icons.receipt_long,
     ),
     AppSection(
+      path: '/admin/dishes',
+      labelOf: (l) => l.navDishAvailability,
+      crumbOf: (l) => l.navDishAvailability,
+      icon: Icons.toggle_on_outlined,
+    ),
+    AppSection(
       path: '/admin/settings',
       labelOf: (l) => l.navSettings,
       crumbOf: (l) => l.navSettings,
@@ -71,6 +77,12 @@ class AppSections {
       labelOf: (l) => l.navFloorOverview,
       crumbOf: (l) => l.navFloorOverview,
       icon: Icons.table_restaurant_outlined,
+    ),
+    AppSection(
+      path: '/pos/dishes',
+      labelOf: (l) => l.navDishAvailability,
+      crumbOf: (l) => l.navDishAvailability,
+      icon: Icons.toggle_on_outlined,
     ),
     AppSection(
       path: '/pos/sales',

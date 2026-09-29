@@ -143,6 +143,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       child: Column(
         children: [
           _guestHeader(table),
+          RefusalNotice(tableId: table.id),
           Expanded(
             child: CustomScrollView(
               slivers: [
@@ -911,6 +912,7 @@ class CustomerCartScreen extends StatelessWidget {
       child: Column(
         children: [
           _cartHeader(context, table),
+          RefusalNotice(tableId: table.id),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -1306,4 +1308,35 @@ BoxDecoration guestHeaderDecoration(BuildContext context) {
     color: surfaces.header,
     border: Border(bottom: BorderSide(color: surfaces.onHeader.withValues(alpha: 0.18))),
   );
+}
+
+class RefusalNotice extends StatelessWidget {
+  const RefusalNotice({super.key, required this.tableId});
+
+  final String tableId;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final order = store.openOrderFor(tableId);
+    if (order == null || !order.awaitingCustomerConfirmation) return const SizedBox.shrink();
+    final button = CafeSurfaces.of(context).button;
+    return Material(
+      color: button.withValues(alpha: 0.12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.l10n.guestItemRemoved(order.refusalNotice), style: TextStyle(color: button, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            FilledButton(
+              onPressed: () => store.confirmRefusedOrder(tableId),
+              child: Text(context.l10n.guestConfirmRequestBill),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

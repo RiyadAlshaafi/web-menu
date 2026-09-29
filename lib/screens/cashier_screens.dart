@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 
 class LanguageButton extends StatelessWidget {
@@ -602,10 +603,28 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
         _cashKv(context.l10n.cashierTotalToCharge, store.currency.format(total)),
         const SizedBox(height: 12),
+        if (order.awaitingCustomerConfirmation)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(context.l10n.cashierWaitingCustomerConfirm, style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w700)),
+          ),
         TerracottaButton(
           label: context.l10n.cashierSettleCloseBill(store.currency.format(total)),
-          onPressed: () => showCashSettleDialog(context, store, order.tableId),
+          onPressed: order.awaitingCustomerConfirmation ? null : () => showCashSettleDialog(context, store, order.tableId),
         ),
+        if (order.awaitingCustomerConfirmation)
+          TextButton(
+            onPressed: () async {
+              final ok = await showCafeConfirmDialog(
+                context,
+                title: context.l10n.cashierSettleAnyway,
+                message: context.l10n.cashierSettleAnywayMessage,
+                confirm: context.l10n.cashierSettleAnyway,
+              );
+              if (ok && context.mounted) showCashSettleDialog(context, store, order.tableId);
+            },
+            child: Text(context.l10n.cashierSettleAnyway),
+          ),
         const SizedBox(height: 8),
         Row(
           children: [

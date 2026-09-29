@@ -224,6 +224,72 @@ abstract class AppLocalizations {
   /// **'Sales Log'**
   String get navSalesLog;
 
+  /// No description provided for @navDishAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish availability'**
+  String get navDishAvailability;
+
+  /// No description provided for @dishSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search dishes'**
+  String get dishSearchHint;
+
+  /// No description provided for @dishFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get dishFilterAll;
+
+  /// No description provided for @dishFilterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get dishFilterActive;
+
+  /// No description provided for @dishFilterInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get dishFilterInactive;
+
+  /// No description provided for @dishAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get dishAllCategories;
+
+  /// No description provided for @dishInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get dishInactive;
+
+  /// No description provided for @dishActivateAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate all'**
+  String get dishActivateAll;
+
+  /// No description provided for @dishDeactivateAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate all'**
+  String get dishDeactivateAll;
+
+  /// No description provided for @dishBulkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update this category?'**
+  String get dishBulkTitle;
+
+  /// No description provided for @dishBulkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This changes every dish in {category}.'**
+  String dishBulkMessage(String category);
+
   /// No description provided for @salesSearchHint.
   ///
   /// In en, this message translates to:
@@ -1837,6 +1903,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Item removed — marked as unavailable'**
   String get cashierItemRefused;
+
+  /// No description provided for @guestItemRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Item removed: {name} — currently unavailable.'**
+  String guestItemRemoved(String name);
+
+  /// No description provided for @guestConfirmRequestBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and request bill'**
+  String get guestConfirmRequestBill;
+
+  /// No description provided for @cashierWaitingCustomerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the table to confirm the updated order.'**
+  String get cashierWaitingCustomerConfirm;
+
+  /// No description provided for @cashierSettleAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle anyway'**
+  String get cashierSettleAnyway;
+
+  /// No description provided for @cashierSettleAnywayMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer has not confirmed the updated order. Settle anyway?'**
+  String get cashierSettleAnywayMessage;
 
   /// No description provided for @cashierNotAvailable.
   ///

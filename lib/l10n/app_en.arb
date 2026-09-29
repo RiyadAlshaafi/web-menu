@@ -27,6 +27,22 @@
   "navTablesQr": "Tables & QR Hub",
   "navSettings": "Settings",
   "navSalesLog": "Sales Log",
+  "navDishAvailability": "Dish availability",
+  "dishSearchHint": "Search dishes",
+  "dishFilterAll": "All",
+  "dishFilterActive": "Active",
+  "dishFilterInactive": "Inactive",
+  "dishAllCategories": "All categories",
+  "dishInactive": "Inactive",
+  "dishActivateAll": "Activate all",
+  "dishDeactivateAll": "Deactivate all",
+  "dishBulkTitle": "Update this category?",
+  "dishBulkMessage": "This changes every dish in {category}.",
+  "@dishBulkMessage": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
   "salesSearchHint": "Search table, cashier, or transaction",
   "salesDateFrom": "From",
   "salesDateTo": "To",
@@ -518,6 +534,16 @@
   "cashierActionUnavailable": "This action is not available on this register.",
   "cashierRefuse": "Refuse",
   "cashierItemRefused": "Item removed — marked as unavailable",
+  "guestItemRemoved": "Item removed: {name} — currently unavailable.",
+  "@guestItemRemoved": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "guestConfirmRequestBill": "Confirm and request bill",
+  "cashierWaitingCustomerConfirm": "Waiting for the table to confirm the updated order.",
+  "cashierSettleAnyway": "Settle anyway",
+  "cashierSettleAnywayMessage": "The customer has not confirmed the updated order. Settle anyway?",
   "cashierNotAvailable": "Not available",
   "cashierMarkUnavailable": "Mark unavailable",
   "cashierMarkAvailable": "Mark available",
