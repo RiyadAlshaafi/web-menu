@@ -162,6 +162,30 @@ class CafeTheme {
         thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? onButton : null),
         trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : null),
       ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : null),
+        checkColor: WidgetStateProperty.all(onButton),
+        side: WidgetStateBorderSide.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.button, width: 2);
+          return const BorderSide(color: CafeColors.inkMuted, width: 2);
+        }),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : CafeColors.inkMuted),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.white,
+        selectedColor: surfaces.button,
+        disabledColor: CafeColors.line,
+        labelStyle: TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700),
+        secondaryLabelStyle: TextStyle(color: onButton, fontWeight: FontWeight.w700),
+        checkmarkColor: onButton,
+        side: WidgetStateBorderSide.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.button, width: 1.5);
+          return const BorderSide(color: CafeColors.line);
+        }),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CafePageTransitionsBuilder(),
@@ -186,7 +210,7 @@ class CafeTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: CafeColors.terracotta, width: 1.2),
+          borderSide: BorderSide(color: surfaces.button, width: 1.2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       ),

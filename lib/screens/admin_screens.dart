@@ -353,7 +353,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                         context.l10n.adminTableNumber(item.number),
                                         style: TextStyle(
                                           fontWeight: FontWeight.w800,
-                                          color: selected ? CafeColors.terracotta : CafeColors.ink,
+                                          color: selected ? CafeSurfaces.of(context).button : CafeColors.ink,
                                         ),
                                       ),
                                     ),

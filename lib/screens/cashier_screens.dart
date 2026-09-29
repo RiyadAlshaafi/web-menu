@@ -479,11 +479,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? CafeColors.ink : Colors.white,
+            color: selected ? CafeSurfaces.of(context).button : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? CafeColors.ink : CafeColors.line),
+            border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line),
           ),
-          child: Text(label, style: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
+          child: Text(label, style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
         ),
       ),
     );
@@ -719,7 +719,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       value: applyService,
-                      activeColor: CafeColors.terracotta,
+                      activeColor: CafeSurfaces.of(context).button,
                       controlAffinity: ListTileControlAffinity.leading,
                       title: Text(context.l10n.cashierApplyServiceCharge),
                       subtitle: Text(store.currency.format(store.serviceCharge(subtotal))),
@@ -980,11 +980,11 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? CafeColors.ink : Colors.white,
+            color: selected ? CafeSurfaces.of(context).button : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? CafeColors.ink : CafeColors.line),
+            border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line),
           ),
-          child: Text(label, style: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
+          child: Text(label, style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
         ),
       ),
     );

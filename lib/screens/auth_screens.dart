@@ -124,7 +124,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
                                       color: CafeColors.key,
                                       borderRadius: BorderRadius.circular(18),
                                       border: Border.all(
-                                        color: active ? CafeColors.terracotta : Colors.transparent,
+                                        color: active ? CafeSurfaces.of(context).button : Colors.transparent,
                                       ),
                                     ),
                                     child: Column(
@@ -440,7 +440,6 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                         height: 18,
                         child: Checkbox(
                           value: remember,
-                          activeColor: CafeColors.terracotta,
                           onChanged: (value) => setState(() => remember = value ?? false),
                         ),
                       ),
@@ -591,7 +590,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 color: CafeColors.key,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: digits[index].text.isNotEmpty ? CafeColors.terracotta : Colors.transparent,
+                                  color: digits[index].text.isNotEmpty ? CafeSurfaces.of(context).button : Colors.transparent,
                                 ),
                               ),
                               child: TextField(

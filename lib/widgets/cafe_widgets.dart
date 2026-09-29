@@ -173,9 +173,9 @@ class _SoftCardState extends State<SoftCard> {
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null || widget.hoverable;
     final borderColor = widget.selected
-        ? CafeColors.terracotta
+        ? CafeSurfaces.of(context).button
         : hover
-            ? CafeColors.terracotta.withValues(alpha: 0.35)
+            ? CafeSurfaces.of(context).button.withValues(alpha: 0.35)
             : CafeColors.line;
     final body = Container(
       padding: widget.padding,

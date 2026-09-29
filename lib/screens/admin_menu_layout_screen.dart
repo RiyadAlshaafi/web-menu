@@ -278,7 +278,7 @@ class _CategoryCardState extends State<_CategoryCard> {
           color: inspecting ? const Color(0xFFFFF6F1) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: inspecting ? CafeColors.terracotta : const Color(0xFFE6E2DC),
+            color: inspecting ? CafeSurfaces.of(context).button : const Color(0xFFE6E2DC),
             width: inspecting ? 1.6 : 1,
           ),
           boxShadow: const [
@@ -310,13 +310,13 @@ class _CategoryCardState extends State<_CategoryCard> {
                     height: 28,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: inspecting ? CafeColors.terracotta : CafeColors.peach,
+                      color: inspecting ? CafeSurfaces.of(context).button : CafeColors.peach,
                       borderRadius: BorderRadius.circular(inspecting ? 8 : 14),
                     ),
                     child: Text(
                       '${widget.index + 1}',
                       style: TextStyle(
-                        color: inspecting ? Colors.white : CafeColors.terracottaDark,
+                        color: inspecting ? CafeSurfaces.of(context).onButton : CafeColors.terracottaDark,
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
                       ),
@@ -541,7 +541,7 @@ class _DishRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected ? const Color(0xFFFFF4EE) : const Color(0xFFFBF7F2),
         borderRadius: BorderRadius.circular(14),
-        border: selected ? Border.all(color: CafeColors.terracotta.withValues(alpha: 0.55), width: 1.2) : null,
+        border: selected ? Border.all(color: CafeSurfaces.of(context).button.withValues(alpha: 0.55), width: 1.2) : null,
       ),
       child: Row(
         children: [
@@ -613,7 +613,7 @@ class _DishRow extends StatelessWidget {
 
   Widget _heroToggle(BuildContext context, bool hero, bool selected, VoidCallback onTap) {
     return Material(
-      color: selected ? (hero ? CafeColors.terracotta : Colors.white) : Colors.white,
+      color: selected ? (hero ? CafeSurfaces.of(context).button : Colors.white) : Colors.white,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
@@ -622,14 +622,14 @@ class _DishRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: selected && hero ? CafeColors.terracotta : CafeColors.line),
+            border: Border.all(color: selected && hero ? CafeSurfaces.of(context).button : CafeColors.line),
           ),
           child: Text(
             hero ? context.l10n.layoutHero : context.l10n.layoutList,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: selected && hero ? Colors.white : CafeColors.inkMuted,
+              color: selected && hero ? CafeSurfaces.of(context).onButton : CafeColors.inkMuted,
             ),
           ),
         ),

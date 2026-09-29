@@ -100,18 +100,24 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
   }
 
   Widget _chip(String label, bool selected, VoidCallback onTap) {
+    final button = CafeSurfaces.of(context).button;
+    final onButton = CafeSurfaces.of(context).onButton;
     return Material(
-      color: selected ? CafeColors.terracotta : Colors.white,
+      color: selected ? button : Colors.white,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: selected ? button : CafeColors.line, width: selected ? 1.5 : 1),
+          ),
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : CafeColors.inkMuted,
+              color: selected ? onButton : CafeColors.inkMuted,
               fontWeight: FontWeight.w700,
               fontSize: 12,
             ),
@@ -189,7 +195,8 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                             label: Text('$rate%'),
                             selected: selected,
                             selectedColor: CafeSurfaces.of(context).button,
-                            labelStyle: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12),
+                            side: BorderSide(color: selected ? CafeSurfaces.of(context).button : CafeColors.line, width: selected ? 1.5 : 1),
+                            labelStyle: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12),
                             onSelected: (_) {
                               percent = rate.toDouble();
                               percentController.text = '$rate';
@@ -356,7 +363,6 @@ class _DiscountDishCardState extends State<_DiscountDishCard> {
                 children: [
                   Checkbox(
                     value: dish.discountApplied,
-                    activeColor: CafeColors.terracotta,
                     onChanged: (value) {
                       final percent = double.tryParse(percentController.text) ?? dish.discountPercent;
                       store.setDishDiscount(dish, percent: percent, applied: value ?? false);
@@ -535,16 +541,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: selected ? CafeColors.terracotta : CafeColors.line, width: selected ? 2 : 1),
+          border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line, width: selected ? 2 : 1),
           color: CafeColors.key,
         ),
         child: Row(
           children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             const SizedBox(width: 8),
-            Text(badge, style: const TextStyle(color: CafeColors.terracotta, fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(badge, style: TextStyle(color: CafeSurfaces.of(context).button, fontSize: 12, fontWeight: FontWeight.w700)),
             const Spacer(),
-            Icon(selected ? Icons.check_circle : Icons.circle_outlined, color: selected ? CafeColors.terracotta : CafeColors.inkMuted),
+            Icon(selected ? Icons.check_circle : Icons.circle_outlined, color: selected ? CafeSurfaces.of(context).button : CafeColors.inkMuted),
           ],
         ),
       ),

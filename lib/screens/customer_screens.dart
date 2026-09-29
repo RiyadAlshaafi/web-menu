@@ -415,12 +415,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? CafeColors.terracottaDark : CafeColors.creamDark,
+            color: selected ? CafeSurfaces.of(context).button : CafeColors.creamDark,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line),
           ),
           child: Text(
             label,
-            style: TextStyle(color: selected ? Colors.white : CafeColors.inkMuted, fontWeight: FontWeight.w600, fontSize: 12),
+            style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.inkMuted, fontWeight: FontWeight.w600, fontSize: 12),
           ),
         ),
       ),
