@@ -312,6 +312,8 @@ class AppDatabase {
         awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
         refusalNotice: row['refusal_notice'] as String? ?? '',
         paymentTypeId: row['payment_type_id'] as String?,
+        yearMonth: row['year_month'] as String?,
+        shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
         lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
               menuItemId: line['menu_item_id'] as String? ?? '',
               name: line['name'] as String? ?? '',
@@ -484,6 +486,15 @@ class AppDatabase {
       return null;
     }
     return result['error'] as String? ?? 'Payment failed.';
+  }
+
+  Future<String?> assignShiftOrderNumber(String orderId) async {
+    if (client == null) return 'Supabase is not configured.';
+    _applyHeaders();
+    final raw = await client!.rpc('assign_shift_order_number', params: {'p_order_id': orderId});
+    final result = Map<String, dynamic>.from(raw as Map);
+    if (result['ok'] == true) return null;
+    return result['error'] as String? ?? 'Order number was not assigned.';
   }
 
   Future<String?> setTablePaymentType(String qrSlug, String typeId) async {

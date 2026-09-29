@@ -52,6 +52,7 @@
   "salesAllStatuses": "All statuses",
   "salesExportCsv": "Export CSV",
   "salesExportPdf": "Export PDF",
+  "salesColId": "ID",
   "salesColWhen": "Date & time",
   "salesColTable": "Table",
   "salesColCashier": "Cashier",

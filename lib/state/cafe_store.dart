@@ -110,10 +110,32 @@ class CafeStore extends ChangeNotifier {
     if (_pendingWrites > 0) return;
     await db.refreshFromDisk(liveOnly: true);
     final next = _stampFromDb();
-    if (next == _syncStamp) return;
-    _hydrateOperational();
-    _syncStamp = next;
-    notifyListeners();
+    if (next != _syncStamp) {
+      _hydrateOperational();
+      _syncStamp = next;
+      notifyListeners();
+    }
+    await ensureShiftNumbers();
+  }
+
+  bool _assigningNumbers = false;
+
+  Future<void> ensureShiftNumbers() async {
+    if (_assigningNumbers || authKind != AuthKind.cashier) return;
+    final ids = orders.where((order) => order.status != OrderStatus.paid && order.shiftOrderNumber == null).map((order) => order.id).toList();
+    if (ids.isEmpty) return;
+    _assigningNumbers = true;
+    try {
+      for (final id in ids) {
+        await db.assignShiftOrderNumber(id);
+      }
+      await db.refreshFromDisk(liveOnly: true);
+      _hydrateOperational();
+      _syncStamp = _stamp();
+      notifyListeners();
+    } finally {
+      _assigningNumbers = false;
+    }
   }
 
   String _stampFromDb() => jsonEncode({
@@ -501,6 +523,7 @@ class CafeStore extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+    await ensureShiftNumbers();
     notifyListeners();
     return true;
   }
@@ -834,9 +857,21 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  static String padSequence(int n) {
+    final width = n > 999 ? 4 : 3;
+    return n.toString().padLeft(width, '0');
+  }
+
   String saleNumber(Payment payment, {required bool perShift}) {
-    final text = perShift ? payment.shiftDisplayNumber : payment.monthlyDisplayNumber;
-    return text == null || text.isEmpty ? '—' : text;
+    final n = perShift ? payment.shiftOrderNumber : payment.monthlyOrderNumber;
+    final yymm = payment.yearMonth;
+    if (yymm == null || yymm.isEmpty || n == null) return '—';
+    return '$yymm${padSequence(n)}';
+  }
+
+  String shiftTicket(CafeOrder order) {
+    final n = order.shiftOrderNumber;
+    return n == null ? '…' : padSequence(n);
   }
 
   String typeName(String? id) {

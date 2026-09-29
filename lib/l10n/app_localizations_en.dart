@@ -135,6 +135,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesExportPdf => 'Export PDF';
 
   @override
+  String get salesColId => 'ID';
+
+  @override
   String get salesColWhen => 'Date & time';
 
   @override

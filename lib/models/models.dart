@@ -294,6 +294,8 @@ class CafeOrder {
     this.awaitingCustomerConfirmation = false,
     this.refusalNotice = '',
     this.paymentTypeId,
+    this.yearMonth,
+    this.shiftOrderNumber,
   });
 
   final String id;
@@ -307,6 +309,8 @@ class CafeOrder {
   bool awaitingCustomerConfirmation;
   String refusalNotice;
   String? paymentTypeId;
+  String? yearMonth;
+  int? shiftOrderNumber;
 
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get subtotal => lines.fold(0, (sum, line) => sum + line.total);
@@ -327,6 +331,8 @@ class CafeOrder {
         awaitingCustomerConfirmation: json['awaitingCustomerConfirmation'] as bool? ?? false,
         refusalNotice: json['refusalNotice'] as String? ?? '',
         paymentTypeId: json['paymentTypeId'] as String?,
+        yearMonth: json['yearMonth'] as String?,
+        shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
         lines: (json['lines'] as List<dynamic>)
             .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
             .toList(),
@@ -343,6 +349,8 @@ class CafeOrder {
         'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
         'refusalNotice': refusalNotice,
         'paymentTypeId': paymentTypeId,
+        'yearMonth': yearMonth,
+        'shiftOrderNumber': shiftOrderNumber,
         'lines': lines.map((line) => line.toJson()).toList(),
       };
 }

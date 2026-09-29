@@ -575,7 +575,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(order.id)}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text('${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
         if (waiting)
           Padding(
@@ -1121,7 +1121,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          '#${payment.orderId}  •  ${context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
+                                          '${store.saleNumber(payment, perShift: true)}  •  ${context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
                                           style: const TextStyle(fontWeight: FontWeight.w800),
                                         ),
                                       ),

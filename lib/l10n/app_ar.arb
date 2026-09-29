@@ -41,6 +41,7 @@
   "salesAllStatuses": "كل الحالات",
   "salesExportCsv": "تصدير CSV",
   "salesExportPdf": "تصدير PDF",
+  "salesColId": "الرقم",
   "salesColWhen": "التاريخ والوقت",
   "salesColTable": "الطاولة",
   "salesColCashier": "الكاشير",

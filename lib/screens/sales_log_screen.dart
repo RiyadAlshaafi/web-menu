@@ -14,7 +14,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
 
-enum _Sort { when, table, cashier, items, subtotal, discount, total, method, status }
+enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
 
 class SalesLogScreen extends StatefulWidget {
   const SalesLogScreen({super.key, this.ownSalesOnly = false});
@@ -178,6 +178,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
 
     return Row(
       children: [
+        cell(context.l10n.salesColId, _Sort.id),
         cell(context.l10n.salesColWhen, _Sort.when, flex: 3),
         cell(context.l10n.salesColTable, _Sort.table),
         cell(context.l10n.salesColCashier, _Sort.cashier, flex: 3),
@@ -197,7 +198,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          cell('${store.saleNumber(row.payment, perShift: widget.ownSalesOnly)}  ${DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt)}', flex: 3),
+          cell(store.saleNumber(row.payment, perShift: widget.ownSalesOnly)),
+          cell(DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt), flex: 3),
           cell(row.tableNumber),
           cell(row.cashierName, flex: 3),
           cell('${row.itemCount}'),
@@ -264,6 +266,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     }).map((payment) => _sale(store, payment)).toList();
     list.sort((a, b) {
       final result = switch (sort) {
+        _Sort.id => store.saleNumber(a.payment, perShift: widget.ownSalesOnly).compareTo(store.saleNumber(b.payment, perShift: widget.ownSalesOnly)),
         _Sort.when => a.payment.paidAt.compareTo(b.payment.paidAt),
         _Sort.table => a.tableNumber.compareTo(b.tableNumber),
         _Sort.cashier => a.cashierName.compareTo(b.cashierName),

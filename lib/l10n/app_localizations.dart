@@ -344,6 +344,12 @@ abstract class AppLocalizations {
   /// **'Export PDF'**
   String get salesExportPdf;
 
+  /// No description provided for @salesColId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get salesColId;
+
   /// No description provided for @salesColWhen.
   ///
   /// In en, this message translates to:
