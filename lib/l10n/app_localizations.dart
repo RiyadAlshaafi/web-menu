@@ -1826,6 +1826,36 @@ abstract class AppLocalizations {
   /// **'This action is not available on this register.'**
   String get cashierActionUnavailable;
 
+  /// No description provided for @cashierRefuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get cashierRefuse;
+
+  /// No description provided for @cashierItemRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Item removed — marked as unavailable'**
+  String get cashierItemRefused;
+
+  /// No description provided for @cashierNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get cashierNotAvailable;
+
+  /// No description provided for @cashierMarkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark unavailable'**
+  String get cashierMarkUnavailable;
+
+  /// No description provided for @cashierMarkAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark available'**
+  String get cashierMarkAvailable;
+
   /// No description provided for @cashierColStatus.
   ///
   /// In en, this message translates to:

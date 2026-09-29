@@ -164,6 +164,7 @@ class AppDatabase {
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => scheduleLive())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'carts', callback: (_) => scheduleLive())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'cart_lines', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'menu_items', callback: (_) => scheduleLive())
           .subscribe();
     } catch (error, stack) {
       _listening = false;
@@ -266,15 +267,16 @@ class AppDatabase {
           guests: row['guests'] as int? ?? 0,
         )).toList();
     if (!liveOnly) {
-    final categoryRows = await client!.from('menu_categories').select();
-    _categories = (categoryRows as List).map((row) => MenuCategory(
-          id: row['id'] as String,
-          nameEn: row['name_en'] as String? ?? '',
-          nameAr: row['name_ar'] as String? ?? '',
-          sortOrder: row['sort_order'] as int? ?? 0,
-          spotlight: row['spotlight'] as bool? ?? false,
-          visible: row['visible'] as bool? ?? true,
-        )).toList();
+      final categoryRows = await client!.from('menu_categories').select();
+      _categories = (categoryRows as List).map((row) => MenuCategory(
+            id: row['id'] as String,
+            nameEn: row['name_en'] as String? ?? '',
+            nameAr: row['name_ar'] as String? ?? '',
+            sortOrder: row['sort_order'] as int? ?? 0,
+            spotlight: row['spotlight'] as bool? ?? false,
+            visible: row['visible'] as bool? ?? true,
+          )).toList();
+    }
     final itemRows = await client!.from('menu_items').select();
     _menuItems = (itemRows as List).map((row) => MenuItem(
           id: row['id'] as String,
@@ -291,8 +293,7 @@ class AppDatabase {
           discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
           discountApplied: row['discount_applied'] as bool? ?? false,
         )).toList();
-      _catalogAt = DateTime.now();
-    }
+    if (!liveOnly) _catalogAt = DateTime.now();
     if (epoch != _epoch) return;
     final orderRows = await client!.from('orders').select('*, order_lines(*)');
     _orders = (orderRows as List).map((row) {
@@ -637,6 +638,20 @@ class AppDatabase {
     for (final row in rows as List) {
       final id = row['id'] as String;
       if (!keep.contains(id)) await client!.from(table).delete().eq('id', id);
+    }
+  }
+
+  Future<String?> setItemAvailable(String itemId, bool available) async {
+    if (client == null) return 'Supabase is not configured.';
+    final match = _menuItems.where((item) => item.id == itemId);
+    final previous = match.isEmpty ? null : match.first.available;
+    if (match.isNotEmpty) match.first.available = available;
+    try {
+      await client!.rpc('set_item_available', params: {'p_item_id': itemId, 'p_available': available});
+      return null;
+    } catch (error) {
+      if (match.isNotEmpty && previous != null) match.first.available = previous;
+      return '$error';
     }
   }
 

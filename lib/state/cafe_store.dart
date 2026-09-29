@@ -206,6 +206,33 @@ class CafeStore extends ChangeNotifier {
   double get serviceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0.10;
   double get taxRate => (cafe['taxRate'] as num?)?.toDouble() ?? 0;
 
+  List<MenuItem> get guestMenu {
+    final visibleIds = guestCategories.map((item) => item.id).toSet();
+    final items = menuItems.where((item) => visibleIds.contains(item.categoryId)).toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return items;
+  }
+
+  bool canOrderItem(MenuItem item) => item.available && !item.soldOut;
+
+  Future<String?> setItemAvailable(String itemId, bool available) async {
+    final error = await db.setItemAvailable(itemId, available);
+    notifyListeners();
+    return error;
+  }
+
+  Future<String?> refuseOrderLine(CafeOrder order, OrderLine line) async {
+    order.lines.remove(line);
+    await db.writeOrders(orders);
+    String? error;
+    if (line.menuItemId.isNotEmpty) {
+      error = await setItemAvailable(line.menuItemId, false);
+    } else {
+      notifyListeners();
+    }
+    return error;
+  }
+
   List<MenuItem> get liveMenu {
     final visibleIds = guestCategories.map((item) => item.id).toSet();
     final items = menuItems

@@ -956,6 +956,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'This action is not available on this register.';
 
   @override
+  String get cashierRefuse => 'Refuse';
+
+  @override
+  String get cashierItemRefused => 'Item removed — marked as unavailable';
+
+  @override
+  String get cashierNotAvailable => 'Not available';
+
+  @override
+  String get cashierMarkUnavailable => 'Mark unavailable';
+
+  @override
+  String get cashierMarkAvailable => 'Mark available';
+
+  @override
   String get cashierColStatus => 'Status';
 
   @override

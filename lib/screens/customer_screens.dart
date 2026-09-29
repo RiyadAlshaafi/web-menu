@@ -124,12 +124,12 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       );
     }
 
-    final items = store.liveMenu.where((item) {
+    final items = store.guestMenu.where((item) {
       if (chefsOnly) return item.featured;
       if (categoryId == null) return true;
       return item.categoryId == categoryId;
     }).toList();
-    final featured = store.liveMenu.where((item) => item.featured).toList();
+    final featured = store.guestMenu.where((item) => item.featured).toList();
     final grouped = <String, List<MenuItem>>{};
     for (final item in items) {
       grouped.putIfAbsent(item.categoryId, () => []).add(item);
@@ -214,7 +214,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     ),
                   ),
                 ),
-                if (store.liveMenu.isEmpty)
+                if (store.guestMenu.isEmpty)
                   SliverFillRemaining(child: EmptyHint(context.l10n.noMenu))
                 else ...[
                   if (featured.isNotEmpty && (chefsOnly || categoryId == null))
@@ -468,7 +468,26 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
               child: Row(
                 children: [
-                  Expanded(child: Text(item.displayName(store.locale), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.displayName(store.locale),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: store.canOrderItem(item) ? CafeColors.ink : CafeColors.inkMuted,
+                            decoration: store.canOrderItem(item) ? null : TextDecoration.lineThrough,
+                          ),
+                        ),
+                        if (!store.canOrderItem(item))
+                          Text(context.l10n.cashierNotAvailable, style: TextStyle(color: CafeSurfaces.of(context).button, fontSize: 11, fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
                   _add(store, tableId, item),
                 ],
               ),
@@ -493,7 +512,19 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.displayName(store.locale), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  Text(
+                    item.displayName(store.locale),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: store.canOrderItem(item) ? CafeColors.ink : CafeColors.inkMuted,
+                      decoration: store.canOrderItem(item) ? null : TextDecoration.lineThrough,
+                    ),
+                  ),
+                  if (!store.canOrderItem(item))
+                    Text(context.l10n.cashierNotAvailable, style: TextStyle(color: CafeSurfaces.of(context).button, fontSize: 11, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -540,19 +571,26 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 
   Widget _add(CafeStore store, String tableId, MenuItem item) {
+    final open = store.canOrderItem(item);
     return SizedBox(
       width: 32,
       height: 32,
       child: IconButton.filled(
-        onPressed: () => store.addToCart(tableId, item),
+        onPressed: open ? () => store.addToCart(tableId, item) : null,
         padding: EdgeInsets.zero,
-        style: IconButton.styleFrom(backgroundColor: CafeColors.creamDark, foregroundColor: CafeColors.terracottaDark),
+        style: IconButton.styleFrom(
+          backgroundColor: open ? CafeColors.creamDark : CafeColors.line,
+          foregroundColor: open ? CafeSurfaces.of(context).button : CafeColors.inkMuted,
+          disabledBackgroundColor: CafeColors.line,
+          disabledForegroundColor: CafeColors.inkMuted,
+        ),
         icon: const Icon(Icons.add, size: 18),
       ),
     );
   }
 
   Future<void> _showDish(CafeStore store, String tableId, MenuItem item) async {
+    if (!store.canOrderItem(item)) return;
     var qty = 1;
     await showModalBottomSheet<void>(
       context: context,

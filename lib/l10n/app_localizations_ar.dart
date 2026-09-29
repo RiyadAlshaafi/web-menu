@@ -954,6 +954,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierActionUnavailable => 'هذا الإجراء غير متاح في هذا الصندوق.';
 
   @override
+  String get cashierRefuse => 'رفض';
+
+  @override
+  String get cashierItemRefused => 'تمت إزالة الصنف وتمييزه كغير متاح';
+
+  @override
+  String get cashierNotAvailable => 'غير متاح';
+
+  @override
+  String get cashierMarkUnavailable => 'تمييز كغير متاح';
+
+  @override
+  String get cashierMarkAvailable => 'إتاحة الصنف';
+
+  @override
   String get cashierColStatus => 'الحالة';
 
   @override

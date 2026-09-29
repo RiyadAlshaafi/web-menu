@@ -588,6 +588,12 @@ class _DishRow extends StatelessWidget {
               ],
             ),
           ),
+          if (!inspecting)
+            IconButton(
+              tooltip: dish.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
+              onPressed: () => store.setItemAvailable(dish.id, !dish.available),
+              icon: Icon(dish.available ? Icons.block : Icons.check_circle_outline, color: dish.available ? CafeColors.inkMuted : CafeSurfaces.of(context).button),
+            ),
           if (!inspecting && dish.available)
             Padding(
               padding: const EdgeInsets.only(right: 6),
