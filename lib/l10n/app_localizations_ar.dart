@@ -70,6 +70,80 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navSettings => 'الإعدادات';
 
   @override
+  String get navSalesLog => 'سجل المبيعات';
+
+  @override
+  String get salesSearchHint => 'ابحث بالطاولة أو الكاشير أو رقم العملية';
+
+  @override
+  String get salesDateFrom => 'من';
+
+  @override
+  String get salesDateTo => 'إلى';
+
+  @override
+  String get salesAllCashiers => 'كل الكاشيرية';
+
+  @override
+  String get salesAllTables => 'كل الطاولات';
+
+  @override
+  String get salesAllMethods => 'كل طرق الدفع';
+
+  @override
+  String get salesAllStatuses => 'كل الحالات';
+
+  @override
+  String get salesExportCsv => 'تصدير CSV';
+
+  @override
+  String get salesExportPdf => 'تصدير PDF';
+
+  @override
+  String get salesColWhen => 'التاريخ والوقت';
+
+  @override
+  String get salesColTable => 'الطاولة';
+
+  @override
+  String get salesColCashier => 'الكاشير';
+
+  @override
+  String get salesColItems => 'الأصناف';
+
+  @override
+  String get salesColSubtotal => 'المجموع';
+
+  @override
+  String get salesColDiscount => 'الخصم';
+
+  @override
+  String get salesColTax => 'الضريبة';
+
+  @override
+  String get salesColTotal => 'الإجمالي';
+
+  @override
+  String get salesColMethod => 'الدفع';
+
+  @override
+  String get salesColStatus => 'الحالة';
+
+  @override
+  String get salesPaid => 'مدفوع';
+
+  @override
+  String get salesEmpty => 'لا توجد مبيعات مطابقة.';
+
+  @override
+  String get salesOwnOnly => 'تُعرض مبيعاتك فقط.';
+
+  @override
+  String salesPage(int page, int pages) {
+    return 'صفحة $page من $pages';
+  }
+
+  @override
   String get navLiveAlerts => 'التنبيهات والطابور المباشر';
 
   @override

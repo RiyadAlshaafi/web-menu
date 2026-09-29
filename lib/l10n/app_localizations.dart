@@ -218,6 +218,150 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettings;
 
+  /// No description provided for @navSalesLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Log'**
+  String get navSalesLog;
+
+  /// No description provided for @salesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search table, cashier, or transaction'**
+  String get salesSearchHint;
+
+  /// No description provided for @salesDateFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get salesDateFrom;
+
+  /// No description provided for @salesDateTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get salesDateTo;
+
+  /// No description provided for @salesAllCashiers.
+  ///
+  /// In en, this message translates to:
+  /// **'All cashiers'**
+  String get salesAllCashiers;
+
+  /// No description provided for @salesAllTables.
+  ///
+  /// In en, this message translates to:
+  /// **'All tables'**
+  String get salesAllTables;
+
+  /// No description provided for @salesAllMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'All methods'**
+  String get salesAllMethods;
+
+  /// No description provided for @salesAllStatuses.
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get salesAllStatuses;
+
+  /// No description provided for @salesExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get salesExportCsv;
+
+  /// No description provided for @salesExportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get salesExportPdf;
+
+  /// No description provided for @salesColWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & time'**
+  String get salesColWhen;
+
+  /// No description provided for @salesColTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get salesColTable;
+
+  /// No description provided for @salesColCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier'**
+  String get salesColCashier;
+
+  /// No description provided for @salesColItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get salesColItems;
+
+  /// No description provided for @salesColSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get salesColSubtotal;
+
+  /// No description provided for @salesColDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get salesColDiscount;
+
+  /// No description provided for @salesColTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get salesColTax;
+
+  /// No description provided for @salesColTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get salesColTotal;
+
+  /// No description provided for @salesColMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get salesColMethod;
+
+  /// No description provided for @salesColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get salesColStatus;
+
+  /// No description provided for @salesPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get salesPaid;
+
+  /// No description provided for @salesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales match these filters.'**
+  String get salesEmpty;
+
+  /// No description provided for @salesOwnOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing your sales only.'**
+  String get salesOwnOnly;
+
+  /// No description provided for @salesPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String salesPage(int page, int pages);
+
   /// No description provided for @navLiveAlerts.
   ///
   /// In en, this message translates to:

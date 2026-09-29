@@ -45,6 +45,12 @@ class AppSections {
       icon: Icons.qr_code_2,
     ),
     AppSection(
+      path: '/admin/sales',
+      labelOf: (l) => l.navSalesLog,
+      crumbOf: (l) => l.navSalesLog,
+      icon: Icons.receipt_long,
+    ),
+    AppSection(
       path: '/admin/settings',
       labelOf: (l) => l.navSettings,
       crumbOf: (l) => l.navSettings,
@@ -65,6 +71,12 @@ class AppSections {
       labelOf: (l) => l.navFloorOverview,
       crumbOf: (l) => l.navFloorOverview,
       icon: Icons.table_restaurant_outlined,
+    ),
+    AppSection(
+      path: '/pos/sales',
+      labelOf: (l) => l.navSalesLog,
+      crumbOf: (l) => l.navSalesLog,
+      icon: Icons.receipt_long,
     ),
     AppSection(
       path: '/pos/shifts',

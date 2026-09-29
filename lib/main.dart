@@ -11,6 +11,7 @@ import 'screens/admin_screens.dart';
 import 'screens/auth_screens.dart';
 import 'screens/cashier_screens.dart';
 import 'screens/customer_screens.dart';
+import 'screens/sales_log_screen.dart';
 import 'state/cafe_store.dart';
 import 'theme/cafe_theme.dart';
 
@@ -120,6 +121,10 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierFloorScreen()),
             ),
             GoRoute(
+              path: '/pos/sales',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const SalesLogScreen(ownSalesOnly: true)),
+            ),
+            GoRoute(
               path: '/pos/shifts',
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierShiftsScreen()),
             ),
@@ -140,6 +145,10 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
             GoRoute(
               path: '/admin/tables',
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminTablesScreen()),
+            ),
+            GoRoute(
+              path: '/admin/sales',
+              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const SalesLogScreen()),
             ),
             GoRoute(
               path: '/admin/settings',

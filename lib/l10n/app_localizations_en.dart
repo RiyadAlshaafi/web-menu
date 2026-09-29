@@ -70,6 +70,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettings => 'Settings';
 
   @override
+  String get navSalesLog => 'Sales Log';
+
+  @override
+  String get salesSearchHint => 'Search table, cashier, or transaction';
+
+  @override
+  String get salesDateFrom => 'From';
+
+  @override
+  String get salesDateTo => 'To';
+
+  @override
+  String get salesAllCashiers => 'All cashiers';
+
+  @override
+  String get salesAllTables => 'All tables';
+
+  @override
+  String get salesAllMethods => 'All methods';
+
+  @override
+  String get salesAllStatuses => 'All statuses';
+
+  @override
+  String get salesExportCsv => 'Export CSV';
+
+  @override
+  String get salesExportPdf => 'Export PDF';
+
+  @override
+  String get salesColWhen => 'Date & time';
+
+  @override
+  String get salesColTable => 'Table';
+
+  @override
+  String get salesColCashier => 'Cashier';
+
+  @override
+  String get salesColItems => 'Items';
+
+  @override
+  String get salesColSubtotal => 'Subtotal';
+
+  @override
+  String get salesColDiscount => 'Discount';
+
+  @override
+  String get salesColTax => 'Tax';
+
+  @override
+  String get salesColTotal => 'Total';
+
+  @override
+  String get salesColMethod => 'Method';
+
+  @override
+  String get salesColStatus => 'Status';
+
+  @override
+  String get salesPaid => 'Paid';
+
+  @override
+  String get salesEmpty => 'No sales match these filters.';
+
+  @override
+  String get salesOwnOnly => 'Showing your sales only.';
+
+  @override
+  String salesPage(int page, int pages) {
+    return 'Page $page of $pages';
+  }
+
+  @override
   String get navLiveAlerts => 'Live Alerts & Queue';
 
   @override
