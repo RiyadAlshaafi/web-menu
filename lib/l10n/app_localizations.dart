@@ -2558,6 +2558,18 @@ abstract class AppLocalizations {
   /// **'How will you pay?'**
   String get payChoose;
 
+  /// No description provided for @cashierWaitingServed.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for order to be served'**
+  String get cashierWaitingServed;
+
+  /// No description provided for @cashierSettleAnywayNotServed.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer has not confirmed the updated order, and it has not been marked served. Mark it served before settling.'**
+  String get cashierSettleAnywayNotServed;
+
   /// No description provided for @payChanged.
   ///
   /// In en, this message translates to:

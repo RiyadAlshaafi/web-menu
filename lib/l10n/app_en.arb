@@ -777,6 +777,8 @@
   "payTypeAdd": "Add type",
   "payTypeInUse": "This type is already used on a sale. Disable it instead of deleting it.",
   "payChoose": "How will you pay?",
+  "cashierWaitingServed": "Waiting for order to be served",
+  "cashierSettleAnywayNotServed": "The customer has not confirmed the updated order, and it has not been marked served. Mark it served before settling.",
   "payChanged": "Payment method changed from {oldName} to {newName} by {name} at {time}",
   "@payChanged": {
     "placeholders": {

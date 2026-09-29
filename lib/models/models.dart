@@ -427,6 +427,11 @@ class Payment {
     required this.shiftId,
     required this.paidAt,
     this.paymentTypeId,
+    this.yearMonth,
+    this.shiftOrderNumber,
+    this.monthlyOrderNumber,
+    this.shiftDisplayNumber,
+    this.monthlyDisplayNumber,
     List<PaymentMethodChange>? changes,
   }) : changes = changes ?? [];
 
@@ -440,6 +445,11 @@ class Payment {
   final String shiftId;
   final DateTime paidAt;
   String? paymentTypeId;
+  final String? yearMonth;
+  final int? shiftOrderNumber;
+  final int? monthlyOrderNumber;
+  final String? shiftDisplayNumber;
+  final String? monthlyDisplayNumber;
   final List<PaymentMethodChange> changes;
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
@@ -453,6 +463,11 @@ class Payment {
         shiftId: json['shiftId'] as String,
         paidAt: DateTime.parse(json['paidAt'] as String),
         paymentTypeId: json['paymentTypeId'] as String?,
+        yearMonth: json['yearMonth'] as String?,
+        shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
+        monthlyOrderNumber: (json['monthlyOrderNumber'] as num?)?.toInt(),
+        shiftDisplayNumber: json['shiftDisplayNumber'] as String?,
+        monthlyDisplayNumber: json['monthlyDisplayNumber'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -466,6 +481,11 @@ class Payment {
         'shiftId': shiftId,
         'paidAt': paidAt.toIso8601String(),
         'paymentTypeId': paymentTypeId,
+        'yearMonth': yearMonth,
+        'shiftOrderNumber': shiftOrderNumber,
+        'monthlyOrderNumber': monthlyOrderNumber,
+        'shiftDisplayNumber': shiftDisplayNumber,
+        'monthlyDisplayNumber': monthlyDisplayNumber,
         'changes': changes.map((change) => change.toJson()).toList(),
       };
 }

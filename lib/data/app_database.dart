@@ -391,6 +391,11 @@ class AppDatabase {
             shiftId: row['shift_id'] as String,
             paidAt: DateTime.parse(row['paid_at'] as String),
             paymentTypeId: row['payment_type_id'] as String?,
+            yearMonth: row['year_month'] as String?,
+            shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
+            monthlyOrderNumber: (row['monthly_order_number'] as num?)?.toInt(),
+            shiftDisplayNumber: row['shift_display_number'] as String?,
+            monthlyDisplayNumber: row['monthly_display_number'] as String?,
             changes: history,
           );
       }).toList();

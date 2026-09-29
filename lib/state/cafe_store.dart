@@ -834,6 +834,11 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  String saleNumber(Payment payment, {required bool perShift}) {
+    final text = perShift ? payment.shiftDisplayNumber : payment.monthlyDisplayNumber;
+    return text == null || text.isEmpty ? '—' : text;
+  }
+
   String typeName(String? id) {
     if (id == null || id.isEmpty) return locale == 'ar' ? 'نقداً' : 'Cash';
     final match = paymentTypes.where((type) => type.id == id);
@@ -875,6 +880,7 @@ class CafeStore extends ChangeNotifier {
     if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
     final order = openOrderFor(tableId);
     if (order == null) return l10n.errNoOpenBill;
+    if (order.status != OrderStatus.served) return l10n.cashierWaitingServed;
     final due = tabTotal(tableId, applyService: applyService);
     if (cashReceived < due) return l10n.insufficientCash;
     final failure = await db.settleCash(
@@ -883,7 +889,11 @@ class CafeStore extends ChangeNotifier {
       applyService: applyService,
       paymentTypeId: openOrderFor(tableId)?.paymentTypeId,
     );
-    if (failure != null) return failure == 'insufficient cash' ? l10n.insufficientCash : failure;
+    if (failure != null) {
+      if (failure == 'insufficient cash') return l10n.insufficientCash;
+      if (failure == 'order is not served') return l10n.cashierWaitingServed;
+      return failure;
+    }
     await syncFromDisk();
     notifyListeners();
     return null;

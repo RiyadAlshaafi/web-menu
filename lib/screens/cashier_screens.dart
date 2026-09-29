@@ -595,6 +595,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
         _cashKv(context.l10n.cashierTotalToCharge, store.currency.format(total)),
         const SizedBox(height: 12),
+        if (order.status != OrderStatus.served)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(context.l10n.cashierWaitingServed, style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w700)),
+          ),
         if (order.awaitingCustomerConfirmation)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -602,18 +607,21 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
           ),
         TerracottaButton(
           label: context.l10n.cashierSettleCloseBill(store.currency.format(total)),
-          onPressed: order.awaitingCustomerConfirmation ? null : () => showCashSettleDialog(context, store, order.tableId),
+          onPressed: order.status == OrderStatus.served && !order.awaitingCustomerConfirmation
+              ? () => showCashSettleDialog(context, store, order.tableId)
+              : null,
         ),
         if (order.awaitingCustomerConfirmation)
           TextButton(
             onPressed: () async {
+              final served = order.status == OrderStatus.served;
               final ok = await showCafeConfirmDialog(
                 context,
                 title: context.l10n.cashierSettleAnyway,
-                message: context.l10n.cashierSettleAnywayMessage,
+                message: served ? context.l10n.cashierSettleAnywayMessage : context.l10n.cashierSettleAnywayNotServed,
                 confirm: context.l10n.cashierSettleAnyway,
               );
-              if (ok && context.mounted) showCashSettleDialog(context, store, order.tableId);
+              if (ok && served && context.mounted) showCashSettleDialog(context, store, order.tableId, ignoreCustomerConfirm: true);
             },
             child: Text(context.l10n.cashierSettleAnyway),
           ),
@@ -642,7 +650,16 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
   }
 }
 
-Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String tableId) async {
+Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String tableId, {bool ignoreCustomerConfirm = false}) async {
+  final order = store.openOrderFor(tableId);
+  if (order == null || order.status != OrderStatus.served || (order.awaitingCustomerConfirmation && !ignoreCustomerConfirm)) {
+    final parts = <String>[
+      if (order == null || order.status != OrderStatus.served) context.l10n.cashierWaitingServed,
+      if (order != null && order.awaitingCustomerConfirmation) context.l10n.cashierWaitingCustomerConfirm,
+    ];
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
+    return;
+  }
   final controller = TextEditingController();
   final navigator = Navigator.of(context, rootNavigator: true);
   var applyService = store.serviceChargeRate > 0;
@@ -950,9 +967,9 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                                     const Spacer(),
                                     TerracottaButton(
                                       label: context.l10n.cashierSettleCloseBill(store.currency.format(store.tabTotal(table.id))),
-                                      onPressed: table.status == TableStatus.billRequested || (order != null)
-                                          ? () => showCashSettleDialog(context, store, table.id)
-                                          : null,
+                                      onPressed: order == null
+                                          ? null
+                                          : () => showCashSettleDialog(context, store, table.id),
                                     ),
                                   ],
                                 ),

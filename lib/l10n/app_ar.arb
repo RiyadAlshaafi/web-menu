@@ -412,6 +412,8 @@
   "payTypeAdd": "إضافة طريقة",
   "payTypeInUse": "هذه الطريقة مستخدمة في عملية بيع. أوقفها بدل حذفها.",
   "payChoose": "كيف ستدفع؟",
+  "cashierWaitingServed": "بانتظار تعليم الطلب كمقدَّم",
+  "cashierSettleAnywayNotServed": "لم يؤكد الزبون الطلب المعدّل، ولم يُعلَّم كمقدَّم. علّمه كمقدَّم قبل التسوية.",
   "payChanged": "تغيّرت طريقة الدفع من {oldName} إلى {newName} بواسطة {name} في {time}",
   "@payChanged": {
     "placeholders": {

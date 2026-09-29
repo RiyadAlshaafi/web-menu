@@ -1368,6 +1368,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payChoose => 'كيف ستدفع؟';
 
   @override
+  String get cashierWaitingServed => 'بانتظار تعليم الطلب كمقدَّم';
+
+  @override
+  String get cashierSettleAnywayNotServed =>
+      'لم يؤكد الزبون الطلب المعدّل، ولم يُعلَّم كمقدَّم. علّمه كمقدَّم قبل التسوية.';
+
+  @override
   String payChanged(String oldName, String newName, String name, String time) {
     return 'تغيّرت طريقة الدفع من $oldName إلى $newName بواسطة $name في $time';
   }

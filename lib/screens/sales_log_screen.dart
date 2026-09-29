@@ -197,7 +197,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          cell(DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt), flex: 3),
+          cell('${store.saleNumber(row.payment, perShift: widget.ownSalesOnly)}  ${DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt)}', flex: 3),
           cell(row.tableNumber),
           cell(row.cashierName, flex: 3),
           cell('${row.itemCount}'),
@@ -256,8 +256,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       if (to != null && payment.paidAt.isAfter(DateTime(to!.year, to!.month, to!.day, 23, 59, 59))) return false;
       final row = _sale(store, payment);
       if (query.isEmpty) return true;
+      final number = store.saleNumber(payment, perShift: widget.ownSalesOnly).toLowerCase();
       return row.tableNumber.toLowerCase().contains(query) ||
           row.cashierName.toLowerCase().contains(query) ||
+          number.contains(query) ||
           payment.id.toLowerCase().contains(query);
     }).map((payment) => _sale(store, payment)).toList();
     list.sort((a, b) {
@@ -321,7 +323,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             if (current.paymentTypeId != null) current.paymentTypeId!,
           };
           return AlertDialog(
-            title: Text(DateFormat('y-MM-dd HH:mm').format(current.paidAt)),
+            title: Text(live.saleNumber(current, perShift: widget.ownSalesOnly)),
             content: SizedBox(
               width: 420,
               child: SingleChildScrollView(
@@ -329,9 +331,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(DateFormat('y-MM-dd HH:mm').format(current.paidAt)),
                     Text('${context.l10n.salesColTable}: ${row.tableNumber}'),
                     Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
-                    Text(current.id, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
                     const SizedBox(height: 8),
                     if (row.lines.isEmpty)
                       Text('${row.itemCount}')
@@ -385,9 +387,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<_Sale> rows) async {
-    final buffer = StringBuffer('date,table,cashier,items,subtotal,discount,total,method,status,id\n');
+    final buffer = StringBuffer('order,date,table,cashier,items,subtotal,discount,total,method,status\n');
     for (final row in rows) {
       buffer.writeln([
+        store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
         DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
         row.tableNumber,
         row.cashierName,
@@ -397,7 +400,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.total,
         store.typeName(row.payment.paymentTypeId),
         'paid',
-        row.payment.id,
       ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
     }
     await FilePicker.platform.saveFile(dialogTitle: context.l10n.salesExportCsv, fileName: 'sales-log.csv', bytes: utf8.encode(buffer.toString()));
@@ -415,9 +417,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               pw.Text('Sales Log', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 8),
               pw.TableHelper.fromTextArray(
-                headers: const ['When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
+                headers: const ['Order', 'When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
                 data: rows
                     .map((row) => [
+                          store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
                           DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
                           row.tableNumber,
                           row.cashierName,

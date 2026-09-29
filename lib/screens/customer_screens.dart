@@ -1253,19 +1253,22 @@ class CustomerBillScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 if (order != null && store.enabledPaymentTypes.isNotEmpty) ...[
-                  Text(context.l10n.payChoose, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
+                  DropdownButtonFormField<String>(
+                    key: ValueKey(order.paymentTypeId),
+                    initialValue: store.enabledPaymentTypes.any((type) => type.id == order.paymentTypeId) ? order.paymentTypeId : null,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.payChoose,
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: CafeSurfaces.of(context).button)),
+                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: CafeSurfaces.of(context).button, width: 2)),
+                    ),
+                    icon: Icon(Icons.keyboard_arrow_down, color: CafeSurfaces.of(context).button),
+                    items: [
                       for (final type in store.enabledPaymentTypes)
-                        ChoiceChip(
-                          label: Text(type.label(store.locale)),
-                          selected: order.paymentTypeId == type.id,
-                          onSelected: (_) => store.setTablePaymentType(table.id, type.id),
-                        ),
+                        DropdownMenuItem(value: type.id, child: Text(type.label(store.locale))),
                     ],
+                    onChanged: (id) {
+                      if (id != null) store.setTablePaymentType(table.id, id);
+                    },
                   ),
                   const SizedBox(height: 16),
                 ],

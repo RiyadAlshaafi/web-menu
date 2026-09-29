@@ -1371,6 +1371,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payChoose => 'How will you pay?';
 
   @override
+  String get cashierWaitingServed => 'Waiting for order to be served';
+
+  @override
+  String get cashierSettleAnywayNotServed =>
+      'The customer has not confirmed the updated order, and it has not been marked served. Mark it served before settling.';
+
+  @override
   String payChanged(String oldName, String newName, String name, String time) {
     return 'Payment method changed from $oldName to $newName by $name at $time';
   }
