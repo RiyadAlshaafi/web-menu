@@ -668,6 +668,11 @@ class Secrets {
 
   static String hash(String value, String salt) => value;
 
+  static String publicId([int length = 12]) {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(length, (_) => alphabet[_random.nextInt(alphabet.length)]).join();
+  }
+
   static String otpCode() => List.generate(6, (_) => _random.nextInt(10)).join();
 
   static String id([String prefix = 'id']) {

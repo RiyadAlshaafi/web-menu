@@ -162,8 +162,8 @@ class CashierShell extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         selected: active,
-        selectedTileColor: CafeColors.terracotta,
-        selectedColor: Colors.white,
+        selectedTileColor: CafeSurfaces.of(context).button,
+        selectedColor: CafeSurfaces.of(context).onButton,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         leading: Icon(section.icon),
         title: compact ? null : Text(section.label(context), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),

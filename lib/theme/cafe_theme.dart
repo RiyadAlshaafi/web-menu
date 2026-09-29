@@ -158,6 +158,10 @@ class CafeTheme {
         style: ElevatedButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: onButton, shape: buttonShape),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(backgroundColor: surfaces.button, foregroundColor: onButton),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? onButton : null),
+        trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : null),
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CafePageTransitionsBuilder(),

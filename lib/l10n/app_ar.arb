@@ -98,6 +98,8 @@
   "adminSessions": "الجلسات",
   "adminSearchTableHint": "ابحث عن طاولة أو منطقة...",
   "adminAddTableButton": "+ إضافة طاولة",
+  "adminRegenerateQr": "إعادة إنشاء رمز QR",
+  "adminRegenerateAllQr": "إعادة إنشاء كل رموز QR",
   "adminTableNumber": "طاولة {number}",
   "adminTableAvailable": "متاحة",
   "adminTableOccupied": "مشغولة",

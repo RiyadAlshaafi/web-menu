@@ -318,6 +318,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminAddTableButton => '+ إضافة طاولة';
 
   @override
+  String get adminRegenerateQr => 'إعادة إنشاء رمز QR';
+
+  @override
+  String get adminRegenerateAllQr => 'إعادة إنشاء كل رموز QR';
+
+  @override
   String adminTableNumber(String number) {
     return 'طاولة $number';
   }

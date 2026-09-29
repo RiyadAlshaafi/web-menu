@@ -319,6 +319,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAddTableButton => '+ Add Table';
 
   @override
+  String get adminRegenerateQr => 'Regenerate QR';
+
+  @override
+  String get adminRegenerateAllQr => 'Regenerate all QR codes';
+
+  @override
   String adminTableNumber(String number) {
     return 'Table $number';
   }

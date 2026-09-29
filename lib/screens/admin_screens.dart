@@ -229,7 +229,7 @@ class AdminShell extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 0, compact ? 10 : 12, 8),
       child: Material(
-        color: active ? CafeColors.terracotta : Colors.transparent,
+        color: active ? CafeSurfaces.of(context).button : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () => context.go(section.path),
@@ -238,7 +238,7 @@ class AdminShell extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(compact ? 10 : 14, 12, compact ? 10 : 12, 12),
             child: Row(
               children: [
-                Icon(section.icon, color: active ? Colors.white : CafeColors.inkMuted, size: 18),
+                Icon(section.icon, color: active ? CafeSurfaces.of(context).onButton : CafeColors.inkMuted, size: 18),
                 if (!compact) ...[
                   const SizedBox(width: 10),
                   Expanded(
@@ -247,7 +247,7 @@ class AdminShell extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         height: 1.15,
-                        color: active ? Colors.white : CafeColors.ink,
+                        color: active ? CafeSurfaces.of(context).onButton : CafeColors.ink,
                       ),
                     ),
                   ),
@@ -313,6 +313,11 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                 expanded: false,
                 label: context.l10n.adminAddTableButton,
                 onPressed: () => _addTable(context, store),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: store.tables.isEmpty ? null : () => store.regenerateAllTableQrs(),
+                child: Text(context.l10n.adminRegenerateAllQr),
               ),
             ],
           ),
@@ -424,6 +429,10 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                             }
                                           },
                                     child: const Text('Save PNG'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => store.regenerateTableQr(table.id),
+                                    child: Text(context.l10n.adminRegenerateQr),
                                   ),
                                 ],
                               ),

@@ -27,14 +27,14 @@ class CustomerShell {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: !enabled ? CafeColors.line : (active ? CafeColors.terracottaDark : CafeColors.inkMuted)),
+            Icon(icon, size: 22, color: !enabled ? CafeColors.line : (active ? CafeSurfaces.of(context).button : CafeColors.inkMuted)),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: active ? FontWeight.w800 : FontWeight.w500,
-                color: !enabled ? CafeColors.line : (active ? CafeColors.terracottaDark : CafeColors.inkMuted),
+                color: !enabled ? CafeColors.line : (active ? CafeSurfaces.of(context).button : CafeColors.inkMuted),
               ),
             ),
             if (active)
@@ -42,7 +42,7 @@ class CustomerShell {
                 margin: const EdgeInsets.only(top: 3),
                 width: 4,
                 height: 4,
-                decoration: const BoxDecoration(color: CafeColors.terracottaDark, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: CafeSurfaces.of(context).button, shape: BoxShape.circle),
               ),
           ],
         ),

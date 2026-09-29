@@ -96,8 +96,11 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
               ),
               TextButton.icon(
                 onPressed: () => setState(() => creating = !creating),
-                icon: const Icon(Icons.add, size: 16, color: CafeColors.terracotta),
-                label: Text(creating ? context.l10n.layoutClose : context.l10n.layoutNewCategory, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800)),
+                icon: Icon(Icons.add, size: 16, color: CafeSurfaces.of(context).button),
+                label: Text(
+                  creating ? context.l10n.layoutClose : context.l10n.layoutNewCategory,
+                  style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w800),
+                ),
               ),
             ],
           ),
@@ -185,6 +188,8 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
               icon: const Icon(Icons.check, size: 16),
               label: Text(context.l10n.layoutCreateCategory, style: const TextStyle(fontWeight: FontWeight.w700)),
               style: FilledButton.styleFrom(
+                backgroundColor: CafeSurfaces.of(context).button,
+                foregroundColor: CafeSurfaces.of(context).onButton,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -433,7 +438,6 @@ class _CategoryCardState extends State<_CategoryCard> {
                   const SizedBox(width: 6),
                   Switch(
                     value: category.visible,
-                    activeTrackColor: CafeColors.terracotta,
                     onChanged: (value) => store.saveCategory(category..visible = value),
                   ),
                   IconButton(

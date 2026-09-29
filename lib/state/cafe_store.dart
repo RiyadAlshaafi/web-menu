@@ -225,7 +225,7 @@ class CafeStore extends ChangeNotifier {
   }
 
   CafeTable? tableBySlug(String slug) {
-    final matches = tables.where((table) => table.qrSlug == slug || table.id == slug || table.number == slug);
+    final matches = tables.where((table) => table.qrSlug == slug || table.id == slug);
     return matches.isEmpty ? null : matches.first;
   }
 
@@ -507,16 +507,30 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<CafeTable> addTable(String number) async {
-    final slug = number.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
     final table = CafeTable(
       id: Secrets.id('tbl'),
       number: number.trim(),
-      qrSlug: slug.isEmpty ? Secrets.id('t') : slug,
+      qrSlug: Secrets.publicId(),
     );
     tables.add(table);
     await db.writeTables(tables);
     notifyListeners();
     return table;
+  }
+
+  Future<void> regenerateTableQr(String id) async {
+    final table = tableById(id);
+    table.qrSlug = Secrets.publicId();
+    await db.writeTables(tables);
+    notifyListeners();
+  }
+
+  Future<void> regenerateAllTableQrs() async {
+    for (final table in tables) {
+      table.qrSlug = Secrets.publicId();
+    }
+    await db.writeTables(tables);
+    notifyListeners();
   }
 
   Future<void> deleteTable(String id) async {

@@ -188,7 +188,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                           return ChoiceChip(
                             label: Text('$rate%'),
                             selected: selected,
-                            selectedColor: CafeColors.terracotta,
+                            selectedColor: CafeSurfaces.of(context).button,
                             labelStyle: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12),
                             onSelected: (_) {
                               percent = rate.toDouble();
@@ -209,7 +209,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                         onChanged: (value) => setModal(() => activate = value),
                         title: Text(context.l10n.catalogActivateImmediately, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                         subtitle: Text(context.l10n.catalogActivateImmediatelyDesc, style: const TextStyle(fontSize: 12)),
-                        activeTrackColor: CafeColors.terracotta,
+                        activeTrackColor: CafeSurfaces.of(context).button,
                       ),
                       const SizedBox(height: 8),
                       Align(

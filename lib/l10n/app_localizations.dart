@@ -686,6 +686,18 @@ abstract class AppLocalizations {
   /// **'+ Add Table'**
   String get adminAddTableButton;
 
+  /// No description provided for @adminRegenerateQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate QR'**
+  String get adminRegenerateQr;
+
+  /// No description provided for @adminRegenerateAllQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate all QR codes'**
+  String get adminRegenerateAllQr;
+
   /// No description provided for @adminTableNumber.
   ///
   /// In en, this message translates to:
