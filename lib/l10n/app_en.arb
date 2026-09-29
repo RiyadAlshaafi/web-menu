@@ -766,5 +766,24 @@
   },
   "guestVatIncluded": "Hospitality & VAT (Included)",
   "guestTotalDue": "Total Due",
-  "guestWannaCheckIn": "Wanna Check In"
+  "guestWannaCheckIn": "Wanna Check In",
+  "navCashierLog": "Cashier Log & Shift",
+  "cashierLogScope": "Your transactions. Filter them by shift.",
+  "salesAllShifts": "All shifts",
+  "payTypesTitle": "Payment types",
+  "payTypesHint": "Customers choose from the enabled types. Disabling one keeps past sales.",
+  "payTypeNameEn": "English name",
+  "payTypeNameAr": "Arabic name",
+  "payTypeAdd": "Add type",
+  "payTypeInUse": "This type is already used on a sale. Disable it instead of deleting it.",
+  "payChoose": "How will you pay?",
+  "payChanged": "Payment method changed from {oldName} to {newName} by {name} at {time}",
+  "@payChanged": {
+    "placeholders": {
+      "oldName": {"type": "String"},
+      "newName": {"type": "String"},
+      "name": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  }
 }

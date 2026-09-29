@@ -1252,14 +1252,37 @@ class CustomerBillScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (order != null && store.enabledPaymentTypes.isNotEmpty) ...[
+                  Text(context.l10n.payChoose, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final type in store.enabledPaymentTypes)
+                        ChoiceChip(
+                          label: Text(type.label(store.locale)),
+                          selected: order.paymentTypeId == type.id,
+                          onSelected: (_) => store.setTablePaymentType(table.id, type.id),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 if (order != null)
                   TerracottaButton(
                     label: context.l10n.guestWannaCheckIn,
-                    onPressed: store.canRequestBill(table.id)
-                        ? () => store.requestBill(table.id)
-                        : () {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
-                          },
+                    onPressed: () {
+                      if (!store.canRequestBill(table.id)) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
+                        return;
+                      }
+                      if (store.enabledPaymentTypes.isNotEmpty && order.paymentTypeId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.payChoose)));
+                        return;
+                      }
+                      store.requestBill(table.id);
+                    },
                   ),
               ],
             ),

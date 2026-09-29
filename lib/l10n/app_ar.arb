@@ -401,5 +401,24 @@
   "guestServiceCharge": "رسوم الخدمة ({percent}%)",
   "guestVatIncluded": "الضيافة وضريبة القيمة المضافة (مشمولة)",
   "guestTotalDue": "الإجمالي المستحق",
-  "guestWannaCheckIn": "أرغب في طلب الحساب"
+  "guestWannaCheckIn": "أرغب في طلب الحساب",
+  "navCashierLog": "سجل الكاشير والوردية",
+  "cashierLogScope": "معاملاتك فقط. يمكن تصفيتها حسب الوردية.",
+  "salesAllShifts": "كل الورديات",
+  "payTypesTitle": "طرق الدفع",
+  "payTypesHint": "يختار الزبون من الطرق المفعّلة. إيقاف طريقة لا يغيّر المبيعات السابقة.",
+  "payTypeNameEn": "الاسم بالإنجليزية",
+  "payTypeNameAr": "الاسم بالعربية",
+  "payTypeAdd": "إضافة طريقة",
+  "payTypeInUse": "هذه الطريقة مستخدمة في عملية بيع. أوقفها بدل حذفها.",
+  "payChoose": "كيف ستدفع؟",
+  "payChanged": "تغيّرت طريقة الدفع من {oldName} إلى {newName} بواسطة {name} في {time}",
+  "@payChanged": {
+    "placeholders": {
+      "oldName": {"type": "String"},
+      "newName": {"type": "String"},
+      "name": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  }
 }

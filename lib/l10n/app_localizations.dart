@@ -2497,6 +2497,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wanna Check In'**
   String get guestWannaCheckIn;
+
+  /// No description provided for @navCashierLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier Log & Shift'**
+  String get navCashierLog;
+
+  /// No description provided for @cashierLogScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Your transactions. Filter them by shift.'**
+  String get cashierLogScope;
+
+  /// No description provided for @salesAllShifts.
+  ///
+  /// In en, this message translates to:
+  /// **'All shifts'**
+  String get salesAllShifts;
+
+  /// No description provided for @payTypesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment types'**
+  String get payTypesTitle;
+
+  /// No description provided for @payTypesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers choose from the enabled types. Disabling one keeps past sales.'**
+  String get payTypesHint;
+
+  /// No description provided for @payTypeNameEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English name'**
+  String get payTypeNameEn;
+
+  /// No description provided for @payTypeNameAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic name'**
+  String get payTypeNameAr;
+
+  /// No description provided for @payTypeAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add type'**
+  String get payTypeAdd;
+
+  /// No description provided for @payTypeInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This type is already used on a sale. Disable it instead of deleting it.'**
+  String get payTypeInUse;
+
+  /// No description provided for @payChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'How will you pay?'**
+  String get payChoose;
+
+  /// No description provided for @payChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method changed from {oldName} to {newName} by {name} at {time}'**
+  String payChanged(String oldName, String newName, String name, String time);
 }
 
 class _AppLocalizationsDelegate

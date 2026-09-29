@@ -126,9 +126,10 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const DishAvailabilityScreen()),
             ),
             GoRoute(
-              path: '/pos/sales',
+              path: '/pos/log',
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const SalesLogScreen(ownSalesOnly: true)),
             ),
+            GoRoute(path: '/pos/sales', redirect: (_, _) => '/pos/log'),
             GoRoute(
               path: '/pos/shifts',
               pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierShiftsScreen()),

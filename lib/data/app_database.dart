@@ -66,6 +66,7 @@ class AppDatabase {
   List<CafeOrder> _orders = [];
   Map<String, CartState> _carts = {};
   List<Payment> _payments = [];
+  List<PaymentType> _paymentTypes = [];
   List<CashShift> _shifts = [];
   List<StaffCall> _calls = [];
 
@@ -85,6 +86,7 @@ class AppDatabase {
   List<CafeOrder> get orders => List<CafeOrder>.from(_orders);
   Map<String, CartState> get carts => Map<String, CartState>.from(_carts);
   List<Payment> get payments => List<Payment>.from(_payments);
+  List<PaymentType> get paymentTypes => List<PaymentType>.from(_paymentTypes);
   List<CashShift> get shifts => List<CashShift>.from(_shifts);
   List<StaffCall> get calls => List<StaffCall>.from(_calls);
   Map<String, dynamic>? get otp => null;
@@ -141,6 +143,7 @@ class AppDatabase {
     _orders = [];
     _carts = {};
     _payments = [];
+    _paymentTypes = [];
     _shifts = [];
     _calls = [];
   }
@@ -308,6 +311,7 @@ class AppDatabase {
         cashierId: row['cashier_id'] as String?,
         awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
         refusalNotice: row['refusal_notice'] as String? ?? '',
+        paymentTypeId: row['payment_type_id'] as String?,
         lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
               menuItemId: line['menu_item_id'] as String? ?? '',
               name: line['name'] as String? ?? '',
@@ -343,10 +347,41 @@ class AppDatabase {
         resolved: row['resolved'] as bool? ?? false,
       );
     }).toList();
-    if (client!.auth.currentUser != null || cashierToken != null) {
-      final paymentRows = await client!.from('payments').select();
-      _payments = (paymentRows as List).map((row) => Payment(
+    try {
+      final typeRows = await client!.from('payment_types').select().order('sort_order');
+      _paymentTypes = (typeRows as List).map((row) => PaymentType(
             id: row['id'] as String,
+            nameEn: row['name_en'] as String? ?? '',
+            nameAr: row['name_ar'] as String? ?? '',
+            enabled: row['enabled'] as bool? ?? true,
+            sortOrder: row['sort_order'] as int? ?? 0,
+          )).toList();
+    } catch (error) {
+      debugPrint('Payment types were not loaded: $error');
+      _paymentTypes = [];
+    }
+    if (client!.auth.currentUser != null || cashierToken != null) {
+      final changeRows = await client!.from('payment_method_changes').select();
+      final changes = <String, List<PaymentMethodChange>>{};
+      for (final row in changeRows as List) {
+        final paymentId = row['payment_id'] as String;
+        changes.putIfAbsent(paymentId, () => []).add(PaymentMethodChange(
+              id: row['id'] as String,
+              paymentId: paymentId,
+              oldTypeId: row['old_type_id'] as String?,
+              newTypeId: row['new_type_id'] as String?,
+              actorName: row['actor_name'] as String? ?? '',
+              actorRole: row['actor_role'] as String? ?? '',
+              createdAt: DateTime.parse(row['created_at'] as String),
+            ));
+      }
+      final paymentRows = await client!.from('payments').select();
+      _payments = (paymentRows as List).map((row) {
+        final id = row['id'] as String;
+        final history = changes[id] ?? [];
+        history.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        return Payment(
+            id: id,
             orderId: row['order_id'] as String,
             tableId: row['table_id'] as String,
             totalDue: (row['total_due'] as num).toDouble(),
@@ -355,7 +390,10 @@ class AppDatabase {
             cashierId: row['cashier_id'] as String,
             shiftId: row['shift_id'] as String,
             paidAt: DateTime.parse(row['paid_at'] as String),
-          )).toList();
+            paymentTypeId: row['payment_type_id'] as String?,
+            changes: history,
+          );
+      }).toList();
       final shiftRows = await client!.from('shifts').select();
       _shifts = (shiftRows as List).map((row) => CashShift(
             id: row['id'] as String,
@@ -426,13 +464,14 @@ class AppDatabase {
     }
   }
 
-  Future<String?> settleCash(String tableId, double cashReceived, {bool applyService = true}) async {
+  Future<String?> settleCash(String tableId, double cashReceived, {bool applyService = true, String? paymentTypeId}) async {
     if (client == null) return 'Supabase is not configured.';
     _applyHeaders();
     final raw = await client!.rpc('settle_cash', params: {
       'p_table_id': tableId,
       'p_cash_received': cashReceived,
       'p_apply_service': applyService,
+      'p_payment_type_id': paymentTypeId,
     });
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] == true) {
@@ -440,6 +479,71 @@ class AppDatabase {
       return null;
     }
     return result['error'] as String? ?? 'Payment failed.';
+  }
+
+  Future<String?> setTablePaymentType(String qrSlug, String typeId) async {
+    if (client == null) return 'Supabase is not configured.';
+    _applyHeaders();
+    final raw = await client!.rpc('set_table_payment_type', params: {
+      'p_qr_slug': qrSlug,
+      'p_type_id': typeId,
+    });
+    final result = Map<String, dynamic>.from(raw as Map);
+    if (result['ok'] == true) {
+      await refreshFromDisk();
+      return null;
+    }
+    return result['error'] as String? ?? 'Payment type was not saved.';
+  }
+
+  Future<String?> changePaymentType(String paymentId, String typeId) async {
+    if (client == null) return 'Supabase is not configured.';
+    _applyHeaders();
+    final raw = await client!.rpc('change_payment_type', params: {
+      'p_payment_id': paymentId,
+      'p_type_id': typeId,
+    });
+    final result = Map<String, dynamic>.from(raw as Map);
+    if (result['ok'] == true) {
+      await refreshFromDisk();
+      return null;
+    }
+    return result['error'] as String? ?? 'Payment type was not changed.';
+  }
+
+  Future<String?> addPaymentType(String nameEn, String nameAr) async {
+    if (client == null || restaurantId == null) return 'Supabase is not configured.';
+    final sort = _paymentTypes.fold<int>(0, (max, type) => type.sortOrder > max ? type.sortOrder : max) + 1;
+    await client!.from('payment_types').insert({
+      'restaurant_id': restaurantId,
+      'name_en': nameEn,
+      'name_ar': nameAr,
+      'sort_order': sort,
+    });
+    await refreshFromDisk();
+    return null;
+  }
+
+  Future<String?> savePaymentType(PaymentType type) async {
+    if (client == null) return 'Supabase is not configured.';
+    await client!.from('payment_types').update({
+      'name_en': type.nameEn,
+      'name_ar': type.nameAr,
+      'enabled': type.enabled,
+    }).eq('id', type.id);
+    await refreshFromDisk();
+    return null;
+  }
+
+  Future<String?> deletePaymentType(String id) async {
+    if (client == null) return 'Supabase is not configured.';
+    try {
+      await client!.from('payment_types').delete().eq('id', id);
+      await refreshFromDisk();
+      return null;
+    } catch (error) {
+      return '$error';
+    }
   }
 
   Future<void> writeCashiers(List<Cashier> items) async {

@@ -4,11 +4,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
 import '../models/models.dart';
+import '../money.dart';
 import '../theme/cafe_theme.dart';
 
 enum AuthKind { none, admin, cashier }
@@ -17,7 +17,7 @@ class CafeStore extends ChangeNotifier {
   CafeStore(this.db);
 
   final AppDatabase db;
-  final currency = NumberFormat.currency(symbol: '€');
+  CafeMoney get currency => CafeMoney(locale);
 
   late Map<String, dynamic> cafe;
   String locale = 'en';
@@ -29,6 +29,7 @@ class CafeStore extends ChangeNotifier {
   List<CafeOrder> orders = [];
   Map<String, CartState> carts = {};
   List<Payment> payments = [];
+  List<PaymentType> paymentTypes = [];
   List<CashShift> shifts = [];
   List<StaffCall> calls = [];
 
@@ -61,6 +62,7 @@ class CafeStore extends ChangeNotifier {
     orders = db.orders;
     carts = db.carts;
     payments = db.payments;
+    paymentTypes = db.paymentTypes;
     shifts = db.shifts;
     calls = db.calls;
     _syncStamp = _stamp();
@@ -98,6 +100,7 @@ class CafeStore extends ChangeNotifier {
         'categories': categories.map((item) => item.toJson()).toList(),
         'calls': calls.map((item) => item.toJson()).toList(),
         'payments': payments.map((item) => item.toJson()).toList(),
+        'paymentTypes': paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}').toList(),
         'shifts': shifts.map((item) => item.toJson()).toList(),
       });
 
@@ -121,6 +124,7 @@ class CafeStore extends ChangeNotifier {
         'categories': db.categories.map((item) => item.toJson()).toList(),
         'calls': db.calls.map((item) => item.toJson()).toList(),
         'payments': db.payments.map((item) => item.toJson()).toList(),
+        'paymentTypes': db.paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}').toList(),
         'shifts': db.shifts.map((item) => item.toJson()).toList(),
       });
 
@@ -135,6 +139,7 @@ class CafeStore extends ChangeNotifier {
     orders = db.orders;
     carts = db.carts;
     payments = db.payments;
+    paymentTypes = db.paymentTypes;
     shifts = db.shifts;
     calls = db.calls;
     if (currentShift != null) {
@@ -829,6 +834,37 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  String typeName(String? id) {
+    if (id == null || id.isEmpty) return locale == 'ar' ? 'نقداً' : 'Cash';
+    final match = paymentTypes.where((type) => type.id == id);
+    return match.isEmpty ? (locale == 'ar' ? 'نقداً' : 'Cash') : match.first.label(locale);
+  }
+
+  List<PaymentType> get enabledPaymentTypes => paymentTypes.where((type) => type.enabled).toList();
+
+  Future<String?> _refreshAfter(Future<String?> action) async {
+    final error = await action;
+    _hydrateOperational();
+    notifyListeners();
+    return error;
+  }
+
+  Future<String?> setTablePaymentType(String tableId, String typeId) =>
+      _refreshAfter(db.setTablePaymentType(tableById(tableId).qrSlug, typeId));
+
+  Future<String?> changePaymentType(String paymentId, String typeId) =>
+      _refreshAfter(db.changePaymentType(paymentId, typeId));
+
+  Future<String?> addPaymentType(String nameEn, String nameAr) => _refreshAfter(db.addPaymentType(nameEn, nameAr));
+
+  Future<String?> savePaymentType(PaymentType type) => _refreshAfter(db.savePaymentType(type));
+
+  Future<String?> deletePaymentType(String id) {
+    final used = payments.any((payment) => payment.paymentTypeId == id) || orders.any((order) => order.paymentTypeId == id);
+    if (used) return Future.value(l10n.payTypeInUse);
+    return _refreshAfter(db.deletePaymentType(id));
+  }
+
   Future<String?> settleCash({
     required String tableId,
     required double cashReceived,
@@ -841,7 +877,12 @@ class CafeStore extends ChangeNotifier {
     if (order == null) return l10n.errNoOpenBill;
     final due = tabTotal(tableId, applyService: applyService);
     if (cashReceived < due) return l10n.insufficientCash;
-    final failure = await db.settleCash(tableId, cashReceived, applyService: applyService);
+    final failure = await db.settleCash(
+      tableId,
+      cashReceived,
+      applyService: applyService,
+      paymentTypeId: openOrderFor(tableId)?.paymentTypeId,
+    );
     if (failure != null) return failure == 'insufficient cash' ? l10n.insufficientCash : failure;
     await syncFromDisk();
     notifyListeners();

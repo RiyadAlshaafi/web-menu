@@ -293,6 +293,7 @@ class CafeOrder {
     this.cashierId,
     this.awaitingCustomerConfirmation = false,
     this.refusalNotice = '',
+    this.paymentTypeId,
   });
 
   final String id;
@@ -305,6 +306,7 @@ class CafeOrder {
   String? cashierId;
   bool awaitingCustomerConfirmation;
   String refusalNotice;
+  String? paymentTypeId;
 
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get subtotal => lines.fold(0, (sum, line) => sum + line.total);
@@ -324,6 +326,7 @@ class CafeOrder {
         cashierId: json['cashierId'] as String?,
         awaitingCustomerConfirmation: json['awaitingCustomerConfirmation'] as bool? ?? false,
         refusalNotice: json['refusalNotice'] as String? ?? '',
+        paymentTypeId: json['paymentTypeId'] as String?,
         lines: (json['lines'] as List<dynamic>)
             .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
             .toList(),
@@ -339,6 +342,7 @@ class CafeOrder {
         'cashierId': cashierId,
         'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
         'refusalNotice': refusalNotice,
+        'paymentTypeId': paymentTypeId,
         'lines': lines.map((line) => line.toJson()).toList(),
       };
 }
@@ -365,6 +369,52 @@ class CartState {
       };
 }
 
+class PaymentType {
+  PaymentType({
+    required this.id,
+    required this.nameEn,
+    required this.nameAr,
+    required this.enabled,
+    required this.sortOrder,
+  });
+
+  final String id;
+  String nameEn;
+  String nameAr;
+  bool enabled;
+  int sortOrder;
+
+  String label(String locale) => locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
+}
+
+class PaymentMethodChange {
+  PaymentMethodChange({
+    required this.id,
+    required this.paymentId,
+    required this.actorName,
+    required this.actorRole,
+    required this.createdAt,
+    this.oldTypeId,
+    this.newTypeId,
+  });
+
+  final String id;
+  final String paymentId;
+  final String? oldTypeId;
+  final String? newTypeId;
+  final String actorName;
+  final String actorRole;
+  final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'oldTypeId': oldTypeId,
+        'newTypeId': newTypeId,
+        'actorName': actorName,
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
 class Payment {
   Payment({
     required this.id,
@@ -376,7 +426,9 @@ class Payment {
     required this.cashierId,
     required this.shiftId,
     required this.paidAt,
-  });
+    this.paymentTypeId,
+    List<PaymentMethodChange>? changes,
+  }) : changes = changes ?? [];
 
   final String id;
   final String orderId;
@@ -387,7 +439,8 @@ class Payment {
   final String cashierId;
   final String shiftId;
   final DateTime paidAt;
-  String get method => 'CASH';
+  String? paymentTypeId;
+  final List<PaymentMethodChange> changes;
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
         id: json['id'] as String,
@@ -399,6 +452,7 @@ class Payment {
         cashierId: json['cashierId'] as String,
         shiftId: json['shiftId'] as String,
         paidAt: DateTime.parse(json['paidAt'] as String),
+        paymentTypeId: json['paymentTypeId'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -411,7 +465,8 @@ class Payment {
         'cashierId': cashierId,
         'shiftId': shiftId,
         'paidAt': paidAt.toIso8601String(),
-        'method': 'CASH',
+        'paymentTypeId': paymentTypeId,
+        'changes': changes.map((change) => change.toJson()).toList(),
       };
 }
 

@@ -79,9 +79,9 @@ class AppSections {
       icon: Icons.toggle_on_outlined,
     ),
     AppSection(
-      path: '/pos/sales',
-      labelOf: (l) => l.navSalesLog,
-      crumbOf: (l) => l.navSalesLog,
+      path: '/pos/log',
+      labelOf: (l) => l.navCashierLog,
+      crumbOf: (l) => l.navCashierLog,
       icon: Icons.receipt_long,
     ),
     AppSection(

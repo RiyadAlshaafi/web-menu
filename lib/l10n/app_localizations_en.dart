@@ -1337,4 +1337,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestWannaCheckIn => 'Wanna Check In';
+
+  @override
+  String get navCashierLog => 'Cashier Log & Shift';
+
+  @override
+  String get cashierLogScope => 'Your transactions. Filter them by shift.';
+
+  @override
+  String get salesAllShifts => 'All shifts';
+
+  @override
+  String get payTypesTitle => 'Payment types';
+
+  @override
+  String get payTypesHint =>
+      'Customers choose from the enabled types. Disabling one keeps past sales.';
+
+  @override
+  String get payTypeNameEn => 'English name';
+
+  @override
+  String get payTypeNameAr => 'Arabic name';
+
+  @override
+  String get payTypeAdd => 'Add type';
+
+  @override
+  String get payTypeInUse =>
+      'This type is already used on a sale. Disable it instead of deleting it.';
+
+  @override
+  String get payChoose => 'How will you pay?';
+
+  @override
+  String payChanged(String oldName, String newName, String name, String time) {
+    return 'Payment method changed from $oldName to $newName by $name at $time';
+  }
 }

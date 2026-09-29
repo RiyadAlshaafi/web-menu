@@ -31,6 +31,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   DateTime? to;
   String? cashierId;
   String? tableId;
+  String? methodId;
+  String? shiftId;
   _Sort sort = _Sort.when;
   bool ascending = false;
   int page = 0;
@@ -56,10 +58,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.navSalesLog, style: CafeTheme.display.copyWith(fontSize: 28)),
+          Text(widget.ownSalesOnly ? context.l10n.navCashierLog : context.l10n.navSalesLog, style: CafeTheme.display.copyWith(fontSize: 28)),
           if (widget.ownSalesOnly) ...[
             const SizedBox(height: 4),
-            Text(context.l10n.salesOwnOnly, style: const TextStyle(color: CafeColors.inkMuted)),
+            Text(context.l10n.cashierLogScope, style: const TextStyle(color: CafeColors.inkMuted)),
           ],
           const SizedBox(height: 12),
           Wrap(
@@ -90,6 +92,19 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                 (id) => id == null ? context.l10n.salesAllTables : store.tableById(id).number,
                 (value) => setState(() { tableId = value; page = 0; }),
               ),
+              _menu<String?>(
+                methodId,
+                [null, ...store.paymentTypes.map((item) => item.id)],
+                (id) => id == null ? context.l10n.salesAllMethods : store.typeName(id),
+                (value) => setState(() { methodId = value; page = 0; }),
+              ),
+              if (widget.ownSalesOnly)
+                _menu<String?>(
+                  shiftId,
+                  [null, ...store.shifts.where((shift) => shift.cashierId == store.currentCashier?.id).map((shift) => shift.id)],
+                  (id) => id == null ? context.l10n.salesAllShifts : _shiftLabel(store, id),
+                  (value) => setState(() { shiftId = value; page = 0; }),
+                ),
               FilledButton(onPressed: () => _exportCsv(store, rows), child: Text(context.l10n.salesExportCsv)),
               OutlinedButton(
                 onPressed: () => _exportPdf(store, rows),
@@ -115,7 +130,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                             itemBuilder: (context, index) {
                               final row = visible[index];
                               return InkWell(
-                                onTap: () => _detail(context, store, row),
+                                onTap: () => _detail(context, row),
                                 child: _line(context, store, row, button),
                               );
                             },
@@ -189,7 +204,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
           cell(store.currency.format(row.subtotal)),
           cell(store.currency.format(row.discount)),
           cell(store.currency.format(row.total)),
-          cell(row.payment.method),
+          cell(store.typeName(row.payment.paymentTypeId)),
           Expanded(
             flex: 2,
             child: Align(
@@ -235,6 +250,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       if (mine != null && payment.cashierId != mine) return false;
       if (cashierId != null && payment.cashierId != cashierId) return false;
       if (tableId != null && payment.tableId != tableId) return false;
+      if (methodId != null && payment.paymentTypeId != methodId) return false;
+      if (shiftId != null && payment.shiftId != shiftId) return false;
       if (from != null && payment.paidAt.isBefore(DateTime(from!.year, from!.month, from!.day))) return false;
       if (to != null && payment.paidAt.isAfter(DateTime(to!.year, to!.month, to!.day, 23, 59, 59))) return false;
       final row = _sale(store, payment);
@@ -252,7 +269,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         _Sort.subtotal => a.subtotal.compareTo(b.subtotal),
         _Sort.discount => a.discount.compareTo(b.discount),
         _Sort.total => a.total.compareTo(b.total),
-        _Sort.method => a.payment.method.compareTo(b.payment.method),
+        _Sort.method => store.typeName(a.payment.paymentTypeId).compareTo(store.typeName(b.payment.paymentTypeId)),
         _Sort.status => 0,
       };
       return ascending ? result : -result;
@@ -283,42 +300,86 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     return match.isEmpty ? id : match.first.name;
   }
 
-  Future<void> _detail(BuildContext context, CafeStore store, _Sale row) {
+  String _shiftLabel(CafeStore store, String id) {
+    final match = store.shifts.where((shift) => shift.id == id);
+    if (match.isEmpty) return id;
+    final shift = match.first;
+    final opened = DateFormat('y-MM-dd HH:mm').format(shift.openedAt);
+    final closed = shift.closedAt == null ? '' : ' – ${DateFormat('HH:mm').format(shift.closedAt!)}';
+    return '$opened$closed';
+  }
+
+  Future<void> _detail(BuildContext context, _Sale row) {
     return showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt)),
-        content: SizedBox(
-          width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${context.l10n.salesColTable}: ${row.tableNumber}'),
-              Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
-              Text(row.payment.id, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-              const SizedBox(height: 8),
-              if (row.lines.isEmpty)
-                Text('${row.itemCount}')
-              else
-                ...row.lines.map((line) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        '${line.qty}× ${line.name}  ${store.currency.format(line.unitPrice)}'
-                        '${line.discountAmount > 0 ? '  −${store.currency.format(line.discountAmount)}' : ''}'
-                        '  ${store.currency.format(line.total)}',
+      builder: (context) => Consumer<CafeStore>(
+        builder: (context, live, _) {
+          final payment = live.payments.where((item) => item.id == row.payment.id);
+          final current = payment.isEmpty ? row.payment : payment.first;
+          final choices = {
+            ...live.enabledPaymentTypes.map((type) => type.id),
+            if (current.paymentTypeId != null) current.paymentTypeId!,
+          };
+          return AlertDialog(
+            title: Text(DateFormat('y-MM-dd HH:mm').format(current.paidAt)),
+            content: SizedBox(
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${context.l10n.salesColTable}: ${row.tableNumber}'),
+                    Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
+                    Text(current.id, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    if (row.lines.isEmpty)
+                      Text('${row.itemCount}')
+                    else
+                      ...row.lines.map((line) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              '${line.qty}× ${line.name}  ${live.currency.format(line.unitPrice)}'
+                              '${line.discountAmount > 0 ? '  −${live.currency.format(line.discountAmount)}' : ''}'
+                              '  ${live.currency.format(line.total)}',
+                            ),
+                          )),
+                    const Divider(),
+                    Text('${context.l10n.salesColSubtotal}: ${live.currency.format(row.subtotal)}'),
+                    Text('${context.l10n.salesColDiscount}: ${live.currency.format(row.discount)}'),
+                    Text('${context.l10n.salesColTotal}: ${live.currency.format(row.total)}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text('${context.l10n.salesColMethod}: ${live.typeName(current.paymentTypeId)}'),
+                    if (choices.isNotEmpty)
+                      DropdownButton<String>(
+                        value: choices.contains(current.paymentTypeId) ? current.paymentTypeId : null,
+                        items: choices.map((id) => DropdownMenuItem(value: id, child: Text(live.typeName(id)))).toList(),
+                        onChanged: (value) async {
+                          if (value == null || value == current.paymentTypeId) return;
+                          final error = await live.changePaymentType(current.id, value);
+                          if (!context.mounted || error == null) return;
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                        },
                       ),
-                    )),
-              const Divider(),
-              Text('${context.l10n.salesColSubtotal}: ${store.currency.format(row.subtotal)}'),
-              Text('${context.l10n.salesColDiscount}: ${store.currency.format(row.discount)}'),
-              Text('${context.l10n.salesColTotal}: ${store.currency.format(row.total)}', style: const TextStyle(fontWeight: FontWeight.w800)),
-              Text('${context.l10n.salesColMethod}: ${row.payment.method}'),
-              Text('${context.l10n.salesColStatus}: ${context.l10n.salesPaid}'),
-            ],
-          ),
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel))],
+                    ...current.changes.map((change) => Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            context.l10n.payChanged(
+                              live.typeName(change.oldTypeId),
+                              live.typeName(change.newTypeId),
+                              change.actorName,
+                              DateFormat('y-MM-dd HH:mm').format(change.createdAt),
+                            ),
+                            style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
+                          ),
+                        )),
+                    Text('${context.l10n.salesColStatus}: ${context.l10n.salesPaid}'),
+                  ],
+                ),
+              ),
+            ),
+            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel))],
+          );
+        },
       ),
     );
   }
@@ -334,7 +395,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.subtotal,
         row.discount,
         row.total,
-        row.payment.method,
+        store.typeName(row.payment.paymentTypeId),
         'paid',
         row.payment.id,
       ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
@@ -364,7 +425,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                           store.currency.format(row.subtotal),
                           store.currency.format(row.discount),
                           store.currency.format(row.total),
-                          row.payment.method,
+                          store.typeName(row.payment.paymentTypeId),
                           'Paid',
                         ])
                     .toList(),

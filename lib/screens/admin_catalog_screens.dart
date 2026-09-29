@@ -412,6 +412,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         const SizedBox(height: 18),
         const AdminBrandSettings(),
         const SizedBox(height: 16),
+        const PaymentTypesCard(),
+        const SizedBox(height: 16),
         SoftCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,6 +555,120 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             Icon(selected ? Icons.check_circle : Icons.circle_outlined, color: selected ? CafeSurfaces.of(context).button : CafeColors.inkMuted),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PaymentTypesCard extends StatefulWidget {
+  const PaymentTypesCard({super.key});
+
+  @override
+  State<PaymentTypesCard> createState() => _PaymentTypesCardState();
+}
+
+class _PaymentTypesCardState extends State<PaymentTypesCard> {
+  final nameEn = TextEditingController();
+  final nameAr = TextEditingController();
+
+  @override
+  void dispose() {
+    nameEn.dispose();
+    nameAr.dispose();
+    super.dispose();
+  }
+
+  Future<void> _rename(BuildContext context, CafeStore store, PaymentType type) async {
+    final en = TextEditingController(text: type.nameEn);
+    final ar = TextEditingController(text: type.nameAr);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.payTypesTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: en, decoration: InputDecoration(labelText: context.l10n.payTypeNameEn)),
+            const SizedBox(height: 8),
+            TextField(controller: ar, decoration: InputDecoration(labelText: context.l10n.payTypeNameAr)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.payTypeAdd)),
+        ],
+      ),
+    );
+    if (saved == true && en.text.trim().isNotEmpty && ar.text.trim().isNotEmpty) {
+      type.nameEn = en.text.trim();
+      type.nameAr = ar.text.trim();
+      await store.savePaymentType(type);
+    }
+    en.dispose();
+    ar.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.l10n.payTypesTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(context.l10n.payTypesHint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13)),
+          const SizedBox(height: 12),
+          for (final type in store.paymentTypes)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: type.enabled,
+              title: Text(type.label(store.locale)),
+              subtitle: Text('${type.nameEn} · ${type.nameAr}'),
+              onChanged: (value) {
+                type.enabled = value;
+                store.savePaymentType(type);
+              },
+              secondary: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: context.l10n.payTypeNameEn,
+                    onPressed: () => _rename(context, store, type),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.commonDelete,
+                    onPressed: () async {
+                      final error = await store.deletePaymentType(type.id);
+                      if (!context.mounted || error == null) return;
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          TextField(controller: nameEn, decoration: InputDecoration(labelText: context.l10n.payTypeNameEn)),
+          const SizedBox(height: 8),
+          TextField(controller: nameAr, decoration: InputDecoration(labelText: context.l10n.payTypeNameAr)),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: () async {
+                final en = nameEn.text.trim();
+                final ar = nameAr.text.trim();
+                if (en.isEmpty || ar.isEmpty) return;
+                await store.addPaymentType(en, ar);
+                nameEn.clear();
+                nameAr.clear();
+              },
+              child: Text(context.l10n.payTypeAdd),
+            ),
+          ),
+        ],
       ),
     );
   }

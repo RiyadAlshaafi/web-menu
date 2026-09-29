@@ -1334,4 +1334,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guestWannaCheckIn => 'أرغب في طلب الحساب';
+
+  @override
+  String get navCashierLog => 'سجل الكاشير والوردية';
+
+  @override
+  String get cashierLogScope => 'معاملاتك فقط. يمكن تصفيتها حسب الوردية.';
+
+  @override
+  String get salesAllShifts => 'كل الورديات';
+
+  @override
+  String get payTypesTitle => 'طرق الدفع';
+
+  @override
+  String get payTypesHint =>
+      'يختار الزبون من الطرق المفعّلة. إيقاف طريقة لا يغيّر المبيعات السابقة.';
+
+  @override
+  String get payTypeNameEn => 'الاسم بالإنجليزية';
+
+  @override
+  String get payTypeNameAr => 'الاسم بالعربية';
+
+  @override
+  String get payTypeAdd => 'إضافة طريقة';
+
+  @override
+  String get payTypeInUse =>
+      'هذه الطريقة مستخدمة في عملية بيع. أوقفها بدل حذفها.';
+
+  @override
+  String get payChoose => 'كيف ستدفع؟';
+
+  @override
+  String payChanged(String oldName, String newName, String name, String time) {
+    return 'تغيّرت طريقة الدفع من $oldName إلى $newName بواسطة $name في $time';
+  }
 }
