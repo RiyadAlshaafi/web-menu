@@ -96,27 +96,19 @@ class CashierShell extends StatelessWidget {
                     const SizedBox(height: 22),
                     Text(context.l10n.cashierAllInOne, style: const TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: CafeColors.inkMuted)),
                     const SizedBox(height: 10),
-                    _nav(
-                      context,
-                      AppSections.cashier[0],
-                      location == '/pos',
-                      compact,
-                      badge: '${store.openCalls.length + store.liveOrders().length}',
-                    ),
-                    _nav(
-                      context,
-                      AppSections.cashier[1],
-                      location.startsWith('/pos/tables'),
-                      compact,
-                      badge: store.tables.isEmpty ? null : '$occupied/${store.tables.length}',
-                    ),
-                    _nav(
-                      context,
-                      AppSections.cashier[2],
-                      location.startsWith('/pos/shifts'),
-                      compact,
-                      badge: sales == 0 ? null : store.currency.format(sales),
-                    ),
+                    for (final item in AppSections.cashier)
+                      _nav(
+                        context,
+                        item,
+                        item.matches(location),
+                        compact,
+                        badge: switch (item.path) {
+                          '/pos' => '${store.openCalls.length + store.liveOrders().length}',
+                          '/pos/tables' => store.tables.isEmpty ? null : '$occupied/${store.tables.length}',
+                          '/pos/shifts' => sales == 0 ? null : store.currency.format(sales),
+                          _ => null,
+                        },
+                      ),
                     const Spacer(),
                     SoftCard(
                       padding: const EdgeInsets.all(10),
