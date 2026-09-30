@@ -227,12 +227,26 @@ class GuestSession extends StatefulWidget {
 class _GuestSessionState extends State<GuestSession> {
   CafeStore? _store;
   bool _sawOpenOrder = false;
+  bool _loading = true;
+  bool _missing = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<CafeStore>().ensureGuest(widget.slug);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _missing = false;
+    });
+    await context.read<CafeStore>().ensureGuest(widget.slug);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _missing = context.read<CafeStore>().tableBySlug(widget.slug) == null;
     });
   }
 
@@ -251,7 +265,7 @@ class _GuestSessionState extends State<GuestSession> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.slug != widget.slug) {
       _sawOpenOrder = false;
-      context.read<CafeStore>().ensureGuest(widget.slug);
+      _load();
     }
   }
 
@@ -263,7 +277,7 @@ class _GuestSessionState extends State<GuestSession> {
 
   void _onStore() {
     final store = _store;
-    if (store == null || !mounted) return;
+    if (store == null || !mounted || _loading) return;
     final table = store.tableBySlug(widget.slug);
     if (table == null) return;
     if (store.openOrderFor(table.id) != null) {
@@ -281,8 +295,25 @@ class _GuestSessionState extends State<GuestSession> {
     });
   }
 
+  bool _needsChoice(CafeStore store, CafeTable table) {
+    if (store.openOrderFor(table.id) != null) return false;
+    return store.serviceChoiceFor(widget.slug) == null && store.serviceChoiceFor(table.id) == null;
+  }
+
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    if (_loading) return const GuestLoadingScreen();
+    final table = store.tableBySlug(widget.slug);
+    if (_missing || table == null) return GuestQrError(onRetry: _load);
+    if (_needsChoice(store, table)) {
+      return GuestServiceScreen(
+        table: table,
+        onChoose: (type) => store.chooseService(widget.slug, type),
+      );
+    }
+    return widget.child;
+  }
 }
 
 /// GoRouter must not refresh on every catalog save — that tears down overlays

@@ -423,5 +423,15 @@
       "name": {"type": "String"},
       "time": {"type": "String"}
     }
-  }
+  },
+  "guestLoadingTable": "جاري تحميل طاولتك...",
+  "guestQrInvalid": "رمز QR هذا لا يطابق طاولة.",
+  "guestQrInvalidHint": "اطلب من المقهى رمزاً جديداً.",
+  "guestRetry": "حاول مرة أخرى",
+  "guestChooseService": "كيف تريد الطلب؟",
+  "guestDineIn": "تناول في المكان",
+  "guestDineInHint": "نوصل الطلب إلى هذه الطاولة.",
+  "guestTakeout": "سفري",
+  "guestTakeoutHint": "تستلم الطلب بنفسك. الطاولة تبقى فارغة.",
+  "serviceTakeout": "سفري"
 }

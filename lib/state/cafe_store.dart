@@ -332,7 +332,34 @@ class CafeStore extends ChangeNotifier {
       for (final call in openCalls)
         if (call.kind == 'bill') call.tableId,
     };
-    return tables.where((table) => requested.contains(table.id)).toList();
+    return tables.where((table) {
+      if (!requested.contains(table.id)) return false;
+      return openOrderFor(table.id)?.serviceType != 'takeout';
+    }).toList();
+  }
+
+  final Map<String, String> _serviceBySlug = {};
+
+  String? serviceChoiceFor(String slug) => _serviceBySlug[slug];
+
+  void chooseService(String slug, String type) {
+    _serviceBySlug[slug] = type == 'takeout' ? 'takeout' : 'dine_in';
+    notifyListeners();
+  }
+
+  String serviceForTable(String tableId) {
+    final order = openOrderFor(tableId);
+    if (order != null) return order.serviceType;
+    final table = tables.where((item) => item.id == tableId);
+    if (table.isEmpty) return 'dine_in';
+    return _serviceBySlug[table.first.qrSlug] ?? _serviceBySlug[table.first.id] ?? 'dine_in';
+  }
+
+  bool orderIsTakeout(CafeOrder order) => order.serviceType == 'takeout';
+
+  bool paymentIsTakeout(Payment payment) {
+    final match = orders.where((order) => order.id == payment.orderId);
+    return match.isNotEmpty && match.first.serviceType == 'takeout';
   }
 
   double tabSubtotal(String tableId) =>
@@ -786,7 +813,7 @@ class CafeStore extends ChangeNotifier {
     }
     _pendingWrites += 1;
     try {
-      final error = await db.sendTableCart(tableId);
+      final error = await db.sendTableCart(tableId, serviceType: serviceForTable(tableId));
       if (error != null) throw StateError(error);
       _hydrateOperational();
     } finally {
@@ -805,23 +832,26 @@ class CafeStore extends ChangeNotifier {
   Future<void> requestBill(String tableId, {bool force = false}) async {
     if (!force && !canRequestBill(tableId)) return;
     final table = tableById(tableId);
-    table.status = TableStatus.billRequested;
+    final takeout = serviceForTable(tableId) == 'takeout';
+    if (!takeout) {
+      table.status = TableStatus.billRequested;
+      try {
+        await db.updateTableStatus(table);
+      } catch (error, stack) {
+        debugPrint('Table bill status was not saved: $error\n$stack');
+      }
+    }
     final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);
     if (!openBill) {
       calls.add(
         StaffCall(
           id: Secrets.id(),
           tableId: tableId,
-          tableNumber: table.number,
+          tableNumber: takeout ? 'Takeout' : table.number,
           createdAt: DateTime.now(),
           kind: 'bill',
         ),
       );
-    }
-    try {
-      await db.updateTableStatus(table);
-    } catch (error, stack) {
-      debugPrint('Table bill status was not saved: $error\n$stack');
     }
     await db.writeCalls(calls);
     notifyListeners();

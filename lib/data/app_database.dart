@@ -312,6 +312,7 @@ class AppDatabase {
         awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
         refusalNotice: row['refusal_notice'] as String? ?? '',
         paymentTypeId: row['payment_type_id'] as String?,
+        serviceType: row['service_type'] as String? ?? 'dine_in',
         yearMonth: row['year_month'] as String?,
         shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
         lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
@@ -670,7 +671,7 @@ class AppDatabase {
     return next;
   }
 
-  Future<String?> sendTableCart(String tableId) async {
+  Future<String?> sendTableCart(String tableId, {String serviceType = 'dine_in'}) async {
     if (client == null) return 'Supabase is not configured.';
     await _cartWrites;
     _applyHeaders();
@@ -682,6 +683,7 @@ class AppDatabase {
           if (line.menuItemId.isNotEmpty && line.qty > 0)
             {'menu_item_id': line.menuItemId, 'qty': line.qty},
       ],
+      'p_service_type': serviceType,
     });
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] != true) return result['error'] as String? ?? 'Order was not sent.';

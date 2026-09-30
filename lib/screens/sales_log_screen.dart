@@ -200,7 +200,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         children: [
           cell(store.saleNumber(row.payment, perShift: widget.ownSalesOnly)),
           cell(DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt), flex: 3),
-          cell(row.tableNumber),
+          cell(row.takeout ? context.l10n.serviceTakeout : row.tableNumber),
           cell(row.cashierName, flex: 3),
           cell('${row.itemCount}'),
           cell(store.currency.format(row.subtotal)),
@@ -290,7 +290,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final charged = lines.fold<double>(0, (sum, line) => sum + line.total);
     return _Sale(
       payment: payment,
-      tableNumber: table.isEmpty ? '' : table.first.number,
+      tableNumber: order.isNotEmpty && order.first.serviceType == 'takeout'
+          ? ''
+          : (table.isEmpty ? '' : table.first.number),
+      takeout: order.isNotEmpty && order.first.serviceType == 'takeout',
       cashierName: _cashierName(store, payment.cashierId),
       itemCount: order.isEmpty ? 0 : order.first.itemCount,
       lines: lines,
@@ -335,7 +338,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(DateFormat('y-MM-dd HH:mm').format(current.paidAt)),
-                    Text('${context.l10n.salesColTable}: ${row.tableNumber}'),
+                    Text('${context.l10n.salesColTable}: ${row.takeout ? context.l10n.serviceTakeout : row.tableNumber}'),
                     Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
                     const SizedBox(height: 8),
                     if (row.lines.isEmpty)
@@ -395,7 +398,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       buffer.writeln([
         store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
         DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
-        row.tableNumber,
+        row.takeout ? 'Takeout' : row.tableNumber,
         row.cashierName,
         row.itemCount,
         row.subtotal,
@@ -425,7 +428,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                     .map((row) => [
                           store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
                           DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
-                          row.tableNumber,
+                          row.takeout ? 'Takeout' : row.tableNumber,
                           row.cashierName,
                           '${row.itemCount}',
                           store.currency.format(row.subtotal),
@@ -449,6 +452,7 @@ class _Sale {
   const _Sale({
     required this.payment,
     required this.tableNumber,
+    required this.takeout,
     required this.cashierName,
     required this.itemCount,
     required this.lines,
@@ -459,6 +463,7 @@ class _Sale {
 
   final Payment payment;
   final String tableNumber;
+  final bool takeout;
   final String cashierName;
   final int itemCount;
   final List<OrderLine> lines;

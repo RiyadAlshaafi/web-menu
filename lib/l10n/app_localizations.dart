@@ -2581,6 +2581,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment method changed from {oldName} to {newName} by {name} at {time}'**
   String payChanged(String oldName, String newName, String name, String time);
+
+  /// No description provided for @guestLoadingTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your table...'**
+  String get guestLoadingTable;
+
+  /// No description provided for @guestQrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This QR code doesn\'t match a table.'**
+  String get guestQrInvalid;
+
+  /// No description provided for @guestQrInvalidHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the cafe for a new code.'**
+  String get guestQrInvalidHint;
+
+  /// No description provided for @guestRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get guestRetry;
+
+  /// No description provided for @guestChooseService.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you ordering?'**
+  String get guestChooseService;
+
+  /// No description provided for @guestDineIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Dine-in'**
+  String get guestDineIn;
+
+  /// No description provided for @guestDineInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll serve this table.'**
+  String get guestDineInHint;
+
+  /// No description provided for @guestTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout'**
+  String get guestTakeout;
+
+  /// No description provided for @guestTakeoutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll pick it up. This table stays free.'**
+  String get guestTakeoutHint;
+
+  /// No description provided for @serviceTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout'**
+  String get serviceTakeout;
 }
 
 class _AppLocalizationsDelegate

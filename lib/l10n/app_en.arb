@@ -788,5 +788,15 @@
       "name": {"type": "String"},
       "time": {"type": "String"}
     }
-  }
+  },
+  "guestLoadingTable": "Loading your table...",
+  "guestQrInvalid": "This QR code doesn't match a table.",
+  "guestQrInvalidHint": "Ask the cafe for a new code.",
+  "guestRetry": "Try again",
+  "guestChooseService": "How are you ordering?",
+  "guestDineIn": "Dine-in",
+  "guestDineInHint": "We'll serve this table.",
+  "guestTakeout": "Takeout",
+  "guestTakeoutHint": "You'll pick it up. This table stays free.",
+  "serviceTakeout": "Takeout"
 }

@@ -1384,4 +1384,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String payChanged(String oldName, String newName, String name, String time) {
     return 'Payment method changed from $oldName to $newName by $name at $time';
   }
+
+  @override
+  String get guestLoadingTable => 'Loading your table...';
+
+  @override
+  String get guestQrInvalid => 'This QR code doesn\'t match a table.';
+
+  @override
+  String get guestQrInvalidHint => 'Ask the cafe for a new code.';
+
+  @override
+  String get guestRetry => 'Try again';
+
+  @override
+  String get guestChooseService => 'How are you ordering?';
+
+  @override
+  String get guestDineIn => 'Dine-in';
+
+  @override
+  String get guestDineInHint => 'We\'ll serve this table.';
+
+  @override
+  String get guestTakeout => 'Takeout';
+
+  @override
+  String get guestTakeoutHint => 'You\'ll pick it up. This table stays free.';
+
+  @override
+  String get serviceTakeout => 'Takeout';
 }

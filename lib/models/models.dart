@@ -294,6 +294,7 @@ class CafeOrder {
     this.awaitingCustomerConfirmation = false,
     this.refusalNotice = '',
     this.paymentTypeId,
+    this.serviceType = 'dine_in',
     this.yearMonth,
     this.shiftOrderNumber,
   });
@@ -309,6 +310,7 @@ class CafeOrder {
   bool awaitingCustomerConfirmation;
   String refusalNotice;
   String? paymentTypeId;
+  String serviceType;
   String? yearMonth;
   int? shiftOrderNumber;
 
@@ -331,6 +333,7 @@ class CafeOrder {
         awaitingCustomerConfirmation: json['awaitingCustomerConfirmation'] as bool? ?? false,
         refusalNotice: json['refusalNotice'] as String? ?? '',
         paymentTypeId: json['paymentTypeId'] as String?,
+        serviceType: json['serviceType'] as String? ?? 'dine_in',
         yearMonth: json['yearMonth'] as String?,
         shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
         lines: (json['lines'] as List<dynamic>)
@@ -349,6 +352,7 @@ class CafeOrder {
         'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
         'refusalNotice': refusalNotice,
         'paymentTypeId': paymentTypeId,
+        'serviceType': serviceType,
         'yearMonth': yearMonth,
         'shiftOrderNumber': shiftOrderNumber,
         'lines': lines.map((line) => line.toJson()).toList(),

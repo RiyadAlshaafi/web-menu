@@ -1381,4 +1381,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String payChanged(String oldName, String newName, String name, String time) {
     return 'تغيّرت طريقة الدفع من $oldName إلى $newName بواسطة $name في $time';
   }
+
+  @override
+  String get guestLoadingTable => 'جاري تحميل طاولتك...';
+
+  @override
+  String get guestQrInvalid => 'رمز QR هذا لا يطابق طاولة.';
+
+  @override
+  String get guestQrInvalidHint => 'اطلب من المقهى رمزاً جديداً.';
+
+  @override
+  String get guestRetry => 'حاول مرة أخرى';
+
+  @override
+  String get guestChooseService => 'كيف تريد الطلب؟';
+
+  @override
+  String get guestDineIn => 'تناول في المكان';
+
+  @override
+  String get guestDineInHint => 'نوصل الطلب إلى هذه الطاولة.';
+
+  @override
+  String get guestTakeout => 'سفري';
+
+  @override
+  String get guestTakeoutHint => 'تستلم الطلب بنفسك. الطاولة تبقى فارغة.';
+
+  @override
+  String get serviceTakeout => 'سفري';
 }

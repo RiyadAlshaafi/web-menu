@@ -306,7 +306,9 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                             (call) => _alert(
                               id: 'call-${call.id}',
                               arrivedAt: call.createdAt,
-                              table: call.tableNumber,
+                              table: store.openOrderFor(call.tableId)?.serviceType == 'takeout' || call.tableNumber == 'Takeout'
+                                  ? context.l10n.serviceTakeout
+                                  : call.tableNumber,
                               title: context.l10n.cashierCallStaff,
                               body: context.l10n.cashierAssistanceRequested,
                               time: call.createdAt,
@@ -322,7 +324,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               final next = order.status.next;
                               return _alert(
                                 id: 'order-${order.id}',
-                                table: order.tableNumber,
+                                table: order.serviceType == 'takeout' ? context.l10n.serviceTakeout : order.tableNumber,
                                 title: context.l10n.cashierNewOrder,
                                 body: [
                                   _orderStatusLabel(context, order.status),
@@ -575,7 +577,12 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(
+          order.serviceType == 'takeout'
+              ? '${context.l10n.serviceTakeout}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}'
+              : '${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
         Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
         if (waiting)
           Padding(
@@ -1121,7 +1128,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          '${store.saleNumber(payment, perShift: true)}  •  ${context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
+                                          '${store.saleNumber(payment, perShift: true)}  •  ${store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
                                           style: const TextStyle(fontWeight: FontWeight.w800),
                                         ),
                                       ),
