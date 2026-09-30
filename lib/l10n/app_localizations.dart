@@ -2641,6 +2641,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Takeout'**
   String get serviceTakeout;
+
+  /// No description provided for @payDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String payDeleteTitle(String name);
+
+  /// No description provided for @payDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Past sales using this method will keep showing it.'**
+  String get payDeleteMessage;
+
+  /// No description provided for @payTypeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get payTypeSave;
 }
 
 class _AppLocalizationsDelegate

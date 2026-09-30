@@ -388,6 +388,7 @@ class PaymentType {
     required this.nameAr,
     required this.enabled,
     required this.sortOrder,
+    this.archived = false,
   });
 
   final String id;
@@ -395,6 +396,7 @@ class PaymentType {
   String nameAr;
   bool enabled;
   int sortOrder;
+  bool archived;
 
   String label(String locale) => locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
 }

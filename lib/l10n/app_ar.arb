@@ -433,5 +433,13 @@
   "guestDineInHint": "نوصل الطلب إلى هذه الطاولة.",
   "guestTakeout": "سفري",
   "guestTakeoutHint": "تستلم الطلب بنفسك. الطاولة تبقى فارغة.",
-  "serviceTakeout": "سفري"
+  "serviceTakeout": "سفري",
+  "payDeleteTitle": "حذف {name}؟",
+  "@payDeleteTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "payDeleteMessage": "المبيعات السابقة التي استخدمت هذه الطريقة ستبقى كما هي.",
+  "payTypeSave": "حفظ"
 }

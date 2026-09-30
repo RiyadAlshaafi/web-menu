@@ -100,7 +100,7 @@ class CafeStore extends ChangeNotifier {
         'categories': categories.map((item) => item.toJson()).toList(),
         'calls': calls.map((item) => item.toJson()).toList(),
         'payments': payments.map((item) => item.toJson()).toList(),
-        'paymentTypes': paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}').toList(),
+        'paymentTypes': paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}${item.archived}').toList(),
         'shifts': shifts.map((item) => item.toJson()).toList(),
       });
 
@@ -146,7 +146,7 @@ class CafeStore extends ChangeNotifier {
         'categories': db.categories.map((item) => item.toJson()).toList(),
         'calls': db.calls.map((item) => item.toJson()).toList(),
         'payments': db.payments.map((item) => item.toJson()).toList(),
-        'paymentTypes': db.paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}').toList(),
+        'paymentTypes': db.paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}${item.archived}').toList(),
         'shifts': db.shifts.map((item) => item.toJson()).toList(),
       });
 
@@ -893,10 +893,14 @@ class CafeStore extends ChangeNotifier {
   }
 
   String saleNumber(Payment payment, {required bool perShift}) {
-    final n = perShift ? payment.shiftOrderNumber : payment.monthlyOrderNumber;
-    final yymm = payment.yearMonth;
-    if (yymm == null || yymm.isEmpty || n == null) return '—';
-    return '$yymm${padSequence(n)}';
+    if (perShift) {
+      return cashierSaleNumber(yearMonth: payment.yearMonth, shiftOrderNumber: payment.shiftOrderNumber);
+    }
+    return adminSaleNumber(
+      yearMonth: payment.yearMonth,
+      monthlyOrderNumber: payment.monthlyOrderNumber,
+      monthlyDisplayNumber: payment.monthlyDisplayNumber,
+    );
   }
 
   String shiftTicket(CafeOrder order) {
@@ -910,7 +914,8 @@ class CafeStore extends ChangeNotifier {
     return match.isEmpty ? (locale == 'ar' ? 'نقداً' : 'Cash') : match.first.label(locale);
   }
 
-  List<PaymentType> get enabledPaymentTypes => paymentTypes.where((type) => type.enabled).toList();
+  List<PaymentType> get enabledPaymentTypes =>
+      paymentTypes.where((type) => type.enabled && !type.archived).toList();
 
   Future<String?> _refreshAfter(Future<String?> action) async {
     final error = await action;
@@ -931,7 +936,15 @@ class CafeStore extends ChangeNotifier {
 
   Future<String?> deletePaymentType(String id) {
     final used = payments.any((payment) => payment.paymentTypeId == id) || orders.any((order) => order.paymentTypeId == id);
-    if (used) return Future.value(l10n.payTypeInUse);
+    final match = paymentTypes.where((type) => type.id == id);
+    if (match.isEmpty) return Future.value(null);
+    if (used) {
+      final type = match.first;
+      type
+        ..archived = true
+        ..enabled = false;
+      return savePaymentType(type);
+    }
     return _refreshAfter(db.deletePaymentType(id));
   }
 

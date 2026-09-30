@@ -358,6 +358,7 @@ class AppDatabase {
             nameAr: row['name_ar'] as String? ?? '',
             enabled: row['enabled'] as bool? ?? true,
             sortOrder: row['sort_order'] as int? ?? 0,
+            archived: row['archived'] as bool? ?? false,
           )).toList();
     } catch (error) {
       debugPrint('Payment types were not loaded: $error');
@@ -543,13 +544,18 @@ class AppDatabase {
 
   Future<String?> savePaymentType(PaymentType type) async {
     if (client == null) return 'Supabase is not configured.';
-    await client!.from('payment_types').update({
-      'name_en': type.nameEn,
-      'name_ar': type.nameAr,
-      'enabled': type.enabled,
-    }).eq('id', type.id);
-    await refreshFromDisk();
-    return null;
+    try {
+      await client!.from('payment_types').update({
+        'name_en': type.nameEn,
+        'name_ar': type.nameAr,
+        'enabled': type.enabled,
+        'archived': type.archived,
+      }).eq('id', type.id);
+      await refreshFromDisk();
+      return null;
+    } catch (error) {
+      return '$error';
+    }
   }
 
   Future<String?> deletePaymentType(String id) async {

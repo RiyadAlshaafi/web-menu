@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 import 'admin_brand_settings.dart';
 
@@ -570,6 +571,7 @@ class PaymentTypesCard extends StatefulWidget {
 class _PaymentTypesCardState extends State<PaymentTypesCard> {
   final nameEn = TextEditingController();
   final nameAr = TextEditingController();
+  String? editingId;
 
   @override
   void dispose() {
@@ -578,39 +580,31 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
     super.dispose();
   }
 
-  Future<void> _rename(BuildContext context, CafeStore store, PaymentType type) async {
-    final en = TextEditingController(text: type.nameEn);
-    final ar = TextEditingController(text: type.nameAr);
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.payTypesTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: en, decoration: InputDecoration(labelText: context.l10n.payTypeNameEn)),
-            const SizedBox(height: 8),
-            TextField(controller: ar, decoration: InputDecoration(labelText: context.l10n.payTypeNameAr)),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.commonCancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.payTypeAdd)),
-        ],
-      ),
+  Future<void> _delete(BuildContext context, CafeStore store, PaymentType type) async {
+    final ok = await showCafeConfirmDialog(
+      context,
+      title: context.l10n.payDeleteTitle(type.label(store.locale)),
+      message: context.l10n.payDeleteMessage,
     );
-    if (saved == true && en.text.trim().isNotEmpty && ar.text.trim().isNotEmpty) {
-      type.nameEn = en.text.trim();
-      type.nameAr = ar.text.trim();
-      await store.savePaymentType(type);
+    if (!ok || !context.mounted) return;
+    final error = await store.deletePaymentType(type.id);
+    if (!context.mounted) return;
+    if (editingId == type.id) {
+      setState(() {
+        editingId = null;
+        nameEn.clear();
+        nameAr.clear();
+      });
     }
-    en.dispose();
-    ar.dispose();
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
+    final types = store.paymentTypes.where((type) => !type.archived).toList();
     return SoftCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,32 +613,40 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
           const SizedBox(height: 4),
           Text(context.l10n.payTypesHint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13)),
           const SizedBox(height: 12),
-          for (final type in store.paymentTypes)
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: type.enabled,
-              title: Text(type.label(store.locale)),
-              subtitle: Text('${type.nameEn} · ${type.nameAr}'),
-              onChanged: (value) {
-                type.enabled = value;
-                store.savePaymentType(type);
-              },
-              secondary: Row(
-                mainAxisSize: MainAxisSize.min,
+          for (final type in types)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
                 children: [
                   IconButton(
                     tooltip: context.l10n.payTypeNameEn,
-                    onPressed: () => _rename(context, store, type),
+                    onPressed: () => setState(() {
+                      editingId = type.id;
+                      nameEn.text = type.nameEn;
+                      nameAr.text = type.nameAr;
+                    }),
                     icon: const Icon(Icons.edit_outlined),
                   ),
                   IconButton(
                     tooltip: context.l10n.commonDelete,
-                    onPressed: () async {
-                      final error = await store.deletePaymentType(type.id);
-                      if (!context.mounted || error == null) return;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                    },
+                    onPressed: () => _delete(context, store, type),
                     icon: const Icon(Icons.delete_outline),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(type.label(store.locale), style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text('${type.nameEn} · ${type.nameAr}', style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: type.enabled,
+                    onChanged: (value) {
+                      type.enabled = value;
+                      store.savePaymentType(type);
+                    },
                   ),
                 ],
               ),
@@ -661,11 +663,32 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
                 final en = nameEn.text.trim();
                 final ar = nameAr.text.trim();
                 if (en.isEmpty || ar.isEmpty) return;
-                await store.addPaymentType(en, ar);
+                if (editingId != null) {
+                  final match = store.paymentTypes.where((type) => type.id == editingId);
+                  if (match.isEmpty) return;
+                  final type = match.first
+                    ..nameEn = en
+                    ..nameAr = ar;
+                  final error = await store.savePaymentType(type);
+                  if (!context.mounted) return;
+                  if (error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    return;
+                  }
+                } else {
+                  final error = await store.addPaymentType(en, ar);
+                  if (!context.mounted) return;
+                  if (error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    return;
+                  }
+                }
+                if (!mounted) return;
+                setState(() => editingId = null);
                 nameEn.clear();
                 nameAr.clear();
               },
-              child: Text(context.l10n.payTypeAdd),
+              child: Text(editingId == null ? context.l10n.payTypeAdd : context.l10n.payTypeSave),
             ),
           ),
         ],

@@ -798,5 +798,13 @@
   "guestDineInHint": "We'll serve this table.",
   "guestTakeout": "Takeout",
   "guestTakeoutHint": "You'll pick it up. This table stays free.",
-  "serviceTakeout": "Takeout"
+  "serviceTakeout": "Takeout",
+  "payDeleteTitle": "Delete {name}?",
+  "@payDeleteTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "payDeleteMessage": "Past sales using this method will keep showing it.",
+  "payTypeSave": "Save"
 }

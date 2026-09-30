@@ -1414,4 +1414,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serviceTakeout => 'Takeout';
+
+  @override
+  String payDeleteTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get payDeleteMessage =>
+      'Past sales using this method will keep showing it.';
+
+  @override
+  String get payTypeSave => 'Save';
 }

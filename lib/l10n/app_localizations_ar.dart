@@ -1411,4 +1411,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get serviceTakeout => 'سفري';
+
+  @override
+  String payDeleteTitle(String name) {
+    return 'حذف $name؟';
+  }
+
+  @override
+  String get payDeleteMessage =>
+      'المبيعات السابقة التي استخدمت هذه الطريقة ستبقى كما هي.';
+
+  @override
+  String get payTypeSave => 'حفظ';
 }
