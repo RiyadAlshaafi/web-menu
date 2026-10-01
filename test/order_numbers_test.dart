@@ -35,26 +35,40 @@ void main() {
     expect(formatSaleNumber('2609', 1000), '26091000');
   });
 
-  test('the recorded takeout stays on the September counter when its shift restarts', () {
+  test('cashier resets at midnight and admin keeps counting, including past 999', () {
+    final daily = <String, int>{};
     final monthly = <String, int>{};
-    final shifts = <String, int>{};
-    String settle({required DateTime at, required String shiftId}) {
+
+    ({String cashier, String admin}) issue(DateTime at) {
       final yymm = yearMonthInTripoli(at);
-      nextScopedCounter(shifts, 'shift:$shiftId');
+      final dayNumber = nextScopedCounter(daily, dailyCounterScope(at));
       final monthNumber = nextScopedCounter(monthly, monthlyCounterScope(yymm));
-      return formatSaleNumber(yymm, monthNumber);
+      return (
+        cashier: cashierSaleNumber(yearMonth: yymm, shiftOrderNumber: dayNumber),
+        admin: adminSaleNumber(yearMonth: yymm, monthlyOrderNumber: monthNumber),
+      );
     }
 
-    expect(settle(at: DateTime.utc(2026, 9, 29, 19, 46), shiftId: 'shift-a'), '2609001');
-    expect(settle(at: DateTime.utc(2026, 9, 29, 19, 49), shiftId: 'shift-a'), '2609002');
-    expect(settle(at: DateTime.utc(2026, 9, 29, 20, 12), shiftId: 'shift-a'), '2609003');
-    expect(yearMonthInTripoli(DateTime.utc(2026, 9, 29, 23, 59)), '2609');
-    expect(yearMonthInTripoli(DateTime.utc(2026, 9, 30, 0, 1)), '2609');
-    // Next day, new shift, takeout. Monthly key is still month:2609.
-    expect(settle(at: DateTime.utc(2026, 9, 30, 16, 20), shiftId: 'shift-b'), '2609004');
-    expect(shifts['shift:shift-b'], 1);
-    expect(monthly['month:2609'], 4);
-    expect(adminSaleNumber(yearMonth: '2609', monthlyOrderNumber: 4, monthlyDisplayNumber: '2609004'), '2609004');
-    expect(cashierSaleNumber(yearMonth: '2609', shiftOrderNumber: 1), '2609001');
+    // 23:59 and 00:01 in Tripoli, still September.
+    final beforeMidnight = DateTime.utc(2026, 9, 29, 21, 59);
+    final afterMidnight = DateTime.utc(2026, 9, 29, 22, 1);
+    expect(yearMonthInTripoli(beforeMidnight), '2609');
+    expect(yearMonthInTripoli(afterMidnight), '2609');
+    expect(dailyCounterScope(beforeMidnight), isNot(dailyCounterScope(afterMidnight)));
+
+    final first = issue(beforeMidnight);
+    final second = issue(afterMidnight);
+    expect(first.cashier, '2609001');
+    expect(second.cashier, '2609001');
+    expect(first.admin, '2609001');
+    expect(second.admin, '2609002');
+
+    expect(formatSaleNumber('2610', 1), '2610001');
+    expect(formatSaleNumber('2610', 999), '2610999');
+    expect(formatSaleNumber('2610', 1000), '26101000');
+    expect(formatSaleNumber('2610', 99999), '261099999');
+    expect(monthly.containsKey('month:2609'), isTrue);
+    expect(daily.keys.every((key) => key.startsWith('day:')), isTrue);
+    expect(daily.keys.any((key) => key.startsWith('shift:')), isFalse);
   });
 }

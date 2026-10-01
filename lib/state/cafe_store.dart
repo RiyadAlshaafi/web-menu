@@ -888,8 +888,8 @@ class CafeStore extends ChangeNotifier {
   }
 
   static String padSequence(int n) {
-    final width = n > 999 ? 4 : 3;
-    return n.toString().padLeft(width, '0');
+    final text = n.toString();
+    return text.length >= 3 ? text : text.padLeft(3, '0');
   }
 
   String saleNumber(Payment payment, {required bool perShift}) {

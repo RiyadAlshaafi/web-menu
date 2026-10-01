@@ -1121,7 +1121,9 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                   ],
                                 ),
                               ),
-                              ...store.payments.map((payment) {
+                              ...(() {
+                                final rows = [...store.payments]..sort((a, b) => b.paidAt.compareTo(a.paidAt));
+                                return rows.map((payment) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   child: Row(
@@ -1155,7 +1157,8 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                     ],
                                   ),
                                 );
-                              }),
+                                }).toList();
+                              }()),
                             ],
                           ),
                 );
