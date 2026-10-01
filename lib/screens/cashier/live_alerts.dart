@@ -17,7 +17,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     final orders = store.liveOrders();
     final calls = store.openCalls.where((call) => call.kind != 'bill').toList();
     final bills = store.billTables;
-    final clock = DateFormat('HH:mm:ss').format(DateTime.now());
+    final clock = formatTripoliClock(DateTime.now());
     CafeOrder? selected = orders.where((order) => order.id == selectedOrderId).firstOrNull;
     selected ??= bills.isEmpty ? null : store.openOrderFor(bills.first.id);
     selected ??= orders.isEmpty ? null : orders.first;
@@ -154,7 +154,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               return _alert(
                                 id: 'order-${order.id}',
                                 table: order.serviceType == 'takeout' ? context.l10n.serviceTakeout : order.tableNumber,
-                                title: context.l10n.cashierNewOrder,
+                                title: context.l10n.cashierOrderNumber(store.shiftTicket(order)),
                                 body: [
                                   _orderStatusLabel(context, order.status),
                                   if (order.latestRound > 1) context.l10n.orderRound(order.latestRound),

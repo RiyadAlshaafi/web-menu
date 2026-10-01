@@ -16,11 +16,14 @@ extension CafeStorePayments on CafeStore {
     );
   }
 
-  String shiftTicket(CafeOrder order) {
-    final n = order.shiftOrderNumber;
-    if (n == null) return '…';
-    return formatSaleNumber('0000', n).substring(4);
+  String receiptNumber(Payment payment) {
+    if (payment.monthlyOrderNumber == null) return payment.monthlyDisplayNumber ?? '—';
+    return formatReceiptNumber(payment.yearMonth, payment.monthlyOrderNumber);
   }
+
+  String orderNumber(int? sequence) => formatOrderNumber(sequence);
+
+  String shiftTicket(CafeOrder order) => formatOrderNumber(order.shiftOrderNumber);
 
   String typeName(String? id) {
     if (id == null || id.isEmpty) return locale == 'ar' ? 'نقداً' : 'Cash';

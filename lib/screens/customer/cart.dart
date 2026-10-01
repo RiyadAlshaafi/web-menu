@@ -52,9 +52,9 @@ class CustomerCartScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.guestOrderNumber(order.id), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                          Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
                           Text(context.l10n.guestTableNumber(table.number), style: const TextStyle(color: CafeColors.inkMuted)),
-                          Text(context.l10n.guestSentToKitchenAt(DateFormat.Hm().format(order.createdAt)), style: const TextStyle(color: CafeColors.inkMuted)),
+                          Text(context.l10n.guestSentToKitchenAt(formatTripoliTime(order.createdAt)), style: const TextStyle(color: CafeColors.inkMuted)),
                           const SizedBox(height: 12),
                           Container(
                             width: double.infinity,

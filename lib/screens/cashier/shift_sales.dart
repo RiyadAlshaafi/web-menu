@@ -36,7 +36,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(context.l10n.cashierShiftSalesTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
-              GhostChip(label: DateFormat('HH:mm:ss').format(DateTime.now()), icon: Icons.schedule),
+              GhostChip(label: formatTripoliClock(DateTime.now()), icon: Icons.schedule),
               const LanguageButton(),
               OutlinedButton.icon(
                 onPressed: () {},
@@ -109,12 +109,23 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                   child: Row(
                                     children: [
                                       Expanded(
-                                        child: Text(
-                                          '${store.saleNumber(payment, perShift: true)}  •  ${store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
-                                          style: const TextStyle(fontWeight: FontWeight.w800),
+                                        child: Text.rich(
+                                          TextSpan(
+                                            children: [
+                                              TextSpan(text: store.receiptNumber(payment), style: const TextStyle(fontWeight: FontWeight.w800)),
+                                              TextSpan(
+                                                text: '  ·  ${context.l10n.cashierOrderNumber(store.orderNumber(payment.shiftOrderNumber))}',
+                                                style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w600),
+                                              ),
+                                              TextSpan(
+                                                text: '  •  ${store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
+                                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                      SizedBox(width: 64, child: Text(DateFormat.Hm().format(payment.paidAt))),
+                                      SizedBox(width: 64, child: Text(formatTripoliTime(payment.paidAt))),
                                       SizedBox(
                                         width: 80,
                                         child: Text(store.currency.format(payment.totalDue), textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w800)),

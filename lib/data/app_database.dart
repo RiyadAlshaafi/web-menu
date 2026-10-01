@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../time_format.dart';
 import '../report_error.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
 import 'sales_history.dart';
@@ -428,8 +429,9 @@ class AppDatabase {
   Future<void> alignSalesWindow({DateTime? from, DateTime? to}) async {
     if (client == null) return;
     final cutoff = salesHistoryCutoff(DateTime.now());
-    final nextFrom = from != null && from.isBefore(cutoff) ? DateTime(from.year, from.month, from.day) : null;
-    final nextTo = nextFrom != null && to != null ? DateTime(to.year, to.month, to.day, 23, 59, 59) : null;
+    final start = from == null ? null : tripoliDayStartUtc(from);
+    final nextFrom = start != null && start.isBefore(cutoff) ? start : null;
+    final nextTo = nextFrom != null && to != null ? tripoliDayEndUtc(to) : null;
     if (nextFrom == _salesFrom && nextTo == _salesTo) return;
     _salesFrom = nextFrom;
     _salesTo = nextTo;

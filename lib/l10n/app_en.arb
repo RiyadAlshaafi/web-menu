@@ -52,7 +52,15 @@
   "salesAllStatuses": "All statuses",
   "salesExportCsv": "Export CSV",
   "salesExportPdf": "Export PDF",
-  "salesColId": "ID",
+  "salesColId": "Receipt No.",
+  "salesReceiptNo": "Receipt No.",
+  "salesOrderNo": "Order #",
+  "salesReceiptLine": "Receipt No. {number}",
+  "@salesReceiptLine": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
   "salesColWhen": "Date & time",
   "salesColTable": "Table",
   "salesColCashier": "Cashier",
@@ -453,7 +461,7 @@
       }
     }
   },
-  "cashierOrderNumber": "Order #{id}",
+  "cashierOrderNumber": "Order {id}",
   "@cashierOrderNumber": {
     "placeholders": {
       "id": {
@@ -613,7 +621,7 @@
   "cashierTotalShiftGrossSales": "Total Shift Gross Sales",
   "cashierSettledOrders": "Settled Orders",
   "cashierActivePendingBalance": "Active Pending Balance",
-  "cashierColOrderTable": "Order & Table",
+  "cashierColOrderTable": "Receipt & Table",
   "cashierColTime": "Time",
   "cashierColAmount": "Amount",
   "cashierTillBalance": "Till Balance & Drawer #01",
@@ -708,7 +716,7 @@
     }
   },
   "guestLiveTab": "Live Tab",
-  "guestOrderNumber": "Order #{id}",
+  "guestOrderNumber": "Order {id}",
   "@guestOrderNumber": {
     "placeholders": {
       "id": {

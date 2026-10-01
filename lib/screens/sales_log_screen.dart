@@ -9,6 +9,8 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n_ext.dart';
+import '../money.dart';
+import '../time_format.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -194,7 +196,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
 
     return Row(
       children: [
-        cell(context.l10n.salesColId, _Sort.id),
+        cell(context.l10n.salesReceiptNo, _Sort.id),
         cell(context.l10n.salesColWhen, _Sort.when, flex: 3),
         cell(context.l10n.salesColTable, _Sort.table),
         cell(context.l10n.salesColCashier, _Sort.cashier, flex: 3),
@@ -214,8 +216,22 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          cell(store.saleNumber(row.payment, perShift: widget.ownSalesOnly)),
-          cell(DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt), flex: 3),
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(store.receiptNumber(row.payment), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(
+                  context.l10n.cashierOrderNumber(store.orderNumber(row.payment.shiftOrderNumber)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          cell(formatTripoliDateTime(row.payment.paidAt), flex: 3),
           cell(row.takeout ? context.l10n.serviceTakeout : row.tableNumber),
           cell(row.cashierName, flex: 3),
           cell('${row.itemCount}'),
@@ -270,19 +286,18 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       if (tableId != null && payment.tableId != tableId) return false;
       if (methodId != null && payment.paymentTypeId != methodId) return false;
       if (shiftId != null && payment.shiftId != shiftId) return false;
-      if (from != null && payment.paidAt.isBefore(DateTime(from!.year, from!.month, from!.day))) return false;
-      if (to != null && payment.paidAt.isAfter(DateTime(to!.year, to!.month, to!.day, 23, 59, 59))) return false;
+      if (!inTripoliDateRange(payment.paidAt, from: from, to: to)) return false;
       final row = _sale(store, payment);
       if (query.isEmpty) return true;
-      final number = store.saleNumber(payment, perShift: widget.ownSalesOnly).toLowerCase();
+      final receipt = store.receiptNumber(payment);
+      final order = store.orderNumber(payment.shiftOrderNumber);
       return row.tableNumber.toLowerCase().contains(query) ||
           row.cashierName.toLowerCase().contains(query) ||
-          number.contains(query) ||
-          payment.id.toLowerCase().contains(query);
+          saleQueryMatches(query, receipt: receipt, order: order);
     }).map((payment) => _sale(store, payment)).toList();
     list.sort((a, b) {
       final result = switch (sort) {
-        _Sort.id => store.saleNumber(a.payment, perShift: widget.ownSalesOnly).compareTo(store.saleNumber(b.payment, perShift: widget.ownSalesOnly)),
+        _Sort.id => store.receiptNumber(a.payment).compareTo(store.receiptNumber(b.payment)),
         _Sort.when => a.payment.paidAt.compareTo(b.payment.paidAt),
         _Sort.table => a.tableNumber.compareTo(b.tableNumber),
         _Sort.cashier => a.cashierName.compareTo(b.cashierName),
@@ -328,8 +343,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final match = store.shifts.where((shift) => shift.id == id);
     if (match.isEmpty) return id;
     final shift = match.first;
-    final opened = DateFormat('y-MM-dd HH:mm').format(shift.openedAt);
-    final closed = shift.closedAt == null ? '' : ' – ${DateFormat('HH:mm').format(shift.closedAt!)}';
+    final opened = formatTripoliDateTime(shift.openedAt);
+    final closed = shift.closedAt == null ? '' : ' – ${formatTripoliTime(shift.closedAt!)}';
     return '$opened$closed';
   }
 
@@ -345,7 +360,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             if (current.paymentTypeId != null) current.paymentTypeId!,
           };
           return AlertDialog(
-            title: Text(live.saleNumber(current, perShift: widget.ownSalesOnly)),
+            title: Text(context.l10n.salesReceiptLine(live.receiptNumber(current))),
             content: SizedBox(
               width: 420,
               child: SingleChildScrollView(
@@ -353,7 +368,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(DateFormat('y-MM-dd HH:mm').format(current.paidAt)),
+                    Text(context.l10n.cashierOrderNumber(live.orderNumber(current.shiftOrderNumber)), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13)),
+                    Text(formatTripoliDateTime(current.paidAt)),
                     Text('${context.l10n.salesColTable}: ${row.takeout ? context.l10n.serviceTakeout : row.tableNumber}'),
                     Text('${context.l10n.salesColCashier}: ${row.cashierName}'),
                     const SizedBox(height: 8),
@@ -387,12 +403,12 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                     ...current.changes.map((change) => Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            context.l10n.payChanged(
+                            '${context.l10n.salesReceiptLine(live.receiptNumber(current))} · ${context.l10n.payChanged(
                               live.typeName(change.oldTypeId),
                               live.typeName(change.newTypeId),
                               change.actorName,
-                              DateFormat('y-MM-dd HH:mm').format(change.createdAt),
-                            ),
+                              formatTripoliDateTime(change.createdAt),
+                            )}',
                             style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
                           ),
                         )),
@@ -422,11 +438,12 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<_Sale> rows) async {
-    final buffer = StringBuffer('order,date,table,cashier,items,subtotal,discount,total,method,status\n');
+    final buffer = StringBuffer('${context.l10n.salesReceiptNo},${context.l10n.salesOrderNo},date,table,cashier,items,subtotal,discount,total,method,status\n');
     for (final row in rows) {
       buffer.writeln([
-        store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
-        DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
+        store.receiptNumber(row.payment),
+        store.orderNumber(row.payment.shiftOrderNumber),
+        formatTripoliDateTime(row.payment.paidAt),
         row.takeout ? 'Takeout' : row.tableNumber,
         row.cashierName,
         row.itemCount,
@@ -441,6 +458,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportPdf(CafeStore store, List<_Sale> rows) async {
+    final l10n = context.l10n;
+    final receiptHeader = l10n.salesReceiptNo;
+    final orderHeader = l10n.salesOrderNo;
     await Printing.layoutPdf(
       name: 'sales-log',
       onLayout: (PdfPageFormat format) async {
@@ -452,11 +472,12 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               pw.Text('Sales Log', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 8),
               pw.TableHelper.fromTextArray(
-                headers: const ['Order', 'When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
+                headers: [receiptHeader, orderHeader, 'When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
                 data: rows
                     .map((row) => [
-                          store.saleNumber(row.payment, perShift: widget.ownSalesOnly),
-                          DateFormat('y-MM-dd HH:mm').format(row.payment.paidAt),
+                          '$receiptHeader ${store.receiptNumber(row.payment)}',
+                          l10n.cashierOrderNumber(store.orderNumber(row.payment.shiftOrderNumber)),
+                          formatTripoliDateTime(row.payment.paidAt),
                           row.takeout ? 'Takeout' : row.tableNumber,
                           row.cashierName,
                           '${row.itemCount}',

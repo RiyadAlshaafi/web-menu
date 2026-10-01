@@ -347,8 +347,26 @@ abstract class AppLocalizations {
   /// No description provided for @salesColId.
   ///
   /// In en, this message translates to:
-  /// **'ID'**
+  /// **'Receipt No.'**
   String get salesColId;
+
+  /// No description provided for @salesReceiptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt No.'**
+  String get salesReceiptNo;
+
+  /// No description provided for @salesOrderNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #'**
+  String get salesOrderNo;
+
+  /// No description provided for @salesReceiptLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt No. {number}'**
+  String salesReceiptLine(String number);
 
   /// No description provided for @salesColWhen.
   ///
@@ -1715,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashierOrderNumber.
   ///
   /// In en, this message translates to:
-  /// **'Order #{id}'**
+  /// **'Order {id}'**
   String cashierOrderNumber(String id);
 
   /// No description provided for @cashierActiveBillOutRequest.
@@ -2105,7 +2123,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashierColOrderTable.
   ///
   /// In en, this message translates to:
-  /// **'Order & Table'**
+  /// **'Receipt & Table'**
   String get cashierColOrderTable;
 
   /// No description provided for @cashierColTime.
@@ -2357,7 +2375,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestOrderNumber.
   ///
   /// In en, this message translates to:
-  /// **'Order #{id}'**
+  /// **'Order {id}'**
   String guestOrderNumber(String id);
 
   /// No description provided for @guestSentToKitchenAt.

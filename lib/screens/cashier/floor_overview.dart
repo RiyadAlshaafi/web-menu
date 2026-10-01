@@ -47,7 +47,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
             children: [
               Text(context.l10n.cashierFloorOverviewTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
               Text(context.l10n.cashierTablesCount('${store.tables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
-              GhostChip(label: DateFormat('HH:mm:ss').format(DateTime.now()), icon: Icons.schedule),
+              GhostChip(label: formatTripoliClock(DateTime.now()), icon: Icons.schedule),
               const LanguageButton(),
             ],
           ),
@@ -105,6 +105,11 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                                     ],
                                   ),
                                   Text(item.status == TableStatus.free ? context.l10n.cashierAvailable : context.l10n.cashierDiningActive, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                                  if (store.openOrderFor(item.id) != null)
+                                    Text(
+                                      context.l10n.cashierOrderNumber(store.shiftTicket(store.openOrderFor(item.id)!)),
+                                      style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700),
+                                    ),
                                   const Spacer(),
                                   MoneyText(store.currency.format(due)),
                                 ],
@@ -130,6 +135,8 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                                         TableStatus.billRequested => context.l10n.cashierBillPending,
                                       },
                                       style: const TextStyle(color: CafeColors.inkMuted)),
+                                    if (order != null)
+                                      Text(context.l10n.cashierOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800)),
                                     const SizedBox(height: 12),
                                     if (order == null)
                                       EmptyHint(context.l10n.noOrders)

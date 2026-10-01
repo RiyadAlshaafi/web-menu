@@ -10,6 +10,18 @@ void main() {
     expect(formatSaleNumber('0000', 7).substring(4), '007');
     expect(formatSaleNumber('0000', 999).substring(4), '999');
     expect(formatSaleNumber('0000', 1000).substring(4), '1000');
+    expect(formatOrderNumber(7), '#007');
+    expect(formatOrderNumber(1000), '#1000');
+    expect(formatOrderNumber(null), '—');
+    expect(formatReceiptNumber('2610', 417), '2610417');
+    expect(formatReceiptNumber('2610', 1000), '26101000');
+    expect(formatReceiptNumber(null, 5), '—');
+    expect(formatReceiptNumber('2610', null), '—');
+    expect(saleQueryMatches('2610417', receipt: '2610417', order: '#017'), isTrue);
+    expect(saleQueryMatches('417', receipt: '2610417', order: '#017'), isTrue);
+    expect(saleQueryMatches('#017', receipt: '2610417', order: '#017'), isTrue);
+    expect(saleQueryMatches('017', receipt: '2610999', order: '#017'), isTrue);
+    expect(saleQueryMatches('018', receipt: '2610417', order: '#017'), isFalse);
   });
 
   test('Tripoli helpers cross midnight and the month boundary', () {

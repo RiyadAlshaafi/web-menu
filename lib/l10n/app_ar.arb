@@ -41,7 +41,15 @@
   "salesAllStatuses": "كل الحالات",
   "salesExportCsv": "تصدير CSV",
   "salesExportPdf": "تصدير PDF",
-  "salesColId": "الرقم",
+  "salesColId": "رقم الإيصال",
+  "salesReceiptNo": "رقم الإيصال",
+  "salesOrderNo": "رقم الطلب",
+  "salesReceiptLine": "رقم الإيصال {number}",
+  "@salesReceiptLine": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
   "salesColWhen": "التاريخ والوقت",
   "salesColTable": "الطاولة",
   "salesColCashier": "الكاشير",
@@ -269,7 +277,7 @@
   "cashierTableShort": "T-{number}",
   "cashierFree": "متاحة",
   "cashierTableNumber": "طاولة {number}",
-  "cashierOrderNumber": "الطلب #{id}",
+  "cashierOrderNumber": "الطلب {id}",
   "cashierActiveBillOutRequest": "طلب فاتورة نشط  •  طاولة {number}",
   "cashierItemsToSettle": "الأصناف المطلوب تسويتها",
   "orderRound": "الجولة {round}",
@@ -335,7 +343,7 @@
   "cashierTotalShiftGrossSales": "إجمالي مبيعات الوردية",
   "cashierSettledOrders": "الطلبات المسددة",
   "cashierActivePendingBalance": "الرصيد المعلّق الحالي",
-  "cashierColOrderTable": "الطلب والطاولة",
+  "cashierColOrderTable": "الإيصال والطاولة",
   "cashierColTime": "الوقت",
   "cashierColAmount": "المبلغ",
   "cashierTillBalance": "رصيد الصندوق والدرج رقم 01",
@@ -378,7 +386,7 @@
   "guestPortionServing": "حصة واحدة",
   "guestAddToOrder": "أضف إلى الطلب • {amount}",
   "guestLiveTab": "الحساب المفتوح",
-  "guestOrderNumber": "طلب رقم {id}",
+  "guestOrderNumber": "طلب {id}",
   "guestSentToKitchenAt": "أُرسل إلى المطبخ الساعة {time}",
   "guestKitchenPreparing": "المطبخ يحضّر طلبك الآن\nالوقت المتوقع للتقديم ١٠–١٥ دقيقة",
   "guestNewAdditions": "إضافات جديدة",

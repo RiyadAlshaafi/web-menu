@@ -135,7 +135,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesExportPdf => 'Export PDF';
 
   @override
-  String get salesColId => 'ID';
+  String get salesColId => 'Receipt No.';
+
+  @override
+  String get salesReceiptNo => 'Receipt No.';
+
+  @override
+  String get salesOrderNo => 'Order #';
+
+  @override
+  String salesReceiptLine(String number) {
+    return 'Receipt No. $number';
+  }
 
   @override
   String get salesColWhen => 'Date & time';
@@ -885,7 +896,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cashierOrderNumber(String id) {
-    return 'Order #$id';
+    return 'Order $id';
   }
 
   @override
@@ -1112,7 +1123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierActivePendingBalance => 'Active Pending Balance';
 
   @override
-  String get cashierColOrderTable => 'Order & Table';
+  String get cashierColOrderTable => 'Receipt & Table';
 
   @override
   String get cashierColTime => 'Time';
@@ -1256,7 +1267,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String guestOrderNumber(String id) {
-    return 'Order #$id';
+    return 'Order $id';
   }
 
   @override

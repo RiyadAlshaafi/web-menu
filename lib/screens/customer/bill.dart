@@ -71,7 +71,7 @@ class CustomerBillScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(color: CafeColors.creamDark, borderRadius: BorderRadius.circular(20)),
-                    child: Text(context.l10n.guestOrderNumber(order.id), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    child: Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                   ),
               ],
             ),
@@ -95,7 +95,7 @@ class CustomerBillScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(context.l10n.guestOrderSummary, style: CafeTheme.display.copyWith(fontSize: 28)),
                       Text(
-                        '${context.l10n.guestTableNumber(table.number)}  •  ${DateFormat.jm().format(DateTime.now())}${order == null ? '' : '  •  ${context.l10n.guestRefNumber(order.id)}'}',
+                        '${context.l10n.guestTableNumber(table.number)}  •  ${formatTripoliJm(DateTime.now())}${order == null ? '' : '  •  ${context.l10n.guestOrderNumber(store.shiftTicket(order))}'}',
                         style: const TextStyle(color: CafeColors.inkMuted),
                       ),
                       const SizedBox(height: 16),

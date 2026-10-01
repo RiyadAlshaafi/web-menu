@@ -19,11 +19,34 @@ String cashierSaleNumber({required String? yearMonth, required int? shiftOrderNu
   return formatSaleNumber(yearMonth, shiftOrderNumber);
 }
 
-DateTime _tripoli(DateTime instant) => instant.toUtc().add(const Duration(hours: 2));
+/// Spoken order number. Sequence only, at least 3 digits, never clipped.
+String formatOrderNumber(int? sequence) {
+  if (sequence == null) return '—';
+  final text = sequence.toString();
+  final seq = text.length >= 3 ? text : text.padLeft(3, '0');
+  return '#$seq';
+}
+
+/// Official receipt id. Same monthly number for cashier and admin.
+String formatReceiptNumber(String? yearMonth, int? monthlySequence) => formatSaleNumber(yearMonth, monthlySequence);
+
+/// Match a receipt (with or without the YYMM prefix) or an order number (with or without '#').
+bool saleQueryMatches(String query, {required String receipt, required String order}) {
+  final needle = query.trim().toLowerCase().replaceAll('#', '');
+  if (needle.isEmpty) return true;
+  final receiptText = receipt.toLowerCase().replaceAll('—', '');
+  final orderText = order.toLowerCase().replaceAll('#', '').replaceAll('—', '');
+  if (receiptText.isNotEmpty && receiptText.contains(needle)) return true;
+  if (orderText.isNotEmpty && orderText.contains(needle)) return true;
+  return false;
+}
+
+/// Africa/Tripoli is UTC+2 all year. The returned value's clock fields are Tripoli time.
+DateTime toTripoli(DateTime instant) => instant.toUtc().add(const Duration(hours: 2));
 
 /// Tripoli is UTC+2. The monthly key is YYMM only.
 String yearMonthInTripoli(DateTime instant) {
-  final local = _tripoli(instant);
+  final local = toTripoli(instant);
   final year = (local.year % 100).toString().padLeft(2, '0');
   final month = local.month.toString().padLeft(2, '0');
   return '$year$month';
@@ -31,7 +54,7 @@ String yearMonthInTripoli(DateTime instant) {
 
 /// Calendar day in Tripoli, `day:YYMMDD`. A new day is a new key. A new shift is not.
 String dailyCounterScope(DateTime instant) {
-  final local = _tripoli(instant);
+  final local = toTripoli(instant);
   final year = (local.year % 100).toString().padLeft(2, '0');
   final month = local.month.toString().padLeft(2, '0');
   final day = local.day.toString().padLeft(2, '0');
