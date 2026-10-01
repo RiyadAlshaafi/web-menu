@@ -441,12 +441,6 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(context.l10n.cashierWaitingCustomerConfirm, style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w700)),
           ),
-        TerracottaButton(
-          label: context.l10n.cashierSettleCloseBill(store.currency.format(total)),
-          onPressed: order.status == OrderStatus.served && !order.awaitingCustomerConfirmation
-              ? () => showCashSettleDialog(context, store, order.tableId)
-              : null,
-        ),
         if (order.awaitingCustomerConfirmation)
           TextButton(
             onPressed: () async {
