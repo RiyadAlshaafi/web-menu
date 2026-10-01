@@ -81,14 +81,26 @@ class CustomerCartScreen extends StatelessWidget {
                             child: Row(
                               children: [
                                 Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700))),
-                                IconButton(
-                                  onPressed: () => store.setCartQty(table.id, line.menuItemId, line.qty - 1),
-                                  icon: const Icon(Icons.remove, size: 16),
+                                _blockedOr(
+                                  context,
+                                  store,
+                                  IconButton(
+                                    onPressed: store.canPlaceOrder
+                                        ? () => store.setCartQty(table.id, line.menuItemId, line.qty - 1)
+                                        : null,
+                                    icon: Icon(Icons.remove, size: 16, color: store.canPlaceOrder ? null : CafeColors.inkMuted),
+                                  ),
                                 ),
                                 Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                                IconButton(
-                                  onPressed: () => store.setCartQty(table.id, line.menuItemId, line.qty + 1),
-                                  icon: const Icon(Icons.add, size: 16),
+                                _blockedOr(
+                                  context,
+                                  store,
+                                  IconButton(
+                                    onPressed: store.canPlaceOrder
+                                        ? () => store.setCartQty(table.id, line.menuItemId, line.qty + 1)
+                                        : null,
+                                    icon: Icon(Icons.add, size: 16, color: store.canPlaceOrder ? null : CafeColors.inkMuted),
+                                  ),
                                 ),
                                 Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
                               ],

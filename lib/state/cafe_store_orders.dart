@@ -131,7 +131,22 @@ extension CafeStoreOrders on CafeStore {
     }
     _pendingWrites += 1;
     try {
-      final error = await db.sendTableCart(tableId, serviceType: serviceForTable(tableId));
+      final table = tables.where((item) => item.id == tableId);
+      final slug = table.isEmpty ? '' : table.first.qrSlug;
+      final block = slug.isEmpty ? null : await prepareGuestOrderLocation(slug);
+      if (block != null) throw StateError(block);
+      final error = await db.sendTableCart(
+        tableId,
+        serviceType: serviceForTable(tableId),
+        lat: guestLocation == GuestLocationStatus.allowed ? _guestLat : null,
+        lng: guestLocation == GuestLocationStatus.allowed ? _guestLng : null,
+        accuracyM: guestLocation == GuestLocationStatus.allowed ? _guestAccuracyM : null,
+      );
+      if (error == 'too_far' || error == 'location_required') {
+        _clearGuestPoint();
+        guestLocation = error == 'too_far' ? GuestLocationStatus.tooFar : GuestLocationStatus.denied;
+        notifyListeners();
+      }
       if (error != null) throw StateError(error);
       _hydrateOperational();
     } finally {

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
+import '../device_location.dart';
+import '../report_error.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -166,6 +168,8 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        const _CafeLocationCard(),
       ],
     );
   }
@@ -225,6 +229,152 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
           if (picked != null) onPick(picked);
         },
         child: Container(width: 36, height: 36, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8), border: Border.all(color: CafeColors.line))),
+      ),
+    );
+  }
+}
+
+class _CafeLocationCard extends StatefulWidget {
+  const _CafeLocationCard();
+
+  @override
+  State<_CafeLocationCard> createState() => _CafeLocationCardState();
+}
+
+class _CafeLocationCardState extends State<_CafeLocationCard> {
+  final lat = TextEditingController();
+  final lng = TextEditingController();
+  final radius = TextEditingController(text: '100');
+  bool requireNear = false;
+  String? validation;
+  bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    lat.dispose();
+    lng.dispose();
+    radius.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final store = context.read<CafeStore>();
+    try {
+      final saved = await store.loadCafeLocation();
+      if (!mounted || saved == null) return;
+      setState(() {
+        requireNear = saved.enabled;
+        lat.text = saved.lat == null ? '' : saved.lat!.toStringAsFixed(6);
+        lng.text = saved.lng == null ? '' : saved.lng!.toStringAsFixed(6);
+        radius.text = '${saved.radiusM}';
+      });
+    } catch (error, stackTrace) {
+      reportError('cafe location', 'load failed', stackTrace);
+    }
+  }
+
+  double? _coord(TextEditingController controller) {
+    final text = controller.text.trim();
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
+  }
+
+  String? _validate() {
+    final meters = int.tryParse(radius.text.trim());
+    if (meters == null || meters < 30 || meters > 500) return context.l10n.cafeLocationRadiusRange;
+    final latitude = _coord(lat);
+    final longitude = _coord(lng);
+    final latText = lat.text.trim();
+    final lngText = lng.text.trim();
+    final latBad = latText.isNotEmpty && (latitude == null || latitude < -90 || latitude > 90);
+    final lngBad = lngText.isNotEmpty && (longitude == null || longitude < -180 || longitude > 180);
+    if (latBad || lngBad || (requireNear && (latitude == null || longitude == null))) {
+      return context.l10n.cafeLocationNeedPoint;
+    }
+    return null;
+  }
+
+  Future<void> _useCurrent() async {
+    try {
+      final point = await readDeviceLocation();
+      if (!mounted) return;
+      setState(() {
+        lat.text = point.latitude.toStringAsFixed(6);
+        lng.text = point.longitude.toStringAsFixed(6);
+        validation = null;
+      });
+    } on DeviceLocationException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.cafeLocationReadFailed)));
+    }
+  }
+
+  Future<void> _save() async {
+    final message = _validate();
+    if (message != null) {
+      setState(() => validation = message);
+      return;
+    }
+    setState(() {
+      validation = null;
+      saving = true;
+    });
+    final error = await context.read<CafeStore>().saveCafeLocation(
+          enabled: requireNear,
+          lat: _coord(lat),
+          lng: _coord(lng),
+          radiusM: int.parse(radius.text.trim()),
+        );
+    if (!mounted) return;
+    setState(() {
+      saving = false;
+      validation = error == null ? null : context.l10n.cafeLocationSaveFailed;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.l10n.cafeLocationTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: Text(context.l10n.cafeLocationRequire, style: const TextStyle(fontWeight: FontWeight.w700))),
+              Switch(value: requireNear, onChanged: (value) => setState(() => requireNear = value)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(onPressed: _useCurrent, child: Text(context.l10n.cafeLocationUseCurrent)),
+          const SizedBox(height: 12),
+          TextField(controller: lat, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: InputDecoration(labelText: context.l10n.cafeLocationLatitude)),
+          const SizedBox(height: 8),
+          TextField(controller: lng, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: InputDecoration(labelText: context.l10n.cafeLocationLongitude)),
+          const SizedBox(height: 8),
+          TextField(controller: radius, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: context.l10n.cafeLocationRadius)),
+          const SizedBox(height: 8),
+          Text(context.l10n.cafeLocationGpsNote, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13)),
+          if (validation != null) ...[
+            const SizedBox(height: 8),
+            Text(validation!, style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: saving ? null : _save,
+              child: Text(context.l10n.cafeLocationSave),
+            ),
+          ),
+        ],
       ),
     );
   }

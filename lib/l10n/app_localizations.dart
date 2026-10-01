@@ -2695,6 +2695,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more'**
   String get salesLoadMore;
+
+  /// No description provided for @cafeLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe location'**
+  String get cafeLocationTitle;
+
+  /// No description provided for @cafeLocationRequire.
+  ///
+  /// In en, this message translates to:
+  /// **'Require guests to be near the cafe to order'**
+  String get cafeLocationRequire;
+
+  /// No description provided for @cafeLocationUseCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get cafeLocationUseCurrent;
+
+  /// No description provided for @cafeLocationLatitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get cafeLocationLatitude;
+
+  /// No description provided for @cafeLocationLongitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get cafeLocationLongitude;
+
+  /// No description provided for @cafeLocationRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius (meters)'**
+  String get cafeLocationRadius;
+
+  /// No description provided for @cafeLocationSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save location'**
+  String get cafeLocationSave;
+
+  /// No description provided for @cafeLocationGpsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS can be off by 20 to 50 m indoors.'**
+  String get cafeLocationGpsNote;
+
+  /// No description provided for @cafeLocationNeedPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a latitude and longitude before turning this on.'**
+  String get cafeLocationNeedPoint;
+
+  /// No description provided for @cafeLocationRadiusRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius must be between 30 and 500 meters.'**
+  String get cafeLocationRadiusRange;
+
+  /// No description provided for @cafeLocationReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read this device\'s location.'**
+  String get cafeLocationReadFailed;
+
+  /// No description provided for @cafeLocationSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the cafe location.'**
+  String get cafeLocationSaveFailed;
+
+  /// No description provided for @guestLocationTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re too far from the cafe to order. You can still browse the menu.'**
+  String get guestLocationTooFar;
+
+  /// No description provided for @guestLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is needed to place an order. You can still browse the menu.'**
+  String get guestLocationDenied;
+
+  /// No description provided for @guestLocationAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location'**
+  String get guestLocationAllow;
+
+  /// No description provided for @guestLocationIosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On iPhone, turn location back on in the browser\'s site settings.'**
+  String get guestLocationIosHint;
+
+  /// No description provided for @guestLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t read your location. You can still browse the menu.'**
+  String get guestLocationUnavailable;
+
+  /// No description provided for @guestLocationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get guestLocationRetry;
+
+  /// No description provided for @guestLocationChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your location…'**
+  String get guestLocationChecking;
 }
 
 class _AppLocalizationsDelegate

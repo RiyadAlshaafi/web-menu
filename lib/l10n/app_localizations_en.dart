@@ -1446,4 +1446,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesLoadMore => 'Load more';
+
+  @override
+  String get cafeLocationTitle => 'Cafe location';
+
+  @override
+  String get cafeLocationRequire =>
+      'Require guests to be near the cafe to order';
+
+  @override
+  String get cafeLocationUseCurrent => 'Use my current location';
+
+  @override
+  String get cafeLocationLatitude => 'Latitude';
+
+  @override
+  String get cafeLocationLongitude => 'Longitude';
+
+  @override
+  String get cafeLocationRadius => 'Radius (meters)';
+
+  @override
+  String get cafeLocationSave => 'Save location';
+
+  @override
+  String get cafeLocationGpsNote => 'GPS can be off by 20 to 50 m indoors.';
+
+  @override
+  String get cafeLocationNeedPoint =>
+      'Save a latitude and longitude before turning this on.';
+
+  @override
+  String get cafeLocationRadiusRange =>
+      'Radius must be between 30 and 500 meters.';
+
+  @override
+  String get cafeLocationReadFailed =>
+      'Couldn\'t read this device\'s location.';
+
+  @override
+  String get cafeLocationSaveFailed => 'Couldn\'t save the cafe location.';
+
+  @override
+  String get guestLocationTooFar =>
+      'You\'re too far from the cafe to order. You can still browse the menu.';
+
+  @override
+  String get guestLocationDenied =>
+      'Location is needed to place an order. You can still browse the menu.';
+
+  @override
+  String get guestLocationAllow => 'Allow location';
+
+  @override
+  String get guestLocationIosHint =>
+      'On iPhone, turn location back on in the browser\'s site settings.';
+
+  @override
+  String get guestLocationUnavailable =>
+      'We couldn\'t read your location. You can still browse the menu.';
+
+  @override
+  String get guestLocationRetry => 'Retry';
+
+  @override
+  String get guestLocationChecking => 'Checking your location…';
 }

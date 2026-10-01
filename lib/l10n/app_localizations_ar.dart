@@ -1443,4 +1443,68 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesLoadMore => 'تحميل المزيد';
+
+  @override
+  String get cafeLocationTitle => 'موقع المقهى';
+
+  @override
+  String get cafeLocationRequire =>
+      'اطلب من الضيوف أن يكونوا قرب المقهى ليتمكنوا من الطلب';
+
+  @override
+  String get cafeLocationUseCurrent => 'استخدم موقعي الحالي';
+
+  @override
+  String get cafeLocationLatitude => 'خط العرض';
+
+  @override
+  String get cafeLocationLongitude => 'خط الطول';
+
+  @override
+  String get cafeLocationRadius => 'النطاق (متر)';
+
+  @override
+  String get cafeLocationSave => 'حفظ الموقع';
+
+  @override
+  String get cafeLocationGpsNote =>
+      'قد يخطئ GPS بمقدار 20 إلى 50 متراً داخل المباني.';
+
+  @override
+  String get cafeLocationNeedPoint =>
+      'احفظ خط العرض وخط الطول قبل تفعيل هذا الخيار.';
+
+  @override
+  String get cafeLocationRadiusRange => 'النطاق يجب أن يكون بين 30 و 500 متر.';
+
+  @override
+  String get cafeLocationReadFailed => 'تعذر قراءة موقع هذا الجهاز.';
+
+  @override
+  String get cafeLocationSaveFailed => 'تعذر حفظ موقع المقهى.';
+
+  @override
+  String get guestLocationTooFar =>
+      'أنت بعيد عن المقهى ولا يمكن إرسال الطلب. يمكنك تصفح القائمة.';
+
+  @override
+  String get guestLocationDenied =>
+      'الموقع مطلوب لإرسال الطلب. يمكنك تصفح القائمة.';
+
+  @override
+  String get guestLocationAllow => 'السماح بالموقع';
+
+  @override
+  String get guestLocationIosHint =>
+      'على الآيفون، أعد تفعيل الموقع من إعدادات الموقع في المتصفح.';
+
+  @override
+  String get guestLocationUnavailable =>
+      'تعذر قراءة موقعك. يمكنك تصفح القائمة.';
+
+  @override
+  String get guestLocationRetry => 'إعادة المحاولة';
+
+  @override
+  String get guestLocationChecking => 'جارٍ التحقق من موقعك…';
 }

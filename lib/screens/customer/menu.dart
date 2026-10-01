@@ -13,6 +13,15 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   bool chefsOnly = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<CafeStore>().refreshGuestLocation(widget.tableSlug);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final table = store.tableBySlug(widget.tableSlug);
@@ -47,6 +56,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       child: Column(
         children: [
           _guestHeader(table),
+          _locationBanner(store),
           RefusalNotice(tableId: table.id),
           Expanded(
             child: CustomScrollView(
@@ -245,20 +255,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     : () => context.go('/t/${widget.tableSlug}/cart'),
                                 child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
                               ),
-                              FilledButton(
-                                onPressed: store.isSendingOrder(table.id)
-                                    ? null
-                                    : () async {
-                                        final sent = await confirmAndSendOrder(context, store, table.id);
-                                        if (sent && context.mounted) context.go('/t/${widget.tableSlug}/cart');
-                                      },
-                                style: FilledButton.styleFrom(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: store.isSendingOrder(table.id)
-                                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                    : Text(context.l10n.guestOrderButton),
-                              ),
+                              _orderButton(store, table.id),
                             ],
                           ),
                         ),
@@ -480,22 +477,94 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     );
   }
 
+  Widget _locationBanner(CafeStore store) {
+    final message = guestLocationMessage(context, store);
+    if (message == null) return const SizedBox.shrink();
+    final retry = store.guestLocation == GuestLocationStatus.denied || store.guestLocation == GuestLocationStatus.unavailable;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Material(
+        color: CafeColors.peach,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(message, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700, height: 1.3)),
+              if (store.guestLocation == GuestLocationStatus.denied) ...[
+                const SizedBox(height: 4),
+                Text(context.l10n.guestLocationIosHint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, height: 1.3)),
+              ],
+              if (retry) ...[
+                const SizedBox(height: 6),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: CafeSurfaces.of(context).button,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () => store.refreshGuestLocation(widget.tableSlug, force: true),
+                  child: Text(store.guestLocation == GuestLocationStatus.denied ? context.l10n.guestLocationAllow : context.l10n.guestLocationRetry),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _orderButton(CafeStore store, String tableId) {
+    final blocked = !store.canPlaceOrder;
+    final sending = store.isSendingOrder(tableId);
+    final button = FilledButton(
+      onPressed: blocked || sending
+          ? null
+          : () async {
+              final sent = await confirmAndSendOrder(context, store, tableId);
+              if (!mounted || !sent) return;
+              context.go('/t/${widget.tableSlug}/cart');
+            },
+      style: FilledButton.styleFrom(
+        disabledBackgroundColor: CafeColors.line,
+        disabledForegroundColor: CafeColors.inkMuted,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: sending
+          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : Text(context.l10n.guestOrderButton),
+    );
+    if (!blocked) return button;
+    return GestureDetector(
+      onTap: () => showGuestLocationBlock(context, store),
+      child: IgnorePointer(child: button),
+    );
+  }
+
   Widget _add(CafeStore store, String tableId, MenuItem item) {
     final open = store.canOrderItem(item);
-    return SizedBox(
+    final blocked = open && !store.canPlaceOrder;
+    final button = SizedBox(
       width: 32,
       height: 32,
       child: IconButton.filled(
-        onPressed: open ? () => store.addToCart(tableId, item) : null,
+        onPressed: open && !blocked ? () => store.addToCart(tableId, item) : null,
         padding: EdgeInsets.zero,
         style: IconButton.styleFrom(
-          backgroundColor: open ? CafeColors.creamDark : CafeColors.line,
-          foregroundColor: open ? CafeSurfaces.of(context).button : CafeColors.inkMuted,
+          backgroundColor: open && !blocked ? CafeColors.creamDark : CafeColors.line,
+          foregroundColor: open && !blocked ? CafeSurfaces.of(context).button : CafeColors.inkMuted,
           disabledBackgroundColor: CafeColors.line,
           disabledForegroundColor: CafeColors.inkMuted,
         ),
         icon: const Icon(Icons.add, size: 18),
       ),
+    );
+    if (!blocked) return button;
+    return GestureDetector(
+      onTap: () => showGuestLocationBlock(context, store),
+      child: IgnorePointer(child: button),
     );
   }
 
@@ -560,14 +629,20 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  TerracottaButton(
-                    label: context.l10n.guestAddToOrder(store.currency.format(item.salePrice * qty)),
-                    onPressed: () {
-                      for (var i = 0; i < qty; i++) {
-                        store.addToCart(tableId, item);
-                      }
-                      Navigator.pop(context);
-                    },
+                  _blockedOr(
+                    context,
+                    store,
+                    TerracottaButton(
+                      label: context.l10n.guestAddToOrder(store.currency.format(item.salePrice * qty)),
+                      onPressed: store.canPlaceOrder
+                          ? () {
+                              for (var i = 0; i < qty; i++) {
+                                store.addToCart(tableId, item);
+                              }
+                              Navigator.pop(context);
+                            }
+                          : null,
+                    ),
                   ),
                 ],
               ),
@@ -755,11 +830,12 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                           await store.sendCartToKitchen(tableId);
                                           navigator.pop(true);
                                         } catch (error, stackTrace) {
-                                          reportError('send cart', error, stackTrace);
+                                          final text = '$error';
+                                          reportError('send cart', text.contains('p_lat') || text.contains('p_lng') ? 'order was not sent' : error, stackTrace);
                                           sending = false;
                                           setLocal(() {});
                                           if (sheetContext.mounted) {
-                                            ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text('$error')));
+                                            ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text(guestOrderErrorText(sheetContext, error))));
                                           }
                                         }
                                       },
@@ -794,5 +870,38 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
   } finally {
     store.endOrderConfirm(tableId);
   }
+}
+
+String? guestLocationMessage(BuildContext context, CafeStore store) {
+  return switch (store.guestLocation) {
+    GuestLocationStatus.tooFar => context.l10n.guestLocationTooFar,
+    GuestLocationStatus.denied => context.l10n.guestLocationDenied,
+    GuestLocationStatus.unavailable => context.l10n.guestLocationUnavailable,
+    GuestLocationStatus.checking => context.l10n.guestLocationChecking,
+    GuestLocationStatus.off || GuestLocationStatus.allowed => null,
+  };
+}
+
+void showGuestLocationBlock(BuildContext context, CafeStore store) {
+  final message = guestLocationMessage(context, store);
+  if (message == null) return;
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
+
+Widget _blockedOr(BuildContext context, CafeStore store, Widget child) {
+  if (store.canPlaceOrder) return child;
+  return GestureDetector(
+    onTap: () => showGuestLocationBlock(context, store),
+    child: IgnorePointer(child: child),
+  );
+}
+
+String guestOrderErrorText(BuildContext context, Object error) {
+  var text = '$error';
+  const prefix = 'Bad state: ';
+  if (text.startsWith(prefix)) text = text.substring(prefix.length);
+  if (text.contains('too_far')) return context.l10n.guestLocationTooFar;
+  if (text.contains('location_required')) return context.l10n.guestLocationDenied;
+  return text;
 }
 

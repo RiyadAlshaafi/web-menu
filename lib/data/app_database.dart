@@ -262,7 +262,9 @@ class AppDatabase {
       _rememberAdmin = false;
     }
     if (!liveOnly && restaurantId != null) {
-      final restaurant = await client!.from('restaurants').select().eq('id', restaurantId!).maybeSingle();
+      final restaurant = await client!.from('restaurants').select(
+        'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color',
+      ).eq('id', restaurantId!).maybeSingle();
       if (restaurant != null) {
         _locale = restaurant['locale'] as String? ?? 'en';
         _cafe = {
@@ -849,12 +851,60 @@ class AppDatabase {
     return next;
   }
 
-  Future<String?> sendTableCart(String tableId, {String serviceType = 'dine_in'}) async {
+  Future<Map<String, dynamic>> guestLocationRule(String qrSlug, {double? lat, double? lng, double? accuracyM}) async {
+    if (client == null) return const {'enabled': false, 'radius_m': 100};
+    final params = <String, dynamic>{'p_qr_slug': qrSlug};
+    if (lat != null && lng != null) {
+      params['p_lat'] = lat;
+      params['p_lng'] = lng;
+      if (accuracyM != null) params['p_accuracy_m'] = accuracyM;
+    }
+    final raw = await client!.rpc('guest_location_rule', params: params);
+    return Map<String, dynamic>.from(raw as Map);
+  }
+
+  Future<({bool enabled, double? lat, double? lng, int radiusM})?> readCafeLocation() async {
+    if (client == null || restaurantId == null) return null;
+    final row = await client!.from('restaurants').select(
+      'location_check_enabled, location_lat, location_lng, location_radius_m',
+    ).eq('id', restaurantId!).maybeSingle();
+    if (row == null) return null;
+    return (
+      enabled: row['location_check_enabled'] as bool? ?? false,
+      lat: (row['location_lat'] as num?)?.toDouble(),
+      lng: (row['location_lng'] as num?)?.toDouble(),
+      radiusM: (row['location_radius_m'] as num?)?.toInt() ?? 100,
+    );
+  }
+
+  Future<String?> writeCafeLocation({required bool enabled, double? lat, double? lng, required int radiusM}) async {
+    if (client == null || restaurantId == null) return 'Supabase is not configured.';
+    try {
+      await client!.from('restaurants').update({
+        'location_check_enabled': enabled,
+        'location_lat': lat,
+        'location_lng': lng,
+        'location_radius_m': radiusM,
+      }).eq('id', restaurantId!);
+      return null;
+    } catch (_, stackTrace) {
+      reportError('save cafe location', 'save failed', stackTrace);
+      return 'save_failed';
+    }
+  }
+
+  Future<String?> sendTableCart(
+    String tableId, {
+    String serviceType = 'dine_in',
+    double? lat,
+    double? lng,
+    double? accuracyM,
+  }) async {
     if (client == null) return 'Supabase is not configured.';
     await _cartWrites;
     _applyHeaders();
     final cart = _carts[tableId];
-    final raw = await client!.rpc('send_table_cart', params: {
+    final params = <String, dynamic>{
       'p_qr_slug': guestSlug,
       'p_lines': [
         for (final line in cart?.lines ?? const <OrderLine>[])
@@ -862,7 +912,13 @@ class AppDatabase {
             {'menu_item_id': line.menuItemId, 'qty': line.qty},
       ],
       'p_service_type': serviceType,
-    });
+    };
+    if (lat != null && lng != null) {
+      params['p_lat'] = lat;
+      params['p_lng'] = lng;
+      if (accuracyM != null) params['p_accuracy_m'] = accuracyM;
+    }
+    final raw = await client!.rpc('send_table_cart', params: params);
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] != true) return result['error'] as String? ?? 'Order was not sent.';
     await refreshFromDisk();

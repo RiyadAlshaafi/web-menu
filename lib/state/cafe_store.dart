@@ -7,6 +7,7 @@ import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
+import '../device_location.dart';
 import '../models/models.dart';
 import '../money.dart';
 import '../report_error.dart';
@@ -17,8 +18,11 @@ part 'cafe_store_settings.dart';
 part 'cafe_store_catalog.dart';
 part 'cafe_store_orders.dart';
 part 'cafe_store_payments.dart';
+part 'cafe_store_location.dart';
 
 enum AuthKind { none, admin, cashier }
+
+enum GuestLocationStatus { off, checking, allowed, tooFar, denied, unavailable }
 
 class CafeStore extends ChangeNotifier {
   CafeStore(this.db);
@@ -56,6 +60,15 @@ class CafeStore extends ChangeNotifier {
   int otpSecondsLeft = 0;
   Timer? _liveSync;
   String _syncStamp = '';
+  GuestLocationStatus guestLocation = GuestLocationStatus.off;
+  DateTime? _guestNearUntil;
+  double? _guestLat;
+  double? _guestLng;
+  double? _guestAccuracyM;
+  bool _guestLocationStarted = false;
+  bool _guestLocationBusy = false;
+
+  bool get canPlaceOrder => guestLocation == GuestLocationStatus.off || guestLocation == GuestLocationStatus.allowed;
 
   Future<void> load() async {
     await db.init();
