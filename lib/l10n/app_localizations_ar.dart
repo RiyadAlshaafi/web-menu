@@ -1423,4 +1423,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payTypeSave => 'حفظ';
+
+  @override
+  String get clearCashierLog => 'مسح سجل الكاشير';
+
+  @override
+  String get clearCashierLogConfirm =>
+      'هذا يحذف مبيعاتك من سجل الكاشير ويعيد أرقام تذاكر اليوم حتى تختبر من جديد.';
+
+  @override
+  String get clearShiftSales => 'مسح مبيعات وسجلات الوردية';
+
+  @override
+  String get clearShiftSalesConfirm =>
+      'هذا يمسح سجل الصندوق ويعيد مجاميع الوردية وأرقام تذاكر اليوم حتى تختبر من جديد.';
+
+  @override
+  String get clearLogsDone => 'تم المسح.';
 }

@@ -977,6 +977,19 @@ class CafeStore extends ChangeNotifier {
     return null;
   }
 
+  Future<String?> clearTestLogs(String scope) async {
+    final cashier = currentCashier;
+    if (cashier == null) return l10n.errCashierSignInFirst;
+    final failure = await db.clearTestLogs(scope, cashierId: cashier.id);
+    if (failure != null) {
+      if (failure == 'sign in as a cashier first') return l10n.errCashierSignInFirst;
+      return failure;
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return null;
+  }
+
   Future<String?> closeShift({required double actualCash}) async {
     final shift = currentShift ?? openShift;
     if (shift == null) return l10n.errNoOpenShift;

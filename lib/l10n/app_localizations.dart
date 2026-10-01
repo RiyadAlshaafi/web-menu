@@ -2659,6 +2659,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get payTypeSave;
+
+  /// No description provided for @clearCashierLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cashier log'**
+  String get clearCashierLog;
+
+  /// No description provided for @clearCashierLogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes your sales from the cashier log and restarts today\'s ticket numbers so you can test again.'**
+  String get clearCashierLogConfirm;
+
+  /// No description provided for @clearShiftSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear shift sales & logs'**
+  String get clearShiftSales;
+
+  /// No description provided for @clearShiftSalesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the register log, resets shift totals, and restarts today\'s ticket numbers so you can test again.'**
+  String get clearShiftSalesConfirm;
+
+  /// No description provided for @clearLogsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared.'**
+  String get clearLogsDone;
 }
 
 class _AppLocalizationsDelegate

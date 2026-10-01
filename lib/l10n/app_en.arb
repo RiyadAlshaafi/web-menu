@@ -806,5 +806,10 @@
     }
   },
   "payDeleteMessage": "Past sales using this method will keep showing it.",
-  "payTypeSave": "Save"
+  "payTypeSave": "Save",
+  "clearCashierLog": "Clear cashier log",
+  "clearCashierLogConfirm": "This removes your sales from the cashier log and restarts today's ticket numbers so you can test again.",
+  "clearShiftSales": "Clear shift sales & logs",
+  "clearShiftSalesConfirm": "This clears the register log, resets shift totals, and restarts today's ticket numbers so you can test again.",
+  "clearLogsDone": "Cleared."
 }

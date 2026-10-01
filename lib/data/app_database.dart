@@ -490,6 +490,39 @@ class AppDatabase {
     return result['error'] as String? ?? 'Payment failed.';
   }
 
+  Future<String?> clearTestLogs(String scope, {required String cashierId}) async {
+    if (scope != 'cashier' && scope != 'shift') return 'unknown scope';
+    if (client == null) {
+      if (scope == 'cashier') {
+        _payments.removeWhere((payment) => payment.cashierId == cashierId);
+        for (final shift in _shifts.where((shift) => shift.cashierId == cashierId)) {
+          final rows = _payments.where((payment) => payment.shiftId == shift.id);
+          shift.cashSales = rows.fold<double>(0, (sum, payment) => sum + payment.totalDue);
+          shift.transactionCount = rows.length;
+        }
+      } else {
+        _payments.clear();
+        for (final shift in _shifts) {
+          shift.cashSales = 0;
+          shift.transactionCount = 0;
+        }
+      }
+      for (final order in _orders.where((order) => order.status != OrderStatus.paid)) {
+        order.shiftOrderNumber = null;
+        order.yearMonth = null;
+      }
+      return null;
+    }
+    _applyHeaders();
+    final raw = await client!.rpc('clear_test_logs', params: {'p_scope': scope});
+    final result = Map<String, dynamic>.from(raw as Map);
+    if (result['ok'] == true) {
+      await refreshFromDisk();
+      return null;
+    }
+    return result['error'] as String? ?? 'Logs were not cleared.';
+  }
+
   Future<String?> assignShiftOrderNumber(String orderId) async {
     if (client == null) return 'Supabase is not configured.';
     _applyHeaders();

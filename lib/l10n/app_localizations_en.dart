@@ -1426,4 +1426,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payTypeSave => 'Save';
+
+  @override
+  String get clearCashierLog => 'Clear cashier log';
+
+  @override
+  String get clearCashierLogConfirm =>
+      'This removes your sales from the cashier log and restarts today\'s ticket numbers so you can test again.';
+
+  @override
+  String get clearShiftSales => 'Clear shift sales & logs';
+
+  @override
+  String get clearShiftSalesConfirm =>
+      'This clears the register log, resets shift totals, and restarts today\'s ticket numbers so you can test again.';
+
+  @override
+  String get clearLogsDone => 'Cleared.';
 }

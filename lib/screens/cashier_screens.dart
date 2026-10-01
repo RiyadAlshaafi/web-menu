@@ -1069,6 +1069,12 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 icon: const Icon(Icons.sim_card_download_outlined, size: 16),
                 label: Text(context.l10n.cashierExportSummary),
               ),
+              OutlinedButton.icon(
+                onPressed: () => _clearShiftLogs(context, store),
+                icon: const Icon(Icons.delete_outline, size: 16),
+                style: OutlinedButton.styleFrom(foregroundColor: CafeColors.alert, side: const BorderSide(color: CafeColors.alert)),
+                label: Text(context.l10n.clearShiftSales),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -1304,6 +1310,18 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _clearShiftLogs(BuildContext context, CafeStore store) async {
+    final confirmed = await showCafeConfirmDialog(
+      context,
+      title: context.l10n.clearShiftSales,
+      message: context.l10n.clearShiftSalesConfirm,
+    );
+    if (!confirmed || !context.mounted) return;
+    final error = await store.clearTestLogs('shift');
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.clearLogsDone)));
   }
 }
 
