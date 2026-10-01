@@ -9,7 +9,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/app_database.dart';
 import '../models/models.dart';
 import '../money.dart';
+import '../report_error.dart';
 import '../theme/cafe_theme.dart';
+
+
+part 'cafe_store_settings.dart';
+part 'cafe_store_catalog.dart';
+part 'cafe_store_orders.dart';
+part 'cafe_store_payments.dart';
 
 enum AuthKind { none, admin, cashier }
 
@@ -75,9 +82,20 @@ class CafeStore extends ChangeNotifier {
 
   void startLiveSync() {
     _liveSync?.cancel();
-    _liveSync = Timer.periodic(const Duration(seconds: 2), (_) {
+    db.onLiveChange = () {
+      unawaited(syncFromDisk());
+    };
+    db.startRealtime();
+    _liveSync = Timer.periodic(const Duration(seconds: 30), (_) {
       unawaited(syncFromDisk());
     });
+  }
+
+  void stopLiveSync() {
+    _liveSync?.cancel();
+    _liveSync = null;
+    db.onLiveChange = null;
+    db.stopRealtime();
   }
 
   @override
@@ -88,7 +106,7 @@ class CafeStore extends ChangeNotifier {
 
   @override
   void dispose() {
-    _liveSync?.cancel();
+    stopLiveSync();
     super.dispose();
   }
 
@@ -105,6 +123,9 @@ class CafeStore extends ChangeNotifier {
       });
 
   int _pendingWrites = 0;
+  final Map<String, String> _serviceBySlug = {};
+  final Set<String> _sendingTables = {};
+  final Set<String> _confirmingOrders = {};
 
   Future<void> syncFromDisk() async {
     if (_pendingWrites > 0) return;
@@ -127,7 +148,8 @@ class CafeStore extends ChangeNotifier {
     _assigningNumbers = true;
     try {
       for (final id in ids) {
-        await db.assignShiftOrderNumber(id);
+        final error = await db.assignShiftOrderNumber(id);
+        if (_sessionExpired(error)) return;
       }
       await db.refreshFromDisk(liveOnly: true);
       _hydrateOperational();
@@ -172,224 +194,7 @@ class CafeStore extends ChangeNotifier {
 
   bool get hasAdmin => admin != null || db.anyAdmin;
 
-  String get cafeName {
-    final name = (cafe['name'] as String?)?.trim() ?? '';
-    return name.isEmpty ? 'Café Italiano' : name;
-  }
-
-  String get logoUrl => (cafe['logoUrl'] as String?)?.trim() ?? '';
-
-  static const defaultMenuOrigin = 'https://web-menu-akakus.vercel.app';
-
-  String guestLink(String slug) {
-    var base = '';
-    if (kIsWeb) {
-      final origin = Uri.base.origin;
-      if (origin.startsWith('http')) base = origin;
-    }
-    if (base.isEmpty) base = const String.fromEnvironment('PUBLIC_MENU_URL', defaultValue: defaultMenuOrigin);
-    base = base.trim().replaceFirst(RegExp(r'/+$'), '');
-    if (base.endsWith('/rest/v1')) base = base.substring(0, base.length - 7).replaceFirst(RegExp(r'/+$'), '');
-    if (!base.startsWith('http')) return '';
-    return '$base/#/t/$slug';
-  }
-
-  Future<void> saveCompany({required String name, String? logoDataUrl, bool removeLogo = false}) async {
-    var logo = logoUrl;
-    if (removeLogo) {
-      logo = '';
-    } else if (logoDataUrl != null && logoDataUrl.startsWith('data:')) {
-      logo = await db.storeLogo(logoDataUrl);
-    }
-    cafe = {
-      ...cafe,
-      'name': name.trim(),
-      'logoUrl': logo,
-    };
-    await db.writeCafe(cafe);
-    notifyListeners();
-  }
-
-  Future<void> saveAppearance({required Color header, required Color sidebar, required Color background, required Color button}) async {
-    cafe = {
-      ...cafe,
-      'headerColor': CafeColors.toHex(header),
-      'sidebarColor': CafeColors.toHex(sidebar),
-      'backgroundColor': CafeColors.toHex(background),
-      'buttonColor': CafeColors.toHex(button),
-    };
-    await db.writeCafe(cafe);
-    notifyListeners();
-  }
-
-  Future<void> resetAppearance() => saveAppearance(
-        header: CafeColors.defaultHeader,
-        sidebar: CafeColors.defaultSidebar,
-        background: CafeColors.defaultBackground,
-        button: CafeColors.defaultButton,
-      );
-  String get databasePath => db.databasePath;
-  bool get isSqlite => db.isSqlite;
-  double get serviceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0.10;
-  double get taxRate => (cafe['taxRate'] as num?)?.toDouble() ?? 0;
-
-  List<MenuItem> get guestMenu {
-    final visibleIds = guestCategories.map((item) => item.id).toSet();
-    final items = menuItems.where((item) => visibleIds.contains(item.categoryId)).toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return items;
-  }
-
-  bool canOrderItem(MenuItem item) => item.available && !item.soldOut;
-
-  Future<String?> setItemsAvailable(Iterable<String> ids, bool available) async {
-    String? error;
-    for (final id in ids) {
-      error = await db.setItemAvailable(id, available);
-      if (error != null) break;
-    }
-    notifyListeners();
-    return error;
-  }
-
-  Future<String?> setItemAvailable(String itemId, bool available) async {
-    final error = await db.setItemAvailable(itemId, available);
-    notifyListeners();
-    return error;
-  }
-
-  Future<String?> refuseOrderLine(CafeOrder order, OrderLine line) async {
-    final name = line.name;
-    order.lines.remove(line);
-    await db.writeOrders(orders);
-    await db.noteOrderRefusal(order.id, name);
-    order.awaitingCustomerConfirmation = true;
-    order.refusalNotice = order.refusalNotice.trim().isEmpty ? name : '${order.refusalNotice} $name';
-    String? error;
-    if (line.menuItemId.isNotEmpty) {
-      error = await setItemAvailable(line.menuItemId, false);
-    } else {
-      notifyListeners();
-    }
-    return error;
-  }
-
-  Future<void> confirmRefusedOrder(String tableId) async {
-    final order = openOrderFor(tableId);
-    if (order == null) return;
-    await db.confirmOrderRefusal(order.id);
-    order.awaitingCustomerConfirmation = false;
-    order.refusalNotice = '';
-    await requestBill(tableId, force: true);
-  }
-
-  List<MenuItem> get liveMenu {
-    final visibleIds = guestCategories.map((item) => item.id).toSet();
-    final items = menuItems
-        .where((item) => item.available && !item.soldOut && visibleIds.contains(item.categoryId))
-        .toList()
-      ..sort((a, b) {
-        final category = a.sortOrder.compareTo(b.sortOrder);
-        return category;
-      });
-    return items;
-  }
-
-  List<MenuItem> dishesIn(String categoryId) {
-    final items = menuItems.where((item) => item.categoryId == categoryId).toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return items;
-  }
-
-  CafeTable? tableBySlug(String slug) {
-    final matches = tables.where((table) => table.qrSlug == slug || table.id == slug);
-    return matches.isEmpty ? null : matches.first;
-  }
-
-  CafeTable tableById(String id) => tables.firstWhere((table) => table.id == id);
-
-  CartState cartFor(String tableId) =>
-      carts.putIfAbsent(tableId, () => CartState(tableId: tableId));
-
-  CafeOrder? openOrderFor(String tableId) {
-    final open = orders
-        .where((order) => order.tableId == tableId && order.status != OrderStatus.paid)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return open.isEmpty ? null : open.first;
-  }
-
-  List<CafeOrder> liveOrders() =>
-      orders.where((order) => order.status != OrderStatus.paid).toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-  List<StaffCall> get openCalls => calls.where((call) => !call.resolved).toList();
-
-  List<CafeTable> get billTables {
-    final requested = <String>{
-      for (final table in tables)
-        if (table.status == TableStatus.billRequested) table.id,
-      for (final call in openCalls)
-        if (call.kind == 'bill') call.tableId,
-    };
-    return tables.where((table) {
-      if (!requested.contains(table.id)) return false;
-      return openOrderFor(table.id)?.serviceType != 'takeout';
-    }).toList();
-  }
-
-  final Map<String, String> _serviceBySlug = {};
-
-  String? serviceChoiceFor(String slug) => _serviceBySlug[slug];
-
-  void chooseService(String slug, String type) {
-    _serviceBySlug[slug] = type == 'takeout' ? 'takeout' : 'dine_in';
-    notifyListeners();
-  }
-
-  String serviceForTable(String tableId) {
-    final order = openOrderFor(tableId);
-    if (order != null) return order.serviceType;
-    final table = tables.where((item) => item.id == tableId);
-    if (table.isEmpty) return 'dine_in';
-    return _serviceBySlug[table.first.qrSlug] ?? _serviceBySlug[table.first.id] ?? 'dine_in';
-  }
-
-  bool orderIsTakeout(CafeOrder order) => order.serviceType == 'takeout';
-
-  bool paymentIsTakeout(Payment payment) {
-    final match = orders.where((order) => order.id == payment.orderId);
-    return match.isNotEmpty && match.first.serviceType == 'takeout';
-  }
-
-  double tabSubtotal(String tableId) =>
-      (openOrderFor(tableId)?.subtotal ?? 0) + cartFor(tableId).total;
-
-  double serviceCharge(double subtotal) => subtotal * serviceChargeRate;
-
-  /// One formula for the amount on screen and the amount sent to settlement.
-  double chargeTotal(double subtotal, {bool applyService = true}) =>
-      applyService ? subtotal + serviceCharge(subtotal) : subtotal;
-
-  double tabTotal(String tableId, {bool applyService = true}) {
-    return chargeTotal(tabSubtotal(tableId), applyService: applyService);
-  }
-
-  int tabItemCount(String tableId) =>
-      (openOrderFor(tableId)?.itemCount ?? 0) + cartFor(tableId).itemCount;
-
-  CashShift? get openShift {
-    final open = shifts.where((shift) => shift.isOpen).toList();
-    return open.isEmpty ? null : open.first;
-  }
-
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
-
-  Future<void> setLocale(String value) async {
-    locale = value;
-    await db.writeLocale(value);
-    notifyListeners();
-  }
 
   Future<String?> createAdmin({
     required String email,
@@ -405,9 +210,11 @@ class CafeStore extends ChangeNotifier {
     final AuthResponse response;
     try {
       response = await db.client!.auth.signUp(email: trimmed, password: password);
-    } on AuthException catch (error) {
+    } on AuthException catch (error, stackTrace) {
+      reportError('create admin', error, stackTrace);
       return error.message;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('create admin', error, stackTrace);
       return 'Could not reach Supabase: $error';
     }
     if (response.session == null) {
@@ -418,6 +225,7 @@ class CafeStore extends ChangeNotifier {
     await db.refreshFromDisk();
     admin = db.admin;
     authKind = AuthKind.admin;
+    startLiveSync();
     notifyListeners();
     return null;
   }
@@ -426,11 +234,13 @@ class CafeStore extends ChangeNotifier {
     if (db.client == null) return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before signing in.';
     try {
       await db.client!.auth.signInWithPassword(email: email.trim().toLowerCase(), password: password);
-    } on AuthException catch (error) {
+    } on AuthException catch (error, stackTrace) {
+      reportError('admin sign in', error, stackTrace);
       adminError = error.statusCode == '400' ? l10n.errBadCredentials : error.message;
       notifyListeners();
       return adminError;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('admin sign in', error, stackTrace);
       adminError = 'Could not reach Supabase: $error';
       notifyListeners();
       return adminError;
@@ -445,6 +255,7 @@ class CafeStore extends ChangeNotifier {
     authKind = AuthKind.admin;
     adminError = null;
     await db.writeRememberAdmin(remember);
+    startLiveSync();
     notifyListeners();
     return null;
   }
@@ -545,12 +356,15 @@ class CafeStore extends ChangeNotifier {
     loginError = null;
     try {
       await _ensureShift();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('cashier shift', error, stackTrace);
       loginError = '$error';
       notifyListeners();
       return false;
     }
     await ensureShiftNumbers();
+    if (authKind != AuthKind.cashier) return false;
+    startLiveSync();
     notifyListeners();
     return true;
   }
@@ -577,6 +391,7 @@ class CafeStore extends ChangeNotifier {
     if (db.guestSlug == slug && tables.any((table) => table.qrSlug == slug)) return;
     await db.setGuestSlug(slug);
     _hydrateOperational();
+    startLiveSync();
     notifyListeners();
   }
 
@@ -586,8 +401,16 @@ class CafeStore extends ChangeNotifier {
     currentShift = null;
     pinBuffer = '';
     db.cashierToken = null;
+    stopLiveSync();
     db.client?.auth.signOut();
     notifyListeners();
+  }
+
+  bool _sessionExpired(String? error) {
+    if (error != 'session expired, sign in again') return false;
+    loginError = error;
+    signOut();
+    return true;
   }
 
   Future<void> addCashier({required String name, required String pin}) async {
@@ -610,406 +433,6 @@ class CafeStore extends ChangeNotifier {
     await db.writeCashiers(cashiers);
     notifyListeners();
   }
-
-  Future<CafeTable> addTable(String number) async {
-    final table = CafeTable(
-      id: Secrets.id('tbl'),
-      number: number.trim(),
-      qrSlug: Secrets.publicId(),
-    );
-    tables.add(table);
-    await db.writeTables(tables);
-    notifyListeners();
-    return table;
-  }
-
-  Future<void> regenerateTableQr(String id) async {
-    final table = tableById(id);
-    table.qrSlug = Secrets.publicId();
-    await db.writeTables(tables);
-    notifyListeners();
-  }
-
-  Future<void> regenerateAllTableQrs() async {
-    for (final table in tables) {
-      table.qrSlug = Secrets.publicId();
-    }
-    await db.writeTables(tables);
-    notifyListeners();
-  }
-
-  Future<void> deleteTable(String id) async {
-    tables.removeWhere((table) => table.id == id);
-    await db.writeTables(tables);
-    notifyListeners();
-  }
-
-  List<MenuCategory> get orderedCategories {
-    final items = [...categories]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return items;
-  }
-
-  List<MenuCategory> get guestCategories =>
-      orderedCategories.where((category) => category.visible).toList();
-
-  Future<void> addCategory(String nameEn, String nameAr, {bool spotlight = false}) async {
-    categories.add(
-      MenuCategory(
-        id: Secrets.id('cat'),
-        nameEn: nameEn.trim(),
-        nameAr: nameAr.trim().isEmpty ? nameEn.trim() : nameAr.trim(),
-        sortOrder: categories.isEmpty ? 1 : categories.map((item) => item.sortOrder).reduce((a, b) => a > b ? a : b) + 1,
-        spotlight: spotlight,
-      ),
-    );
-    await db.writeCategories(categories);
-    notifyListeners();
-  }
-
-  Future<void> saveCategory(MenuCategory category) async {
-    final index = categories.indexWhere((item) => item.id == category.id);
-    if (index >= 0) categories[index] = category;
-    await db.writeCategories(categories);
-    notifyListeners();
-  }
-
-  Future<void> reorderCategories(int oldIndex, int newIndex) async {
-    final ordered = orderedCategories;
-    if (oldIndex < 0 || oldIndex >= ordered.length) return;
-    final item = ordered.removeAt(oldIndex);
-    ordered.insert(newIndex.clamp(0, ordered.length), item);
-    for (var i = 0; i < ordered.length; i++) {
-      ordered[i].sortOrder = i + 1;
-    }
-    categories = ordered;
-    await db.writeCategories(categories);
-    notifyListeners();
-  }
-
-  Future<void> deleteCategory(String id) async {
-    categories.removeWhere((item) => item.id == id);
-    menuItems.removeWhere((item) => item.categoryId == id);
-    await db.writeCategories(categories);
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  Future<void> saveMenuItem(MenuItem item) async {
-    final index = menuItems.indexWhere((entry) => entry.id == item.id);
-    if (index >= 0) {
-      menuItems[index] = item;
-    } else {
-      if (item.sortOrder == 0) {
-        final siblings = dishesIn(item.categoryId);
-        item.sortOrder = siblings.isEmpty ? 1 : siblings.map((entry) => entry.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
-      }
-      menuItems.add(item);
-    }
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  Future<void> reorderDishes(String categoryId, int oldIndex, int newIndex) async {
-    final ordered = dishesIn(categoryId);
-    if (oldIndex < 0 || oldIndex >= ordered.length) return;
-    final item = ordered.removeAt(oldIndex);
-    ordered.insert(newIndex.clamp(0, ordered.length), item);
-    for (var i = 0; i < ordered.length; i++) {
-      ordered[i].sortOrder = i + 1;
-    }
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  Future<void> persistLayout() async {
-    await db.writeCategories(categories);
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  Future<void> setDishDiscount(MenuItem item, {required double percent, required bool applied}) async {
-    item
-      ..discountPercent = percent.clamp(0, 100)
-      ..discountApplied = applied && percent > 0;
-    await saveMenuItem(item);
-  }
-
-  Future<void> applyCategoryDiscount({
-    required String? categoryId,
-    required double percent,
-    required bool activate,
-  }) async {
-    final rate = percent.clamp(0, 100).toDouble();
-    for (final item in menuItems.where((dish) => categoryId == null || dish.categoryId == categoryId)) {
-      item
-        ..discountPercent = rate
-        ..discountApplied = activate && rate > 0;
-    }
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  Future<void> deleteMenuItem(String id) async {
-    menuItems.removeWhere((item) => item.id == id);
-    await db.writeMenuItems(menuItems);
-    notifyListeners();
-  }
-
-  void addToCart(String tableId, MenuItem item) {
-    if (item.soldOut || !item.available) return;
-    final cart = cartFor(tableId);
-    final existing = cart.lines.where((line) => line.menuItemId == item.id);
-    if (existing.isEmpty) {
-      cart.lines.add(
-        OrderLine(
-          menuItemId: item.id,
-          name: item.displayName(locale),
-          qty: 1,
-          unitPrice: item.salePrice,
-        ),
-      );
-    } else {
-      existing.first.qty += 1;
-    }
-    db.writeCarts(carts).whenComplete(() {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
-    });
-    _pendingWrites += 1;
-    notifyListeners();
-  }
-
-  void setCartQty(String tableId, String menuItemId, int qty) {
-    final cart = cartFor(tableId);
-    cart.lines.removeWhere((line) => line.menuItemId == menuItemId && qty <= 0);
-    for (final line in cart.lines.where((line) => line.menuItemId == menuItemId)) {
-      line.qty = qty;
-    }
-    _pendingWrites += 1;
-    db.writeCarts(carts).whenComplete(() {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
-    });
-    notifyListeners();
-  }
-
-  final Set<String> _sendingTables = {};
-  final Set<String> _confirmingOrders = {};
-
-  bool isSendingOrder(String tableId) => _sendingTables.contains(tableId);
-
-  bool tryBeginOrderConfirm(String tableId) {
-    if (_sendingTables.contains(tableId)) return false;
-    return _confirmingOrders.add(tableId);
-  }
-
-  void endOrderConfirm(String tableId) => _confirmingOrders.remove(tableId);
-
-  Future<CafeOrder?> sendCartToKitchen(String tableId) async {
-    if (!_sendingTables.add(tableId)) return openOrderFor(tableId);
-    notifyListeners();
-    if (cartFor(tableId).lines.isEmpty) {
-      _sendingTables.remove(tableId);
-      notifyListeners();
-      return openOrderFor(tableId);
-    }
-    _pendingWrites += 1;
-    try {
-      final error = await db.sendTableCart(tableId, serviceType: serviceForTable(tableId));
-      if (error != null) throw StateError(error);
-      _hydrateOperational();
-    } finally {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
-      _sendingTables.remove(tableId);
-    }
-    notifyListeners();
-    return openOrderFor(tableId);
-  }
-
-  bool canRequestBill(String tableId) {
-    final order = openOrderFor(tableId);
-    return order != null && order.status == OrderStatus.served && cartFor(tableId).lines.isEmpty;
-  }
-
-  Future<void> requestBill(String tableId, {bool force = false}) async {
-    if (!force && !canRequestBill(tableId)) return;
-    final table = tableById(tableId);
-    final takeout = serviceForTable(tableId) == 'takeout';
-    if (!takeout) {
-      table.status = TableStatus.billRequested;
-      try {
-        await db.updateTableStatus(table);
-      } catch (error, stack) {
-        debugPrint('Table bill status was not saved: $error\n$stack');
-      }
-    }
-    final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);
-    if (!openBill) {
-      calls.add(
-        StaffCall(
-          id: Secrets.id(),
-          tableId: tableId,
-          tableNumber: takeout ? 'Takeout' : table.number,
-          createdAt: DateTime.now(),
-          kind: 'bill',
-        ),
-      );
-    }
-    await db.writeCalls(calls);
-    notifyListeners();
-  }
-
-  Future<void> callStaff(String tableId, {String kind = 'assistance'}) async {
-    calls.add(
-      StaffCall(
-        id: Secrets.id('call'),
-        tableId: tableId,
-        tableNumber: tableById(tableId).number,
-        createdAt: DateTime.now(),
-        kind: kind,
-      ),
-    );
-    await db.writeCalls(calls);
-    notifyListeners();
-  }
-
-  Future<void> resolveCall(String id) async {
-    final match = calls.where((call) => call.id == id);
-    if (match.isEmpty) return;
-    match.first.resolved = true;
-    await db.writeCalls(calls);
-    notifyListeners();
-  }
-
-  void setOrderStatus(String orderId, OrderStatus status) {
-    final order = orders.firstWhere((item) => item.id == orderId);
-    if (order.status.next != status) return;
-    order.status = status;
-    db.writeOrders(orders);
-    notifyListeners();
-  }
-
-  static String padSequence(int n) {
-    final text = n.toString();
-    return text.length >= 3 ? text : text.padLeft(3, '0');
-  }
-
-  String saleNumber(Payment payment, {required bool perShift}) {
-    if (perShift) {
-      return cashierSaleNumber(yearMonth: payment.yearMonth, shiftOrderNumber: payment.shiftOrderNumber);
-    }
-    return adminSaleNumber(
-      yearMonth: payment.yearMonth,
-      monthlyOrderNumber: payment.monthlyOrderNumber,
-      monthlyDisplayNumber: payment.monthlyDisplayNumber,
-    );
-  }
-
-  String shiftTicket(CafeOrder order) {
-    final n = order.shiftOrderNumber;
-    return n == null ? '…' : padSequence(n);
-  }
-
-  String typeName(String? id) {
-    if (id == null || id.isEmpty) return locale == 'ar' ? 'نقداً' : 'Cash';
-    final match = paymentTypes.where((type) => type.id == id);
-    return match.isEmpty ? (locale == 'ar' ? 'نقداً' : 'Cash') : match.first.label(locale);
-  }
-
-  List<PaymentType> get enabledPaymentTypes =>
-      paymentTypes.where((type) => type.enabled && !type.archived).toList();
-
-  Future<String?> _refreshAfter(Future<String?> action) async {
-    final error = await action;
-    _hydrateOperational();
-    notifyListeners();
-    return error;
-  }
-
-  Future<String?> setTablePaymentType(String tableId, String typeId) =>
-      _refreshAfter(db.setTablePaymentType(tableById(tableId).qrSlug, typeId));
-
-  Future<String?> changePaymentType(String paymentId, String typeId) =>
-      _refreshAfter(db.changePaymentType(paymentId, typeId));
-
-  Future<String?> addPaymentType(String nameEn, String nameAr) => _refreshAfter(db.addPaymentType(nameEn, nameAr));
-
-  Future<String?> savePaymentType(PaymentType type) => _refreshAfter(db.savePaymentType(type));
-
-  Future<String?> deletePaymentType(String id) {
-    final used = payments.any((payment) => payment.paymentTypeId == id) || orders.any((order) => order.paymentTypeId == id);
-    final match = paymentTypes.where((type) => type.id == id);
-    if (match.isEmpty) return Future.value(null);
-    if (used) {
-      final type = match.first;
-      type
-        ..archived = true
-        ..enabled = false;
-      return savePaymentType(type);
-    }
-    return _refreshAfter(db.deletePaymentType(id));
-  }
-
-  Future<String?> settleCash({
-    required String tableId,
-    required double cashReceived,
-    bool applyService = true,
-  }) async {
-    final cashier = currentCashier;
-    final shift = currentShift ?? openShift;
-    if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
-    final order = openOrderFor(tableId);
-    if (order == null) return l10n.errNoOpenBill;
-    if (order.status != OrderStatus.served) return l10n.cashierWaitingServed;
-    final due = tabTotal(tableId, applyService: applyService);
-    if (cashReceived < due) return l10n.insufficientCash;
-    final failure = await db.settleCash(
-      tableId,
-      cashReceived,
-      applyService: applyService,
-      paymentTypeId: openOrderFor(tableId)?.paymentTypeId,
-    );
-    if (failure != null) {
-      if (failure == 'insufficient cash') return l10n.insufficientCash;
-      if (failure == 'order is not served') return l10n.cashierWaitingServed;
-      return failure;
-    }
-    await syncFromDisk();
-    notifyListeners();
-    return null;
-  }
-
-  Future<String?> clearTestLogs(String scope) async {
-    final cashier = currentCashier;
-    if (cashier == null) return l10n.errCashierSignInFirst;
-    final failure = await db.clearTestLogs(scope, cashierId: cashier.id);
-    if (failure != null) {
-      if (failure == 'sign in as a cashier first') return l10n.errCashierSignInFirst;
-      return failure;
-    }
-    await syncFromDisk();
-    notifyListeners();
-    return null;
-  }
-
-  Future<String?> closeShift({required double actualCash}) async {
-    final shift = currentShift ?? openShift;
-    if (shift == null) return l10n.errNoOpenShift;
-    shift
-      ..actualCash = actualCash
-      ..closedAt = DateTime.now();
-    await db.writeShifts(shifts);
-    currentShift = null;
-    notifyListeners();
-    return null;
-  }
-
-  Future<void> setOpeningCash(double value) async {
-    final shift = currentShift ?? openShift;
-    if (shift == null) return;
-    shift.openingCash = value;
-    await db.writeShifts(shifts);
-    notifyListeners();
-  }
-
   bool _validEmail(String value) =>
       RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value);
 }

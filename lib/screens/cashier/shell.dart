@@ -1,0 +1,162 @@
+part of '../cashier_screens.dart';
+
+class LanguageButton extends StatelessWidget {
+  const LanguageButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final arabic = store.locale == 'ar';
+    return PopupMenuButton<String>(
+      tooltip: context.l10n.cashierLanguage,
+      onSelected: (code) => store.setLocale(code),
+      itemBuilder: (context) => [
+        CheckedPopupMenuItem(value: 'en', checked: !arabic, child: const Text('English')),
+        CheckedPopupMenuItem(value: 'ar', checked: arabic, child: const Text('العربية')),
+      ],
+      child: IgnorePointer(
+        child: GhostChip(label: arabic ? 'العربية' : 'EN', icon: Icons.language, onTap: () {}),
+      ),
+    );
+  }
+}
+
+class CashierShell extends StatelessWidget {
+  const CashierShell({super.key, required this.child, required this.location});
+
+  final Widget child;
+  final String location;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final staff = store.currentCashier;
+    final occupied = store.tables.where((table) => table.status != TableStatus.free).length;
+    final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
+    final section = AppSections.forCashier(location);
+    final compact = AppSections.compact(MediaQuery.sizeOf(context).width);
+    final railWidth = compact ? 84.0 : 250.0;
+
+    final surfaces = CafeSurfaces.of(context);
+    return Scaffold(
+      backgroundColor: surfaces.background,
+      body: Row(
+        children: [
+          Material(
+            color: surfaces.sidebar,
+            child: SizedBox(
+              width: railWidth,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(color: CafeColors.terracotta, borderRadius: BorderRadius.circular(12)),
+                          alignment: Alignment.center,
+                          child: Icon(section.icon, color: Colors.white, size: 20),
+                        ),
+                        if (!compact) ...[
+                          const SizedBox(width: 8),
+                          Expanded(child: CafeLogo(size: 0, showWordmark: true, compact: true, subtitle: context.l10n.cashierPosTerminal)),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F0E4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.circle, size: 8, color: CafeColors.success),
+                          const SizedBox(width: 6),
+                          Text(context.l10n.cashierSoloShiftLive, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Text(context.l10n.cashierAllInOne, style: const TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: CafeColors.inkMuted)),
+                    const SizedBox(height: 10),
+                    for (final item in AppSections.cashier)
+                      _nav(
+                        context,
+                        item,
+                        item.matches(location),
+                        compact,
+                        badge: switch (item.path) {
+                          '/pos' => '${store.openCalls.length + store.liveOrders().length}',
+                          '/pos/tables' => store.tables.isEmpty ? null : '$occupied/${store.tables.length}',
+                          '/pos/shifts' => sales == 0 ? null : store.currency.format(sales),
+                          _ => null,
+                        },
+                      ),
+                    const Spacer(),
+                    SoftCard(
+                      padding: const EdgeInsets.all(10),
+                      radius: 16,
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: CafeColors.terracottaSoft,
+                            child: Text(staff?.initials ?? 'C', style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800)),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(staff?.name ?? context.l10n.cashierRole, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                Text(context.l10n.cashierSoloCashier, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              store.signOut();
+                              context.go('/login');
+                            },
+                            icon: const Icon(Icons.logout, size: 18),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: ColoredBox(color: surfaces.background, child: child)),
+        ],
+      ),
+    );
+  }
+
+  Widget _nav(BuildContext context, AppSection section, bool active, bool compact, {String? badge}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        selected: active,
+        selectedTileColor: CafeSurfaces.of(context).button,
+        selectedColor: CafeSurfaces.of(context).onButton,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        leading: Icon(section.icon),
+        title: compact ? null : Text(section.label(context), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        trailing: badge == null
+            ? null
+            : Text(badge, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: active ? Colors.white : CafeColors.inkMuted)),
+        onTap: () => context.go(section.path),
+      ),
+    );
+  }
+}
+
+enum _AlertFilter { all, calls, orders, bills, ready }
+

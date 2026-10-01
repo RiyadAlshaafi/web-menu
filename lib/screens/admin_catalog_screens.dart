@@ -643,9 +643,15 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
                   ),
                   Switch(
                     value: type.enabled,
-                    onChanged: (value) {
+                    onChanged: (value) async {
+                      final previous = type.enabled;
                       type.enabled = value;
-                      store.savePaymentType(type);
+                      final error = await store.savePaymentType(type);
+                      if (!context.mounted) return;
+                      if (error != null) {
+                        type.enabled = previous;
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      }
                     },
                   ),
                 ],

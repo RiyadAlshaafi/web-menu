@@ -1443,4 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearLogsDone => 'Cleared.';
+
+  @override
+  String get salesLoadMore => 'Load more';
 }

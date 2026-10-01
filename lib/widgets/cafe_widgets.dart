@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../report_error.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 
@@ -242,7 +243,8 @@ class DishPhoto extends StatelessWidget {
         final bytes = Uint8List.fromList(base64Decode(value.substring(comma + 1)));
         if (bytes.isEmpty) return null;
         return Image.memory(bytes, width: _w, height: size, fit: BoxFit.cover);
-      } catch (_) {
+      } catch (error, stackTrace) {
+        reportError('menu image', error, stackTrace);
         return null;
       }
     }

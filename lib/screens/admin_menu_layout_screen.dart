@@ -8,6 +8,7 @@ import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
+import '../report_error.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
@@ -773,8 +774,8 @@ Future<void> showAddDishDialog(
                           }
                           final mime = (file!.extension ?? 'jpg').toLowerCase() == 'png' ? 'image/png' : 'image/jpeg';
                           setModal(() => image = 'data:$mime;base64,${base64Encode(bytes)}');
-                        } catch (_) {
-                          // Photo is optional — cancelling the picker must not block saving.
+                        } catch (error, stackTrace) {
+                          reportError('menu photo', error, stackTrace);
                         }
                       },
                       child: DashedBorder(
@@ -876,7 +877,8 @@ Future<void> showAddDishDialog(
     if (!host.mounted) return;
     try {
       await store.saveMenuItem(saved);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('save dish layout', error, stackTrace);
       if (host.mounted) {
         ScaffoldMessenger.of(host).showSnackBar(
           SnackBar(content: Text(host.l10n.layoutSaveDishError('$error'))),

@@ -78,8 +78,14 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   onChanged: (_) => setState(() => page = 0),
                 ),
               ),
-              _date(context.l10n.salesDateFrom, from, (value) => setState(() { from = value; page = 0; })),
-              _date(context.l10n.salesDateTo, to, (value) => setState(() { to = value; page = 0; })),
+              _date(context.l10n.salesDateFrom, from, (value) {
+                setState(() { from = value; page = 0; });
+                store.alignSalesWindow(from: from, to: to);
+              }),
+              _date(context.l10n.salesDateTo, to, (value) {
+                setState(() { to = value; page = 0; });
+                store.alignSalesWindow(from: from, to: to);
+              }),
               if (!widget.ownSalesOnly)
                 _menu<String?>(
                   cashierId,
@@ -147,6 +153,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                         Row(
                           children: [
                             Text(context.l10n.salesPage(safePage + 1, pages)),
+                            if (store.salesHasMore)
+                              TextButton(onPressed: () => store.loadMoreSales(), child: Text(context.l10n.salesLoadMore)),
                             const Spacer(),
                             IconButton(onPressed: safePage == 0 ? null : () => setState(() => page = safePage - 1), icon: const Icon(Icons.chevron_left)),
                             IconButton(onPressed: safePage >= pages - 1 ? null : () => setState(() => page = safePage + 1), icon: const Icon(Icons.chevron_right)),

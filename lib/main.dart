@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'report_error.dart';
 import 'models/models.dart';
 import 'screens/admin_screens.dart';
 import 'screens/auth_screens.dart';
@@ -23,7 +24,7 @@ Future<void> main() async {
   try {
     await store.load();
   } catch (error, stack) {
-    debugPrint('Startup failed: $error\n$stack');
+    reportError('startup', error, stack);
   }
   runApp(CafeItalianoApp(store: store));
 }

@@ -2689,6 +2689,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleared.'**
   String get clearLogsDone;
+
+  /// No description provided for @salesLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get salesLoadMore;
 }
 
 class _AppLocalizationsDelegate

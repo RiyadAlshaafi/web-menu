@@ -1440,4 +1440,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearLogsDone => 'تم المسح.';
+
+  @override
+  String get salesLoadMore => 'تحميل المزيد';
 }

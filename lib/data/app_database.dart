@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../report_error.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
+import 'sales_history.dart';
 
 class AppDatabase {
   AppDatabase._();
@@ -47,9 +49,17 @@ class AppDatabase {
 
   bool _ready = false;
   bool _listening = false;
+  bool _realtimeLive = false;
+  bool _realtimeSeenDrop = false;
   int _epoch = 0;
   DateTime? _catalogAt;
   Timer? _liveRefresh;
+  RealtimeChannel? _syncChannel;
+  void Function()? onLiveChange;
+  DateTime? _salesFrom;
+  DateTime? _salesTo;
+  int _salesLimit = salesPageSize;
+  bool salesHasMore = false;
   String? restaurantId;
   String? cashierToken;
   String? guestSlug;
@@ -119,7 +129,7 @@ class AppDatabase {
       _listen();
       await refreshFromDisk();
     } catch (error, stack) {
-      debugPrint('Supabase startup failed: $error\n$stack');
+      reportError('supabase startup', error, stack);
     }
   }
 
@@ -148,30 +158,65 @@ class AppDatabase {
     _calls = [];
   }
 
+  void startRealtime() => _listen();
+
+  void stopRealtime() {
+    _liveRefresh?.cancel();
+    _liveRefresh = null;
+    final channel = _syncChannel;
+    _syncChannel = null;
+    _listening = false;
+    _realtimeLive = false;
+    _realtimeSeenDrop = false;
+    if (channel != null) {
+      client?.removeChannel(channel);
+    }
+  }
+
+  void _emitLive() {
+    final hook = onLiveChange;
+    if (hook != null) {
+      hook();
+    } else {
+      refreshFromDisk(liveOnly: true);
+    }
+  }
+
   void _listen() {
     if (_listening || client == null) return;
     try {
       _listening = true;
       void scheduleLive() {
         _liveRefresh?.cancel();
-        _liveRefresh = Timer(const Duration(milliseconds: 400), () {
-          refreshFromDisk(liveOnly: true);
-        });
+        _liveRefresh = Timer(const Duration(milliseconds: 300), _emitLive);
       }
 
-      client!
+      _syncChannel = client!
           .channel('cafe-sync')
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'orders', callback: (_) => scheduleLive())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => scheduleLive())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => scheduleLive())
-          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'payments', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'order_lines', callback: (_) => scheduleLive())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'carts', callback: (_) => scheduleLive())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'cart_lines', callback: (_) => scheduleLive())
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'staff_calls', callback: (_) => scheduleLive())
           .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'menu_items', callback: (_) => scheduleLive())
-          .subscribe();
+          .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'dining_tables', callback: (_) => scheduleLive())
+          .subscribe((status, _) {
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          final reconnect = _realtimeSeenDrop;
+          _realtimeSeenDrop = false;
+          _realtimeLive = true;
+          if (reconnect) _emitLive();
+        } else if (status == RealtimeSubscribeStatus.closed ||
+            status == RealtimeSubscribeStatus.channelError ||
+            status == RealtimeSubscribeStatus.timedOut) {
+          if (_realtimeLive) _realtimeSeenDrop = true;
+          _realtimeLive = false;
+        }
+      });
     } catch (error, stack) {
       _listening = false;
-      debugPrint('Realtime setup failed: $error\n$stack');
+      _syncChannel = null;
+      reportError('realtime setup', error, stack);
     }
   }
 
@@ -198,7 +243,7 @@ class AppDatabase {
     try {
       await _refreshFromDisk(liveOnly: liveOnly && catalogFresh);
     } catch (error, stack) {
-      debugPrint('Supabase refresh failed: $error\n$stack');
+      reportError('supabase refresh', error, stack);
     }
   }
 
@@ -298,33 +343,6 @@ class AppDatabase {
         )).toList();
     if (!liveOnly) _catalogAt = DateTime.now();
     if (epoch != _epoch) return;
-    final orderRows = await client!.from('orders').select('*, order_lines(*)');
-    _orders = (orderRows as List).map((row) {
-      final table = _tables.where((item) => item.id == row['table_id']);
-      return CafeOrder(
-        id: row['id'] as String,
-        tableId: row['table_id'] as String,
-        tableNumber: table.isEmpty ? '' : table.first.number,
-        status: OrderStatus.values.firstWhere((value) => value.name == row['status'], orElse: () => OrderStatus.received),
-        createdAt: DateTime.parse(row['created_at'] as String),
-        notes: row['notes'] as String? ?? '',
-        cashierId: row['cashier_id'] as String?,
-        awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
-        refusalNotice: row['refusal_notice'] as String? ?? '',
-        paymentTypeId: row['payment_type_id'] as String?,
-        serviceType: row['service_type'] as String? ?? 'dine_in',
-        yearMonth: row['year_month'] as String?,
-        shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
-        lines: ((row['order_lines'] as List?) ?? []).map((line) => OrderLine(
-              menuItemId: line['menu_item_id'] as String? ?? '',
-              name: line['name'] as String? ?? '',
-              qty: (line['qty'] as num?)?.toInt() ?? 1,
-              unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
-              listUnitPrice: (line['list_unit_price'] as num?)?.toDouble(),
-              round: (line['round'] as num?)?.toInt() ?? 1,
-            )).toList(),
-      );
-    }).toList();
     final cartRows = await client!.from('carts').select('*, cart_lines(*)');
     _carts = {
       for (final row in cartRows as List)
@@ -360,49 +378,25 @@ class AppDatabase {
             sortOrder: row['sort_order'] as int? ?? 0,
             archived: row['archived'] as bool? ?? false,
           )).toList();
-    } catch (error) {
-      debugPrint('Payment types were not loaded: $error');
+    } catch (error, stackTrace) {
+      reportError('payment types', error, stackTrace);
       _paymentTypes = [];
     }
+    final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
+    if (epoch != _epoch) return;
+    _orders = await _loadOrders(historyFrom, const {});
     if (client!.auth.currentUser != null || cashierToken != null) {
-      final changeRows = await client!.from('payment_method_changes').select();
-      final changes = <String, List<PaymentMethodChange>>{};
-      for (final row in changeRows as List) {
-        final paymentId = row['payment_id'] as String;
-        changes.putIfAbsent(paymentId, () => []).add(PaymentMethodChange(
-              id: row['id'] as String,
-              paymentId: paymentId,
-              oldTypeId: row['old_type_id'] as String?,
-              newTypeId: row['new_type_id'] as String?,
-              actorName: row['actor_name'] as String? ?? '',
-              actorRole: row['actor_role'] as String? ?? '',
-              createdAt: DateTime.parse(row['created_at'] as String),
-            ));
+      final paymentRows = await _selectPayments(historyFrom, _salesTo, _salesLimit);
+      if (epoch != _epoch) return;
+      salesHasMore = paymentRows.length >= _salesLimit;
+      final paymentIds = [for (final row in paymentRows) row['id'] as String];
+      final changes = await _changesFor(paymentIds);
+      _payments = [for (final row in paymentRows) _mapPayment(Map<String, dynamic>.from(row as Map), changes)];
+      final missingOrders = _payments.map((payment) => payment.orderId).where((id) => _orders.every((order) => order.id != id)).toSet();
+      if (missingOrders.isNotEmpty) {
+        final extra = await _ordersById(missingOrders);
+        _orders = [..._orders, ...extra];
       }
-      final paymentRows = await client!.from('payments').select();
-      _payments = (paymentRows as List).map((row) {
-        final id = row['id'] as String;
-        final history = changes[id] ?? [];
-        history.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        return Payment(
-            id: id,
-            orderId: row['order_id'] as String,
-            tableId: row['table_id'] as String,
-            totalDue: (row['total_due'] as num).toDouble(),
-            cashReceived: (row['cash_received'] as num).toDouble(),
-            changeDue: (row['change_due'] as num).toDouble(),
-            cashierId: row['cashier_id'] as String,
-            shiftId: row['shift_id'] as String,
-            paidAt: DateTime.parse(row['paid_at'] as String),
-            paymentTypeId: row['payment_type_id'] as String?,
-            yearMonth: row['year_month'] as String?,
-            shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
-            monthlyOrderNumber: (row['monthly_order_number'] as num?)?.toInt(),
-            shiftDisplayNumber: row['shift_display_number'] as String?,
-            monthlyDisplayNumber: row['monthly_display_number'] as String?,
-            changes: history,
-          );
-      }).toList();
       final shiftRows = await client!.from('shifts').select();
       _shifts = (shiftRows as List).map((row) => CashShift(
             id: row['id'] as String,
@@ -419,7 +413,137 @@ class AppDatabase {
     } else {
       _payments = [];
       _shifts = [];
+      salesHasMore = false;
     }
+  }
+
+  Future<void> loadMoreSales() async {
+    if (client == null || !salesHasMore) return;
+    _salesLimit += salesPageSize;
+    await refreshFromDisk(liveOnly: true);
+  }
+
+  Future<void> alignSalesWindow({DateTime? from, DateTime? to}) async {
+    if (client == null) return;
+    final cutoff = salesHistoryCutoff(DateTime.now());
+    final nextFrom = from != null && from.isBefore(cutoff) ? DateTime(from.year, from.month, from.day) : null;
+    final nextTo = nextFrom != null && to != null ? DateTime(to.year, to.month, to.day, 23, 59, 59) : null;
+    if (nextFrom == _salesFrom && nextTo == _salesTo) return;
+    _salesFrom = nextFrom;
+    _salesTo = nextTo;
+    _salesLimit = salesPageSize;
+    await refreshFromDisk(liveOnly: true);
+  }
+
+  Future<List<dynamic>> _selectPayments(DateTime from, DateTime? to, int limit) async {
+    final fromIso = from.toUtc().toIso8601String();
+    if (to == null) {
+      return await client!.from('payments').select().gte('paid_at', fromIso).order('paid_at', ascending: false).range(0, limit - 1) as List;
+    }
+    return await client!
+        .from('payments')
+        .select()
+        .gte('paid_at', fromIso)
+        .lte('paid_at', to.toUtc().toIso8601String())
+        .order('paid_at', ascending: false)
+        .range(0, limit - 1) as List;
+  }
+
+  Future<Map<String, List<PaymentMethodChange>>> _changesFor(List<String> paymentIds) async {
+    final changes = <String, List<PaymentMethodChange>>{};
+    const chunk = 80;
+    for (var start = 0; start < paymentIds.length; start += chunk) {
+      final end = start + chunk > paymentIds.length ? paymentIds.length : start + chunk;
+      final rows = await client!.from('payment_method_changes').select().inFilter('payment_id', paymentIds.sublist(start, end));
+      for (final row in rows as List) {
+        final paymentId = row['payment_id'] as String;
+        changes.putIfAbsent(paymentId, () => []).add(PaymentMethodChange(
+              id: row['id'] as String,
+              paymentId: paymentId,
+              oldTypeId: row['old_type_id'] as String?,
+              newTypeId: row['new_type_id'] as String?,
+              actorName: row['actor_name'] as String? ?? '',
+              actorRole: row['actor_role'] as String? ?? '',
+              createdAt: DateTime.parse(row['created_at'] as String),
+            ));
+      }
+    }
+    return changes;
+  }
+
+  Payment _mapPayment(Map<String, dynamic> row, Map<String, List<PaymentMethodChange>> changes) {
+    final id = row['id'] as String;
+    final history = changes[id] ?? [];
+    history.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return Payment(
+      id: id,
+      orderId: row['order_id'] as String,
+      tableId: row['table_id'] as String,
+      totalDue: (row['total_due'] as num).toDouble(),
+      cashReceived: (row['cash_received'] as num).toDouble(),
+      changeDue: (row['change_due'] as num).toDouble(),
+      cashierId: row['cashier_id'] as String,
+      shiftId: row['shift_id'] as String,
+      paidAt: DateTime.parse(row['paid_at'] as String),
+      paymentTypeId: row['payment_type_id'] as String?,
+      yearMonth: row['year_month'] as String?,
+      shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
+      monthlyOrderNumber: (row['monthly_order_number'] as num?)?.toInt(),
+      shiftDisplayNumber: row['shift_display_number'] as String?,
+      monthlyDisplayNumber: row['monthly_display_number'] as String?,
+      changes: history,
+    );
+  }
+
+  Future<List<CafeOrder>> _loadOrders(DateTime from, Set<String> extraIds) async {
+    final openRows = await client!.from('orders').select('*, order_lines(*)').neq('status', 'paid');
+    final paidRows = await client!.from('orders').select('*, order_lines(*)').eq('status', 'paid').gte('created_at', from.toUtc().toIso8601String());
+    final mapped = <String, CafeOrder>{};
+    for (final row in [...openRows as List, ...paidRows as List]) {
+      final order = _mapOrder(Map<String, dynamic>.from(row as Map));
+      mapped[order.id] = order;
+    }
+    final missing = extraIds.where((id) => !mapped.containsKey(id)).toSet();
+    for (final order in await _ordersById(missing)) {
+      mapped[order.id] = order;
+    }
+    return mapped.values.toList();
+  }
+
+  Future<List<CafeOrder>> _ordersById(Set<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final rows = await client!.from('orders').select('*, order_lines(*)').inFilter('id', ids.toList());
+    return [for (final row in rows as List) _mapOrder(Map<String, dynamic>.from(row as Map))];
+  }
+
+  CafeOrder _mapOrder(Map<String, dynamic> row) {
+    final table = _tables.where((item) => item.id == row['table_id']);
+    return CafeOrder(
+      id: row['id'] as String,
+      tableId: row['table_id'] as String,
+      tableNumber: table.isEmpty ? '' : table.first.number,
+      status: OrderStatus.values.firstWhere((value) => value.name == row['status'], orElse: () => OrderStatus.received),
+      createdAt: DateTime.parse(row['created_at'] as String),
+      notes: row['notes'] as String? ?? '',
+      cashierId: row['cashier_id'] as String?,
+      awaitingCustomerConfirmation: row['awaiting_customer_confirmation'] as bool? ?? false,
+      refusalNotice: row['refusal_notice'] as String? ?? '',
+      paymentTypeId: row['payment_type_id'] as String?,
+      serviceType: row['service_type'] as String? ?? 'dine_in',
+      yearMonth: row['year_month'] as String?,
+      shiftOrderNumber: (row['shift_order_number'] as num?)?.toInt(),
+      lines: ((row['order_lines'] as List?) ?? []).map((line) {
+        final map = Map<String, dynamic>.from(line as Map);
+        return OrderLine(
+          menuItemId: map['menu_item_id'] as String? ?? '',
+          name: map['name'] as String? ?? '',
+          qty: (map['qty'] as num?)?.toInt() ?? 1,
+          unitPrice: (map['unit_price'] as num?)?.toDouble() ?? 0,
+          listUnitPrice: (map['list_unit_price'] as num?)?.toDouble(),
+          round: (map['round'] as num?)?.toInt() ?? 1,
+        );
+      }).toList(),
+    );
   }
 
   Future<int> takeNextOrderId() async => nextOrderId;
@@ -468,26 +592,32 @@ class AppDatabase {
         await refreshFromDisk();
       }
       return result;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('cashier login', error, stackTrace);
       return {'ok': false, 'error': '$error'};
     }
   }
 
   Future<String?> settleCash(String tableId, double cashReceived, {bool applyService = true, String? paymentTypeId}) async {
     if (client == null) return 'Supabase is not configured.';
-    _applyHeaders();
-    final raw = await client!.rpc('settle_cash', params: {
-      'p_table_id': tableId,
-      'p_cash_received': cashReceived,
-      'p_apply_service': applyService,
-      'p_payment_type_id': paymentTypeId,
-    });
-    final result = Map<String, dynamic>.from(raw as Map);
-    if (result['ok'] == true) {
-      await refreshFromDisk();
-      return null;
+    try {
+      _applyHeaders();
+      final raw = await client!.rpc('settle_cash', params: {
+        'p_table_id': tableId,
+        'p_cash_received': cashReceived,
+        'p_apply_service': applyService,
+        'p_payment_type_id': paymentTypeId,
+      });
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk();
+        return null;
+      }
+      return result['error'] as String? ?? 'Payment failed.';
+    } catch (error, stackTrace) {
+      reportError('settle cash', error, stackTrace);
+      return '$error';
     }
-    return result['error'] as String? ?? 'Payment failed.';
   }
 
   Future<String?> clearTestLogs(String scope, {required String cashierId}) async {
@@ -565,14 +695,19 @@ class AppDatabase {
   Future<String?> addPaymentType(String nameEn, String nameAr) async {
     if (client == null || restaurantId == null) return 'Supabase is not configured.';
     final sort = _paymentTypes.fold<int>(0, (max, type) => type.sortOrder > max ? type.sortOrder : max) + 1;
-    await client!.from('payment_types').insert({
-      'restaurant_id': restaurantId,
-      'name_en': nameEn,
-      'name_ar': nameAr,
-      'sort_order': sort,
-    });
-    await refreshFromDisk();
-    return null;
+    try {
+      await client!.from('payment_types').insert({
+        'restaurant_id': restaurantId,
+        'name_en': nameEn,
+        'name_ar': nameAr,
+        'sort_order': sort,
+      });
+      await refreshFromDisk();
+      return null;
+    } catch (error, stackTrace) {
+      reportError('add payment type', error, stackTrace);
+      return '$error';
+    }
   }
 
   Future<String?> savePaymentType(PaymentType type) async {
@@ -586,7 +721,8 @@ class AppDatabase {
       }).eq('id', type.id);
       await refreshFromDisk();
       return null;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('save payment type', error, stackTrace);
       return '$error';
     }
   }
@@ -597,7 +733,8 @@ class AppDatabase {
       await client!.from('payment_types').delete().eq('id', id);
       await refreshFromDisk();
       return null;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('delete payment type', error, stackTrace);
       return '$error';
     }
   }
@@ -706,7 +843,9 @@ class AppDatabase {
 
   Future<void> writeCarts(Map<String, CartState> carts) {
     final next = _cartWrites.then((_) => _writeCarts(carts));
-    _cartWrites = next.catchError((Object _) {});
+    _cartWrites = next.catchError((Object error, StackTrace stackTrace) {
+      reportError('write carts', error, stackTrace);
+    });
     return next;
   }
 
@@ -812,7 +951,8 @@ class AppDatabase {
     try {
       await client!.rpc('set_item_available', params: {'p_item_id': itemId, 'p_available': available});
       return null;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      reportError('set item available', error, stackTrace);
       if (match.isNotEmpty && previous != null) match.first.available = previous;
       return '$error';
     }
