@@ -154,23 +154,6 @@ class CustomerBillScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
-                if (order != null)
-                  TerracottaButton(
-                    label: context.l10n.guestWannaCheckIn,
-                    onPressed: () async {
-                      if (!store.canRequestBill(table.id)) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
-                        return;
-                      }
-                      if (store.enabledPaymentTypes.isNotEmpty && order.paymentTypeId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.payChoose)));
-                        return;
-                      }
-                      final error = await store.requestBill(table.id);
-                      if (!context.mounted || error == null) return;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                    },
-                  ),
               ],
             ),
           ),

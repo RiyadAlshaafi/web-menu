@@ -132,39 +132,13 @@ class CustomerCartScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            store.callStaff(table.id);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestRequestSent)));
-                          },
-                          icon: const Icon(Icons.notifications_active_outlined),
-                          label: Text(context.l10n.guestCallServer),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: store.canRequestBill(table.id)
-                              ? () async {
-                                  final error = await store.requestBill(table.id);
-                                  if (!context.mounted) return;
-                                  if (error != null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                                    return;
-                                  }
-                                  context.go('/t/$tableSlug/bill');
-                                }
-                              : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
-                                },
-                          icon: const Icon(Icons.receipt_long),
-                          label: Text(context.l10n.guestRequestBill),
-                        ),
-                      ),
-                    ],
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      store.callStaff(table.id);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestRequestSent)));
+                    },
+                    icon: const Icon(Icons.notifications_active_outlined),
+                    label: Text(context.l10n.guestCallServer),
                   ),
                 ],
               ],

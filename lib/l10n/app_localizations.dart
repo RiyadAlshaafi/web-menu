@@ -2827,6 +2827,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking your location…'**
   String get guestLocationChecking;
+
+  /// No description provided for @cashierCustomerPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer wants to pay: {method}'**
+  String cashierCustomerPay(String method);
+
+  /// No description provided for @cashierCustomerPayNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer has not chosen how to pay'**
+  String get cashierCustomerPayNone;
 }
 
 class _AppLocalizationsDelegate

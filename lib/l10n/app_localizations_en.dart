@@ -1522,4 +1522,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestLocationChecking => 'Checking your location…';
+
+  @override
+  String cashierCustomerPay(String method) {
+    return 'Customer wants to pay: $method';
+  }
+
+  @override
+  String get cashierCustomerPayNone => 'Customer has not chosen how to pay';
 }

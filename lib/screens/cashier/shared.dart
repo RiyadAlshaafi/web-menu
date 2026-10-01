@@ -1,5 +1,11 @@
 part of '../cashier_screens.dart';
 
+String _customerPayLabel(BuildContext context, CafeStore store, CafeOrder order) {
+  final id = order.paymentTypeId;
+  if (id == null || id.isEmpty) return context.l10n.cashierCustomerPayNone;
+  return context.l10n.cashierCustomerPay(store.typeName(id));
+}
+
 List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder order) {
   final rounds = order.latestRound;
   return [

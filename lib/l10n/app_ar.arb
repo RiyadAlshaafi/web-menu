@@ -474,5 +474,12 @@
   "guestLocationIosHint": "على الآيفون، أعد تفعيل الموقع من إعدادات الموقع في المتصفح.",
   "guestLocationUnavailable": "تعذر قراءة موقعك. يمكنك تصفح القائمة.",
   "guestLocationRetry": "إعادة المحاولة",
-  "guestLocationChecking": "جارٍ التحقق من موقعك…"
+  "guestLocationChecking": "جارٍ التحقق من موقعك…",
+  "cashierCustomerPay": "الزبون يريد الدفع: {method}",
+  "@cashierCustomerPay": {
+    "placeholders": {
+      "method": {"type": "String"}
+    }
+  },
+  "cashierCustomerPayNone": "الزبون لم يختر طريقة الدفع"
 }
