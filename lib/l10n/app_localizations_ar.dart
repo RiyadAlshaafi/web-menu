@@ -1518,12 +1518,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guestLocationChecking => 'جارٍ التحقق من موقعك…';
-
-  @override
-  String cashierCustomerPay(String method) {
-    return 'الزبون يريد الدفع: $method';
-  }
-
-  @override
-  String get cashierCustomerPayNone => 'الزبون لم يختر طريقة الدفع';
 }

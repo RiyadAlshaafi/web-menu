@@ -56,12 +56,6 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                         child: Text(context.l10n.cashierBillRequestedBadge, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.4)),
                       ),
                     const SizedBox(height: 6),
-                    if (order != null)
-                      Text(
-                        _customerPayLabel(context, store, order),
-                        style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w800),
-                      ),
-                    const SizedBox(height: 6),
                     Text(
                       '${table.zone}  •  ${context.l10n.cashierDineIn}  •  ${context.l10n.cashierElapsedMinutes('$minutes')}',
                       style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),

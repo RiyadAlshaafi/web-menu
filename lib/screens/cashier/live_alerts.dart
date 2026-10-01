@@ -121,9 +121,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               arrivedAt: store.openCalls.where((c) => c.kind == 'bill' && c.tableId == table.id).firstOrNull?.createdAt,
                               table: table.number,
                               title: context.l10n.cashierBillRequest,
-                              body: order == null
-                                  ? context.l10n.noOrders
-                                  : '${context.l10n.cashierItemsCount('${order.itemCount}')} • ${_customerPayLabel(context, store, order)}',
+                              body: order == null ? context.l10n.noOrders : context.l10n.cashierItemsCount('${order.itemCount}'),
                               time: order?.createdAt,
                               amount: store.tabTotal(table.id),
                               action: context.l10n.cashierSettleBill,
@@ -415,7 +413,6 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
-        Text(_customerPayLabel(context, store, order), style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w800, fontSize: 13)),
         if (waiting)
           Padding(
             padding: const EdgeInsets.only(top: 6),

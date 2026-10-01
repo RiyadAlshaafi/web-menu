@@ -839,12 +839,5 @@
   "guestLocationIosHint": "On iPhone, turn location back on in the browser's site settings.",
   "guestLocationUnavailable": "We couldn't read your location. You can still browse the menu.",
   "guestLocationRetry": "Retry",
-  "guestLocationChecking": "Checking your location…",
-  "cashierCustomerPay": "Customer wants to pay: {method}",
-  "@cashierCustomerPay": {
-    "placeholders": {
-      "method": {"type": "String"}
-    }
-  },
-  "cashierCustomerPayNone": "Customer has not chosen how to pay"
+  "guestLocationChecking": "Checking your location…"
 }
