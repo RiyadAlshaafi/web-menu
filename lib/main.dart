@@ -8,14 +8,26 @@ import 'package:provider/provider.dart';
 import 'data/app_database.dart';
 import 'report_error.dart';
 import 'models/models.dart';
-import 'screens/admin_screens.dart';
-import 'screens/auth_screens.dart';
-import 'screens/cashier_screens.dart';
+import 'screens/admin_screens.dart' deferred as admin_ui;
+import 'screens/auth_screens.dart' deferred as auth_ui;
+import 'screens/cashier_screens.dart' deferred as cashier_ui;
 import 'screens/customer_screens.dart';
-import 'screens/sales_log_screen.dart';
-import 'screens/dish_availability_screen.dart';
+import 'screens/sales_log_screen.dart' deferred as sales_ui;
+import 'screens/dish_availability_screen.dart' deferred as dishes_ui;
 import 'state/cafe_store.dart';
 import 'theme/cafe_theme.dart';
+
+Future<void> _loadAuth() => auth_ui.loadLibrary();
+
+Future<void> _loadCashier() => cashier_ui.loadLibrary();
+
+Future<void> _loadAdmin() => admin_ui.loadLibrary();
+
+Future<void> _loadPosDishes() => Future.wait([cashier_ui.loadLibrary(), dishes_ui.loadLibrary()]);
+
+Future<void> _loadPosLog() => Future.wait([cashier_ui.loadLibrary(), sales_ui.loadLibrary()]);
+
+Future<void> _loadAdminSales() => Future.wait([admin_ui.loadLibrary(), sales_ui.loadLibrary()]);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,14 +94,20 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
       },
       routes: [
         GoRoute(path: '/', redirect: (_, _) => widget.store.hasAdmin ? '/login' : '/admin/setup'),
-        GoRoute(path: '/login', builder: (_, _) => const PinLoginScreen()),
-        GoRoute(path: '/admin/setup', builder: (_, _) => const AdminAuthScreen(setup: true)),
-        GoRoute(path: '/admin/login', builder: (_, _) => const AdminAuthScreen()),
+        GoRoute(path: '/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.PinLoginScreen())),
+        GoRoute(path: '/admin/setup', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.AdminAuthScreen(setup: true))),
+        GoRoute(path: '/admin/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.AdminAuthScreen())),
         GoRoute(
           path: '/admin/forgot',
-          builder: (_, state) => ForgotPasswordScreen(email: state.extra as String? ?? ''),
+          builder: (_, state) => DeferredView(
+            load: _loadAuth,
+            builder: () => auth_ui.ForgotPasswordScreen(email: state.extra as String? ?? ''),
+          ),
         ),
-        GoRoute(path: '/admin/password', builder: (_, _) => const ChangePasswordScreen()),
+        GoRoute(
+          path: '/admin/password',
+          builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.ChangePasswordScreen()),
+        ),
         GoRoute(
           path: '/t/:tableId',
           builder: (_, state) => GuestSession(
@@ -112,55 +130,91 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           ),
         ),
         ShellRoute(
-          builder: (context, state, child) => CashierShell(location: state.uri.path, child: child),
+          builder: (context, state, child) => DeferredView(
+            load: _loadCashier,
+            builder: () => cashier_ui.CashierShell(location: state.uri.path, child: child),
+          ),
           routes: [
             GoRoute(
               path: '/pos',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierDashboardScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadCashier, builder: () => cashier_ui.CashierDashboardScreen()),
+              ),
             ),
             GoRoute(
               path: '/pos/tables',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierFloorScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadCashier, builder: () => cashier_ui.CashierFloorScreen()),
+              ),
             ),
             GoRoute(
               path: '/pos/dishes',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const DishAvailabilityScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadPosDishes, builder: () => dishes_ui.DishAvailabilityScreen()),
+              ),
             ),
             GoRoute(
               path: '/pos/log',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const SalesLogScreen(ownSalesOnly: true)),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadPosLog, builder: () => sales_ui.SalesLogScreen(ownSalesOnly: true)),
+              ),
             ),
             GoRoute(path: '/pos/sales', redirect: (_, _) => '/pos/log'),
             GoRoute(
               path: '/pos/shifts',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const CashierShiftsScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadCashier, builder: () => cashier_ui.CashierShiftsScreen()),
+              ),
             ),
           ],
         ),
         ShellRoute(
-          builder: (context, state, child) => AdminShell(location: state.uri.path, child: child),
+          builder: (context, state, child) => DeferredView(
+            load: _loadAdmin,
+            builder: () => admin_ui.AdminShell(location: state.uri.path, child: child),
+          ),
           routes: [
             GoRoute(
               path: '/admin/menu',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminMenuScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminMenuScreen()),
+              ),
             ),
             GoRoute(
               path: '/admin/discounts',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminCategoriesScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminCategoriesScreen()),
+              ),
             ),
             GoRoute(path: '/admin/categories', redirect: (_, _) => '/admin/discounts'),
             GoRoute(
               path: '/admin/tables',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminTablesScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminTablesScreen()),
+              ),
             ),
             GoRoute(
               path: '/admin/sales',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const SalesLogScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdminSales, builder: () => sales_ui.SalesLogScreen()),
+              ),
             ),
             GoRoute(path: '/admin/dishes', redirect: (_, _) => '/admin/menu'),
             GoRoute(
               path: '/admin/settings',
-              pageBuilder: (_, state) => NoTransitionPage(key: state.pageKey, child: const AdminSettingsScreen()),
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminSettingsScreen()),
+              ),
             ),
           ],
         ),
@@ -341,5 +395,48 @@ class _RouterRefresh extends ChangeNotifier {
   void dispose() {
     _store.removeListener(_handle);
     super.dispose();
+  }
+}
+
+/// Loads a deferred library before building its screen. The download starts in
+/// the constructor so a shell route can prefetch the chunk before this widget
+/// is mounted.
+class DeferredView extends StatefulWidget {
+  DeferredView({super.key, required Future<void> Function() load, required this.builder})
+      : ready = load(),
+        reload = load;
+
+  final Future<void> ready;
+  final Future<void> Function() reload;
+  final Widget Function() builder;
+
+  @override
+  State<DeferredView> createState() => _DeferredViewState();
+}
+
+class _DeferredViewState extends State<DeferredView> {
+  late Future<void> _ready = widget.ready;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _ready,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: FilledButton(
+                onPressed: () => setState(() => _ready = widget.reload()),
+                child: Text(AppLocalizations.of(context)!.guestRetry),
+              ),
+            ),
+          );
+        }
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        return widget.builder();
+      },
+    );
   }
 }
