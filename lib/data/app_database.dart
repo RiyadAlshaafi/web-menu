@@ -282,7 +282,8 @@ class AppDatabase {
       _admin = null;
       _rememberAdmin = false;
     }
-    if (!liveOnly) {
+    final guest = guestSlug != null && cashierToken == null && client!.auth.currentUser == null;
+    if (!liveOnly && !guest) {
       final staffRaw = await client!.rpc(
         'list_pos_cashiers',
         params: restaurantId == null ? null : {'p_restaurant_id': restaurantId},
@@ -355,9 +356,17 @@ class AppDatabase {
         )).toList();
     if (!liveOnly) _catalogAt = DateTime.now();
     if (epoch != _epoch) return;
-    final cartRows = await client!.from('carts').select('*, cart_lines(*)');
+    final guestTableId = guest
+        ? _tables.where((table) => table.qrSlug == guestSlug).map((table) => table.id).firstOrNull
+        : null;
+    final cartQuery = client!.from('carts').select('*, cart_lines(*)');
+    final cartRows = guest
+        ? guestTableId == null
+            ? const <dynamic>[]
+            : await cartQuery.eq('table_id', guestTableId)
+        : await cartQuery;
     _carts = {
-      for (final row in cartRows as List)
+      for (final row in cartRows)
         row['table_id'] as String: CartState(
           tableId: row['table_id'] as String,
           lines: ((row['cart_lines'] as List?) ?? []).map((line) => OrderLine(
@@ -368,6 +377,9 @@ class AppDatabase {
               )).toList(),
         ),
     };
+    if (guest) {
+      _calls = [];
+    } else {
     final callRows = await client!.from('staff_calls').select();
     _calls = (callRows as List).map((row) {
       final table = _tables.where((item) => item.id == row['table_id']);
@@ -380,6 +392,7 @@ class AppDatabase {
         resolved: row['resolved'] as bool? ?? false,
       );
     }).toList();
+    }
     try {
       final typeRows = await client!.from('payment_types').select().order('sort_order');
       _paymentTypes = (typeRows as List).map((row) => PaymentType(
@@ -396,6 +409,12 @@ class AppDatabase {
     }
     final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
     if (epoch != _epoch) return;
+    if (guest) {
+      _orders = guestTableId == null ? [] : await _loadOpenOrdersForTable(guestTableId);
+      _payments = [];
+      _shifts = [];
+      salesHasMore = false;
+    } else {
     _orders = await _loadOrders(historyFrom, const {});
     if (client!.auth.currentUser != null || cashierToken != null) {
       final paymentRows = await _selectPayments(historyFrom, _salesTo, _salesLimit);
@@ -426,6 +445,7 @@ class AppDatabase {
       _payments = [];
       _shifts = [];
       salesHasMore = false;
+    }
     }
   }
 
@@ -506,6 +526,11 @@ class AppDatabase {
       monthlyDisplayNumber: row['monthly_display_number'] as String?,
       changes: history,
     );
+  }
+
+  Future<List<CafeOrder>> _loadOpenOrdersForTable(String tableId) async {
+    final rows = await client!.from('orders').select('*, order_lines(*)').eq('table_id', tableId).neq('status', 'paid');
+    return [for (final row in rows as List) _mapOrder(Map<String, dynamic>.from(row as Map))];
   }
 
   Future<List<CafeOrder>> _loadOrders(DateTime from, Set<String> extraIds) async {

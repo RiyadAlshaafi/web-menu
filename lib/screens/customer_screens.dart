@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../debug/agent_log.dart';
 import '../l10n/l10n_ext.dart';
 import '../time_format.dart';
 import '../report_error.dart';

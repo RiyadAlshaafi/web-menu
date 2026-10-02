@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -126,18 +125,19 @@ class CafeStore extends ChangeNotifier {
   String _cafeStamp(Map<String, dynamic> cafe, String locale) =>
       '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}';
 
-  String _stamp() => jsonEncode({
-        'cafe': _cafeStamp(cafe, locale),
-        'orders': orders.map((item) => item.toJson()).toList(),
-        'tables': tables.map((item) => item.toJson()).toList(),
-        'carts': carts.map((key, value) => MapEntry(key, value.toJson())),
-        'menu': menuItems.map((item) => item.syncKey).toList(),
-        'categories': categories.map((item) => item.toJson()).toList(),
-        'calls': calls.map((item) => item.toJson()).toList(),
-        'payments': payments.map((item) => item.toJson()).toList(),
-        'paymentTypes': paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}${item.archived}').toList(),
-        'shifts': shifts.map((item) => item.toJson()).toList(),
-      });
+  String _stamp() => _fingerprint(
+        cafe: cafe,
+        locale: locale,
+        orders: orders,
+        tables: tables,
+        carts: carts,
+        menu: menuItems,
+        categories: categories,
+        calls: calls,
+        payments: payments,
+        paymentTypes: paymentTypes,
+        shifts: shifts,
+      );
 
   int _pendingWrites = 0;
   final Map<String, String> _serviceBySlug = {};
@@ -177,18 +177,108 @@ class CafeStore extends ChangeNotifier {
     }
   }
 
-  String _stampFromDb() => jsonEncode({
-        'cafe': _cafeStamp(db.cafe, db.locale),
-        'orders': db.orders.map((item) => item.toJson()).toList(),
-        'tables': db.tables.map((item) => item.toJson()).toList(),
-        'carts': db.carts.map((key, value) => MapEntry(key, value.toJson())),
-        'menu': db.menuItems.map((item) => item.syncKey).toList(),
-        'categories': db.categories.map((item) => item.toJson()).toList(),
-        'calls': db.calls.map((item) => item.toJson()).toList(),
-        'payments': db.payments.map((item) => item.toJson()).toList(),
-        'paymentTypes': db.paymentTypes.map((item) => '${item.id}${item.nameEn}${item.nameAr}${item.enabled}${item.archived}').toList(),
-        'shifts': db.shifts.map((item) => item.toJson()).toList(),
-      });
+  String _stampFromDb() => _fingerprint(
+        cafe: db.cafe,
+        locale: db.locale,
+        orders: db.orders,
+        tables: db.tables,
+        carts: db.carts,
+        menu: db.menuItems,
+        categories: db.categories,
+        calls: db.calls,
+        payments: db.payments,
+        paymentTypes: db.paymentTypes,
+        shifts: db.shifts,
+      );
+
+  String _fingerprint({
+    required Map<String, dynamic> cafe,
+    required String locale,
+    required List<CafeOrder> orders,
+    required List<CafeTable> tables,
+    required Map<String, CartState> carts,
+    required List<MenuItem> menu,
+    required List<MenuCategory> categories,
+    required List<StaffCall> calls,
+    required List<Payment> payments,
+    required List<PaymentType> paymentTypes,
+    required List<CashShift> shifts,
+  }) {
+    final buffer = StringBuffer(_cafeStamp(cafe, locale));
+    for (final item in menu) {
+      buffer.write(item.syncKey);
+    }
+    for (final category in categories) {
+      buffer
+        ..write(category.id)
+        ..write(category.visible)
+        ..write(category.sortOrder)
+        ..write(category.nameEn)
+        ..write(category.nameAr);
+    }
+    for (final table in tables) {
+      buffer
+        ..write(table.id)
+        ..write(table.status.name)
+        ..write(table.guests)
+        ..write(table.number);
+    }
+    for (final order in orders) {
+      buffer
+        ..write(order.id)
+        ..write(order.status.name)
+        ..write(order.tableId)
+        ..write(order.awaitingCustomerConfirmation)
+        ..write(order.refusalNotice)
+        ..write(order.paymentTypeId)
+        ..write(order.serviceType);
+      for (final line in order.lines) {
+        buffer
+          ..write(line.menuItemId)
+          ..write(line.qty)
+          ..write(line.unitPrice)
+          ..write(line.round);
+      }
+    }
+    for (final cart in carts.values) {
+      buffer.write(cart.tableId);
+      for (final line in cart.lines) {
+        buffer
+          ..write(line.menuItemId)
+          ..write(line.qty)
+          ..write(line.unitPrice);
+      }
+    }
+    for (final call in calls) {
+      buffer
+        ..write(call.id)
+        ..write(call.resolved)
+        ..write(call.kind);
+    }
+    for (final payment in payments) {
+      buffer
+        ..write(payment.id)
+        ..write(payment.totalDue)
+        ..write(payment.paymentTypeId)
+        ..write(payment.changes.length);
+    }
+    for (final type in paymentTypes) {
+      buffer
+        ..write(type.id)
+        ..write(type.enabled)
+        ..write(type.archived)
+        ..write(type.nameEn)
+        ..write(type.nameAr);
+    }
+    for (final shift in shifts) {
+      buffer
+        ..write(shift.id)
+        ..write(shift.isOpen)
+        ..write(shift.cashSales)
+        ..write(shift.closedAt);
+    }
+    return buffer.toString();
+  }
 
   void _hydrateOperational() {
     cafe = db.cafe;

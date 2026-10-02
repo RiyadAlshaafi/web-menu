@@ -91,13 +91,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     if (!_loggedPaint) {
       _loggedPaint = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // #region agent log
-        agentLog('C', 'menu.dart:build', 'menu painted', {
-          'rows': items.length,
-          'httpImages': items.where((item) => item.imageUrl.startsWith('http')).length,
-          'dataImages': items.where((item) => item.imageUrl.startsWith('data:')).length,
-        });
-        // #endregion
         _warmFirstPhotos(items);
       });
     }
@@ -405,6 +398,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _featured(CafeStore store, String tableId, MenuItem item) {
     return SoftCard(
       lightShadow: true,
+      ink: false,
       radius: 12,
       padding: EdgeInsets.zero,
       onTap: () => _showDish(store, tableId, item),
@@ -477,6 +471,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: SoftCard(
         lightShadow: true,
+        ink: false,
         radius: 12,
         padding: const EdgeInsets.all(12),
         onTap: () => _showDish(store, tableId, item),

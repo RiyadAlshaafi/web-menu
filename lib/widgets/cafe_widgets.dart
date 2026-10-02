@@ -154,6 +154,7 @@ class SoftCard extends StatefulWidget {
     this.selected = false,
     this.hoverable = false,
     this.lightShadow = false,
+    this.ink = true,
   });
 
   final Widget child;
@@ -164,6 +165,7 @@ class SoftCard extends StatefulWidget {
   final bool selected;
   final bool hoverable;
   final bool lightShadow;
+  final bool ink;
 
   @override
   State<SoftCard> createState() => _SoftCardState();
@@ -192,6 +194,12 @@ class _SoftCardState extends State<SoftCard> {
       ),
       child: widget.child,
     );
+    if (!widget.ink) {
+      return MouseRegion(
+        cursor: widget.onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+        child: GestureDetector(onTap: widget.onTap, child: body),
+      );
+    }
     if (!interactive && !widget.selected) return body;
     return MouseRegion(
       onEnter: widget.hoverable ? (_) => setState(() => hover = true) : null,
