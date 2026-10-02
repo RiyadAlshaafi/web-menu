@@ -19,6 +19,6 @@ if ! command -v flutter >/dev/null 2>&1; then
 fi
 flutter config --enable-web
 flutter pub get
-flutter build web --release \
+flutter build web --release --wasm \
   --dart-define=SUPABASE_URL="$SUPABASE_URL" \
   --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
