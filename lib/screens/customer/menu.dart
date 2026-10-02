@@ -96,6 +96,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     }
 
     return CustomScrollView(
+              scrollCacheExtent: const ScrollCacheExtent.pixels(480),
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
@@ -396,12 +397,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 
   Widget _featured(CafeStore store, String tableId, MenuItem item) {
-    return SoftCard(
+    return ScrollFriendlyTap(
+      onTap: () => _showDish(store, tableId, item),
+      child: SoftCard(
       lightShadow: true,
       ink: false,
       radius: 12,
       padding: EdgeInsets.zero,
-      onTap: () => _showDish(store, tableId, item),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -463,18 +465,20 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             ),
           ],
         ),
+      ),
     );
   }
 
   Widget _row(CafeStore store, String tableId, MenuItem item) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: SoftCard(
+      child: ScrollFriendlyTap(
+        onTap: () => _showDish(store, tableId, item),
+        child: SoftCard(
         lightShadow: true,
         ink: false,
         radius: 12,
         padding: const EdgeInsets.all(12),
-        onTap: () => _showDish(store, tableId, item),
         child: Row(
           children: [
             DishPhoto(path: item.imageUrl, size: 96, radius: 8),
@@ -508,6 +512,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -625,10 +630,16 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         icon: const Icon(Icons.add, size: 18),
       ),
     );
-    if (!blocked) return button;
-    return GestureDetector(
-      onTap: () => showGuestLocationBlock(context, store),
-      child: IgnorePointer(child: button),
+    final control = !blocked
+        ? button
+        : GestureDetector(
+            onTap: () => showGuestLocationBlock(context, store),
+            child: IgnorePointer(child: button),
+          );
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => ScrollFriendlyTap.claimPointer(context),
+      child: control,
     );
   }
 

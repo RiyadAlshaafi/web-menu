@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -194,12 +195,7 @@ class _SoftCardState extends State<SoftCard> {
       ),
       child: widget.child,
     );
-    if (!widget.ink) {
-      return MouseRegion(
-        cursor: widget.onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
-        child: GestureDetector(onTap: widget.onTap, child: body),
-      );
-    }
+    if (!widget.ink) return body;
     if (!interactive && !widget.selected) return body;
     return MouseRegion(
       onEnter: widget.hoverable ? (_) => setState(() => hover = true) : null,
@@ -215,6 +211,50 @@ class _SoftCardState extends State<SoftCard> {
           child: body,
         ),
       ),
+    );
+  }
+}
+
+/// Opens a row on tap without joining the scroll gesture arena.
+class ScrollFriendlyTap extends StatefulWidget {
+  const ScrollFriendlyTap({super.key, required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  static void claimPointer(BuildContext context) {
+    context.findAncestorStateOfType<_ScrollFriendlyTapState>()?.claim();
+  }
+
+  @override
+  State<ScrollFriendlyTap> createState() => _ScrollFriendlyTapState();
+}
+
+class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
+  var _moved = false;
+  var _claimed = false;
+  var _travel = 0.0;
+
+  void claim() => _claimed = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) {
+        _moved = false;
+        _travel = 0;
+      },
+      onPointerMove: (event) {
+        _travel += event.delta.distance;
+        if (_travel > kTouchSlop) _moved = true;
+      },
+      onPointerUp: (_) {
+        if (!_moved && !_claimed) widget.onTap?.call();
+        _claimed = false;
+      },
+      onPointerCancel: (_) => _claimed = false,
+      child: widget.child,
     );
   }
 }
