@@ -153,6 +153,7 @@ class SoftCard extends StatefulWidget {
     this.radius = 24,
     this.selected = false,
     this.hoverable = false,
+    this.lightShadow = false,
   });
 
   final Widget child;
@@ -162,6 +163,7 @@ class SoftCard extends StatefulWidget {
   final double radius;
   final bool selected;
   final bool hoverable;
+  final bool lightShadow;
 
   @override
   State<SoftCard> createState() => _SoftCardState();
@@ -184,9 +186,9 @@ class _SoftCardState extends State<SoftCard> {
         color: widget.color,
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: borderColor, width: widget.selected ? 1.6 : 1),
-        boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6)),
-        ],
+        boxShadow: widget.lightShadow
+            ? const [BoxShadow(color: Color(0x14000000), blurRadius: 2, offset: Offset(0, 2))]
+            : const [BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6))],
       ),
       child: widget.child,
     );
@@ -253,18 +255,47 @@ class DishPhoto extends StatelessWidget {
       );
     }
     if (value.startsWith('http://') || value.startsWith('https://')) {
+      final thumb = _thumbnailUrl(value, cacheWidth, cacheHeight);
       return Image.network(
-        value,
+        thumb,
         width: _w,
         height: size,
         fit: BoxFit.cover,
         cacheWidth: cacheWidth,
         cacheHeight: cacheHeight,
         gaplessPlayback: true,
-        errorBuilder: (_, _, _) => _placeholder(),
+        errorBuilder: (_, _, _) {
+          if (thumb == value) return _placeholder();
+          return Image.network(
+            value,
+            width: _w,
+            height: size,
+            fit: BoxFit.cover,
+            cacheWidth: cacheWidth,
+            cacheHeight: cacheHeight,
+            gaplessPlayback: true,
+            errorBuilder: (_, _, _) => _placeholder(),
+          );
+        },
       );
     }
     return null;
+  }
+
+  String _thumbnailUrl(String value, int cacheWidth, int cacheHeight) {
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.host.endsWith('.supabase.co')) return value;
+    const marker = '/storage/v1/object/';
+    if (!uri.path.contains(marker)) return value;
+    return uri.replace(
+      path: uri.path.replaceFirst(marker, '/storage/v1/render/image/'),
+      queryParameters: {
+        ...uri.queryParameters,
+        'width': '${cacheWidth.clamp(1, 480)}',
+        'height': '${cacheHeight.clamp(1, 480)}',
+        'resize': 'cover',
+      },
+    ).toString();
   }
 
   Uint8List? _bytesFor(String value) {

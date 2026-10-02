@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:menu_web_v1/theme/cafe_theme.dart';
 
 void main() {
-  setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
-  });
-
   testWidgets('header, sidebar, background, and button stay independent', (tester) async {
     const surfaces = CafeSurfaces(
       header: Color(0xFF112233),

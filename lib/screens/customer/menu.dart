@@ -404,6 +404,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
 
   Widget _featured(CafeStore store, String tableId, MenuItem item) {
     return SoftCard(
+      lightShadow: true,
       radius: 12,
       padding: EdgeInsets.zero,
       onTap: () => _showDish(store, tableId, item),
@@ -475,6 +476,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: SoftCard(
+        lightShadow: true,
         radius: 12,
         padding: const EdgeInsets.all(12),
         onTap: () => _showDish(store, tableId, item),

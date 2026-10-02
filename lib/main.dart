@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -318,10 +317,7 @@ class _GuestSessionState extends State<GuestSession> {
       _missing = false;
     });
     final started = DateTime.now();
-    await Future.wait([
-      context.read<CafeStore>().ensureGuest(widget.slug),
-      _warmMenuFonts(),
-    ]);
+    await context.read<CafeStore>().ensureGuest(widget.slug);
     if (!mounted) return;
     // #region agent log
     final store = context.read<CafeStore>();
@@ -367,19 +363,6 @@ class _GuestSessionState extends State<GuestSession> {
   void dispose() {
     _store?.removeListener(_onStore);
     super.dispose();
-  }
-
-  Future<void> _warmMenuFonts() async {
-    try {
-      await GoogleFonts.pendingFonts([
-        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
-        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      ]);
-    } catch (error, stack) {
-      reportError('menu fonts', error, stack);
-    }
   }
 
   void _onStore() {

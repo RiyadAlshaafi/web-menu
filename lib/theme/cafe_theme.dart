@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CafeColors {
   static const cream = Color(0xFFFDF9F2);
@@ -128,7 +127,7 @@ class CafeTheme {
   static ThemeData get light => forSurfaces(CafeSurfaces.defaults);
 
   static ThemeData forSurfaces(CafeSurfaces surfaces) {
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme().apply(
+    final textTheme = ThemeData(fontFamily: 'PlusJakartaSans').textTheme.apply(
       bodyColor: CafeColors.ink,
       displayColor: CafeColors.ink,
     );
@@ -140,6 +139,7 @@ class CafeTheme {
     final buttonShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'PlusJakartaSans',
       colorScheme: scheme,
       scaffoldBackgroundColor: surfaces.background,
       canvasColor: surfaces.background,
@@ -217,14 +217,16 @@ class CafeTheme {
     );
   }
 
-  static TextStyle get display => GoogleFonts.plusJakartaSans(
+  static const display = TextStyle(
+        fontFamily: 'PlusJakartaSans',
         fontWeight: FontWeight.w600,
         color: CafeColors.ink,
         height: 1.15,
         letterSpacing: -0.4,
       );
 
-  static TextStyle get brand => GoogleFonts.plusJakartaSans(
+  static const brand = TextStyle(
+        fontFamily: 'PlusJakartaSans',
         fontWeight: FontWeight.w700,
         color: CafeColors.ink,
         letterSpacing: -0.4,
