@@ -98,6 +98,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           'dataImages': items.where((item) => item.imageUrl.startsWith('data:')).length,
         });
         // #endregion
+        _warmFirstPhotos(items);
       });
     }
 
@@ -320,6 +321,20 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   )
                 : const SizedBox.shrink(key: ValueKey('cart-bar-empty')),
     );
+  }
+
+  void _warmFirstPhotos(List<MenuItem> items) {
+    if (!mounted) return;
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    final edge = (96 * ratio).round();
+    var warmed = 0;
+    for (final item in items) {
+      if (warmed >= 4) return;
+      final url = item.imageUrl.trim();
+      if (!url.startsWith('http')) continue;
+      precacheImage(ResizeImage.resizeIfNeeded(edge, edge, NetworkImage(url)), context);
+      warmed++;
+    }
   }
 
   Widget _guestHeader(CafeTable table, String cafeName) {

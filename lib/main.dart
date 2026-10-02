@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -64,6 +65,8 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
   late final GoRouter router;
   late final _RouterRefresh routerRefresh;
   late String locale;
+  String? _surfaceStamp;
+  ThemeData? _surfaceTheme;
 
   @override
   void initState() {
@@ -264,9 +267,16 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           GlobalCupertinoLocalizations.delegate,
         ],
         builder: (context, child) {
-          final surfaces = CafeSurfaces.fromCafe(context.watch<CafeStore>().cafe);
+          final stamp = context.select<CafeStore, String>((store) {
+            final cafe = store.cafe;
+            return '${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}';
+          });
+          if (stamp != _surfaceStamp || _surfaceTheme == null) {
+            _surfaceStamp = stamp;
+            _surfaceTheme = CafeTheme.forSurfaces(CafeSurfaces.fromCafe(context.read<CafeStore>().cafe));
+          }
           return Theme(
-            data: CafeTheme.forSurfaces(surfaces),
+            data: _surfaceTheme!,
             child: Directionality(
               textDirection: locale == 'ar' ? TextDirection.rtl : TextDirection.ltr,
               child: child ?? const SizedBox.shrink(),
@@ -308,7 +318,10 @@ class _GuestSessionState extends State<GuestSession> {
       _missing = false;
     });
     final started = DateTime.now();
-    await context.read<CafeStore>().ensureGuest(widget.slug);
+    await Future.wait([
+      context.read<CafeStore>().ensureGuest(widget.slug),
+      _warmMenuFonts(),
+    ]);
     if (!mounted) return;
     // #region agent log
     final store = context.read<CafeStore>();
@@ -354,6 +367,19 @@ class _GuestSessionState extends State<GuestSession> {
   void dispose() {
     _store?.removeListener(_onStore);
     super.dispose();
+  }
+
+  Future<void> _warmMenuFonts() async {
+    try {
+      await GoogleFonts.pendingFonts([
+        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+        GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+      ]);
+    } catch (error, stack) {
+      reportError('menu fonts', error, stack);
+    }
   }
 
   void _onStore() {
