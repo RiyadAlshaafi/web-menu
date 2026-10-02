@@ -123,7 +123,11 @@ class CafeStore extends ChangeNotifier {
     super.dispose();
   }
 
+  String _cafeStamp(Map<String, dynamic> cafe, String locale) =>
+      '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}';
+
   String _stamp() => jsonEncode({
+        'cafe': _cafeStamp(cafe, locale),
         'orders': orders.map((item) => item.toJson()).toList(),
         'tables': tables.map((item) => item.toJson()).toList(),
         'carts': carts.map((key, value) => MapEntry(key, value.toJson())),
@@ -174,6 +178,7 @@ class CafeStore extends ChangeNotifier {
   }
 
   String _stampFromDb() => jsonEncode({
+        'cafe': _cafeStamp(db.cafe, db.locale),
         'orders': db.orders.map((item) => item.toJson()).toList(),
         'tables': db.tables.map((item) => item.toJson()).toList(),
         'carts': db.carts.map((key, value) => MapEntry(key, value.toJson())),

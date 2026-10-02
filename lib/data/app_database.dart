@@ -248,6 +248,26 @@ class AppDatabase {
     }
   }
 
+  Future<void> _loadRestaurant() async {
+    final id = restaurantId;
+    if (id == null || client == null) return;
+    final restaurant = await client!.from('restaurants').select(
+      'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color',
+    ).eq('id', id).maybeSingle();
+    if (restaurant == null) return;
+    _locale = restaurant['locale'] as String? ?? 'en';
+    _cafe = {
+      'name': restaurant['name'] ?? '',
+      'logoUrl': restaurant['logo_url'] ?? '',
+      'headerColor': restaurant['header_color'] ?? '',
+      'sidebarColor': restaurant['sidebar_color'] ?? '',
+      'backgroundColor': restaurant['background_color'] ?? '',
+      'buttonColor': restaurant['button_color'] ?? '',
+      'serviceChargeRate': (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
+      'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
+    };
+  }
+
   Future<void> _refreshFromDisk({bool liveOnly = false}) async {
     final epoch = _epoch;
     _applyHeaders();
@@ -261,24 +281,6 @@ class AppDatabase {
     } else if (cashierToken == null) {
       _admin = null;
       _rememberAdmin = false;
-    }
-    if (!liveOnly && restaurantId != null) {
-      final restaurant = await client!.from('restaurants').select(
-        'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color',
-      ).eq('id', restaurantId!).maybeSingle();
-      if (restaurant != null) {
-        _locale = restaurant['locale'] as String? ?? 'en';
-        _cafe = {
-          'name': restaurant['name'] ?? '',
-          'logoUrl': restaurant['logo_url'] ?? '',
-          'headerColor': restaurant['header_color'] ?? '',
-          'sidebarColor': restaurant['sidebar_color'] ?? '',
-          'backgroundColor': restaurant['background_color'] ?? '',
-          'buttonColor': restaurant['button_color'] ?? '',
-          'serviceChargeRate': (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
-          'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
-        };
-      }
     }
     if (!liveOnly) {
       final staffRaw = await client!.rpc(
@@ -307,6 +309,8 @@ class AppDatabase {
     if (restaurantId == null && tableList.isNotEmpty) {
       restaurantId = tableList.first['restaurant_id'] as String?;
     }
+    if (epoch != _epoch) return;
+    await _loadRestaurant();
     if (epoch != _epoch) return;
     _tables = tableList.map((row) => CafeTable(
           id: row['id'] as String,
