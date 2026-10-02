@@ -223,30 +223,26 @@ class DishPhoto extends StatelessWidget {
   final double? width;
   final double radius;
 
+  static final Map<String, Uint8List> _decoded = {};
+
   double get _w => width ?? size;
 
   @override
   Widget build(BuildContext context) {
+    final ratio = MediaQuery.devicePixelRatioOf(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: _image() ?? _placeholder(),
+      child: _image(cacheWidth: (_w * ratio).round(), cacheHeight: (size * ratio).round()) ?? _placeholder(),
     );
   }
 
-  Widget? _image() {
+  Widget? _image({required int cacheWidth, required int cacheHeight}) {
     final value = path.trim();
     if (value.isEmpty) return null;
     if (value.startsWith('data:')) {
-      final comma = value.indexOf(',');
-      if (comma < 0) return null;
-      try {
-        final bytes = Uint8List.fromList(base64Decode(value.substring(comma + 1)));
-        if (bytes.isEmpty) return null;
-        return Image.memory(bytes, width: _w, height: size, fit: BoxFit.cover);
-      } catch (error, stackTrace) {
-        reportError('menu image', error, stackTrace);
-        return null;
-      }
+      final bytes = _bytesFor(value);
+      if (bytes == null) return null;
+      return Image.memory(bytes, width: _w, height: size, fit: BoxFit.cover, cacheWidth: cacheWidth, cacheHeight: cacheHeight);
     }
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return Image.network(
@@ -254,10 +250,27 @@ class DishPhoto extends StatelessWidget {
         width: _w,
         height: size,
         fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
         errorBuilder: (_, _, _) => _placeholder(),
       );
     }
     return null;
+  }
+
+  Uint8List? _bytesFor(String value) {
+    final cached = _decoded[value];
+    if (cached != null) return cached;
+    final comma = value.indexOf(',');
+    if (comma < 0) return null;
+    try {
+      final bytes = Uint8List.fromList(base64Decode(value.substring(comma + 1)));
+      if (bytes.isEmpty) return null;
+      return _decoded[value] = bytes;
+    } catch (error, stackTrace) {
+      reportError('menu image', error, stackTrace);
+      return null;
+    }
   }
 
   Widget _placeholder() {

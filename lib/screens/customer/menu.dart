@@ -170,27 +170,29 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         ),
                       ),
                     ),
-                  ...store.guestCategories.where((category) => grouped.containsKey(category.id)).map((category) {
+                  ...store.guestCategories.where((category) => grouped.containsKey(category.id)).expand((category) {
                     final dishes = grouped[category.id]!;
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(category.label(store.locale), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                                const Spacer(),
-                                Text(context.l10n.guestItemCount('${dishes.length}'), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ...dishes.map((item) => _row(store, table.id, item)),
-                          ],
+                    return [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Row(
+                            children: [
+                              Text(category.label(store.locale), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              const Spacer(),
+                              Text(context.l10n.guestItemCount('${dishes.length}'), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
+                            ],
+                          ),
                         ),
                       ),
-                    );
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList.builder(
+                          itemCount: dishes.length,
+                          itemBuilder: (context, index) => RepaintBoundary(child: _row(store, table.id, dishes[index])),
+                        ),
+                      ),
+                    ];
                   }),
                   const SliverToBoxAdapter(child: SizedBox(height: 88)),
                 ],
