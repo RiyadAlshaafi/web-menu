@@ -12,7 +12,6 @@ import '../money.dart';
 import '../report_error.dart';
 import '../theme/cafe_theme.dart';
 
-
 part 'cafe_store_settings.dart';
 part 'cafe_store_catalog.dart';
 part 'cafe_store_orders.dart';
@@ -41,6 +40,7 @@ class CafeStore extends ChangeNotifier {
   List<Payment> payments = [];
   List<PaymentType> paymentTypes = [];
   List<CashShift> shifts = [];
+  List<ShiftExpense> expenses = [];
   List<StaffCall> calls = [];
 
   AuthKind authKind = AuthKind.none;
@@ -67,7 +67,9 @@ class CafeStore extends ChangeNotifier {
   bool _guestLocationStarted = false;
   bool _guestLocationBusy = false;
 
-  bool get canPlaceOrder => guestLocation == GuestLocationStatus.off || guestLocation == GuestLocationStatus.allowed;
+  bool get canPlaceOrder =>
+      guestLocation == GuestLocationStatus.off ||
+      guestLocation == GuestLocationStatus.allowed;
 
   Future<void> load() async {
     await db.init();
@@ -83,6 +85,7 @@ class CafeStore extends ChangeNotifier {
     payments = db.payments;
     paymentTypes = db.paymentTypes;
     shifts = db.shifts;
+    expenses = db.expenses;
     calls = db.calls;
     _syncStamp = _stamp();
     if (db.rememberAdmin && admin != null) {
@@ -126,18 +129,19 @@ class CafeStore extends ChangeNotifier {
       '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}';
 
   String _stamp() => _fingerprint(
-        cafe: cafe,
-        locale: locale,
-        orders: orders,
-        tables: tables,
-        carts: carts,
-        menu: menuItems,
-        categories: categories,
-        calls: calls,
-        payments: payments,
-        paymentTypes: paymentTypes,
-        shifts: shifts,
-      );
+    cafe: cafe,
+    locale: locale,
+    orders: orders,
+    tables: tables,
+    carts: carts,
+    menu: menuItems,
+    categories: categories,
+    calls: calls,
+    payments: payments,
+    paymentTypes: paymentTypes,
+    shifts: shifts,
+    expenses: expenses,
+  );
 
   int _pendingWrites = 0;
   final Map<String, String> _serviceBySlug = {};
@@ -160,7 +164,14 @@ class CafeStore extends ChangeNotifier {
 
   Future<void> ensureShiftNumbers() async {
     if (_assigningNumbers || authKind != AuthKind.cashier) return;
-    final ids = orders.where((order) => order.status != OrderStatus.paid && order.shiftOrderNumber == null).map((order) => order.id).toList();
+    final ids = orders
+        .where(
+          (order) =>
+              order.status != OrderStatus.paid &&
+              order.shiftOrderNumber == null,
+        )
+        .map((order) => order.id)
+        .toList();
     if (ids.isEmpty) return;
     _assigningNumbers = true;
     try {
@@ -178,18 +189,19 @@ class CafeStore extends ChangeNotifier {
   }
 
   String _stampFromDb() => _fingerprint(
-        cafe: db.cafe,
-        locale: db.locale,
-        orders: db.orders,
-        tables: db.tables,
-        carts: db.carts,
-        menu: db.menuItems,
-        categories: db.categories,
-        calls: db.calls,
-        payments: db.payments,
-        paymentTypes: db.paymentTypes,
-        shifts: db.shifts,
-      );
+    cafe: db.cafe,
+    locale: db.locale,
+    orders: db.orders,
+    tables: db.tables,
+    carts: db.carts,
+    menu: db.menuItems,
+    categories: db.categories,
+    calls: db.calls,
+    payments: db.payments,
+    paymentTypes: db.paymentTypes,
+    shifts: db.shifts,
+    expenses: db.expenses,
+  );
 
   String _fingerprint({
     required Map<String, dynamic> cafe,
@@ -203,6 +215,7 @@ class CafeStore extends ChangeNotifier {
     required List<Payment> payments,
     required List<PaymentType> paymentTypes,
     required List<CashShift> shifts,
+    required List<ShiftExpense> expenses,
   }) {
     final buffer = StringBuffer(_cafeStamp(cafe, locale));
     for (final item in menu) {
@@ -277,6 +290,15 @@ class CafeStore extends ChangeNotifier {
         ..write(shift.cashSales)
         ..write(shift.closedAt);
     }
+    for (final expense in expenses) {
+      buffer
+        ..write(expense.id)
+        ..write(expense.shiftId)
+        ..write(expense.amount)
+        ..write(expense.description)
+        ..write(expense.paidToCafe)
+        ..write(expense.paidToCashierId);
+    }
     return buffer.toString();
   }
 
@@ -293,6 +315,7 @@ class CafeStore extends ChangeNotifier {
     payments = db.payments;
     paymentTypes = db.paymentTypes;
     shifts = db.shifts;
+    expenses = db.expenses;
     calls = db.calls;
     if (currentShift != null) {
       final match = shifts.where((shift) => shift.id == currentShift!.id);
@@ -314,10 +337,15 @@ class CafeStore extends ChangeNotifier {
     if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
     if (password != confirm) return l10n.errPasswordsMismatch;
     if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
-    if (db.client == null) return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before creating an admin.';
+    if (db.client == null) {
+      return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before creating an admin.';
+    }
     final AuthResponse response;
     try {
-      response = await db.client!.auth.signUp(email: trimmed, password: password);
+      response = await db.client!.auth.signUp(
+        email: trimmed,
+        password: password,
+      );
     } on AuthException catch (error, stackTrace) {
       reportError('create admin', error, stackTrace);
       return error.message;
@@ -338,13 +366,24 @@ class CafeStore extends ChangeNotifier {
     return null;
   }
 
-  Future<String?> signInAdmin(String email, String password, {bool remember = false}) async {
-    if (db.client == null) return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before signing in.';
+  Future<String?> signInAdmin(
+    String email,
+    String password, {
+    bool remember = false,
+  }) async {
+    if (db.client == null) {
+      return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before signing in.';
+    }
     try {
-      await db.client!.auth.signInWithPassword(email: email.trim().toLowerCase(), password: password);
+      await db.client!.auth.signInWithPassword(
+        email: email.trim().toLowerCase(),
+        password: password,
+      );
     } on AuthException catch (error, stackTrace) {
       reportError('admin sign in', error, stackTrace);
-      adminError = error.statusCode == '400' ? l10n.errBadCredentials : error.message;
+      adminError = error.statusCode == '400'
+          ? l10n.errBadCredentials
+          : error.message;
       notifyListeners();
       return adminError;
     } catch (error, stackTrace) {
@@ -385,7 +424,11 @@ class CafeStore extends ChangeNotifier {
   Future<String?> verifyOtp(String code) async {
     if (db.client == null) return l10n.errBadCode;
     try {
-      await db.client!.auth.verifyOTP(email: otpEmail, token: code, type: OtpType.recovery);
+      await db.client!.auth.verifyOTP(
+        email: otpEmail,
+        token: code,
+        type: OtpType.recovery,
+      );
     } on AuthException {
       return l10n.errBadCode;
     }
@@ -458,7 +501,9 @@ class CafeStore extends ChangeNotifier {
       return false;
     }
     await syncFromDisk();
-    currentCashier = cashiers.where((item) => item.id == selectedCashierId).firstOrNull ?? cashiers.firstOrNull;
+    currentCashier =
+        cashiers.where((item) => item.id == selectedCashierId).firstOrNull ??
+        cashiers.firstOrNull;
     authKind = AuthKind.cashier;
     pinBuffer = '';
     loginError = null;
@@ -480,7 +525,9 @@ class CafeStore extends ChangeNotifier {
   Future<void> _ensureShift() async {
     final cashier = currentCashier;
     if (cashier == null) return;
-    final existing = shifts.where((shift) => shift.isOpen && shift.cashierId == cashier.id);
+    final existing = shifts.where(
+      (shift) => shift.isOpen && shift.cashierId == cashier.id,
+    );
     if (existing.isNotEmpty) {
       currentShift = existing.first;
       return;
@@ -496,7 +543,9 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> ensureGuest(String slug) async {
-    if (db.guestSlug == slug && tables.any((table) => table.qrSlug == slug)) return;
+    if (db.guestSlug == slug && tables.any((table) => table.qrSlug == slug)) {
+      return;
+    }
     await db.setGuestSlug(slug);
     _hydrateOperational();
     startLiveSync();
@@ -530,7 +579,11 @@ class CafeStore extends ChangeNotifier {
         .take(2)
         .join()
         .toUpperCase();
-    final id = await db.createCashier(name: name.trim(), pin: pin, initials: initials.isEmpty ? 'C' : initials);
+    final id = await db.createCashier(
+      name: name.trim(),
+      pin: pin,
+      initials: initials.isEmpty ? 'C' : initials,
+    );
     if (id == null) return;
     await syncFromDisk();
     notifyListeners();
@@ -541,6 +594,7 @@ class CafeStore extends ChangeNotifier {
     await db.writeCashiers(cashiers);
     notifyListeners();
   }
+
   bool _validEmail(String value) =>
       RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value);
 }

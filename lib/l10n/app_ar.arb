@@ -474,5 +474,13 @@
   "guestLocationIosHint": "على الآيفون، أعد تفعيل الموقع من إعدادات الموقع في المتصفح.",
   "guestLocationUnavailable": "تعذر قراءة موقعك. يمكنك تصفح القائمة.",
   "guestLocationRetry": "إعادة المحاولة",
-  "guestLocationChecking": "جارٍ التحقق من موقعك…"
+  "guestLocationChecking": "جارٍ التحقق من موقعك…",
+  "cashierAddExpense": "إضافة مصروف / صرف نقدي",
+  "cashierExpenseFor": "دُفع إلى",
+  "cashierExpenseCafe": "المقهى",
+  "cashierExpenseAmount": "المبلغ",
+  "cashierExpenseDescription": "الوصف",
+  "cashierExpenseAdd": "إضافة",
+  "cashierExpenseInvalid": "اختر من استلم المبلغ، وأدخل مبلغاً أكبر من صفر، واكتب وصف المصروف.",
+  "cashierExpenseSaved": "تم تسجيل المصروف."
 }

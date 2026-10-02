@@ -1518,4 +1518,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guestLocationChecking => 'جارٍ التحقق من موقعك…';
+
+  @override
+  String get cashierAddExpense => 'إضافة مصروف / صرف نقدي';
+
+  @override
+  String get cashierExpenseFor => 'دُفع إلى';
+
+  @override
+  String get cashierExpenseCafe => 'المقهى';
+
+  @override
+  String get cashierExpenseAmount => 'المبلغ';
+
+  @override
+  String get cashierExpenseDescription => 'الوصف';
+
+  @override
+  String get cashierExpenseAdd => 'إضافة';
+
+  @override
+  String get cashierExpenseInvalid =>
+      'اختر من استلم المبلغ، وأدخل مبلغاً أكبر من صفر، واكتب وصف المصروف.';
+
+  @override
+  String get cashierExpenseSaved => 'تم تسجيل المصروف.';
 }

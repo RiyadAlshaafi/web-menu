@@ -1522,4 +1522,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestLocationChecking => 'Checking your location…';
+
+  @override
+  String get cashierAddExpense => 'Add Expense / Cash Out';
+
+  @override
+  String get cashierExpenseFor => 'Paid To / Expense For';
+
+  @override
+  String get cashierExpenseCafe => 'Café';
+
+  @override
+  String get cashierExpenseAmount => 'Amount';
+
+  @override
+  String get cashierExpenseDescription => 'Description';
+
+  @override
+  String get cashierExpenseAdd => 'Add';
+
+  @override
+  String get cashierExpenseInvalid =>
+      'Choose who was paid, enter an amount greater than 0, and describe the expense.';
+
+  @override
+  String get cashierExpenseSaved => 'Expense recorded.';
 }

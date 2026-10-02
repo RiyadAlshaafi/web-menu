@@ -5,9 +5,13 @@ extension CafeStorePayments on CafeStore {
     final open = shifts.where((shift) => shift.isOpen).toList();
     return open.isEmpty ? null : open.first;
   }
+
   String saleNumber(Payment payment, {required bool perShift}) {
     if (perShift) {
-      return cashierSaleNumber(yearMonth: payment.yearMonth, shiftOrderNumber: payment.shiftOrderNumber);
+      return cashierSaleNumber(
+        yearMonth: payment.yearMonth,
+        shiftOrderNumber: payment.shiftOrderNumber,
+      );
     }
     return adminSaleNumber(
       yearMonth: payment.yearMonth,
@@ -17,18 +21,23 @@ extension CafeStorePayments on CafeStore {
   }
 
   String receiptNumber(Payment payment) {
-    if (payment.monthlyOrderNumber == null) return payment.monthlyDisplayNumber ?? '—';
+    if (payment.monthlyOrderNumber == null) {
+      return payment.monthlyDisplayNumber ?? '—';
+    }
     return formatReceiptNumber(payment.yearMonth, payment.monthlyOrderNumber);
   }
 
   String orderNumber(int? sequence) => formatOrderNumber(sequence);
 
-  String shiftTicket(CafeOrder order) => formatOrderNumber(order.shiftOrderNumber);
+  String shiftTicket(CafeOrder order) =>
+      formatOrderNumber(order.shiftOrderNumber);
 
   String typeName(String? id) {
     if (id == null || id.isEmpty) return locale == 'ar' ? 'نقداً' : 'Cash';
     final match = paymentTypes.where((type) => type.id == id);
-    return match.isEmpty ? (locale == 'ar' ? 'نقداً' : 'Cash') : match.first.label(locale);
+    return match.isEmpty
+        ? (locale == 'ar' ? 'نقداً' : 'Cash')
+        : match.first.label(locale);
   }
 
   List<PaymentType> get enabledPaymentTypes =>
@@ -47,12 +56,16 @@ extension CafeStorePayments on CafeStore {
   Future<String?> changePaymentType(String paymentId, String typeId) =>
       _refreshAfter(db.changePaymentType(paymentId, typeId));
 
-  Future<String?> addPaymentType(String nameEn, String nameAr) => _refreshAfter(db.addPaymentType(nameEn, nameAr));
+  Future<String?> addPaymentType(String nameEn, String nameAr) =>
+      _refreshAfter(db.addPaymentType(nameEn, nameAr));
 
-  Future<String?> savePaymentType(PaymentType type) => _refreshAfter(db.savePaymentType(type));
+  Future<String?> savePaymentType(PaymentType type) =>
+      _refreshAfter(db.savePaymentType(type));
 
   Future<String?> deletePaymentType(String id) {
-    final used = payments.any((payment) => payment.paymentTypeId == id) || orders.any((order) => order.paymentTypeId == id);
+    final used =
+        payments.any((payment) => payment.paymentTypeId == id) ||
+        orders.any((order) => order.paymentTypeId == id);
     final match = paymentTypes.where((type) => type.id == id);
     if (match.isEmpty) return Future.value(null);
     if (used) {
@@ -114,8 +127,62 @@ extension CafeStorePayments on CafeStore {
     if (cashier == null) return l10n.errCashierSignInFirst;
     final failure = await db.clearTestLogs(scope, cashierId: cashier.id);
     if (failure != null) {
-      if (failure == 'sign in as a cashier first') return l10n.errCashierSignInFirst;
+      if (failure == 'sign in as a cashier first') {
+        return l10n.errCashierSignInFirst;
+      }
       return failure;
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return null;
+  }
+
+  double expectedDrawer(CashShift shift) {
+    final cashIds = paymentTypes
+        .where((type) => type.nameEn.toLowerCase() == 'cash')
+        .map((type) => type.id)
+        .toSet();
+    final cashTaken = payments
+        .where(
+          (payment) =>
+              payment.shiftId == shift.id &&
+              (payment.paymentTypeId == null ||
+                  cashIds.contains(payment.paymentTypeId)),
+        )
+        .fold<double>(0, (sum, payment) => sum + payment.totalDue);
+    final cashPaidOut = expenses
+        .where((expense) => expense.shiftId == shift.id)
+        .fold<double>(0, (sum, expense) => sum + expense.amount);
+    return shift.drawerCash(cashTaken: cashTaken, cashPaidOut: cashPaidOut);
+  }
+
+  Future<String?> addShiftExpense({
+    required bool paidToCafe,
+    required String? paidToCashierId,
+    required double amount,
+    required String description,
+  }) async {
+    final shift = currentShift ?? openShift;
+    final cashier = currentCashier;
+    if (shift == null || cashier == null) return l10n.errNoOpenShift;
+    if ((!paidToCafe && (paidToCashierId == null || paidToCashierId.isEmpty)) ||
+        amount <= 0 ||
+        description.trim().isEmpty) {
+      return l10n.cashierExpenseInvalid;
+    }
+    final failure = await db.addShiftExpense(
+      shiftId: shift.id,
+      cashierId: cashier.id,
+      paidToCafe: paidToCafe,
+      paidToCashierId: paidToCashierId,
+      amount: amount,
+      description: description.trim(),
+    );
+    if (failure != null) return failure;
+    if (db.client == null) {
+      expenses = db.expenses;
+      notifyListeners();
+      return null;
     }
     await syncFromDisk();
     notifyListeners();

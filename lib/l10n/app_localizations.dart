@@ -2827,6 +2827,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking your location…'**
   String get guestLocationChecking;
+
+  /// No description provided for @cashierAddExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Expense / Cash Out'**
+  String get cashierAddExpense;
+
+  /// No description provided for @cashierExpenseFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid To / Expense For'**
+  String get cashierExpenseFor;
+
+  /// No description provided for @cashierExpenseCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Café'**
+  String get cashierExpenseCafe;
+
+  /// No description provided for @cashierExpenseAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get cashierExpenseAmount;
+
+  /// No description provided for @cashierExpenseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get cashierExpenseDescription;
+
+  /// No description provided for @cashierExpenseAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get cashierExpenseAdd;
+
+  /// No description provided for @cashierExpenseInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who was paid, enter an amount greater than 0, and describe the expense.'**
+  String get cashierExpenseInvalid;
+
+  /// No description provided for @cashierExpenseSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense recorded.'**
+  String get cashierExpenseSaved;
 }
 
 class _AppLocalizationsDelegate

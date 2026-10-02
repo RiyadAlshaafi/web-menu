@@ -839,5 +839,13 @@
   "guestLocationIosHint": "On iPhone, turn location back on in the browser's site settings.",
   "guestLocationUnavailable": "We couldn't read your location. You can still browse the menu.",
   "guestLocationRetry": "Retry",
-  "guestLocationChecking": "Checking your location…"
+  "guestLocationChecking": "Checking your location…",
+  "cashierAddExpense": "Add Expense / Cash Out",
+  "cashierExpenseFor": "Paid To / Expense For",
+  "cashierExpenseCafe": "Café",
+  "cashierExpenseAmount": "Amount",
+  "cashierExpenseDescription": "Description",
+  "cashierExpenseAdd": "Add",
+  "cashierExpenseInvalid": "Choose who was paid, enter an amount greater than 0, and describe the expense.",
+  "cashierExpenseSaved": "Expense recorded."
 }

@@ -7,11 +7,11 @@ enum OrderStatus {
 
   /// The next kitchen step. Paid and served do not skip ahead.
   OrderStatus? get next => switch (this) {
-        OrderStatus.received => OrderStatus.preparing,
-        OrderStatus.preparing => OrderStatus.ready,
-        OrderStatus.ready => OrderStatus.served,
-        OrderStatus.served || OrderStatus.paid => null,
-      };
+    OrderStatus.received => OrderStatus.preparing,
+    OrderStatus.preparing => OrderStatus.ready,
+    OrderStatus.ready => OrderStatus.served,
+    OrderStatus.served || OrderStatus.paid => null,
+  };
 }
 
 enum TableStatus { free, dining, billRequested }
@@ -32,18 +32,18 @@ class AdminAccount {
   String displayName;
 
   factory AdminAccount.fromJson(Map<String, dynamic> json) => AdminAccount(
-        email: json['email'] as String,
-        passwordHash: json['passwordHash'] as String,
-        passwordSalt: json['passwordSalt'] as String,
-        displayName: json['displayName'] as String? ?? 'Admin',
-      );
+    email: json['email'] as String,
+    passwordHash: json['passwordHash'] as String,
+    passwordSalt: json['passwordSalt'] as String,
+    displayName: json['displayName'] as String? ?? 'Admin',
+  );
 
   Map<String, dynamic> toJson() => {
-        'email': email,
-        'passwordHash': passwordHash,
-        'passwordSalt': passwordSalt,
-        'displayName': displayName,
-      };
+    'email': email,
+    'passwordHash': passwordHash,
+    'passwordSalt': passwordSalt,
+    'displayName': displayName,
+  };
 }
 
 class Cashier {
@@ -64,22 +64,22 @@ class Cashier {
   bool active;
 
   factory Cashier.fromJson(Map<String, dynamic> json) => Cashier(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        pinHash: json['pinHash'] as String,
-        pinSalt: json['pinSalt'] as String,
-        initials: json['initials'] as String,
-        active: json['active'] as bool? ?? true,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    pinHash: json['pinHash'] as String,
+    pinSalt: json['pinSalt'] as String,
+    initials: json['initials'] as String,
+    active: json['active'] as bool? ?? true,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'pinHash': pinHash,
-        'pinSalt': pinSalt,
-        'initials': initials,
-        'active': active,
-      };
+    'id': id,
+    'name': name,
+    'pinHash': pinHash,
+    'pinSalt': pinSalt,
+    'initials': initials,
+    'active': active,
+  };
 }
 
 class MenuCategory {
@@ -102,22 +102,22 @@ class MenuCategory {
   String label(String locale) => locale == 'ar' ? nameAr : nameEn;
 
   factory MenuCategory.fromJson(Map<String, dynamic> json) => MenuCategory(
-        id: json['id'] as String,
-        nameEn: json['nameEn'] as String? ?? json['name'] as String? ?? '',
-        nameAr: json['nameAr'] as String? ?? json['nameEn'] as String? ?? '',
-        sortOrder: json['sortOrder'] as int? ?? 0,
-        spotlight: json['spotlight'] as bool? ?? false,
-        visible: json['visible'] as bool? ?? true,
-      );
+    id: json['id'] as String,
+    nameEn: json['nameEn'] as String? ?? json['name'] as String? ?? '',
+    nameAr: json['nameAr'] as String? ?? json['nameEn'] as String? ?? '',
+    sortOrder: json['sortOrder'] as int? ?? 0,
+    spotlight: json['spotlight'] as bool? ?? false,
+    visible: json['visible'] as bool? ?? true,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nameEn': nameEn,
-        'nameAr': nameAr,
-        'sortOrder': sortOrder,
-        'spotlight': spotlight,
-        'visible': visible,
-      };
+    'id': id,
+    'nameEn': nameEn,
+    'nameAr': nameAr,
+    'sortOrder': sortOrder,
+    'spotlight': spotlight,
+    'visible': visible,
+  };
 }
 
 class MenuItem {
@@ -152,46 +152,48 @@ class MenuItem {
   bool discountApplied;
 
   bool get hasDiscount => discountApplied && discountPercent > 0;
-  double get salePrice => hasDiscount ? (price * (100 - discountPercent) / 100) : price;
+  double get salePrice =>
+      hasDiscount ? (price * (100 - discountPercent) / 100) : price;
 
   /// Change detection without embedding the photo bytes.
   String get syncKey =>
       '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}';
 
-  String displayName(String locale) =>
-      locale == 'en' || nameIt.isEmpty ? (nameEn.isEmpty ? nameIt : nameEn) : nameIt;
+  String displayName(String locale) => locale == 'en' || nameIt.isEmpty
+      ? (nameEn.isEmpty ? nameIt : nameEn)
+      : nameIt;
 
   factory MenuItem.fromJson(Map<String, dynamic> json) => MenuItem(
-        id: json['id'] as String,
-        nameIt: json['nameIt'] as String? ?? '',
-        nameEn: json['nameEn'] as String? ?? json['name'] as String? ?? '',
-        description: json['description'] as String? ?? '',
-        price: (json['price'] as num).toDouble(),
-        categoryId: json['categoryId'] as String,
-        imageUrl: json['imageUrl'] as String? ?? '',
-        available: json['available'] as bool? ?? true,
-        soldOut: json['soldOut'] as bool? ?? false,
-        featured: json['featured'] as bool? ?? false,
-        sortOrder: json['sortOrder'] as int? ?? 0,
-        discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
-        discountApplied: json['discountApplied'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    nameIt: json['nameIt'] as String? ?? '',
+    nameEn: json['nameEn'] as String? ?? json['name'] as String? ?? '',
+    description: json['description'] as String? ?? '',
+    price: (json['price'] as num).toDouble(),
+    categoryId: json['categoryId'] as String,
+    imageUrl: json['imageUrl'] as String? ?? '',
+    available: json['available'] as bool? ?? true,
+    soldOut: json['soldOut'] as bool? ?? false,
+    featured: json['featured'] as bool? ?? false,
+    sortOrder: json['sortOrder'] as int? ?? 0,
+    discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
+    discountApplied: json['discountApplied'] as bool? ?? false,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nameIt': nameIt,
-        'nameEn': nameEn,
-        'description': description,
-        'price': price,
-        'categoryId': categoryId,
-        'imageUrl': imageUrl,
-        'available': available,
-        'soldOut': soldOut,
-        'featured': featured,
-        'sortOrder': sortOrder,
-        'discountPercent': discountPercent,
-        'discountApplied': discountApplied,
-      };
+    'id': id,
+    'nameIt': nameIt,
+    'nameEn': nameEn,
+    'description': description,
+    'price': price,
+    'categoryId': categoryId,
+    'imageUrl': imageUrl,
+    'available': available,
+    'soldOut': soldOut,
+    'featured': featured,
+    'sortOrder': sortOrder,
+    'discountPercent': discountPercent,
+    'discountApplied': discountApplied,
+  };
 }
 
 class CafeTable {
@@ -214,27 +216,27 @@ class CafeTable {
   int guests;
 
   factory CafeTable.fromJson(Map<String, dynamic> json) => CafeTable(
-        id: json['id'] as String,
-        number: json['number'] as String,
-        qrSlug: json['qrSlug'] as String,
-        zone: json['zone'] as String? ?? 'Main Floor',
-        seats: json['seats'] as int? ?? 4,
-        status: TableStatus.values.firstWhere(
-          (value) => value.name == json['status'],
-          orElse: () => TableStatus.free,
-        ),
-        guests: json['guests'] as int? ?? 0,
-      );
+    id: json['id'] as String,
+    number: json['number'] as String,
+    qrSlug: json['qrSlug'] as String,
+    zone: json['zone'] as String? ?? 'Main Floor',
+    seats: json['seats'] as int? ?? 4,
+    status: TableStatus.values.firstWhere(
+      (value) => value.name == json['status'],
+      orElse: () => TableStatus.free,
+    ),
+    guests: json['guests'] as int? ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'number': number,
-        'qrSlug': qrSlug,
-        'zone': zone,
-        'seats': seats,
-        'status': status.name,
-        'guests': guests,
-      };
+    'id': id,
+    'number': number,
+    'qrSlug': qrSlug,
+    'zone': zone,
+    'seats': seats,
+    'status': status.name,
+    'guests': guests,
+  };
 }
 
 class OrderLine {
@@ -267,22 +269,22 @@ class OrderLine {
   }
 
   factory OrderLine.fromJson(Map<String, dynamic> json) => OrderLine(
-        menuItemId: json['menuItemId'] as String,
-        name: json['name'] as String,
-        qty: json['qty'] as int,
-        unitPrice: (json['unitPrice'] as num).toDouble(),
-        listUnitPrice: (json['listUnitPrice'] as num?)?.toDouble(),
-        round: json['round'] as int? ?? 1,
-      );
+    menuItemId: json['menuItemId'] as String,
+    name: json['name'] as String,
+    qty: json['qty'] as int,
+    unitPrice: (json['unitPrice'] as num).toDouble(),
+    listUnitPrice: (json['listUnitPrice'] as num?)?.toDouble(),
+    round: json['round'] as int? ?? 1,
+  );
 
   Map<String, dynamic> toJson() => {
-        'menuItemId': menuItemId,
-        'name': name,
-        'qty': qty,
-        'unitPrice': unitPrice,
-        if (listUnitPrice != null) 'listUnitPrice': listUnitPrice,
-        'round': round,
-      };
+    'menuItemId': menuItemId,
+    'name': name,
+    'qty': qty,
+    'unitPrice': unitPrice,
+    if (listUnitPrice != null) 'listUnitPrice': listUnitPrice,
+    'round': round,
+  };
 }
 
 class CafeOrder {
@@ -320,51 +322,57 @@ class CafeOrder {
 
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get subtotal => lines.fold(0, (sum, line) => sum + line.total);
-  int get latestRound => lines.fold(1, (latest, line) => line.round > latest ? line.round : latest);
-  List<OrderLine> linesInRound(int round) => lines.where((line) => line.round == round).toList();
+  int get latestRound => lines.fold(
+    1,
+    (latest, line) => line.round > latest ? line.round : latest,
+  );
+  List<OrderLine> linesInRound(int round) =>
+      lines.where((line) => line.round == round).toList();
 
   factory CafeOrder.fromJson(Map<String, dynamic> json) => CafeOrder(
-        id: json['id'] as String,
-        tableId: json['tableId'] as String,
-        tableNumber: json['tableNumber'] as String? ?? json['tableId'] as String,
-        status: OrderStatus.values.firstWhere(
-          (value) => value.name == json['status'],
-          orElse: () => OrderStatus.received,
-        ),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        notes: json['notes'] as String? ?? '',
-        cashierId: json['cashierId'] as String?,
-        awaitingCustomerConfirmation: json['awaitingCustomerConfirmation'] as bool? ?? false,
-        refusalNotice: json['refusalNotice'] as String? ?? '',
-        paymentTypeId: json['paymentTypeId'] as String?,
-        serviceType: json['serviceType'] as String? ?? 'dine_in',
-        yearMonth: json['yearMonth'] as String?,
-        shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
-        lines: (json['lines'] as List<dynamic>)
-            .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
-            .toList(),
-      );
+    id: json['id'] as String,
+    tableId: json['tableId'] as String,
+    tableNumber: json['tableNumber'] as String? ?? json['tableId'] as String,
+    status: OrderStatus.values.firstWhere(
+      (value) => value.name == json['status'],
+      orElse: () => OrderStatus.received,
+    ),
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    notes: json['notes'] as String? ?? '',
+    cashierId: json['cashierId'] as String?,
+    awaitingCustomerConfirmation:
+        json['awaitingCustomerConfirmation'] as bool? ?? false,
+    refusalNotice: json['refusalNotice'] as String? ?? '',
+    paymentTypeId: json['paymentTypeId'] as String?,
+    serviceType: json['serviceType'] as String? ?? 'dine_in',
+    yearMonth: json['yearMonth'] as String?,
+    shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
+    lines: (json['lines'] as List<dynamic>)
+        .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
+        .toList(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tableId': tableId,
-        'tableNumber': tableNumber,
-        'status': status.name,
-        'createdAt': createdAt.toIso8601String(),
-        'notes': notes,
-        'cashierId': cashierId,
-        'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
-        'refusalNotice': refusalNotice,
-        'paymentTypeId': paymentTypeId,
-        'serviceType': serviceType,
-        'yearMonth': yearMonth,
-        'shiftOrderNumber': shiftOrderNumber,
-        'lines': lines.map((line) => line.toJson()).toList(),
-      };
+    'id': id,
+    'tableId': tableId,
+    'tableNumber': tableNumber,
+    'status': status.name,
+    'createdAt': createdAt.toIso8601String(),
+    'notes': notes,
+    'cashierId': cashierId,
+    'awaitingCustomerConfirmation': awaitingCustomerConfirmation,
+    'refusalNotice': refusalNotice,
+    'paymentTypeId': paymentTypeId,
+    'serviceType': serviceType,
+    'yearMonth': yearMonth,
+    'shiftOrderNumber': shiftOrderNumber,
+    'lines': lines.map((line) => line.toJson()).toList(),
+  };
 }
 
 class CartState {
-  CartState({required this.tableId, List<OrderLine>? lines}) : lines = lines ?? [];
+  CartState({required this.tableId, List<OrderLine>? lines})
+    : lines = lines ?? [];
 
   final String tableId;
   final List<OrderLine> lines;
@@ -373,16 +381,16 @@ class CartState {
   double get total => lines.fold(0, (sum, line) => sum + line.total);
 
   factory CartState.fromJson(Map<String, dynamic> json) => CartState(
-        tableId: json['tableId'] as String,
-        lines: (json['lines'] as List<dynamic>? ?? [])
-            .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
-            .toList(),
-      );
+    tableId: json['tableId'] as String,
+    lines: (json['lines'] as List<dynamic>? ?? [])
+        .map((line) => OrderLine.fromJson(line as Map<String, dynamic>))
+        .toList(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'tableId': tableId,
-        'lines': lines.map((line) => line.toJson()).toList(),
-      };
+    'tableId': tableId,
+    'lines': lines.map((line) => line.toJson()).toList(),
+  };
 }
 
 class PaymentType {
@@ -402,7 +410,8 @@ class PaymentType {
   int sortOrder;
   bool archived;
 
-  String label(String locale) => locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
+  String label(String locale) =>
+      locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
 }
 
 class PaymentMethodChange {
@@ -425,12 +434,12 @@ class PaymentMethodChange {
   final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'oldTypeId': oldTypeId,
-        'newTypeId': newTypeId,
-        'actorName': actorName,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'oldTypeId': oldTypeId,
+    'newTypeId': newTypeId,
+    'actorName': actorName,
+    'createdAt': createdAt.toIso8601String(),
+  };
 }
 
 class Payment {
@@ -471,41 +480,41 @@ class Payment {
   final List<PaymentMethodChange> changes;
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
-        id: json['id'] as String,
-        orderId: json['orderId'] as String,
-        tableId: json['tableId'] as String,
-        totalDue: (json['totalDue'] as num).toDouble(),
-        cashReceived: (json['cashReceived'] as num).toDouble(),
-        changeDue: (json['changeDue'] as num).toDouble(),
-        cashierId: json['cashierId'] as String,
-        shiftId: json['shiftId'] as String,
-        paidAt: DateTime.parse(json['paidAt'] as String),
-        paymentTypeId: json['paymentTypeId'] as String?,
-        yearMonth: json['yearMonth'] as String?,
-        shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
-        monthlyOrderNumber: (json['monthlyOrderNumber'] as num?)?.toInt(),
-        shiftDisplayNumber: json['shiftDisplayNumber'] as String?,
-        monthlyDisplayNumber: json['monthlyDisplayNumber'] as String?,
-      );
+    id: json['id'] as String,
+    orderId: json['orderId'] as String,
+    tableId: json['tableId'] as String,
+    totalDue: (json['totalDue'] as num).toDouble(),
+    cashReceived: (json['cashReceived'] as num).toDouble(),
+    changeDue: (json['changeDue'] as num).toDouble(),
+    cashierId: json['cashierId'] as String,
+    shiftId: json['shiftId'] as String,
+    paidAt: DateTime.parse(json['paidAt'] as String),
+    paymentTypeId: json['paymentTypeId'] as String?,
+    yearMonth: json['yearMonth'] as String?,
+    shiftOrderNumber: (json['shiftOrderNumber'] as num?)?.toInt(),
+    monthlyOrderNumber: (json['monthlyOrderNumber'] as num?)?.toInt(),
+    shiftDisplayNumber: json['shiftDisplayNumber'] as String?,
+    monthlyDisplayNumber: json['monthlyDisplayNumber'] as String?,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'orderId': orderId,
-        'tableId': tableId,
-        'totalDue': totalDue,
-        'cashReceived': cashReceived,
-        'changeDue': changeDue,
-        'cashierId': cashierId,
-        'shiftId': shiftId,
-        'paidAt': paidAt.toIso8601String(),
-        'paymentTypeId': paymentTypeId,
-        'yearMonth': yearMonth,
-        'shiftOrderNumber': shiftOrderNumber,
-        'monthlyOrderNumber': monthlyOrderNumber,
-        'shiftDisplayNumber': shiftDisplayNumber,
-        'monthlyDisplayNumber': monthlyDisplayNumber,
-        'changes': changes.map((change) => change.toJson()).toList(),
-      };
+    'id': id,
+    'orderId': orderId,
+    'tableId': tableId,
+    'totalDue': totalDue,
+    'cashReceived': cashReceived,
+    'changeDue': changeDue,
+    'cashierId': cashierId,
+    'shiftId': shiftId,
+    'paidAt': paidAt.toIso8601String(),
+    'paymentTypeId': paymentTypeId,
+    'yearMonth': yearMonth,
+    'shiftOrderNumber': shiftOrderNumber,
+    'monthlyOrderNumber': monthlyOrderNumber,
+    'shiftDisplayNumber': shiftDisplayNumber,
+    'monthlyDisplayNumber': monthlyDisplayNumber,
+    'changes': changes.map((change) => change.toJson()).toList(),
+  };
 }
 
 class CashShift {
@@ -534,34 +543,64 @@ class CashShift {
   int transactionCount;
 
   bool get isOpen => closedAt == null;
-  double get expectedCash => openingCash + cashSales - cashRefunds + cashAdjustments;
-  double? get difference => actualCash == null ? null : actualCash! - expectedCash;
+  double drawerCash({required double cashTaken, required double cashPaidOut}) =>
+      openingCash + cashTaken - cashPaidOut - cashRefunds + cashAdjustments;
+  double get expectedCash =>
+      openingCash + cashSales - cashRefunds + cashAdjustments;
+  double? get difference =>
+      actualCash == null ? null : actualCash! - expectedCash;
 
   factory CashShift.fromJson(Map<String, dynamic> json) => CashShift(
-        id: json['id'] as String,
-        cashierId: json['cashierId'] as String,
-        openedAt: DateTime.parse(json['openedAt'] as String),
-        closedAt: json['closedAt'] == null ? null : DateTime.parse(json['closedAt'] as String),
-        openingCash: (json['openingCash'] as num?)?.toDouble() ?? 0,
-        cashSales: (json['cashSales'] as num?)?.toDouble() ?? 0,
-        cashRefunds: (json['cashRefunds'] as num?)?.toDouble() ?? 0,
-        cashAdjustments: (json['cashAdjustments'] as num?)?.toDouble() ?? 0,
-        actualCash: (json['actualCash'] as num?)?.toDouble(),
-        transactionCount: json['transactionCount'] as int? ?? 0,
-      );
+    id: json['id'] as String,
+    cashierId: json['cashierId'] as String,
+    openedAt: DateTime.parse(json['openedAt'] as String),
+    closedAt: json['closedAt'] == null
+        ? null
+        : DateTime.parse(json['closedAt'] as String),
+    openingCash: (json['openingCash'] as num?)?.toDouble() ?? 0,
+    cashSales: (json['cashSales'] as num?)?.toDouble() ?? 0,
+    cashRefunds: (json['cashRefunds'] as num?)?.toDouble() ?? 0,
+    cashAdjustments: (json['cashAdjustments'] as num?)?.toDouble() ?? 0,
+    actualCash: (json['actualCash'] as num?)?.toDouble(),
+    transactionCount: json['transactionCount'] as int? ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'cashierId': cashierId,
-        'openedAt': openedAt.toIso8601String(),
-        'closedAt': closedAt?.toIso8601String(),
-        'openingCash': openingCash,
-        'cashSales': cashSales,
-        'cashRefunds': cashRefunds,
-        'cashAdjustments': cashAdjustments,
-        'actualCash': actualCash,
-        'transactionCount': transactionCount,
-      };
+    'id': id,
+    'cashierId': cashierId,
+    'openedAt': openedAt.toIso8601String(),
+    'closedAt': closedAt?.toIso8601String(),
+    'openingCash': openingCash,
+    'cashSales': cashSales,
+    'cashRefunds': cashRefunds,
+    'cashAdjustments': cashAdjustments,
+    'actualCash': actualCash,
+    'transactionCount': transactionCount,
+  };
+}
+
+class ShiftExpense {
+  ShiftExpense({
+    required this.id,
+    required this.shiftId,
+    required this.cashierId,
+    required this.paidToCafe,
+    required this.amount,
+    required this.description,
+    required this.createdAt,
+    this.paidToCashierId,
+    this.kind = 'cash_out',
+  });
+
+  final String id;
+  final String shiftId;
+  final String cashierId;
+  final bool paidToCafe;
+  final String? paidToCashierId;
+  final double amount;
+  final String description;
+  final DateTime createdAt;
+  final String kind;
 }
 
 class StaffCall {
@@ -582,20 +621,20 @@ class StaffCall {
   bool resolved;
 
   factory StaffCall.fromJson(Map<String, dynamic> json) => StaffCall(
-        id: json['id'] as String,
-        tableId: json['tableId'] as String,
-        tableNumber: json['tableNumber'] as String,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        kind: json['kind'] as String? ?? 'assistance',
-        resolved: json['resolved'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    tableId: json['tableId'] as String,
+    tableNumber: json['tableNumber'] as String,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    kind: json['kind'] as String? ?? 'assistance',
+    resolved: json['resolved'] as bool? ?? false,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tableId': tableId,
-        'tableNumber': tableNumber,
-        'createdAt': createdAt.toIso8601String(),
-        'kind': kind,
-        'resolved': resolved,
-      };
+    'id': id,
+    'tableId': tableId,
+    'tableNumber': tableNumber,
+    'createdAt': createdAt.toIso8601String(),
+    'kind': kind,
+    'resolved': resolved,
+  };
 }
