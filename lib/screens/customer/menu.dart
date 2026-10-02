@@ -24,26 +24,63 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.watch<CafeStore>();
-    final table = store.tableBySlug(widget.tableSlug);
-    if (table == null) {
+    final hasTable = context.select<CafeStore, bool>((store) => store.tableBySlug(widget.tableSlug) != null);
+    if (!hasTable) {
       return CustomerShell.phone(context,
         child: Column(
           children: [
-            _guestHeader(CafeTable(id: 'missing', number: widget.tableSlug, qrSlug: widget.tableSlug)),
+            _guestHeader(CafeTable(id: 'missing', number: widget.tableSlug, qrSlug: widget.tableSlug), context.read<CafeStore>().cafeName),
             Expanded(child: EmptyHint(context.l10n.noTables)),
-            CustomerShell.nav(context, widget.tableSlug, '/t/${widget.tableSlug}'),
+            Builder(builder: (context) => CustomerShell.nav(context, widget.tableSlug, '/t/${widget.tableSlug}')),
           ],
         ),
       );
     }
 
-    final items = store.guestMenu.where((item) {
+    return CustomerShell.phone(context,
+      child: Column(
+        children: [
+          Builder(builder: (context) {
+            final header = context.select<CafeStore, String>((store) {
+              final table = store.tableBySlug(widget.tableSlug);
+              return '${store.cafeName}\u0001${table?.number ?? ''}';
+            });
+            final store = context.read<CafeStore>();
+            final table = store.tableBySlug(widget.tableSlug)!;
+            return _guestHeader(table, header.split('\u0001').first);
+          }),
+          Builder(builder: (context) {
+            context.select<CafeStore, GuestLocationStatus>((store) => store.guestLocation);
+            return _locationBanner(context.read<CafeStore>());
+          }),
+          Builder(builder: (context) {
+            final id = context.select<CafeStore, String>((store) => store.tableBySlug(widget.tableSlug)?.id ?? '');
+            if (id.isEmpty) return const SizedBox.shrink();
+            return RefusalNotice(tableId: id);
+          }),
+          Expanded(
+            child: Builder(builder: (context) {
+              context.select<CafeStore, String>((store) => store.guestScrollRevision(widget.tableSlug));
+              final store = context.read<CafeStore>();
+              final table = store.tableBySlug(widget.tableSlug)!;
+              return _dishScroll(store, table);
+            }),
+          ),
+          Builder(builder: (context) => _cartBar(context)),
+          Builder(builder: (context) => CustomerShell.nav(context, widget.tableSlug, '/t/${widget.tableSlug}')),
+        ],
+      ),
+    );
+  }
+
+  Widget _dishScroll(CafeStore store, CafeTable table) {
+    final menu = store.guestMenu;
+    final items = menu.where((item) {
       if (chefsOnly) return item.featured;
       if (categoryId == null) return true;
       return item.categoryId == categoryId;
     }).toList();
-    final featured = store.guestMenu.where((item) => item.featured).toList();
+    final featured = menu.where((item) => item.featured).toList();
     final grouped = <String, List<MenuItem>>{};
     for (final item in items) {
       grouped.putIfAbsent(item.categoryId, () => []).add(item);
@@ -51,7 +88,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     for (final list in grouped.values) {
       list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     }
-    final cartCount = store.cartFor(table.id).itemCount;
     if (!_loggedPaint) {
       _loggedPaint = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,14 +101,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       });
     }
 
-    return CustomerShell.phone(context,
-      child: Column(
-        children: [
-          _guestHeader(table),
-          _locationBanner(store),
-          RefusalNotice(tableId: table.id),
-          Expanded(
-            child: CustomScrollView(
+    return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
@@ -147,7 +176,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     ),
                   ),
                 ),
-                if (store.guestMenu.isEmpty)
+                if (menu.isEmpty)
                   SliverFillRemaining(child: EmptyHint(context.l10n.noMenu))
                 else ...[
                   if (featured.isNotEmpty && (chefsOnly || categoryId == null))
@@ -197,9 +226,21 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   const SliverToBoxAdapter(child: SizedBox(height: 88)),
                 ],
               ],
-            ),
-          ),
-          AnimatedSwitcher(
+            );
+  }
+
+  Widget _cartBar(BuildContext context) {
+    final stamp = context.select<CafeStore, String>((store) {
+      final table = store.tableBySlug(widget.tableSlug);
+      if (table == null) return '';
+      final cart = store.cartFor(table.id);
+      return '${cart.itemCount}|${cart.total}|${store.isSendingOrder(table.id)}|${store.canPlaceOrder}|${store.openOrderFor(table.id) != null}|${store.guestLocation.name}';
+    });
+    final store = context.read<CafeStore>();
+    final table = store.tableBySlug(widget.tableSlug);
+    if (table == null || stamp.isEmpty) return const SizedBox.shrink();
+    final cartCount = store.cartFor(table.id).itemCount;
+    return AnimatedSwitcher(
             duration: CafeMotion.medium,
             reverseDuration: const Duration(milliseconds: 200),
             switchInCurve: CafeMotion.easeOut,
@@ -278,14 +319,10 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     ),
                   )
                 : const SizedBox.shrink(key: ValueKey('cart-bar-empty')),
-          ),
-          CustomerShell.nav(context, widget.tableSlug, '/t/${widget.tableSlug}'),
-        ],
-      ),
     );
   }
 
-  Widget _guestHeader(CafeTable table) {
+  Widget _guestHeader(CafeTable table, String cafeName) {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -307,7 +344,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
+                Text(cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
                 Row(
                   children: [
                     Container(width: 6, height: 6, decoration: const BoxDecoration(color: CafeColors.terracottaDark, shape: BoxShape.circle)),

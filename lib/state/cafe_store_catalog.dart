@@ -1,6 +1,30 @@
 part of 'cafe_store.dart';
 
 extension CafeStoreCatalog on CafeStore {
+  String guestScrollRevision(String tableSlug) {
+    final table = tableBySlug(tableSlug);
+    final buffer = StringBuffer()
+      ..write(locale)
+      ..write('|')
+      ..write(canPlaceOrder)
+      ..write('|')
+      ..write(guestLocation.name)
+      ..write('|')
+      ..write(table == null ? '' : serviceForTable(table.id));
+    for (final category in guestCategories) {
+      buffer
+        ..write(category.id)
+        ..write(category.sortOrder)
+        ..write(category.nameEn)
+        ..write(category.nameAr)
+        ..write(category.visible);
+    }
+    for (final item in menuItems) {
+      buffer.write(item.syncKey);
+    }
+    return buffer.toString();
+  }
+
   List<MenuItem> get guestMenu {
     final visibleIds = guestCategories.map((item) => item.id).toSet();
     final items = menuItems.where((item) => visibleIds.contains(item.categoryId)).toList()

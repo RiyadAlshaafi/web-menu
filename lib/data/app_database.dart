@@ -328,7 +328,12 @@ class AppDatabase {
             visible: row['visible'] as bool? ?? true,
           )).toList();
     }
-    final itemRows = await client!.from('menu_items').select();
+    final previousImages = {for (final item in _menuItems) item.id: item.imageUrl};
+    final itemRows = liveOnly
+        ? await client!.from('menu_items').select(
+            'id, name_it, name_en, description, price, category_id, available, sold_out, featured, sort_order, discount_percent, discount_applied',
+          )
+        : await client!.from('menu_items').select();
     _menuItems = (itemRows as List).map((row) => MenuItem(
           id: row['id'] as String,
           nameIt: row['name_it'] as String? ?? '',
@@ -336,7 +341,7 @@ class AppDatabase {
           description: row['description'] as String? ?? '',
           price: (row['price'] as num).toDouble(),
           categoryId: row['category_id'] as String,
-          imageUrl: row['image_url'] as String? ?? '',
+          imageUrl: liveOnly ? (previousImages[row['id'] as String] ?? '') : (row['image_url'] as String? ?? ''),
           available: row['available'] as bool? ?? true,
           soldOut: row['sold_out'] as bool? ?? false,
           featured: row['featured'] as bool? ?? false,

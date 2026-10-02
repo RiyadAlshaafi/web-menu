@@ -192,8 +192,8 @@ class _SoftCardState extends State<SoftCard> {
     );
     if (!interactive && !widget.selected) return body;
     return MouseRegion(
-      onEnter: interactive ? (_) => setState(() => hover = true) : null,
-      onExit: interactive ? (_) => setState(() => hover = false) : null,
+      onEnter: widget.hoverable ? (_) => setState(() => hover = true) : null,
+      onExit: widget.hoverable ? (_) => setState(() => hover = false) : null,
       cursor: interactive ? SystemMouseCursors.click : MouseCursor.defer,
       child: Material(
         color: Colors.transparent,
@@ -242,7 +242,15 @@ class DishPhoto extends StatelessWidget {
     if (value.startsWith('data:')) {
       final bytes = _bytesFor(value);
       if (bytes == null) return null;
-      return Image.memory(bytes, width: _w, height: size, fit: BoxFit.cover, cacheWidth: cacheWidth, cacheHeight: cacheHeight);
+      return Image.memory(
+        bytes,
+        width: _w,
+        height: size,
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
+        gaplessPlayback: true,
+      );
     }
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return Image.network(
@@ -252,6 +260,7 @@ class DishPhoto extends StatelessWidget {
         fit: BoxFit.cover,
         cacheWidth: cacheWidth,
         cacheHeight: cacheHeight,
+        gaplessPlayback: true,
         errorBuilder: (_, _, _) => _placeholder(),
       );
     }

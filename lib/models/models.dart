@@ -154,6 +154,10 @@ class MenuItem {
   bool get hasDiscount => discountApplied && discountPercent > 0;
   double get salePrice => hasDiscount ? (price * (100 - discountPercent) / 100) : price;
 
+  /// Change detection without embedding the photo bytes.
+  String get syncKey =>
+      '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}';
+
   String displayName(String locale) =>
       locale == 'en' || nameIt.isEmpty ? (nameEn.isEmpty ? nameIt : nameEn) : nameIt;
 
