@@ -11,6 +11,7 @@ class CustomerMenuScreen extends StatefulWidget {
 class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   String? categoryId;
   bool chefsOnly = false;
+  bool _loggedPaint = false;
 
   @override
   void initState() {
@@ -51,6 +52,18 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     }
     final cartCount = store.cartFor(table.id).itemCount;
+    if (!_loggedPaint) {
+      _loggedPaint = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // #region agent log
+        agentLog('C', 'menu.dart:build', 'menu painted', {
+          'rows': items.length,
+          'httpImages': items.where((item) => item.imageUrl.startsWith('http')).length,
+          'dataImages': items.where((item) => item.imageUrl.startsWith('data:')).length,
+        });
+        // #endregion
+      });
+    }
 
     return CustomerShell.phone(context,
       child: Column(

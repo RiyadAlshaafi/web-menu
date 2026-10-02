@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'debug/agent_log.dart';
 import 'report_error.dart';
 import 'models/models.dart';
 import 'screens/admin_screens.dart' deferred as admin_ui;
@@ -33,11 +34,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   final store = CafeStore(AppDatabase.instance);
+  final started = DateTime.now();
   try {
     await store.load();
   } catch (error, stack) {
     reportError('startup', error, stack);
   }
+  // #region agent log
+  agentLog('C', 'main.dart:main', 'startup load finished', {
+    'ms': DateTime.now().difference(started).inMilliseconds,
+    'menuItems': store.menuItems.length,
+    'orders': store.orders.length,
+    'tables': store.tables.length,
+  });
+  // #endregion
   runApp(CafeItalianoApp(store: store));
 }
 
@@ -297,8 +307,24 @@ class _GuestSessionState extends State<GuestSession> {
       _loading = true;
       _missing = false;
     });
+    final started = DateTime.now();
     await context.read<CafeStore>().ensureGuest(widget.slug);
     if (!mounted) return;
+    // #region agent log
+    final store = context.read<CafeStore>();
+    final images = store.menuItems.map((item) => item.imageUrl);
+    agentLog('D', 'main.dart:GuestSession._load', 'guest catalog ready', {
+      'ms': DateTime.now().difference(started).inMilliseconds,
+      'menuItems': store.menuItems.length,
+      'guestMenu': store.guestMenu.length,
+      'dataUriImages': images.where((url) => url.startsWith('data:')).length,
+      'httpImages': images.where((url) => url.startsWith('http')).length,
+      'imageChars': images.fold<int>(0, (sum, url) => sum + url.length),
+      'orders': store.orders.length,
+      'tables': store.tables.length,
+    });
+    Future<void>.delayed(const Duration(seconds: 3), () => agentLogResources('A'));
+    // #endregion
     setState(() {
       _loading = false;
       _missing = context.read<CafeStore>().tableBySlug(widget.slug) == null;
