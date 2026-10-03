@@ -11,6 +11,12 @@ import '../report_error.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
 import 'sales_history.dart';
 
+double? _asDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
 class AppDatabase {
   AppDatabase._();
   static final AppDatabase instance = AppDatabase._();
@@ -479,7 +485,8 @@ class AppDatabase {
                   menuItemId: line['menu_item_id'] as String? ?? '',
                   name: line['name'] as String? ?? '',
                   qty: (line['qty'] as num?)?.toInt() ?? 1,
-                  unitPrice: (line['unit_price'] as num?)?.toDouble() ?? 0,
+                  unitPrice: _asDouble(line['unit_price']) ?? 0,
+                  listUnitPrice: _asDouble(line['list_unit_price']),
                 ),
               )
               .toList(),
@@ -783,8 +790,8 @@ class AppDatabase {
           menuItemId: map['menu_item_id'] as String? ?? '',
           name: map['name'] as String? ?? '',
           qty: (map['qty'] as num?)?.toInt() ?? 1,
-          unitPrice: (map['unit_price'] as num?)?.toDouble() ?? 0,
-          listUnitPrice: (map['list_unit_price'] as num?)?.toDouble(),
+          unitPrice: _asDouble(map['unit_price']) ?? 0,
+          listUnitPrice: _asDouble(map['list_unit_price']),
           round: (map['round'] as num?)?.toInt() ?? 1,
         );
       }).toList(),
@@ -1153,6 +1160,7 @@ class AppDatabase {
                     'name': line.name,
                     'qty': line.qty,
                     'unit_price': line.unitPrice,
+                    'list_unit_price': line.listUnitPrice ?? line.unitPrice,
                     'round': line.round,
                   },
                 )
@@ -1292,6 +1300,7 @@ class AppDatabase {
                     'name': line.name,
                     'qty': line.qty,
                     'unit_price': line.unitPrice,
+                    'list_unit_price': line.listUnitPrice ?? line.unitPrice,
                   },
                 )
                 .toList(),
@@ -1323,16 +1332,38 @@ class AppDatabase {
     }
     _applyHeaders();
     try {
-      await client!.from('shift_expenses').insert({
-        'restaurant_id': restaurantId,
-        'shift_id': shiftId,
-        'cashier_id': cashierId,
-        'paid_to_cafe': paidToCafe,
-        'paid_to_cashier_id': paidToCafe ? null : paidToCashierId,
-        'amount': amount,
-        'description': description,
-        'kind': 'cash_out',
-      });
+      final rows = await client!
+          .from('shift_expenses')
+          .insert({
+            'restaurant_id': restaurantId,
+            'shift_id': shiftId,
+            'cashier_id': cashierId,
+            'paid_to_cafe': paidToCafe,
+            'paid_to_cashier_id': paidToCafe ? null : paidToCashierId,
+            'amount': amount,
+            'description': description,
+            'kind': 'cash_out',
+          })
+          .select();
+      final row = (rows as List).isEmpty
+          ? null
+          : Map<String, dynamic>.from(rows.first as Map);
+      _expenses = [
+        ShiftExpense(
+          id: row?['id'] as String? ?? expense.id,
+          shiftId: shiftId,
+          cashierId: cashierId,
+          paidToCafe: paidToCafe,
+          paidToCashierId: paidToCafe ? null : paidToCashierId,
+          amount: amount,
+          description: description,
+          createdAt: row?['created_at'] == null
+              ? expense.createdAt
+              : DateTime.parse(row!['created_at'] as String),
+          kind: 'cash_out',
+        ),
+        ..._expenses,
+      ];
       return null;
     } catch (error, stackTrace) {
       reportError('shift expense', error, stackTrace);

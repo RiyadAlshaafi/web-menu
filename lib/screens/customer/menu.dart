@@ -737,7 +737,13 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
     final table = store.tableById(tableId);
     final lines = [
       for (final line in cart.lines)
-        OrderLine(menuItemId: line.menuItemId, name: line.name, qty: line.qty, unitPrice: line.unitPrice),
+        OrderLine(
+          menuItemId: line.menuItemId,
+          name: line.name,
+          qty: line.qty,
+          unitPrice: line.unitPrice,
+          listUnitPrice: line.listUnitPrice,
+        ),
     ];
     final qty = {for (final line in lines) line.menuItemId: line.qty};
     final sent = await showModalBottomSheet<bool>(

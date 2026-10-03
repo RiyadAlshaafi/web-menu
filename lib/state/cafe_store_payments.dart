@@ -170,6 +170,7 @@ extension CafeStorePayments on CafeStore {
         description.trim().isEmpty) {
       return l10n.cashierExpenseInvalid;
     }
+    await db.writeShifts(shifts);
     final failure = await db.addShiftExpense(
       shiftId: shift.id,
       cashierId: cashier.id,
@@ -179,12 +180,9 @@ extension CafeStorePayments on CafeStore {
       description: description.trim(),
     );
     if (failure != null) return failure;
-    if (db.client == null) {
-      expenses = db.expenses;
-      notifyListeners();
-      return null;
-    }
-    await syncFromDisk();
+    await db.refreshFromDisk(liveOnly: true);
+    _hydrateOperational();
+    _syncStamp = _stamp();
     notifyListeners();
     return null;
   }

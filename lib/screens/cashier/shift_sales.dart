@@ -122,7 +122,11 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 final stack = constraints.maxWidth < 980;
                 final ledger = SoftCard(
                   radius: 16,
-                  child: store.payments.isEmpty
+                  child: store.payments.isEmpty &&
+                          (shift == null ||
+                              store.expenses.every(
+                                (item) => item.shiftId != shift.id,
+                              ))
                       ? EmptyHint(context.l10n.noTransactions)
                       : ListView(
                           children: [
@@ -191,9 +195,24 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                               ),
                             ),
                             ...(() {
-                              final rows = [...store.payments]
-                                ..sort((a, b) => b.paidAt.compareTo(a.paidAt));
-                              return rows.map((payment) {
+                              final shiftId = shift?.id;
+                              final events = <Object>[
+                                ...store.payments,
+                                ...store.expenses.where(
+                                  (item) =>
+                                      shiftId == null || item.shiftId == shiftId,
+                                ),
+                              ]..sort((a, b) {
+                                  DateTime at(Object item) => item is Payment
+                                      ? item.paidAt
+                                      : (item as ShiftExpense).createdAt;
+                                  return at(b).compareTo(at(a));
+                                });
+                              return events.map((event) {
+                                if (event is ShiftExpense) {
+                                  return _expenseLedgerRow(context, store, event);
+                                }
+                                final payment = event as Payment;
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 8,
@@ -379,6 +398,70 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       ),
     );
     return expand ? Expanded(child: card) : card;
+  }
+
+  Widget _expenseLedgerRow(
+    BuildContext context,
+    CafeStore store,
+    ShiftExpense expense,
+  ) {
+    final payee = expense.paidToCafe
+        ? context.l10n.cashierExpenseCafe
+        : store.cashiers
+            .where((item) => item.id == expense.paidToCashierId)
+            .map((item) => item.name)
+            .firstWhere((name) => name.isNotEmpty, orElse: () => '');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: expense.description,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  if (payee.isNotEmpty)
+                    TextSpan(
+                      text: '  •  $payee',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 64,
+            child: Text(formatTripoliTime(expense.createdAt)),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              store.currency.format(-expense.amount),
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          SizedBox(
+            width: 72,
+            child: Text(
+              context.l10n.cashierAddExpense,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: CafeColors.inkMuted,
+              ),
+            ),
+          ),
+          const SizedBox(width: 88),
+        ],
+      ),
+    );
   }
 
   Future<void> _addExpense(BuildContext context, CafeStore store) async {

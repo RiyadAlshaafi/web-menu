@@ -87,6 +87,7 @@ extension CafeStoreOrders on CafeStore {
           name: item.displayName(locale),
           qty: 1,
           unitPrice: item.salePrice,
+          listUnitPrice: item.price,
         ),
       );
     } else {

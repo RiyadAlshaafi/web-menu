@@ -250,6 +250,7 @@ class CafeStore extends ChangeNotifier {
           ..write(line.menuItemId)
           ..write(line.qty)
           ..write(line.unitPrice)
+          ..write(line.listUnitPrice)
           ..write(line.round);
       }
     }
@@ -259,7 +260,8 @@ class CafeStore extends ChangeNotifier {
         buffer
           ..write(line.menuItemId)
           ..write(line.qty)
-          ..write(line.unitPrice);
+          ..write(line.unitPrice)
+          ..write(line.listUnitPrice);
       }
     }
     for (final call in calls) {
