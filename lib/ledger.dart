@@ -80,11 +80,21 @@ List<SaleLedgerRow> saleLedgerRows(
   return list;
 }
 
+bool _expenseMatchesCategory(CafeStore store, ShiftExpense expense, String categoryId) {
+  if (expense.categoryId == categoryId) return true;
+  if (expense.categoryId != null) return false;
+  final match = store.expenseCategories.where((item) => item.id == categoryId);
+  if (match.isEmpty) return false;
+  if (match.first.nameEn == 'Café Expense') return expense.paidToCafe;
+  if (match.first.nameEn == 'Cash Withdrawal') return !expense.paidToCafe;
+  return false;
+}
+
 List<ShiftExpense> expenseLedgerRows(
   CafeStore store, {
   String query = '',
   String? cashierId,
-  String? type,
+  String? categoryId,
   DateTime? from,
   DateTime? to,
 }) {
@@ -92,8 +102,9 @@ List<ShiftExpense> expenseLedgerRows(
   final list = store.expenses.where((expense) {
     if (expense.voided) return false;
     if (cashierId != null && expense.cashierId != cashierId) return false;
-    if (type == 'cafe' && !expense.paidToCafe) return false;
-    if (type == 'withdrawal' && expense.paidToCafe) return false;
+    if (categoryId != null && !_expenseMatchesCategory(store, expense, categoryId)) {
+      return false;
+    }
     if (!inTripoliDateRange(expense.createdAt, from: from, to: to)) return false;
     if (needle.isEmpty) return true;
     final cashier = store.cashiers.where((item) => item.id == expense.cashierId);

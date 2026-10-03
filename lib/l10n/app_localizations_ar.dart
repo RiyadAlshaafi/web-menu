@@ -1554,6 +1554,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expenseTypeWithdrawal => 'سحب نقدي';
 
   @override
+  String get expenseCategoriesTitle => 'فئات المصروفات';
+
+  @override
+  String get expenseCategoriesHint =>
+      'يختار أمين الصندوق من الفئات المفعّلة عند تسجيل السحب. تبقى الأسماء ظاهرة على السجلات السابقة حتى بعد الحذف.';
+
+  @override
+  String get expenseCategoryDeleteMessage =>
+      'ستبقى عمليات السحب السابقة التي استخدمت هذه الفئة تعرض اسمها.';
+
+  @override
   String get expenseEdit => 'تعديل';
 
   @override

@@ -1558,6 +1558,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseTypeWithdrawal => 'Cash Withdrawal';
 
   @override
+  String get expenseCategoriesTitle => 'Expense categories';
+
+  @override
+  String get expenseCategoriesHint =>
+      'Cashiers pick from the enabled categories when recording a cash-out. Past rows keep the name even if you delete a category.';
+
+  @override
+  String get expenseCategoryDeleteMessage =>
+      'Past cash-outs using this category will keep showing its name.';
+
+  @override
   String get expenseEdit => 'Edit';
 
   @override

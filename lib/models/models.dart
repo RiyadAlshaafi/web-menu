@@ -414,6 +414,25 @@ class PaymentType {
       locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
 }
 
+class ExpenseCategory {
+  ExpenseCategory({
+    required this.id,
+    required this.nameEn,
+    required this.nameAr,
+    required this.enabled,
+    required this.sortOrder,
+  });
+
+  final String id;
+  String nameEn;
+  String nameAr;
+  bool enabled;
+  int sortOrder;
+
+  String label(String locale) =>
+      locale == 'ar' && nameAr.isNotEmpty ? nameAr : nameEn;
+}
+
 class PaymentMethodChange {
   PaymentMethodChange({
     required this.id,
@@ -593,6 +612,9 @@ class ShiftExpense {
     this.voided = false,
     this.editedFrom,
     this.displayNumber,
+    this.categoryId,
+    this.categoryNameEn,
+    this.categoryNameAr,
   });
 
   final String id;
@@ -607,6 +629,9 @@ class ShiftExpense {
   final bool voided;
   final String? editedFrom;
   final String? displayNumber;
+  final String? categoryId;
+  final String? categoryNameEn;
+  final String? categoryNameAr;
 
   String get shortId =>
       (displayNumber == null || displayNumber!.isEmpty) ? id : displayNumber!;

@@ -88,6 +88,7 @@ class AppDatabase {
   Map<String, CartState> _carts = {};
   List<Payment> _payments = [];
   List<PaymentType> _paymentTypes = [];
+  List<ExpenseCategory> _expenseCategories = [];
   List<CashShift> _shifts = [];
   List<ShiftExpense> _expenses = [];
   List<StaffCall> _calls = [];
@@ -109,6 +110,8 @@ class AppDatabase {
   Map<String, CartState> get carts => Map<String, CartState>.from(_carts);
   List<Payment> get payments => List<Payment>.from(_payments);
   List<PaymentType> get paymentTypes => List<PaymentType>.from(_paymentTypes);
+  List<ExpenseCategory> get expenseCategories =>
+      List<ExpenseCategory>.from(_expenseCategories);
   List<CashShift> get shifts => List<CashShift>.from(_shifts);
   List<ShiftExpense> get expenses => List<ShiftExpense>.from(_expenses);
   List<StaffCall> get calls => List<StaffCall>.from(_calls);
@@ -528,6 +531,26 @@ class AppDatabase {
     } catch (error, stackTrace) {
       reportError('payment types', error, stackTrace);
       _paymentTypes = [];
+    }
+    try {
+      final categoryRows = await client!
+          .from('expense_categories')
+          .select()
+          .order('sort_order');
+      _expenseCategories = (categoryRows as List)
+          .map(
+            (row) => ExpenseCategory(
+              id: row['id'] as String,
+              nameEn: row['name_en'] as String? ?? '',
+              nameAr: row['name_ar'] as String? ?? '',
+              enabled: row['enabled'] as bool? ?? true,
+              sortOrder: row['sort_order'] as int? ?? 0,
+            ),
+          )
+          .toList();
+    } catch (error, stackTrace) {
+      reportError('expense categories', error, stackTrace);
+      _expenseCategories = [];
     }
     final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
     if (epoch != _epoch) return;
@@ -1038,6 +1061,62 @@ class AppDatabase {
     }
   }
 
+  Future<String?> addExpenseCategory(String nameEn, String nameAr) async {
+    if (client == null || restaurantId == null) {
+      return 'Supabase is not configured.';
+    }
+    final sort =
+        _expenseCategories.fold<int>(
+          0,
+          (max, type) => type.sortOrder > max ? type.sortOrder : max,
+        ) +
+        1;
+    try {
+      await client!.from('expense_categories').insert({
+        'restaurant_id': restaurantId,
+        'name_en': nameEn,
+        'name_ar': nameAr,
+        'sort_order': sort,
+      });
+      await refreshFromDisk();
+      return null;
+    } catch (error, stackTrace) {
+      reportError('add expense category', error, stackTrace);
+      return '$error';
+    }
+  }
+
+  Future<String?> saveExpenseCategory(ExpenseCategory category) async {
+    if (client == null) return 'Supabase is not configured.';
+    try {
+      await client!
+          .from('expense_categories')
+          .update({
+            'name_en': category.nameEn,
+            'name_ar': category.nameAr,
+            'enabled': category.enabled,
+          })
+          .eq('id', category.id);
+      await refreshFromDisk();
+      return null;
+    } catch (error, stackTrace) {
+      reportError('save expense category', error, stackTrace);
+      return '$error';
+    }
+  }
+
+  Future<String?> deleteExpenseCategory(String id) async {
+    if (client == null) return 'Supabase is not configured.';
+    try {
+      await client!.from('expense_categories').delete().eq('id', id);
+      await refreshFromDisk();
+      return null;
+    } catch (error, stackTrace) {
+      reportError('delete expense category', error, stackTrace);
+      return '$error';
+    }
+  }
+
   Future<void> writeCashiers(List<Cashier> items) async {
     _cashiers = items;
     if (client == null || restaurantId == null || client!.auth.currentUser == null) {
@@ -1311,16 +1390,21 @@ class AppDatabase {
     voided: row['voided'] as bool? ?? false,
     editedFrom: row['edited_from'] as String?,
     displayNumber: row['display_number'] as String?,
+    categoryId: row['expense_category_id'] as String?,
+    categoryNameEn: row['category_name_en'] as String?,
+    categoryNameAr: row['category_name_ar'] as String?,
   );
 
   Future<String?> addShiftExpense({
     required String shiftId,
     required String cashierId,
+    required String categoryId,
     required bool paidToCafe,
     required String? paidToCashierId,
     required double amount,
     required String description,
   }) async {
+    final category = _expenseCategories.where((item) => item.id == categoryId);
     final expense = ShiftExpense(
       id: Secrets.id('expense'),
       shiftId: shiftId,
@@ -1330,6 +1414,9 @@ class AppDatabase {
       amount: amount,
       description: description,
       createdAt: DateTime.now(),
+      categoryId: categoryId,
+      categoryNameEn: category.isEmpty ? null : category.first.nameEn,
+      categoryNameAr: category.isEmpty ? null : category.first.nameAr,
     );
     if (client == null || restaurantId == null) {
       _expenses = [expense, ..._expenses];
@@ -1341,7 +1428,7 @@ class AppDatabase {
         'record_cash_movement',
         params: {
           'p_shift_id': shiftId,
-          'p_type': paidToCafe ? 'cafe' : 'withdrawal',
+          'p_expense_category_id': categoryId,
           'p_amount': amount,
           'p_description': description,
         },
@@ -1360,7 +1447,7 @@ class AppDatabase {
 
   Future<String?> editShiftExpense({
     required String id,
-    required bool paidToCafe,
+    required String categoryId,
     required double amount,
     required String description,
   }) async {
@@ -1371,7 +1458,7 @@ class AppDatabase {
         'edit_cash_movement',
         params: {
           'p_id': id,
-          'p_type': paidToCafe ? 'cafe' : 'withdrawal',
+          'p_expense_category_id': categoryId,
           'p_amount': amount,
           'p_description': description,
         },

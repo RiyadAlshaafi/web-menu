@@ -39,6 +39,7 @@ class CafeStore extends ChangeNotifier {
   Map<String, CartState> carts = {};
   List<Payment> payments = [];
   List<PaymentType> paymentTypes = [];
+  List<ExpenseCategory> expenseCategories = [];
   List<CashShift> shifts = [];
   List<ShiftExpense> expenses = [];
   List<StaffCall> calls = [];
@@ -84,6 +85,7 @@ class CafeStore extends ChangeNotifier {
     carts = db.carts;
     payments = db.payments;
     paymentTypes = db.paymentTypes;
+    expenseCategories = db.expenseCategories;
     shifts = db.shifts;
     expenses = db.expenses;
     calls = db.calls;
@@ -139,6 +141,7 @@ class CafeStore extends ChangeNotifier {
     calls: calls,
     payments: payments,
     paymentTypes: paymentTypes,
+    expenseCategories: expenseCategories,
     shifts: shifts,
     expenses: expenses,
   );
@@ -199,6 +202,7 @@ class CafeStore extends ChangeNotifier {
     calls: db.calls,
     payments: db.payments,
     paymentTypes: db.paymentTypes,
+    expenseCategories: db.expenseCategories,
     shifts: db.shifts,
     expenses: db.expenses,
   );
@@ -214,6 +218,7 @@ class CafeStore extends ChangeNotifier {
     required List<StaffCall> calls,
     required List<Payment> payments,
     required List<PaymentType> paymentTypes,
+    required List<ExpenseCategory> expenseCategories,
     required List<CashShift> shifts,
     required List<ShiftExpense> expenses,
   }) {
@@ -285,6 +290,13 @@ class CafeStore extends ChangeNotifier {
         ..write(type.nameEn)
         ..write(type.nameAr);
     }
+    for (final category in expenseCategories) {
+      buffer
+        ..write(category.id)
+        ..write(category.enabled)
+        ..write(category.nameEn)
+        ..write(category.nameAr);
+    }
     for (final shift in shifts) {
       buffer
         ..write(shift.id)
@@ -302,7 +314,10 @@ class CafeStore extends ChangeNotifier {
         ..write(expense.paidToCashierId)
         ..write(expense.voided)
         ..write(expense.editedFrom)
-        ..write(expense.displayNumber);
+        ..write(expense.displayNumber)
+        ..write(expense.categoryId)
+        ..write(expense.categoryNameEn)
+        ..write(expense.categoryNameAr);
     }
     return buffer.toString();
   }
@@ -319,6 +334,7 @@ class CafeStore extends ChangeNotifier {
     carts = db.carts;
     payments = db.payments;
     paymentTypes = db.paymentTypes;
+    expenseCategories = db.expenseCategories;
     shifts = db.shifts;
     expenses = db.expenses;
     calls = db.calls;

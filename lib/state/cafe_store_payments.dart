@@ -156,26 +156,53 @@ extension CafeStorePayments on CafeStore {
     return shift.drawerCash(cashTaken: cashTaken, cashPaidOut: cashPaidOut);
   }
 
+  List<ExpenseCategory> get enabledExpenseCategories =>
+      expenseCategories.where((category) => category.enabled).toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+  String expenseCategoryLabel(ShiftExpense expense) {
+    final en = expense.categoryNameEn;
+    final ar = expense.categoryNameAr;
+    if ((en != null && en.isNotEmpty) || (ar != null && ar.isNotEmpty)) {
+      return locale == 'ar' && (ar ?? '').isNotEmpty ? ar! : (en ?? ar ?? '');
+    }
+    final match = expenseCategories.where((item) => item.id == expense.categoryId);
+    if (match.isNotEmpty) return match.first.label(locale);
+    return expense.paidToCafe ? l10n.expenseTypeCafe : l10n.expenseTypeWithdrawal;
+  }
+
+  Future<String?> addExpenseCategory(String nameEn, String nameAr) =>
+      _refreshAfter(db.addExpenseCategory(nameEn, nameAr));
+
+  Future<String?> saveExpenseCategory(ExpenseCategory category) =>
+      _refreshAfter(db.saveExpenseCategory(category));
+
+  Future<String?> deleteExpenseCategory(String id) =>
+      _refreshAfter(db.deleteExpenseCategory(id));
+
   Future<String?> addShiftExpense({
-    required bool paidToCafe,
-    required String? paidToCashierId,
+    required String categoryId,
     required double amount,
     required String description,
   }) async {
     final shift = currentShift ?? openShift;
     final cashier = currentCashier;
+    final category = expenseCategories.where((item) => item.id == categoryId);
     if (shift == null || cashier == null) return l10n.errNoOpenShift;
-    if ((!paidToCafe && (paidToCashierId == null || paidToCashierId.isEmpty)) ||
+    if (category.isEmpty ||
+        !category.first.enabled ||
         amount <= 0 ||
         description.trim().isEmpty) {
       return l10n.cashierExpenseInvalid;
     }
+    final withdrawal = category.first.nameEn == 'Cash Withdrawal';
     await db.writeShifts(shifts);
     final failure = await db.addShiftExpense(
       shiftId: shift.id,
       cashierId: cashier.id,
-      paidToCafe: paidToCafe,
-      paidToCashierId: paidToCashierId,
+      categoryId: categoryId,
+      paidToCafe: !withdrawal,
+      paidToCashierId: withdrawal ? cashier.id : null,
       amount: amount,
       description: description.trim(),
     );
@@ -188,7 +215,7 @@ extension CafeStorePayments on CafeStore {
 
   Future<String?> editShiftExpense({
     required ShiftExpense expense,
-    required bool paidToCafe,
+    required String categoryId,
     required double amount,
     required String description,
   }) async {
@@ -205,9 +232,13 @@ extension CafeStorePayments on CafeStore {
         !shift.first.isOpen) {
       return l10n.cashierExpenseNotEditable;
     }
+    final category = expenseCategories.where((item) => item.id == categoryId);
+    if (category.isEmpty || !category.first.enabled || amount <= 0 || description.trim().isEmpty) {
+      return l10n.cashierExpenseInvalid;
+    }
     final failure = await db.editShiftExpense(
       id: expense.id,
-      paidToCafe: paidToCafe,
+      categoryId: categoryId,
       amount: amount,
       description: description.trim(),
     );

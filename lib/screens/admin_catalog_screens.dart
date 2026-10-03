@@ -415,6 +415,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         const SizedBox(height: 16),
         const PaymentTypesCard(),
         const SizedBox(height: 16),
+        const ExpenseCategoriesCard(),
+        const SizedBox(height: 16),
         SoftCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -683,6 +685,148 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
                   }
                 } else {
                   final error = await store.addPaymentType(en, ar);
+                  if (!context.mounted) return;
+                  if (error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    return;
+                  }
+                }
+                if (!mounted) return;
+                setState(() => editingId = null);
+                nameEn.clear();
+                nameAr.clear();
+              },
+              child: Text(editingId == null ? context.l10n.payTypeAdd : context.l10n.payTypeSave),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpenseCategoriesCard extends StatefulWidget {
+  const ExpenseCategoriesCard({super.key});
+
+  @override
+  State<ExpenseCategoriesCard> createState() => _ExpenseCategoriesCardState();
+}
+
+class _ExpenseCategoriesCardState extends State<ExpenseCategoriesCard> {
+  final nameEn = TextEditingController();
+  final nameAr = TextEditingController();
+  String? editingId;
+
+  @override
+  void dispose() {
+    nameEn.dispose();
+    nameAr.dispose();
+    super.dispose();
+  }
+
+  Future<void> _delete(BuildContext context, CafeStore store, ExpenseCategory category) async {
+    final ok = await showCafeConfirmDialog(
+      context,
+      title: context.l10n.payDeleteTitle(category.label(store.locale)),
+      message: context.l10n.expenseCategoryDeleteMessage,
+    );
+    if (!ok || !context.mounted) return;
+    final error = await store.deleteExpenseCategory(category.id);
+    if (!context.mounted) return;
+    if (editingId == category.id) {
+      setState(() {
+        editingId = null;
+        nameEn.clear();
+        nameAr.clear();
+      });
+    }
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final categories = [...store.expenseCategories]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return SoftCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.l10n.expenseCategoriesTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(context.l10n.expenseCategoriesHint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13)),
+          const SizedBox(height: 12),
+          for (final category in categories)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: context.l10n.payTypeNameEn,
+                    onPressed: () => setState(() {
+                      editingId = category.id;
+                      nameEn.text = category.nameEn;
+                      nameAr.text = category.nameAr;
+                    }),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.commonDelete,
+                    onPressed: () => _delete(context, store, category),
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(category.label(store.locale), style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text('${category.nameEn} · ${category.nameAr}', style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: category.enabled,
+                    onChanged: (value) async {
+                      final previous = category.enabled;
+                      category.enabled = value;
+                      final error = await store.saveExpenseCategory(category);
+                      if (!context.mounted) return;
+                      if (error != null) {
+                        category.enabled = previous;
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          TextField(controller: nameEn, decoration: InputDecoration(labelText: context.l10n.payTypeNameEn)),
+          const SizedBox(height: 8),
+          TextField(controller: nameAr, decoration: InputDecoration(labelText: context.l10n.payTypeNameAr)),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: () async {
+                final en = nameEn.text.trim();
+                final ar = nameAr.text.trim();
+                if (en.isEmpty || ar.isEmpty) return;
+                if (editingId != null) {
+                  final match = store.expenseCategories.where((item) => item.id == editingId);
+                  if (match.isEmpty) return;
+                  final category = match.first
+                    ..nameEn = en
+                    ..nameAr = ar;
+                  final error = await store.saveExpenseCategory(category);
+                  if (!context.mounted) return;
+                  if (error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    return;
+                  }
+                } else {
+                  final error = await store.addExpenseCategory(en, ar);
                   if (!context.mounted) return;
                   if (error != null) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));

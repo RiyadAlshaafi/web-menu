@@ -28,7 +28,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   DateTime? from;
   DateTime? to;
   String? cashierId;
-  String? type;
+  String? categoryId;
 
   @override
   void dispose() {
@@ -45,7 +45,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
       store,
       query: search.text,
       cashierId: cashierId,
-      type: type,
+      categoryId: categoryId,
       from: window.from,
       to: window.to,
     );
@@ -100,13 +100,14 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 onChanged: (value) => setState(() => cashierId = value),
               ),
               DropdownButton<String?>(
-                value: type,
+                value: categoryId,
                 items: [
                   DropdownMenuItem(value: null, child: Text(context.l10n.expenseAllTypes)),
-                  DropdownMenuItem(value: 'cafe', child: Text(context.l10n.expenseTypeCafe)),
-                  DropdownMenuItem(value: 'withdrawal', child: Text(context.l10n.expenseTypeWithdrawal)),
+                  for (final category in store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
+                    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)))
+                    DropdownMenuItem(value: category.id, child: Text(category.label(store.locale))),
                 ],
-                onChanged: (value) => setState(() => type = value),
+                onChanged: (value) => setState(() => categoryId = value),
               ),
               OutlinedButton(onPressed: () => _exportCsv(store, rows), child: Text(context.l10n.salesExportCsv)),
               OutlinedButton(onPressed: () => _exportPdf(store, rows), child: Text(context.l10n.salesExportPdf)),
@@ -138,7 +139,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         store,
         query: search.text,
         cashierId: cashierId,
-        type: type,
+        categoryId: categoryId,
         from: from,
         to: to,
       );
@@ -212,7 +213,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               ),
               Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt))),
               Expanded(flex: 2, child: Text(cashier.isEmpty ? row.cashierId : cashier.first.name)),
-              Expanded(flex: 2, child: Text(row.paidToCafe ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal)),
+              Expanded(flex: 2, child: Text(store.expenseCategoryLabel(row))),
               Expanded(flex: 3, child: Text(row.description)),
               Expanded(
                 child: Text(
@@ -273,7 +274,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         row.shortId,
         formatTripoliDateTime(row.createdAt),
         cashier.isEmpty ? row.cashierId : cashier.first.name,
-        row.paidToCafe ? 'cafe' : 'withdrawal',
+        store.expenseCategoryLabel(row),
         row.description,
         row.amount,
       ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
@@ -302,7 +303,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                       row.shortId,
                       formatTripoliDateTime(row.createdAt),
                       row.cashierId,
-                      row.paidToCafe ? 'cafe' : 'withdrawal',
+                      store.expenseCategoryLabel(row),
                       row.description,
                       row.amount.toString(),
                     ],

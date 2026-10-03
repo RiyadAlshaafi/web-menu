@@ -59,7 +59,7 @@ class AdminDashboardScreen extends StatelessWidget {
                         dense: true,
                         title: Text(row.shortId),
                         subtitle: Text(
-                          '${formatTripoliDateTime(row.createdAt)} · ${row.paidToCafe ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal}',
+                          '${formatTripoliDateTime(row.createdAt)} · ${store.expenseCategoryLabel(row)}',
                         ),
                         trailing: Text(
                           store.currency.format(-row.amount),

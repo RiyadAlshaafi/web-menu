@@ -2894,6 +2894,24 @@ abstract class AppLocalizations {
   /// **'Cash Withdrawal'**
   String get expenseTypeWithdrawal;
 
+  /// No description provided for @expenseCategoriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense categories'**
+  String get expenseCategoriesTitle;
+
+  /// No description provided for @expenseCategoriesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashiers pick from the enabled categories when recording a cash-out. Past rows keep the name even if you delete a category.'**
+  String get expenseCategoriesHint;
+
+  /// No description provided for @expenseCategoryDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Past cash-outs using this category will keep showing its name.'**
+  String get expenseCategoryDeleteMessage;
+
   /// No description provided for @expenseEdit.
   ///
   /// In en, this message translates to:

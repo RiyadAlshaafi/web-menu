@@ -422,7 +422,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                       ),
                       TextSpan(
                         text:
-                            '  •  ${expense.isCafeExpense ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal}',
+                            '  •  ${store.expenseCategoryLabel(expense)}',
                         style: const TextStyle(
                           color: CafeColors.inkMuted,
                           fontWeight: FontWeight.w700,
@@ -645,9 +645,16 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
   late final description = TextEditingController(
     text: widget.editing?.description ?? '',
   );
-  late String? movementType = widget.editing == null
-      ? null
-      : (widget.editing!.paidToCafe ? 'cafe' : 'withdrawal');
+  late String? categoryId = _initialCategoryId();
+
+  String? _initialCategoryId() {
+    final editing = widget.editing;
+    if (editing == null) return null;
+    if (editing.categoryId != null) return editing.categoryId;
+    final name = editing.paidToCafe ? 'Café Expense' : 'Cash Withdrawal';
+    final match = widget.store.expenseCategories.where((item) => item.nameEn == name);
+    return match.isEmpty ? null : match.first.id;
+  }
   var saving = false;
   String? error;
 
@@ -661,7 +668,7 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
   Future<void> _save() async {
     if (saving) return;
     final parsed = double.tryParse(amount.text.trim().replaceAll(',', '.'));
-    if (movementType == null ||
+    if (categoryId == null ||
         parsed == null ||
         parsed <= 0 ||
         description.text.trim().isEmpty) {
@@ -675,14 +682,13 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
     final editing = widget.editing;
     final failure = editing == null
         ? await widget.store.addShiftExpense(
-            paidToCafe: movementType == 'cafe',
-            paidToCashierId: movementType == 'cafe' ? null : widget.store.currentCashier?.id,
+            categoryId: categoryId!,
             amount: parsed,
             description: description.text,
           )
         : await widget.store.editShiftExpense(
             expense: editing,
-            paidToCafe: movementType == 'cafe',
+            categoryId: categoryId!,
             amount: parsed,
             description: description.text,
           );
@@ -721,23 +727,21 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                initialValue: movementType,
+                initialValue: categoryId,
                 decoration: InputDecoration(
                   labelText: context.l10n.expenseType,
                 ),
                 items: [
-                  DropdownMenuItem(
-                    value: 'cafe',
-                    child: Text(context.l10n.expenseTypeCafe),
-                  ),
-                  DropdownMenuItem(
-                    value: 'withdrawal',
-                    child: Text(context.l10n.expenseTypeWithdrawal),
-                  ),
+                  for (final category in widget.store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
+                    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)))
+                    DropdownMenuItem(
+                      value: category.id,
+                      child: Text(category.label(widget.store.locale)),
+                    ),
                 ],
                 onChanged: saving
                     ? null
-                    : (value) => setState(() => movementType = value),
+                    : (value) => setState(() => categoryId = value),
               ),
               const SizedBox(height: 10),
               TextField(
