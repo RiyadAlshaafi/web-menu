@@ -2906,6 +2906,12 @@ abstract class AppLocalizations {
   /// **'Edited'**
   String get expenseEdited;
 
+  /// No description provided for @expenseLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged'**
+  String get expenseLogged;
+
   /// No description provided for @expenseOriginal.
   ///
   /// In en, this message translates to:

@@ -13,7 +13,6 @@ import '../l10n/l10n_ext.dart';
 import '../time_format.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
-import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 
 enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
@@ -114,13 +113,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   [null, ...store.shifts.where((shift) => shift.cashierId == store.currentCashier?.id).map((shift) => shift.id)],
                   (id) => id == null ? context.l10n.salesAllShifts : _shiftLabel(store, id),
                   (value) => setState(() { shiftId = value; page = 0; }),
-                ),
-              if (widget.ownSalesOnly)
-                OutlinedButton.icon(
-                  onPressed: () => _clearLogs(context, store),
-                  icon: const Icon(Icons.delete_outline, size: 16),
-                  style: OutlinedButton.styleFrom(foregroundColor: CafeColors.alert, side: const BorderSide(color: CafeColors.alert)),
-                  label: Text(context.l10n.clearCashierLog),
                 ),
               FilledButton(onPressed: () => _exportCsv(store, rows), child: Text(context.l10n.salesExportCsv)),
               OutlinedButton(
@@ -440,19 +432,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         },
       ),
     );
-  }
-
-  Future<void> _clearLogs(BuildContext context, CafeStore store) async {
-    final confirmed = await showCafeConfirmDialog(
-      context,
-      title: context.l10n.clearCashierLog,
-      message: context.l10n.clearCashierLogConfirm,
-    );
-    if (!confirmed || !context.mounted) return;
-    final error = await store.clearTestLogs('cashier');
-    if (!context.mounted) return;
-    setState(() => page = 0);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.clearLogsDone)));
   }
 
   Future<void> _exportCsv(CafeStore store, List<SaleLedgerRow> rows) async {

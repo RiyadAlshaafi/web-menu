@@ -1560,6 +1560,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expenseEdited => 'معدّل';
 
   @override
+  String get expenseLogged => 'مسجّل';
+
+  @override
   String get expenseOriginal => 'القيد الأصلي';
 
   @override

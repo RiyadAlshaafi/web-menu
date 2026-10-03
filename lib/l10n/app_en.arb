@@ -853,6 +853,7 @@
   "expenseTypeWithdrawal": "Cash Withdrawal",
   "expenseEdit": "Edit",
   "expenseEdited": "Edited",
+  "expenseLogged": "Logged",
   "expenseOriginal": "Original entry",
   "expenseOriginalMissing": "The original entry is no longer on this device.",
   "cashierExpenseNotEditable": "Only a cash-out from your open shift can be edited.",

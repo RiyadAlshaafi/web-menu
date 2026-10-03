@@ -185,40 +185,68 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   Widget _line(BuildContext context, CafeStore store, ShiftExpense row) {
     final cashier = store.cashiers.where((item) => item.id == row.cashierId);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: row.shortId, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  if (row.editedFrom != null)
-                    WidgetSpan(
-                      child: TextButton(
-                        onPressed: () => _original(context, store, row),
-                        child: Text(context.l10n.expenseEdited),
-                      ),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: CafeColors.alert.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(row.shortId, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    _statusPill(
+                      context,
+                      label: row.editedFrom == null ? context.l10n.expenseLogged : context.l10n.expenseEdited,
+                      edited: row.editedFrom != null,
+                      onTap: row.editedFrom == null ? null : () => _original(context, store, row),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt))),
+              Expanded(flex: 2, child: Text(cashier.isEmpty ? row.cashierId : cashier.first.name)),
+              Expanded(flex: 2, child: Text(row.paidToCafe ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal)),
+              Expanded(flex: 3, child: Text(row.description)),
+              Expanded(
+                child: Text(
+                  store.currency.format(-row.amount),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.alert),
+                ),
+              ),
+            ],
           ),
-          Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt))),
-          Expanded(flex: 2, child: Text(cashier.isEmpty ? row.cashierId : cashier.first.name)),
-          Expanded(flex: 2, child: Text(row.paidToCafe ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal)),
-          Expanded(flex: 3, child: Text(row.description)),
-          Expanded(
-            child: Text(
-              store.currency.format(-row.amount),
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.alert),
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _statusPill(
+    BuildContext context, {
+    required String label,
+    required bool edited,
+    VoidCallback? onTap,
+  }) {
+    final color = edited ? CafeColors.alert : CafeColors.inkMuted;
+    final pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color),
+      ),
+      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 12)),
+    );
+    if (onTap == null) return pill;
+    return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: pill);
   }
 
   void _original(BuildContext context, CafeStore store, ShiftExpense row) {

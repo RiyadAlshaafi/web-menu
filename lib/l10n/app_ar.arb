@@ -488,6 +488,7 @@
   "expenseTypeWithdrawal": "سحب نقدي",
   "expenseEdit": "تعديل",
   "expenseEdited": "معدّل",
+  "expenseLogged": "مسجّل",
   "expenseOriginal": "القيد الأصلي",
   "expenseOriginalMissing": "القيد الأصلي غير موجود على هذا الجهاز.",
   "cashierExpenseNotEditable": "يمكن تعديل المصروف من ورديتك المفتوحة فقط.",

@@ -56,15 +56,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 icon: const Icon(Icons.sim_card_download_outlined, size: 16),
                 label: Text(context.l10n.cashierExportSummary),
               ),
-              OutlinedButton.icon(
-                onPressed: () => _clearShiftLogs(context, store),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: CafeColors.alert,
-                  side: const BorderSide(color: CafeColors.alert),
-                ),
-                label: Text(context.l10n.clearShiftSales),
-              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -414,66 +405,112 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         open.id == expense.shiftId &&
         !expense.voided;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: CafeColors.alert.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text.rich(
                   TextSpan(
-                    text: expense.shortId,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    children: [
+                      TextSpan(
+                        text: expense.shortId,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      TextSpan(
+                        text: '  ${expense.description}',
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      TextSpan(
+                        text:
+                            '  •  ${expense.isCafeExpense ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal}',
+                        style: const TextStyle(
+                          color: CafeColors.inkMuted,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextSpan(
-                    text: '  ${expense.description}',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  TextSpan(
-                    text: '  •  ${expense.isCafeExpense ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal}',
-                    style: const TextStyle(
-                      color: CafeColors.inkMuted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          if (expense.editedFrom != null)
-            TextButton(
-              onPressed: () => _showOriginal(context, store, expense),
-              child: Text(context.l10n.expenseEdited),
-            ),
-          SizedBox(
-            width: 64,
-            child: Text(formatTripoliTime(expense.createdAt)),
-          ),
-          SizedBox(
-            width: 80,
-            child: Text(
-              store.currency.format(-expense.amount),
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                color: CafeColors.alert,
+              SizedBox(
+                width: 64,
+                child: Text(formatTripoliTime(expense.createdAt)),
               ),
-            ),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  store.currency.format(-expense.amount),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: CafeColors.alert,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 72,
+                child: Center(
+                  child: _expenseStatusPill(
+                    context,
+                    label: expense.editedFrom == null
+                        ? context.l10n.expenseLogged
+                        : context.l10n.expenseEdited,
+                    edited: expense.editedFrom != null,
+                    onTap: expense.editedFrom == null
+                        ? null
+                        : () => _showOriginal(context, store, expense),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 88,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: canEdit
+                      ? IconButton(
+                          tooltip: context.l10n.expenseEdit,
+                          onPressed: () =>
+                              _addExpense(context, store, editing: expense),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
           ),
-          SizedBox(
-            width: 72,
-            child: canEdit
-                ? IconButton(
-                    tooltip: context.l10n.expenseEdit,
-                    onPressed: () => _addExpense(context, store, editing: expense),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(width: 88),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _expenseStatusPill(
+    BuildContext context, {
+    required String label,
+    required bool edited,
+    VoidCallback? onTap,
+  }) {
+    final color = edited ? CafeColors.alert : CafeColors.inkMuted;
+    final pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 11),
+      ),
+    );
+    if (onTap == null) return pill;
+    return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: pill);
   }
 
   void _showOriginal(BuildContext context, CafeStore store, ShiftExpense expense) {
@@ -598,19 +635,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     );
   }
 
-  Future<void> _clearShiftLogs(BuildContext context, CafeStore store) async {
-    final confirmed = await showCafeConfirmDialog(
-      context,
-      title: context.l10n.clearShiftSales,
-      message: context.l10n.clearShiftSalesConfirm,
-    );
-    if (!confirmed || !context.mounted) return;
-    final error = await store.clearTestLogs('shift');
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? context.l10n.clearLogsDone)),
-    );
-  }
 }
 
 class _ExpenseDialog extends StatefulWidget {

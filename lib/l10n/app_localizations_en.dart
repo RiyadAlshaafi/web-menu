@@ -1564,6 +1564,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseEdited => 'Edited';
 
   @override
+  String get expenseLogged => 'Logged';
+
+  @override
   String get expenseOriginal => 'Original entry';
 
   @override
