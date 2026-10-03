@@ -114,14 +114,20 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: rows.isEmpty
-                ? EmptyHint(context.l10n.noTransactions)
-                : ListView(
-                    children: [
-                      _header(context),
-                      for (final row in rows) _line(context, store, row),
-                    ],
-                  ),
+            child: SoftCard(
+              radius: 16,
+              child: rows.isEmpty
+                  ? EmptyHint(context.l10n.noTransactions)
+                  : ListView(
+                      children: [
+                        _header(context),
+                        for (final row in rows) ...[
+                          const Divider(height: 1),
+                          _line(context, store, row),
+                        ],
+                      ],
+                    ),
+            ),
           ),
         ],
       ),
@@ -185,15 +191,8 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   Widget _line(BuildContext context, CafeStore store, ShiftExpense row) {
     final cashier = store.cashiers.where((item) => item.id == row.cashierId);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: CafeColors.alert.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
             children: [
               Expanded(
                 flex: 2,
@@ -223,8 +222,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 ),
               ),
             ],
-          ),
-        ),
       ),
     );
   }

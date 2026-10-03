@@ -405,15 +405,8 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         open.id == expense.shiftId &&
         !expense.voided;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: CafeColors.alert.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
             children: [
               Expanded(
                 child: Text.rich(
@@ -484,8 +477,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 ),
               ),
             ],
-          ),
-        ),
       ),
     );
   }
