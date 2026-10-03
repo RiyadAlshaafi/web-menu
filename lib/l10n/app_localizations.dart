@@ -2875,6 +2875,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expense recorded.'**
   String get cashierExpenseSaved;
+
+  /// No description provided for @expenseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get expenseType;
+
+  /// No description provided for @expenseTypeCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Café Expense'**
+  String get expenseTypeCafe;
+
+  /// No description provided for @expenseTypeWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Withdrawal'**
+  String get expenseTypeWithdrawal;
+
+  /// No description provided for @expenseEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get expenseEdit;
+
+  /// No description provided for @expenseEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get expenseEdited;
+
+  /// No description provided for @expenseOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original entry'**
+  String get expenseOriginal;
+
+  /// No description provided for @expenseOriginalMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The original entry is no longer on this device.'**
+  String get expenseOriginalMissing;
+
+  /// No description provided for @cashierExpenseNotEditable.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a cash-out from your open shift can be edited.'**
+  String get cashierExpenseNotEditable;
+
+  /// No description provided for @navWages.
+  ///
+  /// In en, this message translates to:
+  /// **'Wages / Expenses'**
+  String get navWages;
+
+  /// No description provided for @navDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboard;
+
+  /// No description provided for @summaryThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get summaryThisMonth;
+
+  /// No description provided for @summarySelectedRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Range'**
+  String get summarySelectedRange;
+
+  /// No description provided for @summaryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get summaryToday;
+
+  /// No description provided for @summarySales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get summarySales;
+
+  /// No description provided for @summaryExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get summaryExpenses;
+
+  /// No description provided for @summaryNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get summaryNet;
+
+  /// No description provided for @dashboardRecentSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Sales'**
+  String get dashboardRecentSales;
+
+  /// No description provided for @dashboardRecentExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Expenses'**
+  String get dashboardRecentExpenses;
+
+  /// No description provided for @dashboardViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get dashboardViewAll;
+
+  /// No description provided for @expenseAllTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'All types'**
+  String get expenseAllTypes;
+
+  /// No description provided for @expenseColId.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get expenseColId;
+
+  /// No description provided for @expenseColWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & time'**
+  String get expenseColWhen;
+
+  /// No description provided for @expenseColCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier'**
+  String get expenseColCashier;
+
+  /// No description provided for @expenseColType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get expenseColType;
+
+  /// No description provided for @expenseColDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get expenseColDescription;
+
+  /// No description provided for @expenseColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get expenseColAmount;
 }
 
 class _AppLocalizationsDelegate

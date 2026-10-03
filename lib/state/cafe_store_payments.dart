@@ -151,7 +151,7 @@ extension CafeStorePayments on CafeStore {
         )
         .fold<double>(0, (sum, payment) => sum + payment.totalDue);
     final cashPaidOut = expenses
-        .where((expense) => expense.shiftId == shift.id)
+        .where((expense) => expense.shiftId == shift.id && !expense.voided)
         .fold<double>(0, (sum, expense) => sum + expense.amount);
     return shift.drawerCash(cashTaken: cashTaken, cashPaidOut: cashPaidOut);
   }
@@ -179,12 +179,50 @@ extension CafeStorePayments on CafeStore {
       amount: amount,
       description: description.trim(),
     );
-    if (failure != null) return failure;
-    await db.refreshFromDisk(liveOnly: true);
+    if (failure != null) return _expenseError(failure);
     _hydrateOperational();
     _syncStamp = _stamp();
     notifyListeners();
     return null;
+  }
+
+  Future<String?> editShiftExpense({
+    required ShiftExpense expense,
+    required bool paidToCafe,
+    required double amount,
+    required String description,
+  }) async {
+    final shift = shifts.where((item) => item.id == expense.shiftId);
+    final open = currentShift ?? openShift;
+    final cashier = currentCashier;
+    if (cashier == null ||
+        open == null ||
+        !open.isOpen ||
+        open.id != expense.shiftId ||
+        expense.cashierId != cashier.id ||
+        expense.voided ||
+        shift.isEmpty ||
+        !shift.first.isOpen) {
+      return l10n.cashierExpenseNotEditable;
+    }
+    final failure = await db.editShiftExpense(
+      id: expense.id,
+      paidToCafe: paidToCafe,
+      amount: amount,
+      description: description.trim(),
+    );
+    if (failure != null) return _expenseError(failure);
+    _hydrateOperational();
+    _syncStamp = _stamp();
+    notifyListeners();
+    return null;
+  }
+
+  String _expenseError(String failure) {
+    if (failure == 'not_found') return l10n.cashierExpenseNotEditable;
+    if (failure == 'sign in as a cashier first') return l10n.errCashierSignInFirst;
+    if (failure == 'invalid') return l10n.cashierExpenseInvalid;
+    return failure;
   }
 
   Future<String?> closeShift({required double actualCash}) async {

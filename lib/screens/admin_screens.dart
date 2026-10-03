@@ -14,6 +14,8 @@ import '../widgets/table_qr.dart';
 
 export 'admin_menu_layout_screen.dart';
 export 'admin_catalog_screens.dart';
+export 'admin_dashboard_screen.dart';
+export 'admin_wages_screen.dart';
 
 class AdminShell extends StatelessWidget {
   const AdminShell({super.key, required this.child, required this.location});

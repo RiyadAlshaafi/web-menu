@@ -590,6 +590,9 @@ class ShiftExpense {
     required this.createdAt,
     this.paidToCashierId,
     this.kind = 'cash_out',
+    this.voided = false,
+    this.editedFrom,
+    this.displayNumber,
   });
 
   final String id;
@@ -601,6 +604,14 @@ class ShiftExpense {
   final String description;
   final DateTime createdAt;
   final String kind;
+  final bool voided;
+  final String? editedFrom;
+  final String? displayNumber;
+
+  String get shortId =>
+      (displayNumber == null || displayNumber!.isEmpty) ? id : displayNumber!;
+
+  bool get isCafeExpense => paidToCafe;
 }
 
 class StaffCall {

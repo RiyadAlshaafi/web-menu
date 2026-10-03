@@ -465,12 +465,12 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                       if (result != null) {
                         setState(() => error = result);
                       } else {
-                        context.go('/admin/menu');
+                        context.go('/admin/dashboard');
                       }
                     } else {
                       final result = await store.signInAdmin(email.text, password.text, remember: remember);
                       if (!context.mounted) return;
-                      if (result == null) context.go('/admin/menu');
+                      if (result == null) context.go('/admin/dashboard');
                     }
                   },
                 ),

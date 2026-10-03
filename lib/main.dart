@@ -182,6 +182,13 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           ),
           routes: [
             GoRoute(
+              path: '/admin/dashboard',
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminDashboardScreen()),
+              ),
+            ),
+            GoRoute(
               path: '/admin/menu',
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,
@@ -208,6 +215,13 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: DeferredView(load: _loadAdminSales, builder: () => sales_ui.SalesLogScreen()),
+              ),
+            ),
+            GoRoute(
+              path: '/admin/wages',
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminWagesScreen()),
               ),
             ),
             GoRoute(path: '/admin/dishes', redirect: (_, _) => '/admin/menu'),

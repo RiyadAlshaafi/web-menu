@@ -26,6 +26,12 @@ class AppSection {
 class AppSections {
   static final admin = <AppSection>[
     AppSection(
+      path: '/admin/dashboard',
+      labelOf: (l) => l.navDashboard,
+      crumbOf: (l) => l.navDashboard,
+      icon: Icons.grid_view_rounded,
+    ),
+    AppSection(
       path: '/admin/menu',
       labelOf: (l) => l.navMenuCatalogLabel,
       crumbOf: (l) => l.navMenuCatalog,
@@ -49,6 +55,12 @@ class AppSections {
       labelOf: (l) => l.navSalesLog,
       crumbOf: (l) => l.navSalesLog,
       icon: Icons.receipt_long,
+    ),
+    AppSection(
+      path: '/admin/wages',
+      labelOf: (l) => l.navWages,
+      crumbOf: (l) => l.navWages,
+      icon: Icons.account_balance_wallet_outlined,
     ),
     AppSection(
       path: '/admin/settings',

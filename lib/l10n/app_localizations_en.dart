@@ -1547,4 +1547,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierExpenseSaved => 'Expense recorded.';
+
+  @override
+  String get expenseType => 'Type';
+
+  @override
+  String get expenseTypeCafe => 'Café Expense';
+
+  @override
+  String get expenseTypeWithdrawal => 'Cash Withdrawal';
+
+  @override
+  String get expenseEdit => 'Edit';
+
+  @override
+  String get expenseEdited => 'Edited';
+
+  @override
+  String get expenseOriginal => 'Original entry';
+
+  @override
+  String get expenseOriginalMissing =>
+      'The original entry is no longer on this device.';
+
+  @override
+  String get cashierExpenseNotEditable =>
+      'Only a cash-out from your open shift can be edited.';
+
+  @override
+  String get navWages => 'Wages / Expenses';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get summaryThisMonth => 'This Month';
+
+  @override
+  String get summarySelectedRange => 'Selected Range';
+
+  @override
+  String get summaryToday => 'Today';
+
+  @override
+  String get summarySales => 'Sales';
+
+  @override
+  String get summaryExpenses => 'Expenses';
+
+  @override
+  String get summaryNet => 'Net';
+
+  @override
+  String get dashboardRecentSales => 'Recent Sales';
+
+  @override
+  String get dashboardRecentExpenses => 'Recent Expenses';
+
+  @override
+  String get dashboardViewAll => 'View all';
+
+  @override
+  String get expenseAllTypes => 'All types';
+
+  @override
+  String get expenseColId => 'ID';
+
+  @override
+  String get expenseColWhen => 'Date & time';
+
+  @override
+  String get expenseColCashier => 'Cashier';
+
+  @override
+  String get expenseColType => 'Type';
+
+  @override
+  String get expenseColDescription => 'Description';
+
+  @override
+  String get expenseColAmount => 'Amount';
 }

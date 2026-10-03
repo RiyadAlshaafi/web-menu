@@ -125,7 +125,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                   child: store.payments.isEmpty &&
                           (shift == null ||
                               store.expenses.every(
-                                (item) => item.shiftId != shift.id,
+                                (item) => item.voided || item.shiftId != shift.id,
                               ))
                       ? EmptyHint(context.l10n.noTransactions)
                       : ListView(
@@ -200,7 +200,8 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                 ...store.payments,
                                 ...store.expenses.where(
                                   (item) =>
-                                      shiftId == null || item.shiftId == shiftId,
+                                      !item.voided &&
+                                      (shiftId == null || item.shiftId == shiftId),
                                 ),
                               ]..sort((a, b) {
                                   DateTime at(Object item) => item is Payment
@@ -405,12 +406,13 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     CafeStore store,
     ShiftExpense expense,
   ) {
-    final payee = expense.paidToCafe
-        ? context.l10n.cashierExpenseCafe
-        : store.cashiers
-            .where((item) => item.id == expense.paidToCashierId)
-            .map((item) => item.name)
-            .firstWhere((name) => name.isNotEmpty, orElse: () => '');
+    final open = store.currentShift ?? store.openShift;
+    final mine = store.currentCashier?.id == expense.cashierId;
+    final canEdit = mine &&
+        open != null &&
+        open.isOpen &&
+        open.id == expense.shiftId &&
+        !expense.voided;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -420,20 +422,29 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: expense.description,
+                    text: expense.shortId,
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  if (payee.isNotEmpty)
-                    TextSpan(
-                      text: '  •  $payee',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  TextSpan(
+                    text: '  ${expense.description}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(
+                    text: '  •  ${expense.isCafeExpense ? context.l10n.expenseTypeCafe : context.l10n.expenseTypeWithdrawal}',
+                    style: const TextStyle(
+                      color: CafeColors.inkMuted,
+                      fontWeight: FontWeight.w700,
                     ),
+                  ),
                 ],
               ),
             ),
           ),
+          if (expense.editedFrom != null)
+            TextButton(
+              onPressed: () => _showOriginal(context, store, expense),
+              child: Text(context.l10n.expenseEdited),
+            ),
           SizedBox(
             width: 64,
             child: Text(formatTripoliTime(expense.createdAt)),
@@ -443,20 +454,21 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
             child: Text(
               store.currency.format(-expense.amount),
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: CafeColors.alert,
+              ),
             ),
           ),
           SizedBox(
             width: 72,
-            child: Text(
-              context.l10n.cashierAddExpense,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-                color: CafeColors.inkMuted,
-              ),
-            ),
+            child: canEdit
+                ? IconButton(
+                    tooltip: context.l10n.expenseEdit,
+                    onPressed: () => _addExpense(context, store, editing: expense),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                  )
+                : const SizedBox.shrink(),
           ),
           const SizedBox(width: 88),
         ],
@@ -464,11 +476,37 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     );
   }
 
-  Future<void> _addExpense(BuildContext context, CafeStore store) async {
+  void _showOriginal(BuildContext context, CafeStore store, ShiftExpense expense) {
+    final prior = store.expenses.where((item) => item.id == expense.editedFrom);
+    final original = prior.isEmpty ? null : prior.first;
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.expenseOriginal),
+        content: Text(
+          original == null
+              ? context.l10n.expenseOriginalMissing
+              : '${original.shortId}\n${original.description}\n${store.currency.format(-original.amount)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.commonCancel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addExpense(
+    BuildContext context,
+    CafeStore store, {
+    ShiftExpense? editing,
+  }) async {
     final saved = await showDialog<bool>(
       context: context,
       barrierColor: const Color(0x99000000),
-      builder: (context) => _ExpenseDialog(store: store),
+      builder: (context) => _ExpenseDialog(store: store, editing: editing),
     );
     if (saved == true && context.mounted) {
       ScaffoldMessenger.of(
@@ -576,18 +614,25 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
 }
 
 class _ExpenseDialog extends StatefulWidget {
-  const _ExpenseDialog({required this.store});
+  const _ExpenseDialog({required this.store, this.editing});
 
   final CafeStore store;
+  final ShiftExpense? editing;
 
   @override
   State<_ExpenseDialog> createState() => _ExpenseDialogState();
 }
 
 class _ExpenseDialogState extends State<_ExpenseDialog> {
-  final amount = TextEditingController();
-  final description = TextEditingController();
-  String? paidTo;
+  late final amount = TextEditingController(
+    text: widget.editing == null ? '' : widget.editing!.amount.toString(),
+  );
+  late final description = TextEditingController(
+    text: widget.editing?.description ?? '',
+  );
+  late String? movementType = widget.editing == null
+      ? null
+      : (widget.editing!.paidToCafe ? 'cafe' : 'withdrawal');
   var saving = false;
   String? error;
 
@@ -601,7 +646,7 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
   Future<void> _save() async {
     if (saving) return;
     final parsed = double.tryParse(amount.text.trim().replaceAll(',', '.'));
-    if (paidTo == null ||
+    if (movementType == null ||
         parsed == null ||
         parsed <= 0 ||
         description.text.trim().isEmpty) {
@@ -612,12 +657,20 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
       saving = true;
       error = null;
     });
-    final failure = await widget.store.addShiftExpense(
-      paidToCafe: paidTo == 'cafe',
-      paidToCashierId: paidTo == 'cafe' ? null : paidTo,
-      amount: parsed,
-      description: description.text,
-    );
+    final editing = widget.editing;
+    final failure = editing == null
+        ? await widget.store.addShiftExpense(
+            paidToCafe: movementType == 'cafe',
+            paidToCashierId: movementType == 'cafe' ? null : widget.store.currentCashier?.id,
+            amount: parsed,
+            description: description.text,
+          )
+        : await widget.store.editShiftExpense(
+            expense: editing,
+            paidToCafe: movementType == 'cafe',
+            amount: parsed,
+            description: description.text,
+          );
     if (!mounted) return;
     if (failure != null) {
       setState(() {
@@ -631,7 +684,6 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final people = widget.store.cashiers;
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -644,7 +696,9 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                context.l10n.cashierAddExpense,
+                widget.editing == null
+                    ? context.l10n.cashierAddExpense
+                    : context.l10n.expenseEdit,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
@@ -652,24 +706,23 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                initialValue: paidTo,
+                initialValue: movementType,
                 decoration: InputDecoration(
-                  labelText: context.l10n.cashierExpenseFor,
+                  labelText: context.l10n.expenseType,
                 ),
                 items: [
                   DropdownMenuItem(
                     value: 'cafe',
-                    child: Text(context.l10n.cashierExpenseCafe),
+                    child: Text(context.l10n.expenseTypeCafe),
                   ),
-                  for (final cashier in people)
-                    DropdownMenuItem(
-                      value: cashier.id,
-                      child: Text(cashier.name),
-                    ),
+                  DropdownMenuItem(
+                    value: 'withdrawal',
+                    child: Text(context.l10n.expenseTypeWithdrawal),
+                  ),
                 ],
                 onChanged: saving
                     ? null
-                    : (value) => setState(() => paidTo = value),
+                    : (value) => setState(() => movementType = value),
               ),
               const SizedBox(height: 10),
               TextField(

@@ -299,7 +299,10 @@ class CafeStore extends ChangeNotifier {
         ..write(expense.amount)
         ..write(expense.description)
         ..write(expense.paidToCafe)
-        ..write(expense.paidToCashierId);
+        ..write(expense.paidToCashierId)
+        ..write(expense.voided)
+        ..write(expense.editedFrom)
+        ..write(expense.displayNumber);
     }
     return buffer.toString();
   }

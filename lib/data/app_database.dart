@@ -546,17 +546,7 @@ class AppDatabase {
           .order('created_at');
       _expenses = (expenseRows as List)
           .map(
-            (row) => ShiftExpense(
-              id: row['id'] as String,
-              shiftId: row['shift_id'] as String,
-              cashierId: row['cashier_id'] as String,
-              paidToCashierId: row['paid_to_cashier_id'] as String?,
-              paidToCafe: row['paid_to_cafe'] as bool? ?? false,
-              amount: (row['amount'] as num).toDouble(),
-              description: row['description'] as String? ?? '',
-              createdAt: DateTime.parse(row['created_at'] as String),
-              kind: row['kind'] as String? ?? 'cash_out',
-            ),
+            (row) => _mapExpense(Map<String, dynamic>.from(row as Map)),
           )
           .toList();
       _orders = await _loadOrders(historyFrom, const {});
@@ -1308,6 +1298,21 @@ class AppDatabase {
     }
   }
 
+  ShiftExpense _mapExpense(Map<String, dynamic> row) => ShiftExpense(
+    id: row['id'] as String,
+    shiftId: row['shift_id'] as String,
+    cashierId: row['cashier_id'] as String,
+    paidToCashierId: row['paid_to_cashier_id'] as String?,
+    paidToCafe: row['paid_to_cafe'] as bool? ?? false,
+    amount: _asDouble(row['amount']) ?? 0,
+    description: row['description'] as String? ?? '',
+    createdAt: DateTime.parse(row['created_at'] as String),
+    kind: row['kind'] as String? ?? 'cash_out',
+    voided: row['voided'] as bool? ?? false,
+    editedFrom: row['edited_from'] as String?,
+    displayNumber: row['display_number'] as String?,
+  );
+
   Future<String?> addShiftExpense({
     required String shiftId,
     required String cashierId,
@@ -1332,41 +1337,53 @@ class AppDatabase {
     }
     _applyHeaders();
     try {
-      final rows = await client!
-          .from('shift_expenses')
-          .insert({
-            'restaurant_id': restaurantId,
-            'shift_id': shiftId,
-            'cashier_id': cashierId,
-            'paid_to_cafe': paidToCafe,
-            'paid_to_cashier_id': paidToCafe ? null : paidToCashierId,
-            'amount': amount,
-            'description': description,
-            'kind': 'cash_out',
-          })
-          .select();
-      final row = (rows as List).isEmpty
-          ? null
-          : Map<String, dynamic>.from(rows.first as Map);
-      _expenses = [
-        ShiftExpense(
-          id: row?['id'] as String? ?? expense.id,
-          shiftId: shiftId,
-          cashierId: cashierId,
-          paidToCafe: paidToCafe,
-          paidToCashierId: paidToCafe ? null : paidToCashierId,
-          amount: amount,
-          description: description,
-          createdAt: row?['created_at'] == null
-              ? expense.createdAt
-              : DateTime.parse(row!['created_at'] as String),
-          kind: 'cash_out',
-        ),
-        ..._expenses,
-      ];
-      return null;
+      final raw = await client!.rpc(
+        'record_cash_movement',
+        params: {
+          'p_shift_id': shiftId,
+          'p_type': paidToCafe ? 'cafe' : 'withdrawal',
+          'p_amount': amount,
+          'p_description': description,
+        },
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk(liveOnly: true);
+        return null;
+      }
+      return result['error'] as String? ?? 'not_found';
     } catch (error, stackTrace) {
       reportError('shift expense', error, stackTrace);
+      return '$error';
+    }
+  }
+
+  Future<String?> editShiftExpense({
+    required String id,
+    required bool paidToCafe,
+    required double amount,
+    required String description,
+  }) async {
+    if (client == null) return 'Supabase is not configured.';
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(
+        'edit_cash_movement',
+        params: {
+          'p_id': id,
+          'p_type': paidToCafe ? 'cafe' : 'withdrawal',
+          'p_amount': amount,
+          'p_description': description,
+        },
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk(liveOnly: true);
+        return null;
+      }
+      return result['error'] as String? ?? 'not_found';
+    } catch (error, stackTrace) {
+      reportError('edit cash movement', error, stackTrace);
       return '$error';
     }
   }

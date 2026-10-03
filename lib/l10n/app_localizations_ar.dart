@@ -1543,4 +1543,83 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierExpenseSaved => 'تم تسجيل المصروف.';
+
+  @override
+  String get expenseType => 'النوع';
+
+  @override
+  String get expenseTypeCafe => 'مصروف المقهى';
+
+  @override
+  String get expenseTypeWithdrawal => 'سحب نقدي';
+
+  @override
+  String get expenseEdit => 'تعديل';
+
+  @override
+  String get expenseEdited => 'معدّل';
+
+  @override
+  String get expenseOriginal => 'القيد الأصلي';
+
+  @override
+  String get expenseOriginalMissing => 'القيد الأصلي غير موجود على هذا الجهاز.';
+
+  @override
+  String get cashierExpenseNotEditable =>
+      'يمكن تعديل المصروف من ورديتك المفتوحة فقط.';
+
+  @override
+  String get navWages => 'الأجور / المصروفات';
+
+  @override
+  String get navDashboard => 'لوحة المتابعة';
+
+  @override
+  String get summaryThisMonth => 'هذا الشهر';
+
+  @override
+  String get summarySelectedRange => 'النطاق المحدد';
+
+  @override
+  String get summaryToday => 'اليوم';
+
+  @override
+  String get summarySales => 'المبيعات';
+
+  @override
+  String get summaryExpenses => 'المصروفات';
+
+  @override
+  String get summaryNet => 'الصافي';
+
+  @override
+  String get dashboardRecentSales => 'آخر المبيعات';
+
+  @override
+  String get dashboardRecentExpenses => 'آخر المصروفات';
+
+  @override
+  String get dashboardViewAll => 'عرض الكل';
+
+  @override
+  String get expenseAllTypes => 'كل الأنواع';
+
+  @override
+  String get expenseColId => 'الرقم';
+
+  @override
+  String get expenseColWhen => 'التاريخ والوقت';
+
+  @override
+  String get expenseColCashier => 'الكاشير';
+
+  @override
+  String get expenseColType => 'النوع';
+
+  @override
+  String get expenseColDescription => 'الوصف';
+
+  @override
+  String get expenseColAmount => 'المبلغ';
 }

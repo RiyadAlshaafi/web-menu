@@ -8,10 +8,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
+import '../ledger.dart';
 import '../l10n/l10n_ext.dart';
-import '../money.dart';
 import '../time_format.dart';
-import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
@@ -66,6 +65,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             const SizedBox(height: 4),
             Text(context.l10n.cashierLogScope, style: const TextStyle(color: CafeColors.inkMuted)),
           ],
+          const SizedBox(height: 12),
+          _summary(context, store),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -210,7 +211,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     );
   }
 
-  Widget _line(BuildContext context, CafeStore store, _Sale row, Color button) {
+  Widget _line(BuildContext context, CafeStore store, SaleLedgerRow row, Color button) {
     Widget cell(String value, {int flex = 2}) => Expanded(flex: flex, child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis));
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -259,13 +260,57 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     );
   }
 
+  Widget _summary(BuildContext context, CafeStore store) {
+    final window = summaryWindow(from: from, to: to);
+    final rows = saleLedgerRows(
+      store,
+      query: search.text,
+      cashierId: cashierId,
+      ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
+      tableId: tableId,
+      methodId: methodId,
+      shiftId: shiftId,
+      from: window.from,
+      to: window.to,
+    );
+    final total = rows.fold<double>(0, (sum, row) => sum + row.total);
+    final range = _rangeLabel(window);
+    return SoftCard(
+      radius: 16,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange,
+            style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
+          ),
+          Text(store.currency.format(total), style: CafeTheme.display.copyWith(fontSize: 24)),
+          Text(range, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  String _rangeLabel(SummaryWindow window) {
+    final start = window.from == null ? '…' : DateFormat.yMd().format(window.from!);
+    final end = window.to == null ? '…' : DateFormat.yMd().format(window.to!);
+    return '$start – $end';
+  }
+
   Widget _date(String label, DateTime? value, ValueChanged<DateTime?> onPick) {
-    return OutlinedButton(
+    return SizedBox(
+      width: 200,
+      child: OutlinedButton(
       onPressed: () async {
         final picked = await showDatePicker(context: context, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 1)), initialDate: value ?? DateTime.now());
         onPick(picked);
       },
-      child: Text(value == null ? label : '$label ${DateFormat.yMd().format(value)}'),
+        child: Text(
+          value == null ? label : '$label ${DateFormat.yMd().format(value)}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
   }
 
@@ -277,24 +322,18 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     );
   }
 
-  List<_Sale> _rows(CafeStore store) {
-    final query = search.text.trim().toLowerCase();
-    final mine = widget.ownSalesOnly ? store.currentCashier?.id : null;
-    final list = store.payments.where((payment) {
-      if (mine != null && payment.cashierId != mine) return false;
-      if (cashierId != null && payment.cashierId != cashierId) return false;
-      if (tableId != null && payment.tableId != tableId) return false;
-      if (methodId != null && payment.paymentTypeId != methodId) return false;
-      if (shiftId != null && payment.shiftId != shiftId) return false;
-      if (!inTripoliDateRange(payment.paidAt, from: from, to: to)) return false;
-      final row = _sale(store, payment);
-      if (query.isEmpty) return true;
-      final receipt = store.receiptNumber(payment);
-      final order = store.orderNumber(payment.shiftOrderNumber);
-      return row.tableNumber.toLowerCase().contains(query) ||
-          row.cashierName.toLowerCase().contains(query) ||
-          saleQueryMatches(query, receipt: receipt, order: order);
-    }).map((payment) => _sale(store, payment)).toList();
+  List<SaleLedgerRow> _rows(CafeStore store) {
+    final list = saleLedgerRows(
+      store,
+      query: search.text,
+      cashierId: cashierId,
+      ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
+      tableId: tableId,
+      methodId: methodId,
+      shiftId: shiftId,
+      from: from,
+      to: to,
+    );
     list.sort((a, b) {
       final result = switch (sort) {
         _Sort.id => store.receiptNumber(a.payment).compareTo(store.receiptNumber(b.payment)),
@@ -313,27 +352,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     return list;
   }
 
-  _Sale _sale(CafeStore store, Payment payment) {
-    final table = store.tables.where((item) => item.id == payment.tableId);
-    final order = store.orders.where((item) => item.id == payment.orderId);
-    final lines = order.isEmpty ? const <OrderLine>[] : order.first.lines;
-    final discount = lines.fold<double>(0, (sum, line) => sum + line.discountAmount);
-    final charged = lines.fold<double>(0, (sum, line) => sum + line.total);
-    return _Sale(
-      payment: payment,
-      tableNumber: order.isNotEmpty && order.first.serviceType == 'takeout'
-          ? ''
-          : (table.isEmpty ? '' : table.first.number),
-      takeout: order.isNotEmpty && order.first.serviceType == 'takeout',
-      cashierName: _cashierName(store, payment.cashierId),
-      itemCount: order.isEmpty ? 0 : order.first.itemCount,
-      lines: lines,
-      subtotal: charged + discount,
-      discount: discount,
-      total: payment.totalDue,
-    );
-  }
-
   String _cashierName(CafeStore store, String id) {
     final match = store.cashiers.where((item) => item.id == id);
     return match.isEmpty ? id : match.first.name;
@@ -348,7 +366,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     return '$opened$closed';
   }
 
-  Future<void> _detail(BuildContext context, _Sale row) {
+  Future<void> _detail(BuildContext context, SaleLedgerRow row) {
     return showDialog<void>(
       context: context,
       builder: (context) => Consumer<CafeStore>(
@@ -437,7 +455,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.clearLogsDone)));
   }
 
-  Future<void> _exportCsv(CafeStore store, List<_Sale> rows) async {
+  Future<void> _exportCsv(CafeStore store, List<SaleLedgerRow> rows) async {
     final buffer = StringBuffer('${context.l10n.salesReceiptNo},${context.l10n.salesOrderNo},date,table,cashier,items,subtotal,discount,total,method,status\n');
     for (final row in rows) {
       buffer.writeln([
@@ -457,7 +475,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     await FilePicker.platform.saveFile(dialogTitle: context.l10n.salesExportCsv, fileName: 'sales-log.csv', bytes: utf8.encode(buffer.toString()));
   }
 
-  Future<void> _exportPdf(CafeStore store, List<_Sale> rows) async {
+  Future<void> _exportPdf(CafeStore store, List<SaleLedgerRow> rows) async {
     final l10n = context.l10n;
     final receiptHeader = l10n.salesReceiptNo;
     final orderHeader = l10n.salesOrderNo;
@@ -496,28 +514,4 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       },
     );
   }
-}
-
-class _Sale {
-  const _Sale({
-    required this.payment,
-    required this.tableNumber,
-    required this.takeout,
-    required this.cashierName,
-    required this.itemCount,
-    required this.lines,
-    required this.subtotal,
-    required this.discount,
-    required this.total,
-  });
-
-  final Payment payment;
-  final String tableNumber;
-  final bool takeout;
-  final String cashierName;
-  final int itemCount;
-  final List<OrderLine> lines;
-  final double subtotal;
-  final double discount;
-  final double total;
 }
