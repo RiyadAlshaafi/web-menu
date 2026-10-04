@@ -1226,6 +1226,30 @@ abstract class AppLocalizations {
   /// **'e.g., Pappardelle ai Funghi Porcini'**
   String get layoutDishNameHint;
 
+  /// No description provided for @layoutDishNameAr.
+  ///
+  /// In en, this message translates to:
+  /// **'ARABIC NAME *'**
+  String get layoutDishNameAr;
+
+  /// No description provided for @layoutDishNameArHint.
+  ///
+  /// In en, this message translates to:
+  /// **'اسم الطبق بالعربية'**
+  String get layoutDishNameArHint;
+
+  /// No description provided for @layoutDishNameEn.
+  ///
+  /// In en, this message translates to:
+  /// **'ENGLISH NAME *'**
+  String get layoutDishNameEn;
+
+  /// No description provided for @layoutDishNameEnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Truffle tagliolini'**
+  String get layoutDishNameEnHint;
+
   /// No description provided for @layoutPriceLabel.
   ///
   /// In en, this message translates to:

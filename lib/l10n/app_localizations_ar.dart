@@ -611,6 +611,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get layoutDishNameHint => 'مثال: Pappardelle ai Funghi Porcini';
 
   @override
+  String get layoutDishNameAr => 'الاسم بالعربية *';
+
+  @override
+  String get layoutDishNameArHint => 'اسم الطبق بالعربية';
+
+  @override
+  String get layoutDishNameEn => 'الاسم بالإنجليزية *';
+
+  @override
+  String get layoutDishNameEnHint => 'مثال: Truffle tagliolini';
+
+  @override
   String get layoutPriceLabel => 'السعر (€ يورو) *';
 
   @override

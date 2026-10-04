@@ -668,13 +668,8 @@ Future<void> showAddDishDialog(
     return;
   }
 
-  final name = TextEditingController(
-    text: existing == null
-        ? ''
-        : existing.nameIt.isEmpty || existing.nameIt == existing.nameEn
-            ? existing.nameEn
-            : '${existing.nameIt} / ${existing.nameEn}',
-  );
+  final nameAr = TextEditingController(text: existing?.nameIt ?? '');
+  final nameEn = TextEditingController(text: existing?.nameEn ?? '');
   final price = TextEditingController(text: existing == null ? '' : existing.price.toStringAsFixed(2));
   var image = existing?.imageUrl ?? '';
   var selectedCategory = categoryId ?? existing?.categoryId ?? store.orderedCategories.first.id;
@@ -729,12 +724,22 @@ Future<void> showAddDishDialog(
                       ],
                     ),
                     const SizedBox(height: 18),
-                    Text(context.l10n.layoutDishNameLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                    Text(context.l10n.layoutDishNameAr, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                     const SizedBox(height: 8),
                     TextField(
-                      controller: name,
+                      controller: nameAr,
                       decoration: InputDecoration(
-                        hintText: context.l10n.layoutDishNameHint,
+                        hintText: context.l10n.layoutDishNameArHint,
+                        fillColor: const Color(0xFFFBF6F0),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(context.l10n.layoutDishNameEn, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameEn,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.layoutDishNameEnHint,
                         fillColor: const Color(0xFFFBF6F0),
                       ),
                     ),
@@ -821,15 +826,15 @@ Future<void> showAddDishDialog(
                         const SizedBox(width: 8),
                         FilledButton.icon(
                           onPressed: () async {
-                            if (name.text.trim().isEmpty) {
+                            final arabic = nameAr.text.trim();
+                            final english = nameEn.text.trim();
+                            if (arabic.isEmpty || english.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(context.l10n.layoutEnterDishName)),
                               );
                               return;
                             }
-                            final parts = name.text.split('/');
-                            final italian = parts.first.trim();
-                            final english = parts.length > 1 ? parts.sublist(1).join('/').trim() : italian;
+                            final italian = arabic;
                             final item = existing ??
                                 MenuItem(
                                   id: Secrets.id('dish'),
@@ -866,13 +871,15 @@ Future<void> showAddDishDialog(
     },
   );
   if (saved == null) {
-    name.dispose();
+    nameAr.dispose();
+    nameEn.dispose();
     price.dispose();
     return;
   }
   final host = context;
   WidgetsBinding.instance.addPostFrameCallback((_) async {
-    name.dispose();
+    nameAr.dispose();
+    nameEn.dispose();
     price.dispose();
     if (!host.mounted) return;
     try {
