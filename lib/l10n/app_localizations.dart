@@ -452,6 +452,48 @@ abstract class AppLocalizations {
   /// **'Page {page} of {pages}'**
   String salesPage(int page, int pages);
 
+  /// No description provided for @navQuickTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Takeout'**
+  String get navQuickTakeout;
+
+  /// No description provided for @quickTakeoutSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a dish'**
+  String get quickTakeoutSearch;
+
+  /// No description provided for @quickTakeoutAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get quickTakeoutAll;
+
+  /// No description provided for @quickTakeoutEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a dish to start the ticket.'**
+  String get quickTakeoutEmpty;
+
+  /// No description provided for @quickTakeoutPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Take payment'**
+  String get quickTakeoutPay;
+
+  /// No description provided for @quickTakeoutNeedTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a table named Takeout in Tables & QR, then try again.'**
+  String get quickTakeoutNeedTable;
+
+  /// No description provided for @quickTakeoutPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout paid.'**
+  String get quickTakeoutPaid;
+
   /// No description provided for @navLiveAlerts.
   ///
   /// In en, this message translates to:

@@ -138,6 +138,13 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           ),
           routes: [
             GoRoute(
+              path: '/pos/takeout',
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadCashier, builder: () => cashier_ui.QuickTakeoutScreen()),
+              ),
+            ),
+            GoRoute(
               path: '/pos',
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,

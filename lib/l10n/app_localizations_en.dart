@@ -193,6 +193,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get navQuickTakeout => 'Quick Takeout';
+
+  @override
+  String get quickTakeoutSearch => 'Search a dish';
+
+  @override
+  String get quickTakeoutAll => 'All';
+
+  @override
+  String get quickTakeoutEmpty => 'Tap a dish to start the ticket.';
+
+  @override
+  String get quickTakeoutPay => 'Take payment';
+
+  @override
+  String get quickTakeoutNeedTable =>
+      'Add a table named Takeout in Tables & QR, then try again.';
+
+  @override
+  String get quickTakeoutPaid => 'Takeout paid.';
+
+  @override
   String get navLiveAlerts => 'Live Alerts & Queue';
 
   @override

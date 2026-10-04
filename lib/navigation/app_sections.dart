@@ -72,6 +72,12 @@ class AppSections {
 
   static final cashier = <AppSection>[
     AppSection(
+      path: '/pos/takeout',
+      labelOf: (l) => l.navQuickTakeout,
+      crumbOf: (l) => l.navQuickTakeout,
+      icon: Icons.point_of_sale_outlined,
+    ),
+    AppSection(
       path: '/pos',
       labelOf: (l) => l.navLiveAlerts,
       crumbOf: (l) => l.navLiveAlerts,

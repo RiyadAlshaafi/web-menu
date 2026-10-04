@@ -81,6 +81,13 @@
       "pages": {"type": "int"}
     }
   },
+  "navQuickTakeout": "Quick Takeout",
+  "quickTakeoutSearch": "Search a dish",
+  "quickTakeoutAll": "All",
+  "quickTakeoutEmpty": "Tap a dish to start the ticket.",
+  "quickTakeoutPay": "Take payment",
+  "quickTakeoutNeedTable": "Add a table named Takeout in Tables & QR, then try again.",
+  "quickTakeoutPaid": "Takeout paid.",
   "navLiveAlerts": "Live Alerts & Queue",
   "navFloorOverview": "Floor Overview",
   "navShiftSales": "Shift Sales & Logs",

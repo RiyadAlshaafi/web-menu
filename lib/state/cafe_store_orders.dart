@@ -158,6 +158,46 @@ extension CafeStoreOrders on CafeStore {
     return openOrderFor(tableId);
   }
 
+  CafeTable? get takeoutCounter {
+    final named = tables.where((table) => table.number.toLowerCase() == 'takeout');
+    return named.isEmpty ? null : named.first;
+  }
+
+  Future<String?> checkoutTakeout({
+    required List<OrderLine> lines,
+    String? paymentTypeId,
+  }) async {
+    final table = takeoutCounter;
+    if (table == null) return 'takeout_table';
+    if (lines.isEmpty) return l10n.cashierExpenseInvalid;
+    chooseService(table.qrSlug, 'takeout');
+    final cart = cartFor(table.id);
+    cart.lines
+      ..clear()
+      ..addAll(lines);
+    final sent = await db.sendTableCart(
+      table.id,
+      serviceType: 'takeout',
+      qrSlug: table.qrSlug,
+    );
+    if (sent != null) return sent;
+    _hydrateOperational();
+    var order = openOrderFor(table.id);
+    while (order != null && order.status.next != null) {
+      order.status = order.status.next!;
+      await db.writeOrders(orders);
+    }
+    if (paymentTypeId != null) {
+      await db.setTablePaymentType(table.qrSlug, paymentTypeId);
+      _hydrateOperational();
+    }
+    return settleCash(
+      tableId: table.id,
+      cashReceived: tabTotal(table.id, applyService: false),
+      applyService: false,
+    );
+  }
+
   bool canRequestBill(String tableId) {
     final order = openOrderFor(tableId);
     return order != null && order.status == OrderStatus.served && cartFor(tableId).lines.isEmpty;

@@ -1313,6 +1313,7 @@ class AppDatabase {
   Future<String?> sendTableCart(
     String tableId, {
     String serviceType = 'dine_in',
+    String? qrSlug,
     double? lat,
     double? lng,
     double? accuracyM,
@@ -1322,7 +1323,7 @@ class AppDatabase {
     _applyHeaders();
     final cart = _carts[tableId];
     final params = <String, dynamic>{
-      'p_qr_slug': guestSlug,
+      'p_qr_slug': qrSlug ?? guestSlug,
       'p_lines': [
         for (final line in cart?.lines ?? const <OrderLine>[])
           if (line.menuItemId.isNotEmpty && line.qty > 0)

@@ -193,6 +193,28 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get navQuickTakeout => 'طلب سفري سريع';
+
+  @override
+  String get quickTakeoutSearch => 'ابحث عن طبق';
+
+  @override
+  String get quickTakeoutAll => 'الكل';
+
+  @override
+  String get quickTakeoutEmpty => 'اضغط طبقاً لبدء التذكرة.';
+
+  @override
+  String get quickTakeoutPay => 'تحصيل الدفع';
+
+  @override
+  String get quickTakeoutNeedTable =>
+      'أضف طاولة باسم Takeout من الطاولات ورمز QR، ثم أعد المحاولة.';
+
+  @override
+  String get quickTakeoutPaid => 'تم دفع طلب السفري.';
+
+  @override
   String get navLiveAlerts => 'التنبيهات والطابور المباشر';
 
   @override

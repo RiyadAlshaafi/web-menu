@@ -17,4 +17,5 @@ part 'cashier/live_alerts.dart';
 part 'cashier/settle_panel.dart';
 part 'cashier/floor_overview.dart';
 part 'cashier/shift_sales.dart';
+part 'cashier/quick_takeout.dart';
 part 'cashier/shared.dart';
