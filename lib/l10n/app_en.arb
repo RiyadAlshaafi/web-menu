@@ -494,6 +494,12 @@
     }
   },
   "cashierTotalToCharge": "Total to Charge",
+  "cashierCustomerPay": "Customer wants to pay: {name}",
+  "@cashierCustomerPay": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "cashierSettleCloseBill": "Settle & Close Bill ({amount})",
   "@cashierSettleCloseBill": {
     "placeholders": {

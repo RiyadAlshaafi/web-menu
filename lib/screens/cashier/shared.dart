@@ -16,12 +16,15 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
             (line) {
               final dish = store.menuItems.where((item) => item.id == line.menuItemId);
               return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.only(bottom: 6, right: 4),
               child: Row(
                 children: [
-                  Text('${line.qty}×  ${line.name}', style: const TextStyle(color: CafeColors.ink)),
+                  Expanded(
+                    child: Text('${line.qty}×  ${line.name}', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.ink)),
+                  ),
                   if (dish.isNotEmpty)
                     IconButton(
+                      visualDensity: VisualDensity.compact,
                       tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
                       onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
                       icon: Icon(dish.first.available ? Icons.block : Icons.check_circle_outline, color: CafeSurfaces.of(context).button, size: 18),
@@ -36,8 +39,10 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                     },
                     child: Text(context.l10n.cashierRefuse),
                   ),
-                  const Spacer(),
-                  Text(store.currency.format(line.total)),
+                  SizedBox(
+                    width: 72,
+                    child: Text(store.currency.format(line.total), textAlign: TextAlign.right),
+                  ),
                 ],
               ),
             );

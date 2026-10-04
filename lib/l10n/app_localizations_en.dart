@@ -938,6 +938,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierTotalToCharge => 'Total to Charge';
 
   @override
+  String cashierCustomerPay(String name) {
+    return 'Customer wants to pay: $name';
+  }
+
+  @override
   String cashierSettleCloseBill(String amount) {
     return 'Settle & Close Bill ($amount)';
   }

@@ -163,12 +163,15 @@ void _cashierUnavailable(BuildContext context) {
 }
 
 Widget _cashKv(String label, String value) {
-  return Row(
-    children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-      const Spacer(),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
-    ],
+  return Padding(
+    padding: const EdgeInsets.only(right: 4),
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700))),
+        const SizedBox(width: 8),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+      ],
+    ),
   );
 }
 

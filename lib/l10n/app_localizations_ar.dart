@@ -937,6 +937,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierTotalToCharge => 'المبلغ المطلوب تحصيله';
 
   @override
+  String cashierCustomerPay(String name) {
+    return 'يريد الزبون الدفع: $name';
+  }
+
+  @override
   String cashierSettleCloseBill(String amount) {
     return 'تسوية وإغلاق الفاتورة ($amount)';
   }

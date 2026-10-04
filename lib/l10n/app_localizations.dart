@@ -1802,6 +1802,12 @@ abstract class AppLocalizations {
   /// **'Total to Charge'**
   String get cashierTotalToCharge;
 
+  /// No description provided for @cashierCustomerPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer wants to pay: {name}'**
+  String cashierCustomerPay(String name);
+
   /// No description provided for @cashierSettleCloseBill.
   ///
   /// In en, this message translates to:

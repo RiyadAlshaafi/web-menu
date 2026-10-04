@@ -403,14 +403,18 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     final service = store.serviceCharge(subtotal);
     final total = store.tabTotal(order.tableId);
     final waiting = store.tableById(order.tableId).status == TableStatus.billRequested;
+    final method = order.paymentTypeId;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          order.serviceType == 'takeout'
-              ? '${context.l10n.serviceTakeout}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}'
-              : '${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Text(
+            order.serviceType == 'takeout'
+                ? '${context.l10n.serviceTakeout}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}'
+                : '${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
         ),
         Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
         if (waiting)
@@ -425,11 +429,24 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         const SizedBox(height: 12),
         Text(context.l10n.cashierItemsToSettle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
         const SizedBox(height: 8),
-        ..._orderLineRows(context, store, order),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.only(right: 4),
+            children: _orderLineRows(context, store, order),
+          ),
+        ),
         const Divider(),
         _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
         _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
         _cashKv(context.l10n.cashierTotalToCharge, store.currency.format(total)),
+        if (method != null && method.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              context.l10n.cashierCustomerPay(store.typeName(method)),
+              style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
         const SizedBox(height: 12),
         if (order.status != OrderStatus.served)
           Padding(

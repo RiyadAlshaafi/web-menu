@@ -289,6 +289,12 @@
   "cashierItemsToSettle": "الأصناف المطلوب تسويتها",
   "orderRound": "الجولة {round}",
   "cashierTotalToCharge": "المبلغ المطلوب تحصيله",
+  "cashierCustomerPay": "يريد الزبون الدفع: {name}",
+  "@cashierCustomerPay": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "cashierSettleCloseBill": "تسوية وإغلاق الفاتورة ({amount})",
   "cashierCashPayment": "دفع نقدي",
   "cashierTotalDue": "الإجمالي المستحق",
