@@ -840,6 +840,7 @@
   "cafeLocationRadiusRange": "Radius must be between 30 and 500 meters.",
   "cafeLocationReadFailed": "Couldn't read this device's location.",
   "cafeLocationSaveFailed": "Couldn't save the cafe location.",
+  "cafeLocationSaved": "Cafe location saved.",
   "guestLocationTooFar": "You're too far from the cafe to order. You can still browse the menu.",
   "guestLocationDenied": "Location is needed to place an order. You can still browse the menu.",
   "guestLocationAllow": "Allow location",

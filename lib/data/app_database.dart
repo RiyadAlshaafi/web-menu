@@ -1294,18 +1294,20 @@ class AppDatabase {
       return 'Supabase is not configured.';
     }
     try {
-      await client!
-          .from('restaurants')
-          .update({
-            'location_check_enabled': enabled,
-            'location_lat': lat,
-            'location_lng': lng,
-            'location_radius_m': radiusM,
-          })
-          .eq('id', restaurantId!);
-      return null;
-    } catch (_, stackTrace) {
-      reportError('save cafe location', 'save failed', stackTrace);
+      final raw = await client!.rpc(
+        'save_cafe_location',
+        params: {
+          'p_enabled': enabled,
+          'p_lat': lat,
+          'p_lng': lng,
+          'p_radius_m': radiusM,
+        },
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) return null;
+      return result['error'] as String? ?? 'save_failed';
+    } catch (error, stackTrace) {
+      reportError('save cafe location', error, stackTrace);
       return 'save_failed';
     }
   }

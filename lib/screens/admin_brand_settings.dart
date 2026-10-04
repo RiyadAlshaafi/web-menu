@@ -336,6 +336,9 @@ class _CafeLocationCardState extends State<_CafeLocationCard> {
       saving = false;
       validation = error == null ? null : context.l10n.cafeLocationSaveFailed;
     });
+    if (error == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.cafeLocationSaved)));
+    }
   }
 
   @override

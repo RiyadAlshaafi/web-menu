@@ -1517,6 +1517,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cafeLocationSaveFailed => 'تعذر حفظ موقع المقهى.';
 
   @override
+  String get cafeLocationSaved => 'تم حفظ موقع المقهى.';
+
+  @override
   String get guestLocationTooFar =>
       'أنت بعيد عن المقهى ولا يمكن إرسال الطلب. يمكنك تصفح القائمة.';
 

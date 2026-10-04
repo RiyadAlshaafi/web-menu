@@ -475,6 +475,7 @@
   "cafeLocationRadiusRange": "النطاق يجب أن يكون بين 30 و 500 متر.",
   "cafeLocationReadFailed": "تعذر قراءة موقع هذا الجهاز.",
   "cafeLocationSaveFailed": "تعذر حفظ موقع المقهى.",
+  "cafeLocationSaved": "تم حفظ موقع المقهى.",
   "guestLocationTooFar": "أنت بعيد عن المقهى ولا يمكن إرسال الطلب. يمكنك تصفح القائمة.",
   "guestLocationDenied": "الموقع مطلوب لإرسال الطلب. يمكنك تصفح القائمة.",
   "guestLocationAllow": "السماح بالموقع",

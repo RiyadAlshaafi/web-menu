@@ -1521,6 +1521,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cafeLocationSaveFailed => 'Couldn\'t save the cafe location.';
 
   @override
+  String get cafeLocationSaved => 'Cafe location saved.';
+
+  @override
   String get guestLocationTooFar =>
       'You\'re too far from the cafe to order. You can still browse the menu.';
 

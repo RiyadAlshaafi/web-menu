@@ -2828,6 +2828,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t save the cafe location.'**
   String get cafeLocationSaveFailed;
 
+  /// No description provided for @cafeLocationSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe location saved.'**
+  String get cafeLocationSaved;
+
   /// No description provided for @guestLocationTooFar.
   ///
   /// In en, this message translates to:
