@@ -815,6 +815,7 @@
     }
   },
   "guestLoadingTable": "Loading your table...",
+  "staffOpening": "Opening...",
   "guestQrInvalid": "This QR code doesn't match a table.",
   "guestQrInvalidHint": "Ask the cafe for a new code.",
   "guestRetry": "Try again",

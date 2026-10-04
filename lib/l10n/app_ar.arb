@@ -450,6 +450,7 @@
     }
   },
   "guestLoadingTable": "جاري تحميل طاولتك...",
+  "staffOpening": "جاري الفتح...",
   "guestQrInvalid": "رمز QR هذا لا يطابق طاولة.",
   "guestQrInvalidHint": "اطلب من المقهى رمزاً جديداً.",
   "guestRetry": "حاول مرة أخرى",

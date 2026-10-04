@@ -1436,6 +1436,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestLoadingTable => 'جاري تحميل طاولتك...';
 
   @override
+  String get staffOpening => 'جاري الفتح...';
+
+  @override
   String get guestQrInvalid => 'رمز QR هذا لا يطابق طاولة.';
 
   @override

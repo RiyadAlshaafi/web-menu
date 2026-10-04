@@ -1439,6 +1439,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestLoadingTable => 'Loading your table...';
 
   @override
+  String get staffOpening => 'Opening...';
+
+  @override
   String get guestQrInvalid => 'This QR code doesn\'t match a table.';
 
   @override

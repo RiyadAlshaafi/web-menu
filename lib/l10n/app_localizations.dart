@@ -2678,6 +2678,12 @@ abstract class AppLocalizations {
   /// **'Loading your table...'**
   String get guestLoadingTable;
 
+  /// No description provided for @staffOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening...'**
+  String get staffOpening;
+
   /// No description provided for @guestQrInvalid.
   ///
   /// In en, this message translates to:

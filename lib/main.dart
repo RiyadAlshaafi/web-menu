@@ -16,6 +16,7 @@ import 'screens/sales_log_screen.dart' deferred as sales_ui;
 import 'screens/dish_availability_screen.dart' deferred as dishes_ui;
 import 'state/cafe_store.dart';
 import 'theme/cafe_theme.dart';
+import 'widgets/cafe_widgets.dart';
 
 Future<void> _loadAuth() => auth_ui.loadLibrary();
 
@@ -33,12 +34,86 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   final store = CafeStore(AppDatabase.instance);
-  try {
-    await store.load();
-  } catch (error, stack) {
-    reportError('startup', error, stack);
+  runApp(StaffBoot(store: store));
+}
+
+class StaffBoot extends StatefulWidget {
+  const StaffBoot({super.key, required this.store});
+
+  final CafeStore store;
+
+  @override
+  State<StaffBoot> createState() => _StaffBootState();
+}
+
+class _StaffBootState extends State<StaffBoot> {
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _open();
   }
-  runApp(CafeItalianoApp(store: store));
+
+  Future<void> _open() async {
+    try {
+      await widget.store.load();
+    } catch (error, stack) {
+      reportError('startup', error, stack);
+    }
+    if (mounted) setState(() => _ready = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ready) return CafeItalianoApp(store: widget.store);
+    return const StaffOpeningApp();
+  }
+}
+
+class StaffOpeningApp extends StatelessWidget {
+  const StaffOpeningApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: CafeTheme.light,
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: const Scaffold(body: StaffOpeningBody()),
+    );
+  }
+}
+
+class StaffOpeningBody extends StatelessWidget {
+  const StaffOpeningBody({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CafeLogo(size: 72, showWordmark: false),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.4, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(height: 14),
+          Text(l10n?.staffOpening ?? 'Opening...', style: const TextStyle(color: CafeColors.inkMuted)),
+        ],
+      ),
+    );
+  }
 }
 
 class CafeItalianoApp extends StatefulWidget {
@@ -470,7 +545,7 @@ class _DeferredViewState extends State<DeferredView> {
           );
         }
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(body: StaffOpeningBody());
         }
         return widget.builder();
       },
