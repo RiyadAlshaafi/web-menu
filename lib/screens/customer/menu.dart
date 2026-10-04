@@ -549,7 +549,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _locationBanner(CafeStore store) {
     final message = guestLocationMessage(context, store);
     if (message == null) return const SizedBox.shrink();
-    final retry = store.guestLocation == GuestLocationStatus.denied || store.guestLocation == GuestLocationStatus.unavailable;
+    final retry = store.guestLocation == GuestLocationStatus.denied ||
+        store.guestLocation == GuestLocationStatus.unavailable ||
+        store.guestLocation == GuestLocationStatus.tooFar;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Material(

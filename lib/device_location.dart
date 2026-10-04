@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'report_error.dart';
@@ -23,17 +24,21 @@ class DeviceLocationException implements Exception {
 
 Future<DevicePoint> readDeviceLocation() async {
   try {
-    final enabled = await Geolocator.isLocationServiceEnabled();
-    if (!enabled) throw DeviceLocationException(DeviceLocationFailure.unavailable);
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      throw DeviceLocationException(DeviceLocationFailure.denied);
+    // The browser prompt is tied to getCurrentPosition. A separate permission
+    // call on web can fail before any prompt and look like a silent denial.
+    if (!kIsWeb) {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) throw DeviceLocationException(DeviceLocationFailure.unavailable);
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        throw DeviceLocationException(DeviceLocationFailure.denied);
+      }
     }
     final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 20)),
     );
     return DevicePoint(latitude: position.latitude, longitude: position.longitude, accuracyM: position.accuracy);
   } on DeviceLocationException {
