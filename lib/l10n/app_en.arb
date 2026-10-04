@@ -809,6 +809,7 @@
   "guestQrInvalidHint": "Ask the cafe for a new code.",
   "guestRetry": "Try again",
   "guestChooseService": "How are you ordering?",
+  "guestChooseLanguage": "Choose your language",
   "guestDineIn": "Dine-in",
   "guestDineInHint": "We'll serve this table.",
   "guestTakeout": "Takeout",

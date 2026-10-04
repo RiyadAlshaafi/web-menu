@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
@@ -30,6 +31,7 @@ class CafeStore extends ChangeNotifier {
 
   late Map<String, dynamic> cafe;
   String locale = 'en';
+  String? guestLocaleOverride;
   AdminAccount? admin;
   List<Cashier> cashiers = [];
   List<CafeTable> tables = [];
@@ -76,6 +78,7 @@ class CafeStore extends ChangeNotifier {
     await db.init();
     cafe = db.cafe;
     locale = db.locale;
+    await _loadGuestLocale();
     admin = db.admin;
     cashiers = db.cashiers;
     tables = db.tables;
@@ -346,7 +349,25 @@ class CafeStore extends ChangeNotifier {
 
   bool get hasAdmin => admin != null || db.anyAdmin;
 
+  String get guestLocale => guestLocaleOverride ?? locale;
+
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
+
+  AppLocalizations get guestL10n => lookupAppLocalizations(Locale(guestLocale));
+
+  Future<void> _loadGuestLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('guest_locale');
+    if (saved == 'en' || saved == 'ar') guestLocaleOverride = saved;
+  }
+
+  Future<void> setGuestLocale(String value) async {
+    if (value != 'en' && value != 'ar') return;
+    guestLocaleOverride = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('guest_locale', value);
+    notifyListeners();
+  }
 
   Future<String?> createAdmin({
     required String email,

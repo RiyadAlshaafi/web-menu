@@ -146,7 +146,7 @@ class CustomerBillScreen extends StatelessWidget {
                     icon: Icon(Icons.keyboard_arrow_down, color: CafeSurfaces.of(context).button),
                     items: [
                       for (final type in store.enabledPaymentTypes)
-                        DropdownMenuItem(value: type.id, child: Text(type.label(store.locale))),
+                        DropdownMenuItem(value: type.id, child: Text(type.label(store.guestLocale))),
                     ],
                     onChanged: (id) {
                       if (id != null) store.setTablePaymentType(table.id, id);

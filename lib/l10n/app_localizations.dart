@@ -2672,6 +2672,12 @@ abstract class AppLocalizations {
   /// **'How are you ordering?'**
   String get guestChooseService;
 
+  /// No description provided for @guestChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language'**
+  String get guestChooseLanguage;
+
   /// No description provided for @guestDineIn.
   ///
   /// In en, this message translates to:

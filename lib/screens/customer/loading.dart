@@ -60,54 +60,35 @@ class GuestQrError extends StatelessWidget {
   }
 }
 
-class GuestServiceScreen extends StatelessWidget {
-  const GuestServiceScreen({super.key, required this.table, required this.onChoose});
+class GuestLanguageScreen extends StatelessWidget {
+  const GuestLanguageScreen({super.key, required this.onChoose});
 
-  final CafeTable table;
   final ValueChanged<String> onChoose;
 
   @override
   Widget build(BuildContext context) {
-    final button = CafeSurfaces.of(context).button;
+    final store = context.watch<CafeStore>();
+    final surfaces = CafeSurfaces.of(context);
     return CustomerShell.phone(
       context,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+        padding: const EdgeInsets.fromLTRB(22, 36, 22, 22),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.watch<CafeStore>().cafeName, style: TextStyle(color: CafeSurfaces.of(context).onBackground.withValues(alpha: 0.7), fontWeight: FontWeight.w700)),
+            const CafeLogo(size: 72, showWordmark: false),
+            const SizedBox(height: 16),
+            Text(store.cafeName, style: CafeTheme.display.copyWith(fontSize: 28, color: surfaces.onBackground)),
             const SizedBox(height: 8),
-            Text(context.l10n.guestChooseService, style: CafeTheme.display.copyWith(fontSize: 32)),
-            const SizedBox(height: 6),
-            Text(context.l10n.guestTableNumber(table.number), style: TextStyle(color: button, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 22),
+            Text(context.l10n.guestChooseLanguage, textAlign: TextAlign.center, style: TextStyle(color: surfaces.onBackground.withValues(alpha: 0.7))),
+            const SizedBox(height: 28),
             SoftCard(
-              onTap: () => onChoose('dine_in'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.restaurant, color: button),
-                  const SizedBox(height: 8),
-                  Text(context.l10n.guestDineIn, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
-                  const SizedBox(height: 4),
-                  Text(context.l10n.guestDineInHint, style: const TextStyle(color: CafeColors.inkMuted)),
-                ],
-              ),
+              onTap: () => onChoose('en'),
+              child: const Text('English', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
             ),
             const SizedBox(height: 12),
             SoftCard(
-              onTap: () => onChoose('takeout'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.shopping_bag_outlined, color: button),
-                  const SizedBox(height: 8),
-                  Text(context.l10n.guestTakeout, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
-                  const SizedBox(height: 4),
-                  Text(context.l10n.guestTakeoutHint, style: const TextStyle(color: CafeColors.inkMuted)),
-                ],
-              ),
+              onTap: () => onChoose('ar'),
+              child: const Text('العربية', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
             ),
           ],
         ),

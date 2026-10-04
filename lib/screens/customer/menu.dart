@@ -154,7 +154,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         })),
                         ...store.guestCategories.map(
                           (category) => _catChip(
-                            category.label(store.locale),
+                            category.label(store.guestLocale),
                             !chefsOnly && categoryId == category.id,
                             () => setState(() {
                               chefsOnly = false;
@@ -202,7 +202,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                           child: Row(
                             children: [
-                              Text(category.label(store.locale), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              Text(category.label(store.guestLocale), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                               const Spacer(),
                               Text(context.l10n.guestItemCount('${dishes.length}'), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
                             ],
@@ -444,7 +444,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.displayName(store.locale),
+                          item.displayName(store.guestLocale),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -488,7 +488,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.displayName(store.locale),
+                    item.displayName(store.guestLocale),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -674,7 +674,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Text(item.displayName(store.locale), style: CafeTheme.display.copyWith(fontSize: 24))),
+                      Expanded(child: Text(item.displayName(store.guestLocale), style: CafeTheme.display.copyWith(fontSize: 24))),
                       _price(store, item, fontSize: 18),
                     ],
                   ),

@@ -444,6 +444,7 @@
   "guestQrInvalidHint": "اطلب من المقهى رمزاً جديداً.",
   "guestRetry": "حاول مرة أخرى",
   "guestChooseService": "كيف تريد الطلب؟",
+  "guestChooseLanguage": "اختر لغتك",
   "guestDineIn": "تناول في المكان",
   "guestDineInHint": "نوصل الطلب إلى هذه الطاولة.",
   "guestTakeout": "سفري",

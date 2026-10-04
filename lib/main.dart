@@ -380,24 +380,31 @@ class _GuestSessionState extends State<GuestSession> {
     });
   }
 
-  bool _needsChoice(CafeStore store, CafeTable table) {
-    if (store.openOrderFor(table.id) != null) return false;
-    return store.serviceChoiceFor(widget.slug) == null && store.serviceChoiceFor(table.id) == null;
+  Widget _localized(CafeStore store, Widget child) {
+    final code = store.guestLocale;
+    return Localizations.override(
+      context: context,
+      locale: Locale(code),
+      child: Directionality(
+        textDirection: code == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+        child: child,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    if (_loading) return const GuestLoadingScreen();
+    if (_loading) return _localized(store, const GuestLoadingScreen());
     final table = store.tableBySlug(widget.slug);
-    if (_missing || table == null) return GuestQrError(onRetry: _load);
-    if (_needsChoice(store, table)) {
-      return GuestServiceScreen(
-        table: table,
-        onChoose: (type) => store.chooseService(widget.slug, type),
+    if (_missing || table == null) return _localized(store, GuestQrError(onRetry: _load));
+    if (store.guestLocaleOverride == null) {
+      return _localized(
+        store,
+        GuestLanguageScreen(onChoose: (code) => store.setGuestLocale(code)),
       );
     }
-    return widget.child;
+    return _localized(store, widget.child);
   }
 }
 

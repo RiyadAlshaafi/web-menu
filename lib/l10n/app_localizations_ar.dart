@@ -1431,6 +1431,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestChooseService => 'كيف تريد الطلب؟';
 
   @override
+  String get guestChooseLanguage => 'اختر لغتك';
+
+  @override
   String get guestDineIn => 'تناول في المكان';
 
   @override

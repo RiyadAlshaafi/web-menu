@@ -1434,6 +1434,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestChooseService => 'How are you ordering?';
 
   @override
+  String get guestChooseLanguage => 'Choose your language';
+
+  @override
   String get guestDineIn => 'Dine-in';
 
   @override
