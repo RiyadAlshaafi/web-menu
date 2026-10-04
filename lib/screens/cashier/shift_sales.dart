@@ -111,7 +111,9 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final stack = constraints.maxWidth < 980;
-                final ledger = SoftCard(
+                final ledger = WideTable(
+                  minWidth: 760,
+                  child: SoftCard(
                   radius: 16,
                   child: store.payments.isEmpty &&
                           (shift == null ||
@@ -308,6 +310,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                               ),
                           ],
                         ),
+                  ),
                 );
                 final till = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -126,6 +126,9 @@ class AppSections {
 
   static bool compact(double width) => width < 960;
 
+  /// Sidebar becomes a drawer so the page can use the full width.
+  static bool useDrawer(double width) => width < 800;
+
   static double titleSize(double width, {double min = 22, double max = 32}) {
     final scaled = width * 0.028;
     return scaled.clamp(min, max);

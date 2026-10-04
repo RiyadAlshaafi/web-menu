@@ -34,20 +34,18 @@ class CashierShell extends StatelessWidget {
     final occupied = store.tables.where((table) => table.status != TableStatus.free).length;
     final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
     final section = AppSections.forCashier(location);
-    final compact = AppSections.compact(MediaQuery.sizeOf(context).width);
-    final railWidth = compact ? 84.0 : 250.0;
+    final width = MediaQuery.sizeOf(context).width;
+    final drawer = AppSections.useDrawer(width);
+    final compact = AppSections.compact(width) && !drawer;
+    final railWidth = drawer ? 280.0 : (AppSections.compact(width) ? 84.0 : 250.0);
 
     final surfaces = CafeSurfaces.of(context);
-    return Scaffold(
-      backgroundColor: surfaces.background,
-      body: Row(
-        children: [
-          Material(
+    final rail = Material(
             color: surfaces.sidebar,
             child: SizedBox(
               width: railWidth,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+                padding: EdgeInsets.fromLTRB(compact ? 8 : 16, 18, compact ? 8 : 16, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -66,24 +64,26 @@ class CashierShell extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F0E4),
-                        borderRadius: BorderRadius.circular(20),
+                    if (!compact) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F0E4),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.circle, size: 8, color: CafeColors.success),
+                            const SizedBox(width: 6),
+                            Text(context.l10n.cashierSoloShiftLive, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.circle, size: 8, color: CafeColors.success),
-                          const SizedBox(width: 6),
-                          Text(context.l10n.cashierSoloShiftLive, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    Text(context.l10n.cashierAllInOne, style: const TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: CafeColors.inkMuted)),
+                      const SizedBox(height: 22),
+                      Text(context.l10n.cashierAllInOne, style: const TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: CafeColors.inkMuted)),
+                    ],
                     const SizedBox(height: 10),
                     for (final item in AppSections.cashier)
                       _nav(
@@ -99,47 +99,99 @@ class CashierShell extends StatelessWidget {
                         },
                       ),
                     const Spacer(),
-                    SoftCard(
-                      padding: const EdgeInsets.all(10),
-                      radius: 16,
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: CafeColors.terracottaSoft,
-                            child: Text(staff?.initials ?? 'C', style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800)),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(staff?.name ?? context.l10n.cashierRole, style: const TextStyle(fontWeight: FontWeight.w800)),
-                                Text(context.l10n.cashierSoloCashier, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
-                              ],
+                    if (compact)
+                      IconButton(
+                        tooltip: context.l10n.cashierRole,
+                        onPressed: () {
+                          store.signOut();
+                          context.go('/login');
+                        },
+                        icon: const Icon(Icons.logout, size: 18),
+                      )
+                    else
+                      SoftCard(
+                        padding: const EdgeInsets.all(10),
+                        radius: 16,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: CafeColors.terracottaSoft,
+                              child: Text(staff?.initials ?? 'C', style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800)),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              store.signOut();
-                              context.go('/login');
-                            },
-                            icon: const Icon(Icons.logout, size: 18),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(staff?.name ?? context.l10n.cashierRole, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                  Text(context.l10n.cashierSoloCashier, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                store.signOut();
+                                context.go('/login');
+                              },
+                              icon: const Icon(Icons.logout, size: 18),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
             ),
+          );
+    return Scaffold(
+      backgroundColor: surfaces.background,
+      drawer: drawer ? Drawer(width: 280, child: rail) : null,
+      body: Row(
+        children: [
+          if (!drawer) rail,
+          Expanded(
+            child: Column(
+              children: [
+                if (drawer)
+                  Material(
+                    color: surfaces.header,
+                    child: SizedBox(
+                      height: 52,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => Scaffold.of(context).openDrawer(),
+                            icon: Icon(Icons.menu, color: surfaces.onHeader),
+                          ),
+                          Expanded(
+                            child: Text(
+                              section.crumb(context),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Expanded(child: ColoredBox(color: surfaces.background, child: child)),
+              ],
+            ),
           ),
-          Expanded(child: ColoredBox(color: surfaces.background, child: child)),
         ],
       ),
     );
   }
 
   Widget _nav(BuildContext context, AppSection section, bool active, bool compact, {String? badge}) {
+    if (compact) {
+      return IconButton(
+        tooltip: section.label(context),
+        onPressed: () => context.go(section.path),
+        icon: Icon(section.icon, color: active ? CafeSurfaces.of(context).button : CafeColors.inkMuted),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: ListTile(

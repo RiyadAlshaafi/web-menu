@@ -119,14 +119,17 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               radius: 16,
               child: rows.isEmpty
                   ? EmptyHint(context.l10n.noTransactions)
-                  : ListView(
+                  : WideTable(
+                      minWidth: 980,
+                      child: ListView(
                       children: [
                         _header(context),
                         for (final row in rows) ...[
                           const Divider(height: 1),
                           _line(context, store, row),
                         ],
-                      ],
+                        ],
+                      ),
                     ),
             ),
           ),

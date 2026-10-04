@@ -128,7 +128,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               radius: 16,
               child: rows.isEmpty
                   ? EmptyHint(context.l10n.salesEmpty)
-                  : Column(
+                  : WideTable(
+                      minWidth: 1100,
+                      child: Column(
                       children: [
                         _header(context),
                         const Divider(height: 1),
@@ -157,6 +159,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                         ),
                       ],
                     ),
+                  ),
             ),
           ),
         ],

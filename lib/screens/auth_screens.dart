@@ -19,6 +19,7 @@ class PinLoginScreen extends StatefulWidget {
 
 class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProviderStateMixin {
   final focusNode = FocusNode();
+  bool _signingIn = false;
   late final AnimationController shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 360));
   late final Animation<double> shakeOffset = TweenSequence<double>([
     for (final (from, to) in const [(0.0, -8.0), (-8.0, 8.0), (8.0, -6.0), (-6.0, 6.0), (6.0, -3.0), (-3.0, 0.0)])
@@ -190,7 +191,12 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
                       const SizedBox(height: 14),
                       _PinPad(store: store),
                       const SizedBox(height: 16),
-                      TerracottaButton(label: context.l10n.authSignIn, showArrow: true, onPressed: () => _submit(store)),
+                      TerracottaButton(
+                        label: context.l10n.authSignIn,
+                        showArrow: true,
+                        busy: _signingIn,
+                        onPressed: _signingIn ? null : () => _submit(store),
+                      ),
                     ],
                   ),
                 ),
@@ -209,7 +215,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
   }
 
   Future<void> _submit(CafeStore store) async {
+    if (_signingIn) return;
+    setState(() => _signingIn = true);
     if (!await store.signInCashier()) {
+      if (mounted) setState(() => _signingIn = false);
       if (mounted && !MediaQuery.disableAnimationsOf(context)) shake.forward(from: 0);
       return;
     }
@@ -330,6 +339,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   final confirm = TextEditingController();
   bool obscure = true;
   bool remember = false;
+  bool signingIn = false;
   String? error;
 
   @override
@@ -454,7 +464,11 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                 const SizedBox(height: 16),
                 TerracottaButton(
                   label: setup ? context.l10n.authCreateAccessCta : context.l10n.authSignInCta,
-                  onPressed: () async {
+                  busy: signingIn,
+                  onPressed: signingIn
+                      ? null
+                      : () async {
+                    if (!setup) setState(() => signingIn = true);
                     if (setup) {
                       final result = await store.createAdmin(
                         email: email.text,
@@ -470,7 +484,11 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                     } else {
                       final result = await store.signInAdmin(email.text, password.text, remember: remember);
                       if (!context.mounted) return;
-                      if (result == null) context.go('/admin/dashboard');
+                      if (result == null) {
+                        context.go('/admin/dashboard');
+                      } else {
+                        setState(() => signingIn = false);
+                      }
                     }
                   },
                 ),

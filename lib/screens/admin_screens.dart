@@ -28,15 +28,12 @@ class AdminShell extends StatelessWidget {
     final store = context.watch<CafeStore>();
     final section = AppSections.forAdmin(location);
     final width = MediaQuery.sizeOf(context).width;
-    final compact = AppSections.compact(width);
-    final railWidth = compact ? 76.0 : 220.0;
+    final drawer = AppSections.useDrawer(width);
+    final compact = AppSections.compact(width) && !drawer;
+    final railWidth = drawer ? 260.0 : (AppSections.compact(width) ? 76.0 : 220.0);
 
     final surfaces = CafeSurfaces.of(context);
-    return Scaffold(
-      backgroundColor: surfaces.background,
-      body: Row(
-        children: [
-          Material(
+    final rail = Material(
             color: surfaces.sidebar,
             child: SizedBox(
               width: railWidth,
@@ -143,29 +140,46 @@ class AdminShell extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          );
+    return Scaffold(
+      backgroundColor: surfaces.background,
+      drawer: drawer ? Drawer(width: 260, child: rail) : null,
+      body: Row(
+        children: [
+          if (!drawer) rail,
           Expanded(
             child: Column(
               children: [
                 Container(
                   height: 64,
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   color: surfaces.header,
                   child: Row(
                     children: [
-                      Text(context.l10n.adminWorkspace, style: TextStyle(color: surfaces.onHeader.withValues(alpha: 0.75), fontWeight: FontWeight.w600)),
-                      Text('  /  ', style: TextStyle(color: surfaces.onHeader.withValues(alpha: 0.75), fontWeight: FontWeight.w600)),
-                      Text(section.crumb(context), style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader)),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F0E4),
-                          borderRadius: BorderRadius.circular(20),
+                      if (drawer)
+                        IconButton(
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          icon: Icon(Icons.menu, color: surfaces.onHeader),
                         ),
-                        child: Text(context.l10n.adminTerminalBadge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
+                      Flexible(
+                        child: Text(
+                          '${context.l10n.adminWorkspace}  /  ${section.crumb(context)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const Spacer(),
+                      if (!drawer)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F0E4),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(context.l10n.adminTerminalBadge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
+                        ),
+                      if (!drawer) const SizedBox(width: 8),
                       OutlinedButton.icon(
                         onPressed: () {
                           if (store.tables.isEmpty) {
@@ -175,7 +189,9 @@ class AdminShell extends StatelessWidget {
                           context.go('/t/${store.tables.first.qrSlug}');
                         },
                         icon: const Icon(Icons.visibility_outlined, size: 16, color: CafeColors.terracotta),
-                        label: Text(context.l10n.adminCustomerView, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
+                        label: drawer
+                            ? const SizedBox.shrink()
+                            : Text(context.l10n.adminCustomerView, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Colors.white,
                           side: const BorderSide(color: CafeColors.line),

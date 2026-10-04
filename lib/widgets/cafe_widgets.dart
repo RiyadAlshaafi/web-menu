@@ -98,6 +98,31 @@ class CafeLogo extends StatelessWidget {
   }
 }
 
+/// Keeps a wide table readable and scrolls sideways when the window is narrow.
+class WideTable extends StatelessWidget {
+  const WideTable({super.key, required this.minWidth, required this.child});
+
+  final double minWidth;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth < minWidth ? minWidth : constraints.maxWidth;
+        return Scrollbar(
+          thumbVisibility: constraints.maxWidth < minWidth,
+          notificationPredicate: (notification) => notification.metrics.axis == Axis.horizontal,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(width: width, height: constraints.maxHeight, child: child),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class TerracottaButton extends StatelessWidget {
   const TerracottaButton({
     super.key,
@@ -106,6 +131,7 @@ class TerracottaButton extends StatelessWidget {
     this.expanded = true,
     this.height = 52,
     this.showArrow = false,
+    this.busy = false,
   });
 
   final String label;
@@ -113,25 +139,32 @@ class TerracottaButton extends StatelessWidget {
   final bool expanded;
   final double height;
   final bool showArrow;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
-    final child = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-        if (showArrow) ...[
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward, size: 18),
-        ],
-      ],
-    );
+    final child = busy
+        ? SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2.4, color: CafeSurfaces.of(context).onButton),
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+            children: [
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              if (showArrow) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward, size: 18),
+              ],
+            ],
+          );
     return SizedBox(
       width: expanded ? double.infinity : null,
       height: height,
       child: FilledButton(
-        onPressed: onPressed,
+        onPressed: busy ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: CafeSurfaces.of(context).button,
           foregroundColor: CafeSurfaces.of(context).onButton,
