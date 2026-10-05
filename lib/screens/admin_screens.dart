@@ -313,8 +313,8 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(context.l10n.adminTablesQrHub, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
-              _miniStat('${store.tables.length}', context.l10n.adminStations),
-              _miniStat('${store.tables.where((item) => item.status != TableStatus.free).length}', context.l10n.adminSessions),
+              _miniStat('${store.diningTables.length}', context.l10n.adminStations),
+              _miniStat('${store.diningTables.where((item) => item.status != TableStatus.free).length}', context.l10n.adminSessions),
             ],
           ),
           const SizedBox(height: 14),

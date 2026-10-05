@@ -11,6 +11,7 @@ import '../device_location.dart';
 import '../models/models.dart';
 import '../money.dart';
 import '../report_error.dart';
+import '../takeout_receipt.dart';
 import '../theme/cafe_theme.dart';
 
 part 'cafe_store_settings.dart';
@@ -69,6 +70,7 @@ class CafeStore extends ChangeNotifier {
   double? _guestAccuracyM;
   bool _guestLocationStarted = false;
   bool _guestLocationBusy = false;
+  bool _takeoutBusy = false;
 
   bool get canPlaceOrder =>
       guestLocation == GuestLocationStatus.off ||

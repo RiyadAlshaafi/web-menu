@@ -70,6 +70,7 @@
   "quickTakeoutEmpty": "اضغط طبقاً لبدء التذكرة.",
   "quickTakeoutPay": "تحصيل الدفع",
   "quickTakeoutNeedTable": "أضف طاولة باسم Takeout من الطاولات ورمز QR، ثم أعد المحاولة.",
+  "quickTakeoutBusy": "هذا الإيصال قيد الحفظ.",
   "quickTakeoutPaid": "تم دفع طلب السفري.",
   "navLiveAlerts": "التنبيهات والطابور المباشر",
   "navFloorOverview": "نظرة عامة على الصالة",

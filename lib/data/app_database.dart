@@ -1325,6 +1325,33 @@ class AppDatabase {
     }
   }
 
+  Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {
+    if (client == null) return 'Supabase is not configured.';
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(
+        'quick_takeout_receipt',
+        params: {
+          'p_lines': [
+            for (final line in lines)
+              if (line.menuItemId.isNotEmpty && line.qty > 0)
+                {'menu_item_id': line.menuItemId, 'qty': line.qty},
+          ],
+          'p_payment_type_id': paymentTypeId,
+        },
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk();
+        return null;
+      }
+      return result['error'] as String? ?? 'Payment failed.';
+    } catch (error, stackTrace) {
+      reportError('quick takeout', error, stackTrace);
+      return '$error';
+    }
+  }
+
   Future<String?> sendTableCart(
     String tableId, {
     String serviceType = 'dine_in',

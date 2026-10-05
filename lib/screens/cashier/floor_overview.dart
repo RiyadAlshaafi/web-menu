@@ -14,8 +14,9 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
+    final dining = store.diningTables;
     final callIds = store.openCalls.map((call) => call.tableId).toSet();
-    final tables = store.tables.where((table) {
+    final tables = dining.where((table) {
       switch (filter) {
         case _FloorFilter.all:
           return true;
@@ -46,7 +47,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(context.l10n.cashierFloorOverviewTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
-              Text(context.l10n.cashierTablesCount('${store.tables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
+              Text(context.l10n.cashierTablesCount('${dining.length}'), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
               GhostChip(label: formatTripoliClock(DateTime.now()), icon: Icons.schedule),
               const LanguageButton(),
             ],
@@ -56,16 +57,16 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _floorChip(context.l10n.cashierFloorAll('${store.tables.length}'), filter == _FloorFilter.all, () => setState(() => filter = _FloorFilter.all)),
-              _floorChip(context.l10n.cashierFloorOccupied('${store.tables.where((item) => item.status != TableStatus.free).length}'), filter == _FloorFilter.occupied, () => setState(() => filter = _FloorFilter.occupied)),
+              _floorChip(context.l10n.cashierFloorAll('${dining.length}'), filter == _FloorFilter.all, () => setState(() => filter = _FloorFilter.all)),
+              _floorChip(context.l10n.cashierFloorOccupied('${dining.where((item) => item.status != TableStatus.free).length}'), filter == _FloorFilter.occupied, () => setState(() => filter = _FloorFilter.occupied)),
               _floorChip(context.l10n.cashierFloorBillDue('${store.billTables.length}'), filter == _FloorFilter.billDue, () => setState(() => filter = _FloorFilter.billDue)),
               _floorChip(context.l10n.cashierFilterCallStaff('${store.openCalls.length}'), filter == _FloorFilter.callStaff, () => setState(() => filter = _FloorFilter.callStaff)),
-              _floorChip(context.l10n.cashierFloorAvailable('${store.tables.where((item) => item.status == TableStatus.free).length}'), filter == _FloorFilter.available, () => setState(() => filter = _FloorFilter.available)),
+              _floorChip(context.l10n.cashierFloorAvailable('${dining.where((item) => item.status == TableStatus.free).length}'), filter == _FloorFilter.available, () => setState(() => filter = _FloorFilter.available)),
             ],
           ),
           const SizedBox(height: 14),
           Expanded(
-            child: store.tables.isEmpty
+            child: dining.isEmpty
                 ? SoftCard(radius: 16, child: EmptyHint(context.l10n.noTables))
                 : LayoutBuilder(
                     builder: (context, constraints) {

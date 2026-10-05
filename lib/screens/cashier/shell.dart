@@ -31,7 +31,8 @@ class CashierShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final staff = store.currentCashier;
-    final occupied = store.tables.where((table) => table.status != TableStatus.free).length;
+    final dining = store.diningTables;
+    final occupied = dining.where((table) => table.status != TableStatus.free).length;
     final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
     final section = AppSections.forCashier(location);
     final width = MediaQuery.sizeOf(context).width;
@@ -93,7 +94,7 @@ class CashierShell extends StatelessWidget {
                         compact,
                         badge: switch (item.path) {
                           '/pos' => '${store.openCalls.length + store.liveOrders().length}',
-                          '/pos/tables' => store.tables.isEmpty ? null : '$occupied/${store.tables.length}',
+                          '/pos/tables' => dining.isEmpty ? null : '$occupied/${dining.length}',
                           '/pos/shifts' => sales == 0 ? null : store.currency.format(sales),
                           _ => null,
                         },

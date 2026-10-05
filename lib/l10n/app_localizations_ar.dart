@@ -212,6 +212,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'أضف طاولة باسم Takeout من الطاولات ورمز QR، ثم أعد المحاولة.';
 
   @override
+  String get quickTakeoutBusy => 'هذا الإيصال قيد الحفظ.';
+
+  @override
   String get quickTakeoutPaid => 'تم دفع طلب السفري.';
 
   @override

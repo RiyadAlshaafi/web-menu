@@ -488,6 +488,12 @@ abstract class AppLocalizations {
   /// **'Add a table named Takeout in Tables & QR, then try again.'**
   String get quickTakeoutNeedTable;
 
+  /// No description provided for @quickTakeoutBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'That receipt is already being saved.'**
+  String get quickTakeoutBusy;
+
   /// No description provided for @quickTakeoutPaid.
   ///
   /// In en, this message translates to:

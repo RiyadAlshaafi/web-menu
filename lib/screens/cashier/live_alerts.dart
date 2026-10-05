@@ -135,7 +135,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                             (call) => _alert(
                               id: 'call-${call.id}',
                               arrivedAt: call.createdAt,
-                              table: store.openOrderFor(call.tableId)?.serviceType == 'takeout' || call.tableNumber == 'Takeout'
+                              table: store.openOrderFor(call.tableId)?.serviceType == 'takeout'
                                   ? context.l10n.serviceTakeout
                                   : call.tableNumber,
                               title: context.l10n.cashierCallStaff,
@@ -193,24 +193,24 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: Text(context.l10n.cashierQuickTableStatus('${store.tables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.4))),
+                              Expanded(child: Text(context.l10n.cashierQuickTableStatus('${store.diningTables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.4))),
                               Text(
                                 context.l10n.cashierActiveTables(
-                                  '${store.tables.where((table) => table.status != TableStatus.free).length}',
-                                  '${store.tables.length}',
+                                  '${store.diningTables.where((table) => table.status != TableStatus.free).length}',
+                                  '${store.diningTables.length}',
                                 ),
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: CafeColors.inkMuted),
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          if (store.tables.isEmpty)
+                          if (store.diningTables.isEmpty)
                             EmptyHint(context.l10n.noTables)
                           else
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: store.tables.map((table) {
+                              children: store.diningTables.map((table) {
                                 final due = store.tabTotal(table.id);
                                 final bill = table.status == TableStatus.billRequested;
                                 final calling = store.openCalls.any((call) => call.tableId == table.id);

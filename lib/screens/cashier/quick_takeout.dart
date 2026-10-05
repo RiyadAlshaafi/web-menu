@@ -61,7 +61,11 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     if (!mounted) return;
     setState(() => paying = false);
     if (error != null) {
-      final message = error == 'takeout_table' ? context.l10n.quickTakeoutNeedTable : error;
+      final message = switch (error) {
+        'takeout_table' => context.l10n.quickTakeoutNeedTable,
+        'in_flight' => context.l10n.quickTakeoutBusy,
+        _ => error,
+      };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;
     }

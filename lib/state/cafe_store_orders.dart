@@ -159,43 +159,61 @@ extension CafeStoreOrders on CafeStore {
   }
 
   CafeTable? get takeoutCounter {
-    final named = tables.where((table) => table.number.toLowerCase() == 'takeout');
+    final named = tables.where(isServiceCounter);
     return named.isEmpty ? null : named.first;
   }
+
+  List<CafeTable> get diningTables => tables.where((table) => !isServiceCounter(table)).toList();
 
   Future<String?> checkoutTakeout({
     required List<OrderLine> lines,
     String? paymentTypeId,
   }) async {
+    if (_takeoutBusy) return 'in_flight';
     final table = takeoutCounter;
     if (table == null) return 'takeout_table';
     if (lines.isEmpty) return l10n.cashierExpenseInvalid;
-    chooseService(table.qrSlug, 'takeout');
-    final cart = cartFor(table.id);
-    cart.lines
-      ..clear()
-      ..addAll(lines);
-    final sent = await db.sendTableCart(
-      table.id,
-      serviceType: 'takeout',
-      qrSlug: table.qrSlug,
-    );
-    if (sent != null) return sent;
-    _hydrateOperational();
-    var order = openOrderFor(table.id);
-    while (order != null && order.status.next != null) {
-      order.status = order.status.next!;
-      await db.writeOrders(orders);
+    final cashier = currentCashier;
+    final shift = currentShift ?? openShift;
+    if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
+    final ticket = [
+      for (final line in lines)
+        OrderLine(
+          menuItemId: line.menuItemId,
+          name: line.name,
+          qty: line.qty,
+          unitPrice: line.unitPrice,
+          listUnitPrice: line.listUnitPrice,
+        ),
+    ];
+    _takeoutBusy = true;
+    notifyListeners();
+    try {
+      await Future<void>.delayed(Duration.zero);
+      if (db.client == null) {
+        final stamp = DateTime.now().microsecondsSinceEpoch;
+        final error = applyQuickTakeout(
+          orders: orders,
+          payments: payments,
+          counter: table,
+          lines: ticket,
+          paymentTypeId: paymentTypeId,
+          cashierId: cashier.id,
+          shiftId: shift.id,
+          orderId: 'takeout-$stamp',
+          paymentId: 'pay-$stamp',
+        );
+        notifyListeners();
+        return error;
+      }
+      final error = await db.quickTakeoutReceipt(ticket, paymentTypeId);
+      if (error != null) return error;
+      await syncFromDisk();
+      return null;
+    } finally {
+      _takeoutBusy = false;
+      notifyListeners();
     }
-    if (paymentTypeId != null) {
-      await db.setTablePaymentType(table.qrSlug, paymentTypeId);
-      _hydrateOperational();
-    }
-    return settleCash(
-      tableId: table.id,
-      cashReceived: tabTotal(table.id, applyService: false),
-      applyService: false,
-    );
   }
 
   bool canRequestBill(String tableId) {
