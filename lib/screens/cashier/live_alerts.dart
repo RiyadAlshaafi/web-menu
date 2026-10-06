@@ -17,7 +17,6 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     final orders = store.liveOrders();
     final calls = store.openCalls.where((call) => call.kind != 'bill').toList();
     final bills = store.billTables;
-    final clock = formatTripoliClock(DateTime.now());
     CafeOrder? selected = orders.where((order) => order.id == selectedOrderId).firstOrNull;
     selected ??= bills.isEmpty ? null : store.openOrderFor(bills.first.id);
     selected ??= orders.isEmpty ? null : orders.first;
@@ -26,33 +25,6 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            decoration: BoxDecoration(
-              color: CafeSurfaces.of(context).header,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-            children: [
-              const Icon(Icons.circle, size: 10, color: CafeColors.success),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.cashierStationFrontCounter,
-                style: CafeTheme.display.copyWith(
-                  fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width, min: 18, max: 22),
-                  color: CafeSurfaces.of(context).onHeader,
-                ),
-              ),
-              const Spacer(),
-              GhostChip(label: clock, icon: Icons.schedule),
-              const SizedBox(width: 8),
-              const LanguageButton(),
-              const SizedBox(width: 8),
-              GhostChip(label: context.l10n.cashierAudioOn, icon: Icons.volume_up_outlined),
-            ],
-            ),
-          ),
-          const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 900;

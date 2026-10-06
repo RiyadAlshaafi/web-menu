@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/table_qr.dart';
@@ -150,80 +151,38 @@ class AdminShell extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                Container(
-                  height: 64,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  color: surfaces.header,
-                  child: Row(
-                    children: [
-                      if (drawer)
-                        IconButton(
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                          icon: Icon(Icons.menu, color: surfaces.onHeader),
+                AppHeader(
+                  title: '${context.l10n.adminWorkspace}  /  ${section.crumb(context)}',
+                  showMenu: drawer,
+                  actions: [
+                    if (!drawer)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F0E4),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      Flexible(
-                        child: Text(
-                          '${context.l10n.adminWorkspace}  /  ${section.crumb(context)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader),
-                        ),
+                        child: Text(context.l10n.adminTerminalBadge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
                       ),
-                      const Spacer(),
-                      if (!drawer)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F0E4),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(context.l10n.adminTerminalBadge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
-                        ),
-                      if (!drawer) const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          if (store.tables.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
-                            return;
-                          }
-                          context.go('/t/${store.tables.first.qrSlug}');
-                        },
-                        icon: const Icon(Icons.visibility_outlined, size: 16, color: CafeColors.terracotta),
-                        label: drawer
-                            ? const SizedBox.shrink()
-                            : Text(context.l10n.adminCustomerView, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          side: const BorderSide(color: CafeColors.line),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        ),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        if (store.tables.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
+                          return;
+                        }
+                        context.go('/t/${store.tables.first.qrSlug}');
+                      },
+                      icon: const Icon(Icons.visibility_outlined, size: 16, color: CafeColors.terracotta),
+                      label: drawer
+                          ? const SizedBox.shrink()
+                          : Text(context.l10n.adminCustomerView, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: CafeColors.line),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      const SizedBox(width: 8),
-                      Stack(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: CafeColors.line),
-                            ),
-                            child: const Icon(Icons.notifications_none, size: 18),
-                          ),
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(color: CafeColors.alert, shape: BoxShape.circle),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Expanded(child: ColoredBox(color: surfaces.background, child: child)),
               ],

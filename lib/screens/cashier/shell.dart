@@ -162,29 +162,11 @@ class CashierShell extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                if (drawer)
-                  Material(
-                    color: surfaces.header,
-                    child: SizedBox(
-                      height: 52,
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => Scaffold.of(context).openDrawer(),
-                            icon: Icon(Icons.menu, color: surfaces.onHeader),
-                          ),
-                          Expanded(
-                            child: Text(
-                              section.crumb(context),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontWeight: FontWeight.w800, color: surfaces.onHeader),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                AppHeader(
+                  title: section.crumb(context),
+                  showMenu: drawer,
+                  actions: const [HeaderClock(), LanguageButton()],
+                ),
                 Expanded(child: ColoredBox(color: surfaces.background, child: child)),
               ],
             ),

@@ -392,7 +392,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final cashierPin = TextEditingController();
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
-  bool applyToQr = true;
 
   @override
   void dispose() {
@@ -431,20 +430,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   const SizedBox(width: 12),
                   Expanded(child: _lang(store, 'ar', 'العربية', context.l10n.catalogLangRegional)),
                 ],
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: applyToQr,
-                onChanged: (value) => setState(() => applyToQr = value),
-                title: Text(context.l10n.catalogApplyLanguageToQr, style: const TextStyle(fontWeight: FontWeight.w600)),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed: () {},
-                  child: Text(context.l10n.catalogSaveLanguage),
-                ),
               ),
             ],
           ),

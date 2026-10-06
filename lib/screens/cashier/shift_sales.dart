@@ -46,16 +46,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                   ),
                 ),
               ),
-              GhostChip(
-                label: formatTripoliClock(DateTime.now()),
-                icon: Icons.schedule,
-              ),
-              const LanguageButton(),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.sim_card_download_outlined, size: 16),
-                label: Text(context.l10n.cashierExportSummary),
-              ),
             ],
           ),
           const SizedBox(height: 14),

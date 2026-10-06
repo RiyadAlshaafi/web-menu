@@ -131,12 +131,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                             ],
                           ),
                         ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(color: CafeColors.creamDark, shape: BoxShape.circle),
-                          child: const Icon(Icons.tune, color: CafeColors.inkMuted, size: 20),
-                        ),
                       ],
                     ),
                   ),
@@ -305,12 +299,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                   ],
                                 ),
                               ),
-                              TextButton(
-                                onPressed: store.openOrderFor(table.id) == null
-                                    ? null
-                                    : () => context.go('/t/${widget.tableSlug}/cart'),
-                                child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
-                              ),
+                              // Only shown once there is an order to view; before that it
+                              // looked tappable (explicit text colour) but did nothing.
+                              if (store.openOrderFor(table.id) != null)
+                                TextButton(
+                                  onPressed: () => context.go('/t/${widget.tableSlug}/cart'),
+                                  child: Text(context.l10n.guestViewOrder, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
+                                ),
                               _orderButton(store, table.id),
                             ],
                           ),

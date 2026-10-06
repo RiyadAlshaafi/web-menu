@@ -48,8 +48,6 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
             children: [
               Text(context.l10n.cashierFloorOverviewTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
               Text(context.l10n.cashierTablesCount('${dining.length}'), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
-              GhostChip(label: formatTripoliClock(DateTime.now()), icon: Icons.schedule),
-              const LanguageButton(),
             ],
           ),
           const SizedBox(height: 12),

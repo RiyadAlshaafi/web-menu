@@ -11,6 +11,7 @@ import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 
