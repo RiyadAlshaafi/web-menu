@@ -182,7 +182,14 @@ class AppDatabase {
       reportError('read device slot', error, stack);
     }
     slot ??= _defaultSlot > 0 ? _defaultSlot : null;
-    if (slot != null) await _resolveBound(slot: slot);
+    if (slot == null) return;
+    try {
+      await _resolveBound(slot: slot);
+    } catch (error, stack) {
+      // E.g. the multi-cafe migration is not applied yet. Stay unlinked and
+      // carry on loading instead of aborting startup.
+      reportError('resolve cafe slot', error, stack);
+    }
   }
 
   Future<void> _resolveBound({int? slot, String? slug}) async {
@@ -603,11 +610,9 @@ class AppDatabase {
           ? (guestTableId == null ? Future<dynamic>.value(<CafeOrder>[]) : _loadOpenOrdersForTable(guestTableId))
           : _loadOrders(historyFrom, const {}),
       staffed ? client!.from('shifts').select() : Future<dynamic>.value(null),
-      (!liveOnly && !guest)
-          ? client!.rpc(
-              'list_pos_cashiers',
-              params: restaurantId == null ? null : {'p_restaurant_id': restaurantId},
-            )
+      // An unlinked device has no cafe to list cashiers for.
+      (!liveOnly && !guest && restaurantId != null)
+          ? client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId})
           : Future<dynamic>.value(null),
       staffed ? _selectPayments(historyFrom, _salesTo, _salesLimit) : Future<dynamic>.value(null),
     ]);

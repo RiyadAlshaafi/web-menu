@@ -174,6 +174,32 @@ as $$
   );
 $$;
 
+-- Older app builds ask for cashiers without naming a cafe. Keep them working
+-- by answering with slot 1 (the original cafe). New builds always send the id
+-- of the cafe they are linked to, and send nothing when unlinked.
+create or replace function public.list_pos_cashiers(p_restaurant_id uuid default null)
+returns table (id uuid, name text, initials text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  rid uuid := p_restaurant_id;
+begin
+  if rid is null then
+    select r.id into rid from public.restaurants r where r.slot = 1;
+  end if;
+  if rid is null then
+    return;
+  end if;
+  return query
+    select c.id, c.name, c.initials
+    from public.cashiers c
+    where c.restaurant_id = rid and c.active;
+end;
+$$;
+
 -- What an install needs to know about its slot before anyone logs in.
 create or replace function public.restaurant_for_slot(p_slot integer)
 returns table (id uuid, slot smallint, slug text, name text, active boolean, has_admin boolean)
