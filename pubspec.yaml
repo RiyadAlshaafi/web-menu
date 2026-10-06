@@ -71,8 +71,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/
-    - assets/fonts/NotoNaskhArabic-Regular.ttf
-    - assets/fonts/NotoNaskhArabic-Bold.ttf
 
   fonts:
     - family: PlusJakartaSans

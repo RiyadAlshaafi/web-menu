@@ -62,7 +62,9 @@ class CafeStore extends ChangeNotifier {
   bool otpVerified = false;
   int otpSecondsLeft = 0;
   Timer? _liveSync;
-  String _syncStamp = '';
+  /// Fingerprint of local state, computed lazily so mutations stay cheap.
+  String? _syncStampCache;
+  String get _syncStamp => _syncStampCache ??= _stamp();
   GuestLocationStatus guestLocation = GuestLocationStatus.off;
   DateTime? _guestNearUntil;
   double? _guestLat;
@@ -94,7 +96,7 @@ class CafeStore extends ChangeNotifier {
     shifts = db.shifts;
     expenses = db.expenses;
     calls = db.calls;
-    _syncStamp = _stamp();
+    _syncStampCache = null;
     if (db.rememberAdmin && admin != null) {
       authKind = AuthKind.admin;
     }
@@ -108,7 +110,8 @@ class CafeStore extends ChangeNotifier {
       unawaited(syncFromDisk());
     };
     db.startRealtime();
-    _liveSync = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Realtime pushes changes; this poll is only a safety net if the channel drops.
+    _liveSync = Timer.periodic(const Duration(seconds: 90), (_) {
       unawaited(syncFromDisk());
     });
   }
@@ -122,7 +125,7 @@ class CafeStore extends ChangeNotifier {
 
   @override
   void notifyListeners() {
-    _syncStamp = _stamp();
+    _syncStampCache = null;
     super.notifyListeners();
   }
 
@@ -162,7 +165,7 @@ class CafeStore extends ChangeNotifier {
     final next = _stampFromDb();
     if (next != _syncStamp) {
       _hydrateOperational();
-      _syncStamp = next;
+      _syncStampCache = next;
       notifyListeners();
     }
     await ensureShiftNumbers();
@@ -189,7 +192,7 @@ class CafeStore extends ChangeNotifier {
       }
       await db.refreshFromDisk(liveOnly: true);
       _hydrateOperational();
-      _syncStamp = _stamp();
+      _syncStampCache = null;
       notifyListeners();
     } finally {
       _assigningNumbers = false;

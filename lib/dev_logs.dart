@@ -1,3 +1,5 @@
+import 'csv_safe.dart';
+
 class DevLogBackup {
   DevLogBackup({required this.receipts, required this.expenses});
 
@@ -70,6 +72,17 @@ class DevExpense {
   };
 }
 
+/// Upper bounds so a hostile or accidental huge file cannot hang the app or
+/// flood the import RPC.
+const maxImportChars = 5 * 1024 * 1024;
+const maxImportRows = 50000;
+const maxImportTextLength = 200;
+
+bool _validAmount(String text) {
+  final value = double.tryParse(text);
+  return value != null && value.isFinite && value >= 0;
+}
+
 const receiptHeader = 'paid_at,receipt,monthly,table,service,item,qty,unit_price,total_due';
 const expenseHeader = 'created_at,amount,description,kind,paid_to_cafe';
 
@@ -83,7 +96,14 @@ DevLogBackup parseDevLogFiles(Map<String, String> files) {
   final receipts = <DevReceipt>[];
   final expenses = <DevExpense>[];
   for (final entry in files.entries) {
-    final rows = _parseCsv(entry.value);
+    if (entry.value.length > maxImportChars) {
+      throw FormatException('${entry.key} is too large to import.');
+    }
+    final text = entry.value.startsWith('﻿') ? entry.value.substring(1) : entry.value;
+    final rows = _parseCsv(text);
+    if (rows.length > maxImportRows) {
+      throw FormatException('${entry.key} has too many rows.');
+    }
     if (rows.isEmpty) {
       throw FormatException('${entry.key} is empty.');
     }
@@ -117,7 +137,7 @@ List<DevReceipt> _receipts(Iterable<List<String>> rows, String fileName) {
     }
     DateTime.parse(row[0].trim());
     final total = row[8].trim();
-    if (double.tryParse(total) == null) {
+    if (!_validAmount(total)) {
       throw FormatException('$fileName line $lineNo has a bad total.');
     }
     final key = '${row[0].trim()}|${row[1].trim()}|${row[2].trim()}|${row[3].trim()}|$service|$total';
@@ -127,17 +147,20 @@ List<DevReceipt> _receipts(Iterable<List<String>> rows, String fileName) {
         paidAt: row[0].trim(),
         receipt: row[1].trim(),
         monthly: row[2].trim(),
-        table: row[3].trim(),
+        table: csvUnguard(row[3].trim()),
         service: service,
         totalDue: total,
         lines: [],
       ),
     );
-    final item = row[5].trim();
+    final item = csvUnguard(row[5].trim());
     if (item.isEmpty) continue;
+    if (item.length > maxImportTextLength) {
+      throw FormatException('$fileName line $lineNo has an item name that is too long.');
+    }
     final qty = int.tryParse(row[6].trim());
     final price = row[7].trim();
-    if (qty == null || qty <= 0 || double.tryParse(price) == null) {
+    if (qty == null || qty <= 0 || qty > 10000 || !_validAmount(price)) {
       throw FormatException('$fileName line $lineNo has a bad item quantity or price.');
     }
     receipt.lines.add(DevReceiptLine(name: item, qty: qty, unitPrice: price));
@@ -155,8 +178,12 @@ List<DevExpense> _expenses(Iterable<List<String>> rows, String fileName) {
       throw FormatException('$fileName line $lineNo does not have 5 columns.');
     }
     DateTime.parse(row[0].trim());
-    if (double.tryParse(row[1].trim()) == null) {
+    if (!_validAmount(row[1].trim())) {
       throw FormatException('$fileName line $lineNo has a bad amount.');
+    }
+    final description = csvUnguard(row[2].trim());
+    if (description.length > maxImportTextLength) {
+      throw FormatException('$fileName line $lineNo has a description that is too long.');
     }
     final paid = row[4].trim().toLowerCase();
     if (paid != 'true' && paid != 'false') {
@@ -166,7 +193,7 @@ List<DevExpense> _expenses(Iterable<List<String>> rows, String fileName) {
       DevExpense(
         createdAt: row[0].trim(),
         amount: row[1].trim(),
-        description: row[2].trim(),
+        description: description,
         kind: row[3].trim().isEmpty ? 'cash_out' : row[3].trim(),
         paidToCafe: paid == 'true',
       ),

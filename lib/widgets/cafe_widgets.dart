@@ -57,6 +57,7 @@ class CafeLogo extends StatelessWidget {
                       logo,
                       width: size,
                       height: size,
+                      cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => Icon(mark ?? Icons.local_cafe, color: light ? Colors.white : CafeColors.terracottaDark, size: size * 0.52),
                     ),

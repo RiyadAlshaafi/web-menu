@@ -205,10 +205,10 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
     if (value.startsWith('data:')) {
       final comma = value.indexOf(',');
       if (comma > 0) {
-        child = Image.memory(base64Decode(value.substring(comma + 1)), fit: BoxFit.cover);
+        child = Image.memory(base64Decode(value.substring(comma + 1)), cacheWidth: 192, fit: BoxFit.cover);
       }
     } else if (value.startsWith('http')) {
-      child = Image.network(value, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.local_cafe));
+      child = Image.network(value, cacheWidth: 192, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.local_cafe));
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),

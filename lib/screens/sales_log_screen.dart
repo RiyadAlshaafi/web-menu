@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
+import '../csv_safe.dart';
 import '../ledger.dart';
 import '../pdf_text.dart';
 import '../save_bytes.dart';
@@ -455,7 +456,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.total,
         store.typeName(row.payment.paymentTypeId),
         'paid',
-      ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
+      ].map(csvCell).join(','));
     }
     try {
       await saveBytesFile(

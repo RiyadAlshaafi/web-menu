@@ -12,23 +12,34 @@ import 'models/models.dart';
 import 'state/cafe_store.dart';
 import 'time_format.dart';
 
+final Map<String, Uint8List> _logoCache = {};
+
+/// Decodes or downloads the logo once per URL so repeat prints skip the fetch.
+Future<pw.MemoryImage?> _logoFor(String url) async {
+  try {
+    var bytes = _logoCache[url];
+    if (bytes == null) {
+      if (url.startsWith('data:')) {
+        bytes = base64Decode(url.split(',').last);
+      } else if (url.startsWith('http')) {
+        final data = await NetworkAssetBundle(Uri.parse(url)).load(url);
+        bytes = data.buffer.asUint8List();
+      } else {
+        return null;
+      }
+      _logoCache[url] = bytes;
+    }
+    return pw.MemoryImage(bytes);
+  } catch (_) {
+    return null;
+  }
+}
+
 Future<Uint8List> receiptPdfBytes(CafeStore store, Payment payment, AppLocalizations l10n) async {
   final row = saleLedgerRow(store, payment);
   final charged = row.lines.fold<double>(0, (sum, line) => sum + line.total);
   final service = row.total - charged;
-  pw.MemoryImage? logo;
-  final url = store.logoUrl;
-  try {
-    if (url.startsWith('data:')) {
-      final encoded = url.split(',').last;
-      logo = pw.MemoryImage(base64Decode(encoded));
-    } else if (url.startsWith('http')) {
-      final data = await NetworkAssetBundle(Uri.parse(url)).load(url);
-      logo = pw.MemoryImage(data.buffer.asUint8List());
-    }
-  } catch (_) {
-    logo = null;
-  }
+  final logo = await _logoFor(store.logoUrl);
   final theme = await PdfFonts.theme();
   final doc = pw.Document(theme: theme);
   doc.addPage(

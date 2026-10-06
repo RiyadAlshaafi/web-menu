@@ -12,12 +12,15 @@ class PdfFonts {
     return pw.ThemeData.withFont(
       base: _regular,
       bold: _bold,
-      fontFallback: [pw.Font.helvetica(), pw.Font.helveticaBold()],
+      fontFallback: [_helvetica, _helveticaBold],
     );
   }
 
   static pw.Font get regular => _regular!;
   static pw.Font get bold => _bold!;
+
+  static final pw.Font _helvetica = pw.Font.helvetica();
+  static final pw.Font _helveticaBold = pw.Font.helveticaBold();
 }
 
 bool pdfHasArabic(String value) => RegExp(r'[\u0600-\u06FF]').hasMatch(value);
@@ -38,7 +41,7 @@ pw.Text pdfText(
     textDirection: arabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
     style: pw.TextStyle(
       font: bold ? PdfFonts.bold : PdfFonts.regular,
-      fontFallback: [bold ? pw.Font.helveticaBold() : pw.Font.helvetica()],
+      fontFallback: [bold ? PdfFonts._helveticaBold : PdfFonts._helvetica],
       fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
       fontSize: size,
     ),

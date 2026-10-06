@@ -215,7 +215,7 @@ extension CafeStorePayments on CafeStore {
     );
     if (failure != null) return _expenseError(failure);
     _hydrateOperational();
-    _syncStamp = _stamp();
+    _syncStampCache = null;
     notifyListeners();
     return null;
   }
@@ -251,7 +251,7 @@ extension CafeStorePayments on CafeStore {
     );
     if (failure != null) return _expenseError(failure);
     _hydrateOperational();
-    _syncStamp = _stamp();
+    _syncStampCache = null;
     notifyListeners();
     return null;
   }

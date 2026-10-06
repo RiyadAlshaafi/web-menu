@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/app_database.dart';
+import '../csv_safe.dart';
 import '../save_bytes.dart';
 import '../dev_logs.dart';
 import '../state/cafe_store.dart';
@@ -323,8 +324,6 @@ class _DevScreenState extends State<DevScreen> {
   }
 }
 
-String _cell(Object? value) => '"${'$value'.replaceAll('"', '""')}"';
-
 String _receiptsCsv(List<dynamic> payments) {
   final buffer = StringBuffer('paid_at,receipt,monthly,table,service,item,qty,unit_price,total_due\n');
   for (final raw in payments) {
@@ -341,7 +340,7 @@ String _receiptsCsv(List<dynamic> payments) {
         '',
         '',
         row['total_due'],
-      ].map(_cell).join(','));
+      ].map(csvCell).join(','));
       continue;
     }
     for (final lineRaw in lines) {
@@ -356,7 +355,7 @@ String _receiptsCsv(List<dynamic> payments) {
         line['qty'],
         line['unit_price'],
         row['total_due'],
-      ].map(_cell).join(','));
+      ].map(csvCell).join(','));
     }
   }
   return buffer.toString();
@@ -372,7 +371,7 @@ String _expensesCsv(List<dynamic> expenses) {
       row['description'],
       row['kind'],
       row['paid_to_cafe'],
-    ].map(_cell).join(','));
+    ].map(csvCell).join(','));
   }
   return buffer.toString();
 }

@@ -5,11 +5,10 @@ class LanguageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.watch<CafeStore>();
-    final arabic = store.locale == 'ar';
+    final arabic = context.select<CafeStore, bool>((store) => store.locale == 'ar');
     return PopupMenuButton<String>(
       tooltip: context.l10n.cashierLanguage,
-      onSelected: (code) => store.setLocale(code),
+      onSelected: (code) => context.read<CafeStore>().setLocale(code),
       itemBuilder: (context) => [
         CheckedPopupMenuItem(value: 'en', checked: !arabic, child: const Text('English')),
         CheckedPopupMenuItem(value: 'ar', checked: arabic, child: const Text('العربية')),
@@ -29,11 +28,21 @@ class CashierShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.watch<CafeStore>();
-    final staff = store.currentCashier;
-    final dining = store.diningTables;
-    final occupied = dining.where((table) => table.status != TableStatus.free).length;
-    final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
+    // Rebuild the rail only when what it shows changes, not on every store tick.
+    final view = context.select<CafeStore, ({String initials, String? name, int tables, int occupied, int alerts, String? sales})>((store) {
+      final staff = store.currentCashier;
+      final dining = store.diningTables;
+      final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
+      return (
+        initials: staff?.initials ?? 'C',
+        name: staff?.name,
+        tables: dining.length,
+        occupied: dining.where((table) => table.status != TableStatus.free).length,
+        alerts: store.openCalls.length + store.liveOrders().length,
+        sales: sales == 0 ? null : store.currency.format(sales),
+      );
+    });
+    final store = context.read<CafeStore>();
     final section = AppSections.forCashier(location);
     final width = MediaQuery.sizeOf(context).width;
     final drawer = AppSections.useDrawer(width);
@@ -93,9 +102,9 @@ class CashierShell extends StatelessWidget {
                         item.matches(location),
                         compact,
                         badge: switch (item.path) {
-                          '/pos' => '${store.openCalls.length + store.liveOrders().length}',
-                          '/pos/tables' => dining.isEmpty ? null : '$occupied/${dining.length}',
-                          '/pos/shifts' => sales == 0 ? null : store.currency.format(sales),
+                          '/pos' => '${view.alerts}',
+                          '/pos/tables' => view.tables == 0 ? null : '${view.occupied}/${view.tables}',
+                          '/pos/shifts' => view.sales,
                           _ => null,
                         },
                       ),
@@ -117,14 +126,14 @@ class CashierShell extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               backgroundColor: CafeColors.terracottaSoft,
-                              child: Text(staff?.initials ?? 'C', style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800)),
+                              child: Text(view.initials, style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800)),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(staff?.name ?? context.l10n.cashierRole, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                  Text(view.name ?? context.l10n.cashierRole, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
                                   Text(context.l10n.cashierSoloCashier, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
                                 ],
                               ),

@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
+import '../csv_safe.dart';
 import '../ledger.dart';
 import '../pdf_text.dart';
 import '../save_bytes.dart';
@@ -124,14 +125,14 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                   ? EmptyHint(context.l10n.noTransactions)
                   : WideTable(
                       minWidth: 980,
-                      child: ListView(
-                      children: [
-                        _header(context),
-                        for (final row in rows) ...[
-                          const Divider(height: 1),
-                          _line(context, store, row),
-                        ],
-                        ],
+                      child: ListView.builder(
+                        // Header, then a divider + line per row, built lazily.
+                        itemCount: 1 + rows.length * 2,
+                        itemBuilder: (context, index) {
+                          if (index == 0) return _header(context);
+                          if (index.isOdd) return const Divider(height: 1);
+                          return _line(context, store, rows[index ~/ 2 - 1]);
+                        },
                       ),
                     ),
             ),
@@ -283,7 +284,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         store.expenseCategoryLabel(row),
         row.description,
         row.amount,
-      ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
+      ].map(csvCell).join(','));
     }
     try {
       await saveBytesFile(
