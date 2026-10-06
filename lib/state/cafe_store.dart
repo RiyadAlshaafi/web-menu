@@ -364,7 +364,8 @@ class CafeStore extends ChangeNotifier {
 
   /// Links this install to cafe [slot] and reloads that cafe's data.
   Future<String?> linkDeviceToSlot(int slot) async {
-    if (authKind != AuthKind.none) signOut();
+    // From the developer tools, keep the developer's own sign-in.
+    if (authKind != AuthKind.none) signOut(keepAuthSession: db.devToolsActive);
     final error = await db.bindSlot(slot);
     if (error == null) _afterRelink();
     return error;
@@ -614,6 +615,20 @@ class CafeStore extends ChangeNotifier {
   Future<void> _ensureShift() async {
     final cashier = currentCashier;
     if (cashier == null) return;
+    if (db.client != null) {
+      // The server finds or opens this cashier's shift, so a device never
+      // writes shift totals of its own.
+      final opened = await db.openShift();
+      final shiftId = opened.shiftId;
+      if (opened.error != null || shiftId == null) {
+        throw StateError(opened.error ?? 'The shift was not opened.');
+      }
+      await db.refreshFromDisk(liveOnly: true);
+      _hydrateOperational();
+      currentShift = shifts.where((shift) => shift.id == shiftId).firstOrNull ??
+          CashShift(id: shiftId, cashierId: cashier.id, openedAt: DateTime.now(), openingCash: 0);
+      return;
+    }
     final existing = shifts.where(
       (shift) => shift.isOpen && shift.cashierId == cashier.id,
     );
@@ -641,14 +656,18 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void signOut() {
+  /// Signs the cashier or admin out of this device. [keepAuthSession] keeps
+  /// the Supabase account signed in (the developer tools need it).
+  void signOut({bool keepAuthSession = false}) {
+    final token = db.cashierToken;
+    if (token != null) unawaited(db.cashierLogout(token));
     authKind = AuthKind.none;
     currentCashier = null;
     currentShift = null;
     pinBuffer = '';
     db.cashierToken = null;
     stopLiveSync();
-    db.client?.auth.signOut();
+    if (!keepAuthSession) db.client?.auth.signOut();
     notifyListeners();
   }
 
@@ -678,10 +697,41 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteCashier(String id) async {
+  /// Removes a cashier from the sign-in screen. The row stays (deactivated)
+  /// because their past payments and shifts point at it.
+  Future<String?> deleteCashier(String id) async {
+    final error = await db.deactivateCashier(id);
+    if (error != null) return error;
     cashiers.removeWhere((item) => item.id == id);
-    await db.writeCashiers(cashiers);
     notifyListeners();
+    return null;
+  }
+
+  /// Changes the signed-in admin's password after checking the current one.
+  Future<String?> changeAdminPassword({required String current, required String next}) async {
+    final client = db.client;
+    final email = client?.auth.currentUser?.email ?? admin?.email ?? '';
+    if (client == null || email.isEmpty) return l10n.errNoAdmin;
+    if (!Secrets.validPassword(next)) return l10n.errWeakPassword;
+    try {
+      await client.auth.signInWithPassword(email: email, password: current);
+    } on AuthException catch (error, stackTrace) {
+      reportError('change password check', error, stackTrace);
+      return l10n.catalogCurrentPasswordWrong;
+    } catch (error, stackTrace) {
+      reportError('change password check', error, stackTrace);
+      return 'Could not reach Supabase: $error';
+    }
+    try {
+      await client.auth.updateUser(UserAttributes(password: next));
+    } on AuthException catch (error, stackTrace) {
+      reportError('change password', error, stackTrace);
+      return error.message;
+    } catch (error, stackTrace) {
+      reportError('change password', error, stackTrace);
+      return 'Could not reach Supabase: $error';
+    }
+    return null;
   }
 
   bool _validEmail(String value) =>

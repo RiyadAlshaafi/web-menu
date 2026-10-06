@@ -3229,6 +3229,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replace'**
   String get adminRegenerateConfirm;
+
+  /// No description provided for @catalogCurrentPasswordWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'The current password is not correct.'**
+  String get catalogCurrentPasswordWrong;
+
+  /// No description provided for @catalogDeleteCashierTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove cashier?'**
+  String get catalogDeleteCashierTitle;
+
+  /// No description provided for @catalogDeleteCashierMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will no longer be able to sign in. Their past sales stay in the records.'**
+  String catalogDeleteCashierMessage(String name);
+
+  /// No description provided for @catalogDeleteCashierConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get catalogDeleteCashierConfirm;
+
+  /// No description provided for @guestItemsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, these dishes are no longer available: {items}. Remove them from your order and try again.'**
+  String guestItemsUnavailable(String items);
+
+  /// No description provided for @guestQtyTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'You can order up to 99 of one dish at a time.'**
+  String get guestQtyTooLarge;
 }
 
 class _AppLocalizationsDelegate

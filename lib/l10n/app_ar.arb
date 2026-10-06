@@ -546,5 +546,11 @@
   "adminRegenerateConfirmTitle": "استبدال رمز QR؟",
   "adminRegenerateConfirmMessage": "رمز QR المطبوع لهذه الطاولة سيتوقف عن العمل. اطبع الرمز الجديد وضعه على الطاولة.",
   "adminRegenerateAllConfirmMessage": "جميع رموز QR المطبوعة لطاولاتك ستتوقف عن العمل. ستحتاج إلى طباعة الرموز الجديدة ووضعها كلها.",
-  "adminRegenerateConfirm": "استبدال"
+  "adminRegenerateConfirm": "استبدال",
+  "catalogCurrentPasswordWrong": "كلمة المرور الحالية غير صحيحة.",
+  "catalogDeleteCashierTitle": "إزالة الكاشير؟",
+  "catalogDeleteCashierMessage": "لن يتمكن {name} من تسجيل الدخول بعد الآن. تبقى مبيعاته السابقة محفوظة في السجلات.",
+  "catalogDeleteCashierConfirm": "إزالة",
+  "guestItemsUnavailable": "عذراً، هذه الأطباق لم تعد متوفرة: {items}. احذفها من طلبك وحاول مرة أخرى.",
+  "guestQtyTooLarge": "يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة."
 }

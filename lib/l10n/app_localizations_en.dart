@@ -1739,4 +1739,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminRegenerateConfirm => 'Replace';
+
+  @override
+  String get catalogCurrentPasswordWrong =>
+      'The current password is not correct.';
+
+  @override
+  String get catalogDeleteCashierTitle => 'Remove cashier?';
+
+  @override
+  String catalogDeleteCashierMessage(String name) {
+    return '$name will no longer be able to sign in. Their past sales stay in the records.';
+  }
+
+  @override
+  String get catalogDeleteCashierConfirm => 'Remove';
+
+  @override
+  String guestItemsUnavailable(String items) {
+    return 'Sorry, these dishes are no longer available: $items. Remove them from your order and try again.';
+  }
+
+  @override
+  String get guestQtyTooLarge =>
+      'You can order up to 99 of one dish at a time.';
 }

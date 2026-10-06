@@ -109,11 +109,12 @@ class CustomerBillScreen extends StatelessWidget {
                             Text(context.l10n.guestThankYou, style: const TextStyle(color: CafeColors.inkMuted)),
                           ],
                         )
-                      else if (order == null && store.cartFor(table.id).lines.isEmpty)
+                      else if (order == null)
                         EmptyHint(context.l10n.noOrders)
                       else ...[
-                        ...?order?.lines.map((line) => _row(store, line)),
-                        ...store.cartFor(table.id).lines.map((line) => _row(store, line)),
+                        // The bill lists what was sent to the kitchen; dishes
+                        // still in the cart are not charged.
+                        ...order.lines.map((line) => _row(store, line)),
                         const SizedBox(height: 8),
                         Container(
                           width: double.infinity,

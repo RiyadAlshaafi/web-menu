@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
 import '../time_format.dart';
 import '../report_error.dart';

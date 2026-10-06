@@ -66,9 +66,10 @@ void main() {
     store.setOrderStatus('order-1', OrderStatus.served);
     expect(store.orders.single.status, OrderStatus.served);
 
-    store.orders.single.status = OrderStatus.received;
-    await store.requestBill(table.id);
-    expect(store.openOrderFor(table.id)!.status, OrderStatus.received);
+    // A bill can be asked for once the order is served; asking does not change
+    // the kitchen status.
+    expect(await store.requestBill(table.id), isNull);
+    expect(store.openOrderFor(table.id)!.status, OrderStatus.served);
     expect(store.tables.single.status, TableStatus.billRequested);
     expect(store.openCalls.where((call) => call.kind == 'bill'), isNotEmpty);
     expect(store.payments, isEmpty);
@@ -101,6 +102,17 @@ void main() {
     final first = CafeTable(id: 'a', number: '1', qrSlug: 'a');
     final second = CafeTable(id: 'b', number: '2', qrSlug: 'b');
     store.tables = [first, second];
+    store.orders = [
+      for (final table in [first, second])
+        CafeOrder(
+          id: 'order-${table.id}',
+          tableId: table.id,
+          tableNumber: table.number,
+          status: OrderStatus.served,
+          createdAt: DateTime.utc(2026, 9, 28),
+          lines: [OrderLine(menuItemId: 'wine', name: 'red wine', qty: 1, unitPrice: 10)],
+        ),
+    ];
     await store.requestBill(first.id);
     await store.requestBill(second.id);
     await store.requestBill(first.id);
@@ -108,6 +120,71 @@ void main() {
     expect(bills.map((call) => call.tableId).toSet(), {'a', 'b'});
     expect(store.billTables.map((table) => table.id).toSet(), {'a', 'b'});
     expect(store.payments, isEmpty);
+  });
+
+  test('the bill charges only what was sent to the kitchen', () {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.menuItems = [
+      MenuItem(id: 'wine', nameIt: 'red wine', nameEn: 'red wine', price: 10, categoryId: 'c'),
+      MenuItem(id: 'bread', nameIt: 'bread', nameEn: 'bread', price: 4, categoryId: 'c'),
+    ];
+    store.orders = [
+      CafeOrder(
+        id: 'order-1',
+        tableId: table.id,
+        tableNumber: table.number,
+        status: OrderStatus.served,
+        createdAt: DateTime.utc(2026, 9, 28),
+        lines: [OrderLine(menuItemId: 'wine', name: 'red wine', qty: 2, unitPrice: 10)],
+      ),
+    ];
+    store.addToCart(table.id, store.menuItems.last);
+    expect(store.cartFor(table.id).total, 4);
+    expect(store.tabSubtotal(table.id), 20);
+    expect(store.tabTotal(table.id, applyService: false), 20);
+  });
+
+  test('one dish stops at the most a single send may carry', () {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.menuItems = [
+      MenuItem(id: 'wine', nameIt: 'red wine', nameEn: 'red wine', price: 10, categoryId: 'c'),
+    ];
+    for (var i = 0; i < CafeStoreOrders.maxDishQty + 5; i++) {
+      store.addToCart(table.id, store.menuItems.single);
+    }
+    expect(store.cartFor(table.id).lines.single.qty, CafeStoreOrders.maxDishQty);
+    store.setCartQty(table.id, 'wine', 500);
+    expect(store.cartFor(table.id).lines.single.qty, CafeStoreOrders.maxDishQty);
+  });
+
+  test('a status change that skips a kitchen step is ignored', () async {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.orders = [
+      CafeOrder(
+        id: 'order-1',
+        tableId: table.id,
+        tableNumber: table.number,
+        status: OrderStatus.received,
+        createdAt: DateTime.utc(2026, 9, 28),
+        lines: [OrderLine(menuItemId: 'wine', name: 'red wine', qty: 1, unitPrice: 10)],
+      ),
+    ];
+    expect(await store.setOrderStatus('order-1', OrderStatus.served), isNull);
+    expect(store.orders.single.status, OrderStatus.received);
+    expect(await store.setOrderStatus('order-1', OrderStatus.preparing), isNull);
+    expect(store.orders.single.status, OrderStatus.preparing);
+  });
+
+  test('a sent line keeps its database id and a cart line has none', () {
+    final sent = OrderLine.fromJson({'id': 'line-1', 'menuItemId': 'wine', 'name': 'red wine', 'qty': 1, 'unitPrice': 10});
+    expect(sent.id, 'line-1');
+    expect(OrderLine.fromJson(sent.toJson()).id, 'line-1');
+    final cart = OrderLine(menuItemId: 'wine', name: 'red wine', qty: 1, unitPrice: 10);
+    expect(cart.id, isNull);
+    expect(cart.toJson().containsKey('id'), isFalse);
   });
 
   test('first launch is empty with no demo data', () {

@@ -253,8 +253,11 @@ class OrderLine {
     required this.unitPrice,
     this.listUnitPrice,
     this.round = 1,
+    this.id,
   });
 
+  /// Database row id of a sent line; null for cart lines and local-only lines.
+  final String? id;
   final String menuItemId;
   final String name;
   int qty;
@@ -281,9 +284,11 @@ class OrderLine {
     unitPrice: (json['unitPrice'] as num).toDouble(),
     listUnitPrice: (json['listUnitPrice'] as num?)?.toDouble(),
     round: json['round'] as int? ?? 1,
+    id: json['id'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
+    if (id != null) 'id': id,
     'menuItemId': menuItemId,
     'name': name,
     'qty': qty,

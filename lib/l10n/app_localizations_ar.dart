@@ -1731,4 +1731,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminRegenerateConfirm => 'استبدال';
+
+  @override
+  String get catalogCurrentPasswordWrong => 'كلمة المرور الحالية غير صحيحة.';
+
+  @override
+  String get catalogDeleteCashierTitle => 'إزالة الكاشير؟';
+
+  @override
+  String catalogDeleteCashierMessage(String name) {
+    return 'لن يتمكن $name من تسجيل الدخول بعد الآن. تبقى مبيعاته السابقة محفوظة في السجلات.';
+  }
+
+  @override
+  String get catalogDeleteCashierConfirm => 'إزالة';
+
+  @override
+  String guestItemsUnavailable(String items) {
+    return 'عذراً، هذه الأطباق لم تعد متوفرة: $items. احذفها من طلبك وحاول مرة أخرى.';
+  }
+
+  @override
+  String get guestQtyTooLarge =>
+      'يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة.';
 }

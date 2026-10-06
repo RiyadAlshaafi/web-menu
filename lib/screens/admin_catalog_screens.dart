@@ -392,6 +392,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final cashierPin = TextEditingController();
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
+  bool changingPassword = false;
 
   @override
   void dispose() {
@@ -400,6 +401,33 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     currentPassword.dispose();
     newPassword.dispose();
     super.dispose();
+  }
+
+  Future<void> _changePassword(CafeStore store) async {
+    setState(() => changingPassword = true);
+    final error = await store.changeAdminPassword(current: currentPassword.text, next: newPassword.text);
+    if (!mounted) return;
+    setState(() => changingPassword = false);
+    if (error == null) {
+      currentPassword.clear();
+      newPassword.clear();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? context.l10n.catalogPasswordUpdated)),
+    );
+  }
+
+  Future<void> _removeCashier(CafeStore store, Cashier member) async {
+    final confirmed = await showCafeConfirmDialog(
+      context,
+      title: context.l10n.catalogDeleteCashierTitle,
+      message: context.l10n.catalogDeleteCashierMessage(member.name),
+      confirm: context.l10n.catalogDeleteCashierConfirm,
+    );
+    if (!confirmed || !mounted) return;
+    final error = await store.deleteCashier(member.id);
+    if (error == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
   @override
@@ -448,7 +476,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton(
-                  onPressed: () => context.mounted ? ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.catalogPasswordUpdated))) : null,
+                  onPressed: changingPassword ? null : () => _changePassword(store),
                   child: Text(context.l10n.catalogUpdatePassword),
                 ),
               ),
@@ -485,7 +513,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             const SizedBox(width: 8),
                             Expanded(child: Text(member.name, style: const TextStyle(fontWeight: FontWeight.w700))),
                             IconButton(
-                              onPressed: () => store.deleteCashier(member.id),
+                              onPressed: () => _removeCashier(store, member),
                               icon: const Icon(Icons.delete_outline, size: 18, color: CafeColors.inkMuted),
                             ),
                           ],

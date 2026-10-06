@@ -23,10 +23,9 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
         builder: (context, setState) {
           final table = store.tableById(tableId);
           final order = store.openOrderFor(tableId);
-          final lines = <OrderLine>[
-            ...?order?.lines,
-            ...store.cartFor(tableId).lines,
-          ];
+          // Only what was sent to the kitchen is charged; unsent cart dishes
+          // are cleared at settlement without being billed.
+          final lines = <OrderLine>[...?order?.lines];
           final subtotal = store.tabSubtotal(tableId);
           final due = store.chargeTotal(subtotal, applyService: applyService);
           final received = double.tryParse(controller.text) ?? 0;

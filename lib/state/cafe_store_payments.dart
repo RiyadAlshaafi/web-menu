@@ -203,7 +203,9 @@ extension CafeStorePayments on CafeStore {
       return l10n.cashierExpenseInvalid;
     }
     final withdrawal = category.first.nameEn == 'Cash Withdrawal';
-    await db.writeShifts(shifts);
+    // The shift row already exists on the server (opened at sign-in), so the
+    // stale local totals are not written back here.
+    if (db.client == null) await db.writeShifts(shifts);
     final failure = await db.addShiftExpense(
       shiftId: shift.id,
       cashierId: cashier.id,
@@ -263,23 +265,45 @@ extension CafeStorePayments on CafeStore {
     return failure;
   }
 
+  /// Closes the signed-in cashier's shift. The server sets only the counted
+  /// cash and the closing time; it keeps its own sales totals.
   Future<String?> closeShift({required double actualCash}) async {
     final shift = currentShift ?? openShift;
     if (shift == null) return l10n.errNoOpenShift;
-    shift
-      ..actualCash = actualCash
-      ..closedAt = DateTime.now();
-    await db.writeShifts(shifts);
+    if (db.client == null) {
+      shift
+        ..actualCash = actualCash
+        ..closedAt = DateTime.now();
+      await db.writeShifts(shifts);
+    } else {
+      final failure = await db.closeShift(actualCash);
+      if (failure != null) {
+        if (_sessionExpired(failure)) return failure;
+        return failure == 'no open shift' ? l10n.errNoOpenShift : failure;
+      }
+      await db.refreshFromDisk(liveOnly: true);
+      _hydrateOperational();
+    }
     currentShift = null;
     notifyListeners();
     return null;
   }
 
-  Future<void> setOpeningCash(double value) async {
+  Future<String?> setOpeningCash(double value) async {
     final shift = currentShift ?? openShift;
-    if (shift == null) return;
-    shift.openingCash = value;
-    await db.writeShifts(shifts);
+    if (shift == null) return l10n.errNoOpenShift;
+    if (db.client == null) {
+      shift.openingCash = value;
+      await db.writeShifts(shifts);
+    } else {
+      final failure = await db.setOpeningCash(value);
+      if (failure != null) {
+        if (_sessionExpired(failure)) return failure;
+        return failure == 'no open shift' ? l10n.errNoOpenShift : failure;
+      }
+      shift.openingCash = value;
+    }
     notifyListeners();
+    return null;
   }
 }

@@ -1004,6 +1004,10 @@ String guestOrderErrorText(BuildContext context, Object error) {
   if (text.startsWith(prefix)) text = text.substring(prefix.length);
   if (text.contains('too_far')) return context.l10n.guestLocationTooFar;
   if (text.contains('location_required')) return context.l10n.guestLocationDenied;
+  if (text.startsWith(AppDatabase.unavailableItemsError)) {
+    return context.l10n.guestItemsUnavailable(text.substring(AppDatabase.unavailableItemsError.length));
+  }
+  if (text.contains('qty_too_large')) return context.l10n.guestQtyTooLarge;
   return text;
 }
 

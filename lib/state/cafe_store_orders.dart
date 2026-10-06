@@ -70,8 +70,9 @@ extension CafeStoreOrders on CafeStore {
     return match.isNotEmpty && match.first.serviceType == 'takeout';
   }
 
-  double tabSubtotal(String tableId) =>
-      (openOrderFor(tableId)?.subtotal ?? 0) + cartFor(tableId).total;
+  /// What the table owes: only lines sent to the kitchen. Dishes still in the
+  /// cart were never ordered, so the bill and settlement leave them out.
+  double tabSubtotal(String tableId) => openOrderFor(tableId)?.subtotal ?? 0;
 
   double serviceCharge(double subtotal) => subtotal * serviceChargeRate;
 
@@ -86,10 +87,14 @@ extension CafeStoreOrders on CafeStore {
   int tabItemCount(String tableId) =>
       (openOrderFor(tableId)?.itemCount ?? 0) + cartFor(tableId).itemCount;
 
+  /// Most of one dish a single send may carry; the server refuses more.
+  static const maxDishQty = 99;
+
   void addToCart(String tableId, MenuItem item) {
     if (item.soldOut || !item.available) return;
     final cart = cartFor(tableId);
     final existing = cart.lines.where((line) => line.menuItemId == item.id);
+    if (existing.isNotEmpty && existing.first.qty >= maxDishQty) return;
     if (existing.isEmpty) {
       cart.lines.add(
         OrderLine(
@@ -111,6 +116,7 @@ extension CafeStoreOrders on CafeStore {
   }
 
   void setCartQty(String tableId, String menuItemId, int qty) {
+    qty = qty > maxDishQty ? maxDishQty : qty;
     final cart = cartFor(tableId);
     cart.lines.removeWhere((line) => line.menuItemId == menuItemId && qty <= 0);
     for (final line in cart.lines.where((line) => line.menuItemId == menuItemId)) {
@@ -141,6 +147,7 @@ extension CafeStoreOrders on CafeStore {
       return openOrderFor(tableId);
     }
     _pendingWrites += 1;
+    var dishesChanged = false;
     try {
       final table = tables.where((item) => item.id == tableId);
       final slug = table.isEmpty ? '' : table.first.qrSlug;
@@ -158,11 +165,16 @@ extension CafeStoreOrders on CafeStore {
         guestLocation = error == 'too_far' ? GuestLocationStatus.tooFar : GuestLocationStatus.denied;
         notifyListeners();
       }
+      if (error != null && error.startsWith(AppDatabase.unavailableItemsError)) {
+        dishesChanged = true;
+      }
       if (error != null) throw StateError(error);
       _hydrateOperational();
     } finally {
       if (_pendingWrites > 0) _pendingWrites -= 1;
       _sendingTables.remove(tableId);
+      // Reload the menu so the dishes the server refused show as unavailable.
+      if (dishesChanged) unawaited(syncFromDisk());
     }
     notifyListeners();
     return openOrderFor(tableId);
@@ -249,17 +261,14 @@ extension CafeStoreOrders on CafeStore {
         ),
       );
     }
-    // The table status and the bill call are independent writes; sending them
-    // together halves the wait before the cashier sees the request.
-    try {
-      await Future.wait([
-        if (!takeout) db.updateTableStatus(table),
-        db.writeCalls(calls),
-      ]);
-    } catch (error, stack) {
-      reportError('request bill', error, stack);
-      return '$error';
-    }
+    notifyListeners();
+    // One server call marks the table and opens the bill call, so a guest no
+    // longer needs write access to the table row.
+    final error = await db.requestBill(
+      qrSlug: authKind == AuthKind.none ? table.qrSlug : null,
+      tableId: authKind == AuthKind.none ? null : tableId,
+    );
+    if (error != null) return error;
     notifyListeners();
     return null;
   }
@@ -286,11 +295,18 @@ extension CafeStoreOrders on CafeStore {
     notifyListeners();
   }
 
-  void setOrderStatus(String orderId, OrderStatus status) {
+  /// Moves an order one kitchen step. Shows the change at once and puts it
+  /// back if the server refuses; returns the server's error, if any.
+  Future<String?> setOrderStatus(String orderId, OrderStatus status) async {
     final order = orders.firstWhere((item) => item.id == orderId);
-    if (order.status.next != status) return;
+    if (order.status.next != status) return null;
+    final previous = order.status;
     order.status = status;
-    db.writeOrders(orders);
     notifyListeners();
+    final error = await db.setOrderStatus(orderId, status);
+    if (error == null) return null;
+    order.status = previous;
+    if (!_sessionExpired(error)) notifyListeners();
+    return error;
   }
 }

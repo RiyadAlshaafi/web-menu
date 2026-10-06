@@ -89,6 +89,13 @@ class AppDatabase {
   /// Slot the developer tools are working on (sent as the x-dev-slot header).
   int? devSlot;
 
+  /// True while the developer tools screen is open.
+  bool devToolsActive = false;
+
+  /// True when the developer signed in only to open the developer tools; the
+  /// session is signed out again when the tools close.
+  bool devSignedInForTools = false;
+
   Map<String, dynamic> _cafe = {
     'name': '',
     'serviceChargeRate': 0.10,
@@ -438,9 +445,9 @@ class AppDatabase {
         // leave screens empty or stale until the next live update. Let the
         // save finish, then load again.
         interrupted++;
-        await Future.wait([_orderWrites, _cartWrites]).timeout(
+        await _cartWrites.timeout(
           const Duration(seconds: 10),
-          onTimeout: () => const [],
+          onTimeout: () {},
         );
         _refreshRerun = true;
         if (!live) _refreshRerunFull = true;
@@ -1022,6 +1029,7 @@ class AppDatabase {
           unitPrice: _asDouble(map['unit_price']) ?? 0,
           listUnitPrice: _asDouble(map['list_unit_price']),
           round: (map['round'] as num?)?.toInt() ?? 1,
+          id: map['id'] as String?,
         );
       }).toList(),
     );
@@ -1339,66 +1347,85 @@ class AppDatabase {
     }
   }
 
-  Future<void> writeCashiers(List<Cashier> items) async {
-    _cashiers = items;
+  /// Stops a cashier from signing in. Cashiers are never hard-deleted: their
+  /// payments and shifts reference them, so a delete fails at the database.
+  Future<String?> deactivateCashier(String id) async {
     if (client == null || restaurantId == null || client!.auth.currentUser == null) {
-      return;
+      _cashiers = _cashiers.where((item) => item.id != id).toList();
+      return null;
     }
-    final keep = items.map((item) => item.id).toSet();
-    final existing = await client!.from('cashiers').select('id');
-    for (final row in existing as List) {
-      if (!keep.contains(row['id'])) {
-        await client!.from('cashiers').delete().eq('id', row['id'] as String);
-      }
+    try {
+      await client!.from('cashiers').update({'active': false}).eq('id', id);
+      _cashiers = _cashiers.where((item) => item.id != id).toList();
+      return null;
+    } catch (error, stackTrace) {
+      reportError('deactivate cashier', error, stackTrace);
+      return '$error';
     }
   }
 
-  Future<void> writeTables(List<CafeTable> items) async {
-    _tables = items;
-    if (client == null || restaurantId == null) return;
-    for (final item in items) {
-      await client!.from('dining_tables').upsert({
-        'id': item.id,
-        'restaurant_id': restaurantId,
-        'number': item.number,
-        'qr_slug': item.qrSlug,
-        'zone': item.zone,
-        'seats': item.seats,
-        'status': item.status.name,
-        'guests': item.guests,
-        'archived': item.archived,
-      });
-    }
+  /// Saves [changed] tables only. The live columns (status, guests) are left
+  /// out on purpose: guests and cashiers change them, and an admin's copy may
+  /// be stale. New rows get the database defaults.
+  Future<void> writeTables(List<CafeTable> all, {required Iterable<CafeTable> changed}) async {
+    _tables = all;
+    final rows = [
+      for (final item in changed)
+        {
+          'id': item.id,
+          'restaurant_id': restaurantId,
+          'number': item.number,
+          'qr_slug': item.qrSlug,
+          'zone': item.zone,
+          'seats': item.seats,
+          'archived': item.archived,
+        },
+    ];
+    if (client == null || restaurantId == null || rows.isEmpty) return;
     // Tables are never hard-deleted: that would cascade to their receipts.
+    await client!.from('dining_tables').upsert(rows);
   }
 
-  Future<void> writeCategories(List<MenuCategory> items) async {
-    _categories = items;
+  /// Saves [changed] categories and deletes [deleted] ones, by id. Never
+  /// deletes rows just because this device's copy of the list lacks them.
+  Future<void> writeCategories(
+    List<MenuCategory> all, {
+    Iterable<MenuCategory> changed = const [],
+    Iterable<String> deleted = const [],
+  }) async {
+    _categories = all;
     if (client == null || restaurantId == null) return;
-    for (final item in items) {
-      await client!.from('menu_categories').upsert({
-        'id': item.id,
-        'restaurant_id': restaurantId,
-        'name_en': item.nameEn,
-        'name_ar': item.nameAr,
-        'sort_order': item.sortOrder,
-        'spotlight': item.spotlight,
-        'visible': item.visible,
-      });
-    }
-    await _deleteMissing(
-      'menu_categories',
-      items.map((item) => item.id).toList(),
-    );
+    final rows = [
+      for (final item in changed)
+        {
+          'id': item.id,
+          'restaurant_id': restaurantId,
+          'name_en': item.nameEn,
+          'name_ar': item.nameAr,
+          'sort_order': item.sortOrder,
+          'spotlight': item.spotlight,
+          'visible': item.visible,
+        },
+    ];
+    if (rows.isNotEmpty) await client!.from('menu_categories').upsert(rows);
+    final ids = deleted.toList();
+    if (ids.isNotEmpty) await client!.from('menu_categories').delete().inFilter('id', ids);
   }
 
-  Future<void> writeMenuItems(List<MenuItem> items) async {
-    _menuItems = items;
+  /// Saves [changed] dishes and deletes [deleted] ones, by id. Never deletes
+  /// rows just because this device's copy of the menu lacks them.
+  Future<void> writeMenuItems(
+    List<MenuItem> all, {
+    Iterable<MenuItem> changed = const [],
+    Iterable<String> deleted = const [],
+  }) async {
+    _menuItems = all;
     if (client == null || restaurantId == null) return;
-    for (final item in items) {
+    final rows = <Map<String, dynamic>>[];
+    for (final item in changed) {
       final image = await _storeImage(item.id, item.imageUrl);
       item.imageUrl = image;
-      await client!.from('menu_items').upsert({
+      rows.add({
         'id': item.id,
         'restaurant_id': restaurantId,
         'category_id': item.categoryId,
@@ -1415,92 +1442,19 @@ class AppDatabase {
         'discount_applied': item.discountApplied,
       });
     }
-    await _deleteMissing('menu_items', items.map((item) => item.id).toList());
+    if (rows.isNotEmpty) await client!.from('menu_items').upsert(rows);
+    final ids = deleted.toList();
+    if (ids.isNotEmpty) await client!.from('menu_items').delete().inFilter('id', ids);
   }
 
-  Future<void> _orderWrites = Future.value();
-
-  /// What the database is known to hold, so unchanged orders and calls are not
-  /// rewritten (an order rewrite is three requests; the call list grows daily).
-  final Map<String, String> _orderWritten = {};
+  /// What the database is known to hold, so unchanged calls are not rewritten
+  /// (the call list grows daily).
   final Map<String, bool> _callWritten = {};
 
-  String _orderSignature(CafeOrder order) {
-    final lines = [
-      for (final line in order.lines)
-        '${line.menuItemId}|${line.name}|${line.qty}|${line.unitPrice}|${line.listUnitPrice}|${line.round}',
-    ];
-    return [
-      order.tableId,
-      order.status.name,
-      order.notes,
-      order.cashierId ?? '',
-      order.createdAt.toIso8601String(),
-      ...lines,
-    ].join('~');
-  }
-
   void _rememberWritten() {
-    _orderWritten
-      ..clear()
-      ..addEntries([for (final order in _orders) MapEntry(order.id, _orderSignature(order))]);
     _callWritten
       ..clear()
       ..addEntries([for (final call in _calls) MapEntry(call.id, call.resolved)]);
-  }
-
-  /// Writes open orders one request batch at a time. Two overlapping writers
-  /// each deleted the order's lines and then inserted them again, which left
-  /// every line twice on the receipt, so writes now queue behind each other.
-  Future<void> writeOrders(List<CafeOrder> items) {
-    _epoch++;
-    _orders = items;
-    final next = _orderWrites.then((_) => _writeOrders(items));
-    _orderWrites = next.catchError((Object error, StackTrace stackTrace) {
-      reportError('write orders', error, stackTrace);
-    });
-    return next;
-  }
-
-  Future<void> _writeOrders(List<CafeOrder> items) async {
-    if (client == null || restaurantId == null) return;
-    for (final item in List<CafeOrder>.of(items)) {
-      if (item.status == OrderStatus.paid) continue;
-      final signature = _orderSignature(item);
-      if (_orderWritten[item.id] == signature) continue;
-      await client!.from('orders').upsert({
-        'id': item.id,
-        'restaurant_id': restaurantId,
-        'table_id': item.tableId,
-        'status': item.status.name,
-        'notes': item.notes,
-        'cashier_id': item.cashierId,
-        'created_at': item.createdAt.toIso8601String(),
-      });
-      await client!.from('order_lines').delete().eq('order_id', item.id);
-      if (item.lines.isEmpty) continue;
-      await client!
-          .from('order_lines')
-          .insert(
-            item.lines
-                .map(
-                  (line) => {
-                    'order_id': item.id,
-                    'restaurant_id': restaurantId,
-                    'menu_item_id': line.menuItemId.isEmpty
-                        ? null
-                        : line.menuItemId,
-                    'name': line.name,
-                    'qty': line.qty,
-                    'unit_price': line.unitPrice,
-                    'list_unit_price': line.listUnitPrice ?? line.unitPrice,
-                    'round': line.round,
-                  },
-                )
-                .toList(),
-          );
-      _orderWritten[item.id] = signature;
-    }
   }
 
   Future<void> _cartWrites = Future.value();
@@ -1588,6 +1542,55 @@ class AppDatabase {
     }
   }
 
+  /// The developer tools need the developer's own account as well as the dev
+  /// password. Signs in with [email] first when given, then checks the
+  /// password. Returns an error to show, or null when the tools may open.
+  Future<String?> openDevTools({
+    String? email,
+    String? accountPassword,
+    required String devPassword,
+  }) async {
+    final current = client;
+    if (current == null) return 'Supabase is not configured.';
+    var signedIn = false;
+    if (email != null) {
+      try {
+        await current.auth.signInWithPassword(
+          email: email.trim().toLowerCase(),
+          password: accountPassword ?? '',
+        );
+        signedIn = true;
+      } on AuthException catch (error) {
+        return error.message;
+      } catch (error, stackTrace) {
+        reportError('developer sign in', error, stackTrace);
+        return '$error';
+      }
+    }
+    if (await checkDevAccess(devPassword)) {
+      if (signedIn) devSignedInForTools = true;
+      return null;
+    }
+    if (signedIn) await current.auth.signOut();
+    return 'Access denied.';
+  }
+
+  /// Ends a session that was opened only for the developer tools, and drops
+  /// that account's cafe so the device goes back to the cafe it is linked to.
+  Future<void> closeDevTools() async {
+    devToolsActive = false;
+    devSlot = null;
+    if (!devSignedInForTools) return;
+    devSignedInForTools = false;
+    try {
+      await client?.auth.signOut();
+    } catch (error, stackTrace) {
+      reportError('developer sign out', error, stackTrace);
+    }
+    restaurantId = null;
+    await refreshFromDisk();
+  }
+
   Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {
     if (client == null) return {'ok': false, 'error': 'Supabase is not configured.'};
     try {
@@ -1657,7 +1660,12 @@ class AppDatabase {
     final raw = await client!.rpc('send_table_cart', params: params);
     final result = Map<String, dynamic>.from(raw as Map);
     if (result['ok'] != true) {
-      return result['error'] as String? ?? 'Order was not sent.';
+      final error = result['error'] as String? ?? 'Order was not sent.';
+      final items = result['items'];
+      if (error == 'items_unavailable' && items is List) {
+        return '$unavailableItemsError${items.join(', ')}';
+      }
+      return error;
     }
     await refreshFromDisk();
     return null;
@@ -1794,6 +1802,88 @@ class AppDatabase {
     }
   }
 
+  /// Prefix of the error [sendTableCart] returns when dishes in the cart were
+  /// switched off; the dish names follow it, comma separated.
+  static const unavailableItemsError = 'items_unavailable:';
+
+  /// Calls an RPC that answers `{ok, error, ...}`. Returns the answer, or an
+  /// `{ok: false, error}` map when the call itself failed.
+  Future<Map<String, dynamic>> _rpcResult(String name, String label, [Map<String, dynamic>? params]) async {
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(name, params: params);
+      if (raw is Map) return Map<String, dynamic>.from(raw);
+      return {'ok': false, 'error': 'Unexpected response from $name.'};
+    } catch (error, stackTrace) {
+      reportError(label, error, stackTrace);
+      return {'ok': false, 'error': '$error'};
+    }
+  }
+
+  String? _failure(Map<String, dynamic> result, String fallback) =>
+      result['ok'] == true ? null : (result['error'] as String? ?? fallback);
+
+  /// Moves an order one kitchen step on the server. Only the status changes;
+  /// the lines and their prices are not rewritten.
+  Future<String?> setOrderStatus(String orderId, OrderStatus status) async {
+    if (client == null) return null;
+    _epoch++; // a load already running would bring back the old status
+    final result = await _rpcResult(
+      'set_order_status',
+      'set order status',
+      {'p_order_id': orderId, 'p_status': status.name},
+    );
+    return _failure(result, 'Order status was not saved.');
+  }
+
+  /// Removes one sent line (a refused dish) from an unpaid order.
+  Future<String?> removeOrderLine(String lineId) async {
+    if (client == null) return null;
+    _epoch++; // a load already running would bring back the removed line
+    final result = await _rpcResult('remove_order_line', 'remove order line', {'p_line_id': lineId});
+    return _failure(result, 'The line was not removed.');
+  }
+
+  /// Asks for the bill: a guest passes the table's QR slug, staff the table id.
+  Future<String?> requestBill({String? qrSlug, String? tableId}) async {
+    if (client == null) return null;
+    final result = await _rpcResult('request_bill', 'request bill', {
+      'p_qr_slug': qrSlug,
+      'p_table_id': tableId,
+    });
+    return _failure(result, 'The bill request was not sent.');
+  }
+
+  /// The signed-in cashier's open shift, opened on the server if needed.
+  Future<({String? shiftId, String? error})> openShift() async {
+    if (client == null) return (shiftId: null, error: null);
+    final result = await _rpcResult('open_shift', 'open shift');
+    return (shiftId: result['shift_id'] as String?, error: _failure(result, 'The shift was not opened.'));
+  }
+
+  Future<String?> setOpeningCash(double amount) async {
+    if (client == null) return null;
+    final result = await _rpcResult('set_opening_cash', 'set opening cash', {'p_amount': amount});
+    return _failure(result, 'The opening float was not saved.');
+  }
+
+  Future<String?> closeShift(double actualCash) async {
+    if (client == null) return null;
+    final result = await _rpcResult('close_shift', 'close shift', {'p_actual_cash': actualCash});
+    return _failure(result, 'The shift was not closed.');
+  }
+
+  /// Ends the cashier session [token] on the server. The token is sent on this
+  /// request alone, so it still works after sign-out cleared it locally.
+  Future<void> cashierLogout(String token) async {
+    if (client == null) return;
+    try {
+      await client!.rpc('cashier_logout').setHeader('x-cashier-token', token);
+    } catch (error, stackTrace) {
+      reportError('cashier logout', error, stackTrace);
+    }
+  }
+
   Future<void> writePayments(List<Payment> items) async => _payments = items;
   Future<void> writeShifts(List<CashShift> items) async {
     _shifts = items;
@@ -1815,16 +1905,6 @@ class AppDatabase {
     }
   }
 
-  Future<void> updateTableStatus(CafeTable table) async {
-    final index = _tables.indexWhere((item) => item.id == table.id);
-    if (index >= 0) _tables[index] = table;
-    if (client == null || restaurantId == null) return;
-    await client!
-        .from('dining_tables')
-        .update({'status': table.status.name, 'guests': table.guests})
-        .eq('id', table.id);
-  }
-
   Future<void> writeCalls(List<StaffCall> items) async {
     _calls = items;
     if (client == null || restaurantId == null) return;
@@ -1839,15 +1919,6 @@ class AppDatabase {
         'created_at': item.createdAt.toIso8601String(),
       });
       _callWritten[item.id] = item.resolved;
-    }
-  }
-
-  Future<void> _deleteMissing(String table, List<String> keep) async {
-    if (client == null) return;
-    final rows = await client!.from(table).select('id');
-    for (final row in rows as List) {
-      final id = row['id'] as String;
-      if (!keep.contains(id)) await client!.from(table).delete().eq('id', id);
     }
   }
 

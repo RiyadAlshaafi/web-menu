@@ -139,9 +139,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                 onTap: () => setState(() => selectedOrderId = order.id),
                                 onAction: next == null
                                     ? null
-                                    : () {
-                                        store.setOrderStatus(order.id, next);
+                                    : () async {
                                         setState(() => selectedOrderId = order.id);
+                                        final error = await store.setOrderStatus(order.id, next);
+                                        if (error == null || !context.mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
                                       },
                               );
                             },

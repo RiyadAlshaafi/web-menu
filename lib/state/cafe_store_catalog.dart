@@ -53,8 +53,18 @@ extension CafeStoreCatalog on CafeStore {
 
   Future<String?> refuseOrderLine(CafeOrder order, OrderLine line) async {
     final name = line.name;
+    // Remove just this line on the server. Rewriting the whole order used to
+    // re-price every other line and could drop a round the guest just sent.
+    final lineId = line.id;
+    if (db.client != null) {
+      if (lineId == null) return 'line not found';
+      final failure = await db.removeOrderLine(lineId);
+      if (failure != null) {
+        if (_sessionExpired(failure)) return failure;
+        return failure;
+      }
+    }
     order.lines.remove(line);
-    await db.writeOrders(orders);
     await db.noteOrderRefusal(order.id, name);
     order.awaitingCustomerConfirmation = true;
     order.refusalNotice = order.refusalNotice.trim().isEmpty ? name : '${order.refusalNotice} $name';
@@ -111,14 +121,14 @@ extension CafeStoreCatalog on CafeStore {
         spotlight: spotlight,
       ),
     );
-    await db.writeCategories(categories);
+    await db.writeCategories(categories, changed: [categories.last]);
     notifyListeners();
   }
 
   Future<void> saveCategory(MenuCategory category) async {
     final index = categories.indexWhere((item) => item.id == category.id);
     if (index >= 0) categories[index] = category;
-    await db.writeCategories(categories);
+    await db.writeCategories(categories, changed: [category]);
     notifyListeners();
   }
 
@@ -131,15 +141,16 @@ extension CafeStoreCatalog on CafeStore {
       ordered[i].sortOrder = i + 1;
     }
     categories = ordered;
-    await db.writeCategories(categories);
+    await db.writeCategories(categories, changed: ordered);
     notifyListeners();
   }
 
   Future<void> deleteCategory(String id) async {
+    final dishIds = [for (final item in menuItems) if (item.categoryId == id) item.id];
     categories.removeWhere((item) => item.id == id);
     menuItems.removeWhere((item) => item.categoryId == id);
-    await db.writeCategories(categories);
-    await db.writeMenuItems(menuItems);
+    await db.writeMenuItems(menuItems, deleted: dishIds);
+    await db.writeCategories(categories, deleted: [id]);
     notifyListeners();
   }
 
@@ -154,7 +165,7 @@ extension CafeStoreCatalog on CafeStore {
       }
       menuItems.add(item);
     }
-    await db.writeMenuItems(menuItems);
+    await db.writeMenuItems(menuItems, changed: [item]);
     notifyListeners();
   }
 
@@ -166,13 +177,16 @@ extension CafeStoreCatalog on CafeStore {
     for (var i = 0; i < ordered.length; i++) {
       ordered[i].sortOrder = i + 1;
     }
-    await db.writeMenuItems(menuItems);
+    await db.writeMenuItems(menuItems, changed: ordered);
     notifyListeners();
   }
 
+  /// Every menu edit is saved as it is made, so "Save menu" only reloads the
+  /// saved menu. Re-uploading this screen's whole copy could undo changes made
+  /// meanwhile elsewhere, such as a dish a cashier just marked unavailable.
   Future<void> persistLayout() async {
-    await db.writeCategories(categories);
-    await db.writeMenuItems(menuItems);
+    await db.refreshFromDisk();
+    _hydrateOperational();
     notifyListeners();
   }
 
@@ -189,18 +203,19 @@ extension CafeStoreCatalog on CafeStore {
     required bool activate,
   }) async {
     final rate = percent.clamp(0, 100).toDouble();
-    for (final item in menuItems.where((dish) => categoryId == null || dish.categoryId == categoryId)) {
+    final targets = menuItems.where((dish) => categoryId == null || dish.categoryId == categoryId).toList();
+    for (final item in targets) {
       item
         ..discountPercent = rate
         ..discountApplied = activate && rate > 0;
     }
-    await db.writeMenuItems(menuItems);
+    await db.writeMenuItems(menuItems, changed: targets);
     notifyListeners();
   }
 
   Future<void> deleteMenuItem(String id) async {
     menuItems.removeWhere((item) => item.id == id);
-    await db.writeMenuItems(menuItems);
+    await db.writeMenuItems(menuItems, deleted: [id]);
     notifyListeners();
   }
 
@@ -211,7 +226,7 @@ extension CafeStoreCatalog on CafeStore {
       qrSlug: Secrets.publicId(),
     );
     tables.add(table);
-    await db.writeTables(tables);
+    await db.writeTables(tables, changed: [table]);
     notifyListeners();
     return table;
   }
@@ -219,15 +234,16 @@ extension CafeStoreCatalog on CafeStore {
   Future<void> regenerateTableQr(String id) async {
     final table = tableById(id);
     table.qrSlug = Secrets.publicId();
-    await db.writeTables(tables);
+    await db.writeTables(tables, changed: [table]);
     notifyListeners();
   }
 
   Future<void> regenerateAllTableQrs() async {
-    for (final table in activeTables) {
+    final active = activeTables;
+    for (final table in active) {
       table.qrSlug = Secrets.publicId();
     }
-    await db.writeTables(tables);
+    await db.writeTables(tables, changed: active);
     notifyListeners();
   }
 
@@ -238,7 +254,7 @@ extension CafeStoreCatalog on CafeStore {
   Future<void> deleteTable(String id) async {
     final table = tableById(id);
     table.archived = true;
-    await db.writeTables(tables);
+    await db.writeTables(tables, changed: [table]);
     notifyListeners();
   }
 }

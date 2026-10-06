@@ -125,7 +125,7 @@ class CustomerCartScreen extends StatelessWidget {
                           children: [
                             Text(context.l10n.guestKitchenTicketTotal, style: const TextStyle(fontWeight: FontWeight.w700)),
                             const Spacer(),
-                            MoneyText(store.guestCurrency.format(store.tabSubtotal(table.id)), style: const TextStyle(fontSize: 20)),
+                            MoneyText(store.guestCurrency.format(store.tabSubtotal(table.id) + cart.total), style: const TextStyle(fontSize: 20)),
                           ],
                         ),
                       ],
