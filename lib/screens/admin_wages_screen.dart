@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../ledger.dart';
+import '../pdf_text.dart';
 import '../save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
@@ -300,13 +301,23 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     await Printing.layoutPdf(
       name: 'wages',
       onLayout: (PdfPageFormat format) async {
-        final doc = pw.Document();
+        final theme = await PdfFonts.theme();
+        final doc = pw.Document(theme: theme);
         doc.addPage(
           pw.MultiPage(
             pageFormat: PdfPageFormat.a4.landscape,
+            theme: theme,
             build: (context) => [
               pw.TableHelper.fromTextArray(
-                headers: const ['ID', 'When', 'Cashier', 'Type', 'Description', 'Amount'],
+                cellBuilder: (index, data, rowNum) => pdfText('$data'),
+                headers: [
+                  pdfText('ID', bold: true),
+                  pdfText('When', bold: true),
+                  pdfText('Cashier', bold: true),
+                  pdfText('Type', bold: true),
+                  pdfText('Description', bold: true),
+                  pdfText('Amount', bold: true),
+                ],
                 data: [
                   for (final row in rows)
                     [

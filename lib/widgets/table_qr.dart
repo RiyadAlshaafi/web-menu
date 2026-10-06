@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:menu_web_v1/pdf_text.dart';
 import 'package:menu_web_v1/save_bytes.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -41,20 +42,22 @@ Future<String?> printTableQr({
   await Printing.layoutPdf(
     name: 'Table $tableNumber',
     onLayout: (PdfPageFormat format) async {
-      final doc = pw.Document();
+      final theme = await PdfFonts.theme();
+      final doc = pw.Document(theme: theme);
       doc.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a6,
+          theme: theme,
           build: (context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              pw.Text(cafeName, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pdfText(cafeName, align: pw.TextAlign.center, size: 16, bold: true),
               pw.SizedBox(height: 6),
-              pw.Text('Table $tableNumber'),
+              pdfText('Table $tableNumber', align: pw.TextAlign.center),
               pw.SizedBox(height: 12),
               pw.Image(pw.MemoryImage(bytes), width: 180, height: 180),
               pw.SizedBox(height: 8),
-              pw.Text(url, style: const pw.TextStyle(fontSize: 8)),
+              pdfText(url, align: pw.TextAlign.center, size: 8),
             ],
           ),
         ),

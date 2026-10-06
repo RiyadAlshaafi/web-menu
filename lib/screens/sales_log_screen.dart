@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../ledger.dart';
+import '../pdf_text.dart';
 import '../save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../time_format.dart';
@@ -475,15 +476,30 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     await Printing.layoutPdf(
       name: 'sales-log',
       onLayout: (PdfPageFormat format) async {
-        final doc = pw.Document();
+        final theme = await PdfFonts.theme();
+        final doc = pw.Document(theme: theme);
         doc.addPage(
           pw.MultiPage(
             pageFormat: PdfPageFormat.a4.landscape,
+            theme: theme,
             build: (context) => [
-              pw.Text('Sales Log', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pdfText('Sales Log', size: 18, bold: true),
               pw.SizedBox(height: 8),
               pw.TableHelper.fromTextArray(
-                headers: [receiptHeader, orderHeader, 'When', 'Table', 'Cashier', 'Items', 'Subtotal', 'Discount', 'Total', 'Method', 'Status'],
+                cellBuilder: (index, data, rowNum) => pdfText('$data'),
+                headers: [
+                  pdfText(receiptHeader, bold: true),
+                  pdfText(orderHeader, bold: true),
+                  pdfText('When', bold: true),
+                  pdfText('Table', bold: true),
+                  pdfText('Cashier', bold: true),
+                  pdfText('Items', bold: true),
+                  pdfText('Subtotal', bold: true),
+                  pdfText('Discount', bold: true),
+                  pdfText('Total', bold: true),
+                  pdfText('Method', bold: true),
+                  pdfText('Status', bold: true),
+                ],
                 data: rows
                     .map((row) => [
                           '$receiptHeader ${store.receiptNumber(row.payment)}',

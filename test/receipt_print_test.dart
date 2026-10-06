@@ -11,7 +11,7 @@ void main() {
 
   test('dine-in and takeout receipts share one pdf builder', () async {
     final store = CafeStore(AppDatabase.instance);
-    store.cafe = {'name': 'Cafe Test', 'serviceChargeRate': 0.10, 'autoPrintReceipt': true};
+    store.cafe = {'name': 'مقهى الاختبار', 'serviceChargeRate': 0.10, 'autoPrintReceipt': true};
     store.locale = 'en';
     final l10n = lookupAppLocalizations(const Locale('en'));
     Payment paymentFor(String id, String service) {
@@ -22,7 +22,7 @@ void main() {
         status: OrderStatus.paid,
         createdAt: DateTime.utc(2026, 10, 6, 10),
         serviceType: service,
-        lines: [OrderLine(menuItemId: 'c', name: 'Coffee', qty: 1, unitPrice: 3, listUnitPrice: 4)],
+        lines: [OrderLine(menuItemId: 'c', name: 'قهوة', qty: 1, unitPrice: 3, listUnitPrice: 4)],
       );
       store.orders.add(order);
       return Payment(
@@ -43,6 +43,7 @@ void main() {
     final takeout = await receiptPdfBytes(store, paymentFor('out', 'takeout'), l10n);
     expect(dine, isNotEmpty);
     expect(takeout, isNotEmpty);
+    expect(String.fromCharCodes(dine), contains('NotoNaskhArabic'));
     expect(store.autoPrintReceipt, isTrue);
   });
 }
