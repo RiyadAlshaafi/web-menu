@@ -187,6 +187,8 @@ class AppDatabase {
   void stopRealtime() {
     _liveRefresh?.cancel();
     _liveRefresh = null;
+    _retryTimer?.cancel();
+    _retryTimer = null;
     final channel = _syncChannel;
     _syncChannel = null;
     _listening = false;
@@ -302,16 +304,70 @@ class AppDatabase {
     await refreshFromDisk();
   }
 
-  Future<void> refreshFromDisk({bool liveOnly = false}) async {
-    if (client == null) return;
-    final catalogFresh =
-        _catalogAt != null &&
-        DateTime.now().difference(_catalogAt!) < const Duration(seconds: 60);
-    try {
-      await _refreshFromDisk(liveOnly: liveOnly && catalogFresh);
-    } catch (error, stack) {
-      reportError('supabase refresh', error, stack);
+  Future<void>? _refreshInFlight;
+  bool _refreshRerun = false;
+  bool _refreshRerunFull = false;
+  Timer? _retryTimer;
+  int _retryAttempt = 0;
+
+  /// Reloads data, one run at a time. A call that arrives while a load is
+  /// running does not start a second, racing load: it queues one more run that
+  /// starts after the current one and returns a future covering both. That
+  /// keeps an older, slower load from overwriting newer data, and guarantees a
+  /// caller that just wrote something reads it back.
+  Future<void> refreshFromDisk({bool liveOnly = false}) {
+    if (client == null) return Future<void>.value();
+    final running = _refreshInFlight;
+    if (running != null) {
+      _refreshRerun = true;
+      if (!liveOnly) _refreshRerunFull = true;
+      return running;
     }
+    final run = _runRefreshes(liveOnly).whenComplete(() => _refreshInFlight = null);
+    _refreshInFlight = run;
+    return run;
+  }
+
+  Future<void> _runRefreshes(bool liveOnly) async {
+    var live = liveOnly;
+    do {
+      _refreshRerun = false;
+      final catalogFresh =
+          _catalogAt != null &&
+          DateTime.now().difference(_catalogAt!) < const Duration(seconds: 60);
+      var failed = false;
+      try {
+        await _refreshFromDisk(liveOnly: live && catalogFresh);
+      } catch (error, stack) {
+        failed = true;
+        reportError('supabase refresh', error, stack);
+      }
+      _afterRefresh(failed: failed);
+      live = !_refreshRerunFull;
+      _refreshRerunFull = false;
+    } while (_refreshRerun);
+  }
+
+  /// A failed load used to leave the app empty until the next manual refresh.
+  /// Retry with a growing delay (2s, 4s, 8s ... up to 30s), then tell the store
+  /// there is new data once it finally succeeds.
+  void _afterRefresh({required bool failed}) {
+    if (!failed) {
+      _retryTimer?.cancel();
+      _retryTimer = null;
+      if (_retryAttempt > 0) {
+        _retryAttempt = 0;
+        _emitLive();
+      }
+      return;
+    }
+    if (_retryTimer != null) return;
+    final seconds = (2 << _retryAttempt.clamp(0, 4)).clamp(2, 30);
+    _retryAttempt++;
+    _retryTimer = Timer(Duration(seconds: seconds), () {
+      _retryTimer = null;
+      unawaited(refreshFromDisk());
+    });
   }
 
   Future<void> _loadRestaurant() async {
