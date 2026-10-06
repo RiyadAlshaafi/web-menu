@@ -902,5 +902,9 @@
   "expenseColCashier": "Cashier",
   "expenseColType": "Type",
   "expenseColDescription": "Description",
-  "expenseColAmount": "Amount"
+  "expenseColAmount": "Amount",
+  "authSetupCode": "Setup code",
+  "authSetupCodeHint": "Code from your provider",
+  "authDeviceNotLinked": "This device is not linked to a cafe yet. Ask your provider to link it from the developer tools.",
+  "authSetupCodeInvalid": "The setup code is not valid for this cafe."
 }

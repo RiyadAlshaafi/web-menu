@@ -177,6 +177,21 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
       },
       routes: [
         GoRoute(path: '/', redirect: (_, _) => widget.store.hasAdmin ? '/login' : '/admin/setup'),
+        // /c/<cafe> links this browser to that cafe, then opens its sign-in.
+        GoRoute(
+          path: '/c/:slug',
+          redirect: (_, state) async {
+            await widget.store.linkDeviceToSlug(state.pathParameters['slug']!);
+            return widget.store.hasAdmin ? '/login' : '/admin/setup';
+          },
+        ),
+        GoRoute(
+          path: '/c/:slug/admin',
+          redirect: (_, state) async {
+            await widget.store.linkDeviceToSlug(state.pathParameters['slug']!);
+            return widget.store.hasAdmin ? '/admin/login' : '/admin/setup';
+          },
+        ),
         GoRoute(path: '/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.PinLoginScreen())),
         GoRoute(
           path: '/dev',

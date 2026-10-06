@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
@@ -71,6 +72,22 @@ class AppDatabase {
   String? cashierToken;
   String? guestSlug;
   bool anyAdmin = false;
+
+  /// Web builds for one existing cafe set this (`--dart-define=DEFAULT_SLOT=1`)
+  /// so they keep working without anyone linking the browser first.
+  static const _defaultSlot = int.fromEnvironment('DEFAULT_SLOT');
+  static const _slotPrefKey = 'device_cafe_slot';
+
+  /// The cafe slot (1-8) this install is linked to, and what the database said
+  /// about it. The slot only decides which cafe's login and setup screens this
+  /// device shows; real access still comes from sign-in, PIN token or QR slug.
+  int? boundSlot;
+  String? boundRestaurantId;
+  String? boundSlug;
+  bool boundHasAdmin = false;
+
+  /// Slot the developer tools are working on (sent as the x-dev-slot header).
+  int? devSlot;
 
   Map<String, dynamic> _cafe = {
     'name': '',
@@ -149,10 +166,73 @@ class AppDatabase {
         );
         _ready = true;
       }
+      await _loadBoundSlot();
       _listen();
       await refreshFromDisk();
     } catch (error, stack) {
       reportError('supabase startup', error, stack);
+    }
+  }
+
+  Future<void> _loadBoundSlot() async {
+    int? slot;
+    try {
+      slot = (await SharedPreferences.getInstance()).getInt(_slotPrefKey);
+    } catch (error, stack) {
+      reportError('read device slot', error, stack);
+    }
+    slot ??= _defaultSlot > 0 ? _defaultSlot : null;
+    if (slot != null) await _resolveBound(slot: slot);
+  }
+
+  Future<void> _resolveBound({int? slot, String? slug}) async {
+    if (client == null) return;
+    final raw = slot != null
+        ? await client!.rpc('restaurant_for_slot', params: {'p_slot': slot})
+        : await client!.rpc('restaurant_for_slug', params: {'p_slug': slug});
+    final rows = raw is List ? raw : const [];
+    if (rows.isEmpty) {
+      boundSlot = null;
+      boundRestaurantId = null;
+      boundSlug = null;
+      boundHasAdmin = false;
+      return;
+    }
+    final row = Map<String, dynamic>.from(rows.first as Map);
+    boundSlot = (row['slot'] as num?)?.toInt() ?? slot;
+    boundRestaurantId = row['id'] as String?;
+    boundSlug = row['slug'] as String?;
+    boundHasAdmin = row['has_admin'] as bool? ?? false;
+  }
+
+  /// Links this install to cafe [slot], remembers it, and reloads.
+  Future<String?> bindSlot(int slot) async {
+    try {
+      await _resolveBound(slot: slot);
+      if (boundRestaurantId == null) return 'That cafe slot does not exist.';
+      await (await SharedPreferences.getInstance()).setInt(_slotPrefKey, slot);
+      _epoch++;
+      await refreshFromDisk();
+      return null;
+    } catch (error, stack) {
+      reportError('bind slot', error, stack);
+      return '$error';
+    }
+  }
+
+  /// Links a browser session to the cafe at `/c/slug`.
+  Future<bool> bindSlug(String slug) async {
+    try {
+      await _resolveBound(slug: slug);
+      final slot = boundSlot;
+      if (boundRestaurantId == null || slot == null) return false;
+      await (await SharedPreferences.getInstance()).setInt(_slotPrefKey, slot);
+      _epoch++;
+      await refreshFromDisk();
+      return true;
+    } catch (error, stack) {
+      reportError('bind slug', error, stack);
+      return false;
     }
   }
 
@@ -292,7 +372,9 @@ class AppDatabase {
     if (current == null) return;
     final headers = Map<String, String>.from(current.headers)
       ..remove('x-qr-slug')
-      ..remove('x-cashier-token');
+      ..remove('x-cashier-token')
+      ..remove('x-dev-slot');
+    if (devSlot != null) headers['x-dev-slot'] = '$devSlot';
     if (guestSlug != null) headers['x-qr-slug'] = guestSlug!;
     if (cashierToken != null) headers['x-cashier-token'] = cashierToken!;
     current.headers = headers;
@@ -411,7 +493,12 @@ class AppDatabase {
     _applyHeaders();
     final user = client!.auth.currentUser;
     final opened = await Future.wait<dynamic>([
-      client!.rpc('has_any_admin'),
+      client!.rpc(
+        'has_any_admin',
+        params: (restaurantId ?? boundRestaurantId) == null
+            ? null
+            : {'p_restaurant_id': restaurantId ?? boundRestaurantId},
+      ),
       if (user != null)
         client!
             .from('profiles')
@@ -443,7 +530,9 @@ class AppDatabase {
         guestSlug != null &&
         cashierToken == null &&
         client!.auth.currentUser == null;
-    if (restaurantId == null && tableList.isNotEmpty) {
+    restaurantId ??= boundRestaurantId;
+    if (restaurantId == null && boundSlot == null && tableList.isNotEmpty) {
+      // Only an unlinked device falls back to whatever table is visible.
       restaurantId = tableList.first['restaurant_id'] as String?;
     }
     if (restaurantId == null && guestSlug == null) {
@@ -1403,6 +1492,7 @@ class AppDatabase {
   Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {
     if (client == null) return {'ok': false, 'error': 'Supabase is not configured.'};
     try {
+      _applyHeaders();
       final raw = await client!.rpc(name, params: {'p_password': password, ...?extra});
       if (raw is Map) return Map<String, dynamic>.from(raw);
       return {'ok': false, 'error': 'Unexpected response from $name.'};

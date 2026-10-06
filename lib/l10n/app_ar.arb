@@ -537,5 +537,9 @@
   "expenseColCashier": "الكاشير",
   "expenseColType": "النوع",
   "expenseColDescription": "الوصف",
-  "expenseColAmount": "المبلغ"
+  "expenseColAmount": "المبلغ",
+  "authSetupCode": "رمز الإعداد",
+  "authSetupCodeHint": "الرمز المقدَّم من المزوّد",
+  "authDeviceNotLinked": "هذا الجهاز غير مرتبط بمقهى بعد. اطلب من المزوّد ربطه من أدوات المطوّر.",
+  "authSetupCodeInvalid": "رمز الإعداد غير صالح لهذا المقهى."
 }

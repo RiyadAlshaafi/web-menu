@@ -1700,4 +1700,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get expenseColAmount => 'المبلغ';
+
+  @override
+  String get authSetupCode => 'رمز الإعداد';
+
+  @override
+  String get authSetupCodeHint => 'الرمز المقدَّم من المزوّد';
+
+  @override
+  String get authDeviceNotLinked =>
+      'هذا الجهاز غير مرتبط بمقهى بعد. اطلب من المزوّد ربطه من أدوات المطوّر.';
+
+  @override
+  String get authSetupCodeInvalid => 'رمز الإعداد غير صالح لهذا المقهى.';
 }

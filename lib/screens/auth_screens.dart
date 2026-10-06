@@ -71,6 +71,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
         ),
         child: Column(
           children: [
+            if (!store.deviceLinked) ...[
+              Text(context.l10n.authDeviceNotLinked, style: const TextStyle(color: CafeColors.alert, fontSize: 13, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+            ],
             Row(
               children: [
                 _DevLogo(
@@ -340,6 +344,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   final confirm = TextEditingController();
+  final setupCode = TextEditingController();
   bool obscure = true;
   bool remember = false;
   bool signingIn = false;
@@ -350,6 +355,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
     email.dispose();
     password.dispose();
     confirm.dispose();
+    setupCode.dispose();
     super.dispose();
   }
 
@@ -443,6 +449,24 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                       prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(context.l10n.authSetupCode, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: setupCode,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.authSetupCodeHint,
+                      prefixIcon: const Icon(Icons.key_outlined, size: 18),
+                    ),
+                  ),
+                  if (!store.deviceLinked) ...[
+                    const SizedBox(height: 8),
+                    Text(context.l10n.authDeviceNotLinked, style: const TextStyle(color: CafeColors.alert, fontSize: 12)),
+                  ],
                 ],
                 const SizedBox(height: 12),
                 if (!setup)
@@ -477,6 +501,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                         email: email.text,
                         password: password.text,
                         confirm: confirm.text,
+                        setupCode: setupCode.text,
                       );
                       if (!context.mounted) return;
                       if (result != null) {

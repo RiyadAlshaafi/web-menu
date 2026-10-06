@@ -1707,4 +1707,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expenseColAmount => 'Amount';
+
+  @override
+  String get authSetupCode => 'Setup code';
+
+  @override
+  String get authSetupCodeHint => 'Code from your provider';
+
+  @override
+  String get authDeviceNotLinked =>
+      'This device is not linked to a cafe yet. Ask your provider to link it from the developer tools.';
+
+  @override
+  String get authSetupCodeInvalid =>
+      'The setup code is not valid for this cafe.';
 }

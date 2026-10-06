@@ -3175,6 +3175,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount'**
   String get expenseColAmount;
+
+  /// No description provided for @authSetupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup code'**
+  String get authSetupCode;
+
+  /// No description provided for @authSetupCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from your provider'**
+  String get authSetupCodeHint;
+
+  /// No description provided for @authDeviceNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is not linked to a cafe yet. Ask your provider to link it from the developer tools.'**
+  String get authDeviceNotLinked;
+
+  /// No description provided for @authSetupCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The setup code is not valid for this cafe.'**
+  String get authSetupCodeInvalid;
 }
 
 class _AppLocalizationsDelegate

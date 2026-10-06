@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,97 @@ class DevScreen extends StatefulWidget {
 class _DevScreenState extends State<DevScreen> {
   bool exporting = false;
   String? notice;
+  List<Map<String, dynamic>> slots = [];
+  int? selectedSlot;
+  bool slotsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadSlots());
+  }
+
+  @override
+  void dispose() {
+    AppDatabase.instance.devSlot = null;
+    super.dispose();
+  }
+
+  Map<String, dynamic>? get _selected {
+    for (final slot in slots) {
+      if (slot['slot'] == selectedSlot) return slot;
+    }
+    return null;
+  }
+
+  Future<void> _loadSlots() async {
+    final result = await AppDatabase.instance.devCall('dev_list_slots', widget.password);
+    if (!mounted) return;
+    final raw = result?['slots'];
+    setState(() {
+      slotsLoading = false;
+      if (result?['ok'] != true || raw is! List) {
+        notice = 'Could not load the cafe slots. Apply the multi-cafe migration first.';
+        return;
+      }
+      slots = [for (final row in raw) Map<String, dynamic>.from(row as Map)];
+      selectedSlot ??= AppDatabase.instance.boundSlot ?? (slots.isEmpty ? null : slots.first['slot'] as int?);
+      AppDatabase.instance.devSlot = selectedSlot;
+    });
+  }
+
+  void _select(int slot) {
+    setState(() => selectedSlot = slot);
+    AppDatabase.instance.devSlot = slot;
+  }
+
+  Future<void> _linkDevice() async {
+    final slot = selectedSlot;
+    if (slot == null) return;
+    final error = await context.read<CafeStore>().linkDeviceToSlot(slot);
+    if (!mounted) return;
+    setState(() => notice = error ?? 'This device is now linked to cafe slot $slot.');
+    await _loadSlots();
+  }
+
+  Future<void> _issueCode() async {
+    final slot = selectedSlot;
+    if (slot == null) return;
+    final result = await AppDatabase.instance.devCall('dev_issue_setup_code', widget.password, {'p_slot': slot});
+    if (!mounted) return;
+    final code = result?['code'];
+    if (result?['ok'] != true || code is! String) {
+      setState(() => notice = '${result?['error'] ?? 'Could not issue a setup code.'}');
+      return;
+    }
+    await _showCode(slot, code);
+    if (mounted) await _loadSlots();
+  }
+
+  Future<void> _showCode(int slot, String code) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Setup code for cafe slot $slot'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SelectableText(code, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 2)),
+            const SizedBox(height: 8),
+            const Text('Shown once and works once. Give it to the cafe owner to create their admin account.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Clipboard.setData(ClipboardData(text: code)),
+            child: const Text('Copy'),
+          ),
+          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+        ],
+      ),
+    );
+  }
 
   Future<bool> _confirm({
     required String title,
@@ -93,7 +185,16 @@ class _DevScreenState extends State<DevScreen> {
     await store.db.refreshFromDisk();
     store.admin = null;
     store.signOut();
-    if (mounted) context.go('/admin/setup');
+    // A new admin now needs a setup code, so issue one right away.
+    final slot = selectedSlot;
+    if (slot != null) {
+      final issued = await AppDatabase.instance.devCall('dev_issue_setup_code', widget.password, {'p_slot': slot});
+      final code = issued?['code'];
+      if (mounted && code is String) await _showCode(slot, code);
+    }
+    if (!mounted) return;
+    await _loadSlots();
+    if (mounted && selectedSlot == store.deviceSlot) context.go('/admin/setup');
   }
 
   void _fail(Object error) {
@@ -253,42 +354,109 @@ class _DevScreenState extends State<DevScreen> {
             Text(notice!, style: const TextStyle(fontWeight: FontWeight.w700)),
           ],
           const SizedBox(height: 16),
+          _slotCard(),
           _card(
             title: 'Reset admin',
             body: 'Removes the current admin account so a new one can be created.',
             label: 'Reset admin',
             danger: true,
-            onPressed: _resetAdmin,
+            onPressed: selectedSlot == null ? null : _resetAdmin,
           ),
           _card(
             title: 'Download all logs',
             body: 'Saves every receipt and every expense for this restaurant, with no date filter.',
             label: exporting ? 'Exporting…' : 'Export',
             danger: false,
-            onPressed: exporting ? null : _export,
+            onPressed: exporting || selectedSlot == null ? null : _export,
           ),
           _card(
             title: 'Import logs',
             body: 'Restores receipts and expenses from the files saved by Download all logs.',
             label: 'Import',
             danger: true,
-            onPressed: _import,
+            onPressed: selectedSlot == null ? null : _import,
           ),
           _card(
             title: 'Delete all logs',
             body: 'Permanently deletes every receipt, order, and expense.',
             label: 'Delete all logs',
             danger: true,
-            onPressed: _wipeLogs,
+            onPressed: selectedSlot == null ? null : _wipeLogs,
           ),
           _card(
             title: 'Delete all dishes',
             body: 'Permanently empties the menu. Past receipts keep their item text.',
             label: 'Delete all dishes',
             danger: true,
-            onPressed: _wipeMenu,
+            onPressed: selectedSlot == null ? null : _wipeMenu,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _slotCard() {
+    final store = context.watch<CafeStore>();
+    final current = _selected;
+    final adminSet = current?['has_admin'] == true;
+    final name = current?['name'] as String?;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SoftCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Cafe slots', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 6),
+            Text(
+              store.deviceSlot == null
+                  ? 'This device is not linked to a cafe yet.'
+                  : 'This device is linked to cafe slot ${store.deviceSlot}.',
+            ),
+            const SizedBox(height: 12),
+            if (slotsLoading)
+              const LinearProgressIndicator()
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final slot in slots)
+                    ChoiceChip(
+                      label: Text('${slot['slot']}${slot['has_admin'] == true ? ' \u2713' : ''}'),
+                      selected: slot['slot'] == selectedSlot,
+                      onSelected: (_) => _select(slot['slot'] as int),
+                    ),
+                ],
+              ),
+            if (current != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Slot ${current['slot']}: ${name != null && name.isNotEmpty ? name : '(no name yet)'}'
+                ' \u00b7 link /c/${current['slug']} \u00b7 ${adminSet ? 'has an admin' : 'no admin yet'}'
+                '${current['has_setup_code'] == true ? ' \u00b7 setup code pending' : ''}',
+              ),
+              const SizedBox(height: 4),
+              const Text('Every action below applies to the selected slot.', style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilledButton(
+                    style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
+                    onPressed: store.deviceSlot == selectedSlot ? null : _linkDevice,
+                    child: const Text('Link this device to this slot'),
+                  ),
+                  OutlinedButton(
+                    onPressed: adminSet ? null : _issueCode,
+                    child: const Text('Issue setup code'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

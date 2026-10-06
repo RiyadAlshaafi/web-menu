@@ -354,6 +354,31 @@ class CafeStore extends ChangeNotifier {
 
   bool get hasAdmin => admin != null || db.anyAdmin;
 
+  /// The cafe slot (1-8) this install is linked to, or null if unlinked.
+  int? get deviceSlot => db.boundSlot;
+
+  /// Links this install to cafe [slot] and reloads that cafe's data.
+  Future<String?> linkDeviceToSlot(int slot) async {
+    if (authKind != AuthKind.none) signOut();
+    final error = await db.bindSlot(slot);
+    if (error == null) _afterRelink();
+    return error;
+  }
+
+  /// Links this browser to the cafe at `/c/slug`. Returns whether it worked.
+  Future<bool> linkDeviceToSlug(String slug) async {
+    if (authKind != AuthKind.none) signOut();
+    final ok = await db.bindSlug(slug);
+    if (ok) _afterRelink();
+    return ok;
+  }
+
+  void _afterRelink() {
+    _hydrateOperational();
+    _syncStampCache = null;
+    notifyListeners();
+  }
+
   String get guestLocale => guestLocaleOverride ?? locale;
 
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
@@ -374,12 +399,17 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Whether this install is linked to one of the cafe slots.
+  bool get deviceLinked => db.boundSlot != null;
+
   Future<String?> createAdmin({
     required String email,
     required String password,
     required String confirm,
+    String setupCode = '',
   }) async {
     if (admin != null) return l10n.errAdminExists;
+    if (db.boundSlot == null) return l10n.authDeviceNotLinked;
     final trimmed = email.trim().toLowerCase();
     if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
     if (password != confirm) return l10n.errPasswordsMismatch;
@@ -392,9 +422,13 @@ class CafeStore extends ChangeNotifier {
       response = await db.client!.auth.signUp(
         email: trimmed,
         password: password,
+        data: {'slot': db.boundSlot, 'setup_code': setupCode.trim().toUpperCase()},
       );
     } on AuthException catch (error, stackTrace) {
       reportError('create admin', error, stackTrace);
+      // Supabase hides the database's own message behind a generic one when
+      // the slot/code check rejects the signup.
+      if (error.message.contains('Database error')) return l10n.authSetupCodeInvalid;
       return error.message;
     } catch (error, stackTrace) {
       reportError('create admin', error, stackTrace);
