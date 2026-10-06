@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/app_database.dart';
+import '../dev_logs.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
@@ -27,6 +29,7 @@ class _DevScreenState extends State<DevScreen> {
     required String title,
     required String body,
     bool requireCheckbox = false,
+    String actionLabel = 'Delete',
   }) async {
     final typed = TextEditingController();
     var checked = false;
@@ -62,7 +65,7 @@ class _DevScreenState extends State<DevScreen> {
               onPressed: typed.text == 'DELETE' && (!requireCheckbox || checked)
                   ? () => Navigator.pop(context, true)
                   : null,
-              child: const Text('Delete'),
+              child: Text(actionLabel),
             ),
           ],
         ),
@@ -91,31 +94,121 @@ class _DevScreenState extends State<DevScreen> {
     if (mounted) context.go('/admin/setup');
   }
 
+  void _fail(Object error) {
+    if (!mounted) return;
+    setState(() {
+      exporting = false;
+      notice = '$error';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+  }
+
   Future<void> _export() async {
     setState(() {
       exporting = true;
       notice = null;
     });
-    final result = await AppDatabase.instance.devCall('dev_export_logs', widget.password);
-    if (!mounted) return;
-    setState(() => exporting = false);
-    if (result?['ok'] != true) {
-      setState(() => notice = 'Export did not run.');
+    try {
+      final result = await AppDatabase.instance.devCall('dev_export_logs', widget.password);
+      if (!mounted) return;
+      if (result == null || result['ok'] != true) {
+        _fail(result?['error'] ?? 'Export did not run.');
+        return;
+      }
+      final payments = result['payments'];
+      final expenses = result['expenses'];
+      if (payments is! List || expenses is! List) {
+        _fail('Export returned an unexpected result.');
+        return;
+      }
+      final receiptBytes = utf8.encode(_receiptsCsv(payments));
+      final expenseBytes = utf8.encode(_expensesCsv(expenses));
+      setState(() => exporting = false);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Save logs'),
+          content: Text('Ready to save ${payments.length} receipts and ${expenses.length} expenses.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+            FilledButton(
+              onPressed: () => _saveCsv(context, 'Save receipts', 'all-receipts.csv', receiptBytes),
+              child: const Text('Save receipts'),
+            ),
+            FilledButton(
+              onPressed: () => _saveCsv(context, 'Save expenses', 'all-expenses.csv', expenseBytes),
+              child: const Text('Save expenses'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      _fail(error);
+    }
+  }
+
+  Future<void> _saveCsv(BuildContext context, String title, String fileName, List<int> bytes) async {
+    try {
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: title,
+        fileName: fileName,
+        bytes: Uint8List.fromList(bytes),
+      );
+      if (!context.mounted) return;
+      if (path == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$fileName was not saved.')));
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+
+  Future<void> _import() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['csv'],
+      allowMultiple: true,
+      withData: true,
+    );
+    if (picked == null || !mounted) return;
+    final files = <String, String>{};
+    for (final file in picked.files) {
+      final bytes = file.bytes;
+      if (bytes == null) {
+        _fail('${file.name} could not be read.');
+        return;
+      }
+      files[file.name] = utf8.decode(bytes);
+    }
+    final DevLogBackup backup;
+    try {
+      backup = parseDevLogFiles(files);
+    } on FormatException catch (error) {
+      _fail(error.message);
       return;
     }
-    final payments = result!['payments'] as List? ?? const [];
-    final expenses = result['expenses'] as List? ?? const [];
-    await FilePicker.platform.saveFile(
-      dialogTitle: 'Save receipts',
-      fileName: 'all-receipts.csv',
-      bytes: utf8.encode(_receiptsCsv(payments)),
+    final go = await _confirm(
+      title: 'Import logs',
+      body: 'This will import ${backup.receipts.length} receipts and ${backup.expenses.length} expense entries as new rows. Existing logs stay. This is hard to undo by hand.',
+      actionLabel: 'Import',
     );
-    if (!mounted) return;
-    await FilePicker.platform.saveFile(
-      dialogTitle: 'Save expenses',
-      fileName: 'all-expenses.csv',
-      bytes: utf8.encode(_expensesCsv(expenses)),
-    );
+    if (!go || !mounted) return;
+    try {
+      final result = await AppDatabase.instance.devCall('dev_import_logs', widget.password, {
+        'p_receipts': [for (final receipt in backup.receipts) receipt.toJson()],
+        'p_expenses': [for (final expense in backup.expenses) expense.toJson()],
+      });
+      if (!mounted) return;
+      if (result == null || result['ok'] != true) {
+        _fail(result?['error'] ?? 'Import did not run.');
+        return;
+      }
+      setState(() => notice = 'Imported ${result['receipts']} receipts and ${result['expenses']} expenses.');
+    } catch (error) {
+      _fail(error);
+    }
   }
 
   Future<void> _wipeLogs() async {
@@ -169,6 +262,13 @@ class _DevScreenState extends State<DevScreen> {
             label: exporting ? 'Exporting…' : 'Export',
             danger: false,
             onPressed: exporting ? null : _export,
+          ),
+          _card(
+            title: 'Import logs',
+            body: 'Restores receipts and expenses from the files saved by Download all logs.',
+            label: 'Import',
+            danger: true,
+            onPressed: _import,
           ),
           _card(
             title: 'Delete all logs',

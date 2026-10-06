@@ -1336,15 +1336,15 @@ class AppDatabase {
     }
   }
 
-  Future<Map<String, dynamic>?> devCall(String name, String password) async {
-    if (client == null) return null;
+  Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {
+    if (client == null) return {'ok': false, 'error': 'Supabase is not configured.'};
     try {
-      final raw = await client!.rpc(name, params: {'p_password': password});
+      final raw = await client!.rpc(name, params: {'p_password': password, ...?extra});
       if (raw is Map) return Map<String, dynamic>.from(raw);
-      return null;
+      return {'ok': false, 'error': 'Unexpected response from $name.'};
     } catch (error, stackTrace) {
       reportError(name, error, stackTrace);
-      return null;
+      return {'ok': false, 'error': '$error'};
     }
   }
 
