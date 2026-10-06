@@ -10,13 +10,18 @@ extension CafeStoreSettings on CafeStore {
 
   static const defaultMenuOrigin = 'https://web-menu-akakus.vercel.app';
 
+  /// Address printed in table QR codes. An explicit PUBLIC_MENU_URL build
+  /// setting wins; otherwise the address the admin is using, unless that is a
+  /// local test address (a QR pointing at localhost works on no guest's phone).
   String guestLink(String slug) {
-    var base = '';
-    if (kIsWeb) {
+    var base = const String.fromEnvironment('PUBLIC_MENU_URL').trim();
+    if (base.isEmpty && kIsWeb) {
+      final host = Uri.base.host;
+      final local = host.isEmpty || host == 'localhost' || host == '127.0.0.1' || host == '::1';
       final origin = Uri.base.origin;
-      if (origin.startsWith('http')) base = origin;
+      if (!local && origin.startsWith('http')) base = origin;
     }
-    if (base.isEmpty) base = const String.fromEnvironment('PUBLIC_MENU_URL', defaultValue: defaultMenuOrigin);
+    if (base.isEmpty) base = defaultMenuOrigin;
     base = base.trim().replaceFirst(RegExp(r'/+$'), '');
     if (base.endsWith('/rest/v1')) base = base.substring(0, base.length - 7).replaceFirst(RegExp(r'/+$'), '');
     if (!base.startsWith('http')) return '';

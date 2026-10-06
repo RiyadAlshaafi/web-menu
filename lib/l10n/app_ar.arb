@@ -542,5 +542,9 @@
   "authSetupCodeHint": "الرمز المقدَّم من المزوّد",
   "authDeviceNotLinked": "هذا الجهاز غير مرتبط بمقهى بعد. اطلب من المزوّد ربطه من أدوات المطوّر.",
   "authSetupCodeInvalid": "رمز الإعداد غير صالح لهذا المقهى.",
-  "adminDeleteTableBusy": "هذه الطاولة عليها طلب مفتوح. أغلقه أو ألغه قبل حذف الطاولة."
+  "adminDeleteTableBusy": "هذه الطاولة عليها طلب مفتوح. أغلقه أو ألغه قبل حذف الطاولة.",
+  "adminRegenerateConfirmTitle": "استبدال رمز QR؟",
+  "adminRegenerateConfirmMessage": "رمز QR المطبوع لهذه الطاولة سيتوقف عن العمل. اطبع الرمز الجديد وضعه على الطاولة.",
+  "adminRegenerateAllConfirmMessage": "جميع رموز QR المطبوعة لطاولاتك ستتوقف عن العمل. ستحتاج إلى طباعة الرموز الجديدة ووضعها كلها.",
+  "adminRegenerateConfirm": "استبدال"
 }

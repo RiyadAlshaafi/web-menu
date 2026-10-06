@@ -3205,6 +3205,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This table has an open order. Settle or cancel it before deleting the table.'**
   String get adminDeleteTableBusy;
+
+  /// No description provided for @adminRegenerateConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace QR code?'**
+  String get adminRegenerateConfirmTitle;
+
+  /// No description provided for @adminRegenerateConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The QR code already printed for this table will stop working. Print the new one and put it on the table.'**
+  String get adminRegenerateConfirmMessage;
+
+  /// No description provided for @adminRegenerateAllConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Every QR code already printed for your tables will stop working. You will need to print and place all the new ones.'**
+  String get adminRegenerateAllConfirmMessage;
+
+  /// No description provided for @adminRegenerateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get adminRegenerateConfirm;
 }
 
 class _AppLocalizationsDelegate

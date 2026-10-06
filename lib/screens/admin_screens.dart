@@ -293,7 +293,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
               ),
               const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: store.activeTables.isEmpty ? null : () => store.regenerateAllTableQrs(),
+                onPressed: store.activeTables.isEmpty ? null : () => _confirmRegenerate(context, store),
                 child: Text(context.l10n.adminRegenerateAllQr),
               ),
             ],
@@ -408,7 +408,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                                     child: const Text('Save PNG'),
                                   ),
                                   TextButton(
-                                    onPressed: () => store.regenerateTableQr(table.id),
+                                    onPressed: () => _confirmRegenerate(context, store, table: table),
                                     child: Text(context.l10n.adminRegenerateQr),
                                   ),
                                 ],
@@ -478,6 +478,22 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
         ],
       ),
     );
+  }
+
+  /// Replacing a QR code invalidates the printed one, so ask first.
+  Future<void> _confirmRegenerate(BuildContext context, CafeStore store, {CafeTable? table}) async {
+    final ok = await showCafeConfirmDialog(
+      context,
+      title: context.l10n.adminRegenerateConfirmTitle,
+      message: table == null ? context.l10n.adminRegenerateAllConfirmMessage : context.l10n.adminRegenerateConfirmMessage,
+      confirm: context.l10n.adminRegenerateConfirm,
+    );
+    if (!ok) return;
+    if (table == null) {
+      await store.regenerateAllTableQrs();
+    } else {
+      await store.regenerateTableQr(table.id);
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, CafeStore store, CafeTable table) async {

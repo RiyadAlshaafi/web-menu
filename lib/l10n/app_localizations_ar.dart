@@ -1717,4 +1717,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get adminDeleteTableBusy =>
       'هذه الطاولة عليها طلب مفتوح. أغلقه أو ألغه قبل حذف الطاولة.';
+
+  @override
+  String get adminRegenerateConfirmTitle => 'استبدال رمز QR؟';
+
+  @override
+  String get adminRegenerateConfirmMessage =>
+      'رمز QR المطبوع لهذه الطاولة سيتوقف عن العمل. اطبع الرمز الجديد وضعه على الطاولة.';
+
+  @override
+  String get adminRegenerateAllConfirmMessage =>
+      'جميع رموز QR المطبوعة لطاولاتك ستتوقف عن العمل. ستحتاج إلى طباعة الرموز الجديدة ووضعها كلها.';
+
+  @override
+  String get adminRegenerateConfirm => 'استبدال';
 }

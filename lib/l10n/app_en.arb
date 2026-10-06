@@ -907,5 +907,9 @@
   "authSetupCodeHint": "Code from your provider",
   "authDeviceNotLinked": "This device is not linked to a cafe yet. Ask your provider to link it from the developer tools.",
   "authSetupCodeInvalid": "The setup code is not valid for this cafe.",
-  "adminDeleteTableBusy": "This table has an open order. Settle or cancel it before deleting the table."
+  "adminDeleteTableBusy": "This table has an open order. Settle or cancel it before deleting the table.",
+  "adminRegenerateConfirmTitle": "Replace QR code?",
+  "adminRegenerateConfirmMessage": "The QR code already printed for this table will stop working. Print the new one and put it on the table.",
+  "adminRegenerateAllConfirmMessage": "Every QR code already printed for your tables will stop working. You will need to print and place all the new ones.",
+  "adminRegenerateConfirm": "Replace"
 }

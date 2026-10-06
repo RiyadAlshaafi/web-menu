@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:menu_web_v1/pdf_text.dart';
@@ -8,10 +9,26 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-Future<Uint8List?> tableQrPng(String data) async {
-  final painter = QrPainter(data: data, version: QrVersions.auto, gapless: true);
-  final image = await painter.toImageData(512);
-  return image?.buffer.asUint8List();
+/// Draws [data] as a QR code on an opaque white square with a blank border
+/// (the "quiet zone" scanners need). A transparent, edge-to-edge image reads
+/// badly on dark viewers and when printed on coloured paper.
+Future<Uint8List?> tableQrPng(String data, {int size = 768}) async {
+  final painter = QrPainter(
+    data: data,
+    version: QrVersions.auto,
+    errorCorrectionLevel: QrErrorCorrectLevel.Q,
+    gapless: true,
+  );
+  final side = size.toDouble();
+  final margin = side * 0.12;
+  final recorder = ui.PictureRecorder();
+  final canvas = ui.Canvas(recorder);
+  canvas.drawRect(ui.Rect.fromLTWH(0, 0, side, side), ui.Paint()..color = const ui.Color(0xFFFFFFFF));
+  canvas.translate(margin, margin);
+  painter.paint(canvas, ui.Size(side - margin * 2, side - margin * 2));
+  final image = await recorder.endRecording().toImage(size, size);
+  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+  return bytes?.buffer.asUint8List();
 }
 
 Future<String?> saveTableQr({required String url, required String tableNumber}) async {

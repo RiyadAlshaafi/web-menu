@@ -1725,4 +1725,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminDeleteTableBusy =>
       'This table has an open order. Settle or cancel it before deleting the table.';
+
+  @override
+  String get adminRegenerateConfirmTitle => 'Replace QR code?';
+
+  @override
+  String get adminRegenerateConfirmMessage =>
+      'The QR code already printed for this table will stop working. Print the new one and put it on the table.';
+
+  @override
+  String get adminRegenerateAllConfirmMessage =>
+      'Every QR code already printed for your tables will stop working. You will need to print and place all the new ones.';
+
+  @override
+  String get adminRegenerateConfirm => 'Replace';
 }

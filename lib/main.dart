@@ -35,13 +35,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   final store = CafeStore(AppDatabase.instance);
-  runApp(StaffBoot(store: store));
+  // The opening screen below resets the browser address to '/', so remember
+  // the page the visitor really asked for (a scanned table QR is /t/<slug>)
+  // before anything can overwrite it.
+  final initialRoute = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+  runApp(StaffBoot(store: store, initialRoute: initialRoute));
 }
 
 class StaffBoot extends StatefulWidget {
-  const StaffBoot({super.key, required this.store});
+  const StaffBoot({super.key, required this.store, this.initialRoute = '/'});
 
   final CafeStore store;
+  final String initialRoute;
 
   @override
   State<StaffBoot> createState() => _StaffBootState();
@@ -67,7 +72,7 @@ class _StaffBootState extends State<StaffBoot> {
 
   @override
   Widget build(BuildContext context) {
-    if (_ready) return CafeItalianoApp(store: widget.store);
+    if (_ready) return CafeItalianoApp(store: widget.store, initialRoute: widget.initialRoute);
     return const StaffOpeningApp();
   }
 }
@@ -118,9 +123,12 @@ class StaffOpeningBody extends StatelessWidget {
 }
 
 class CafeItalianoApp extends StatefulWidget {
-  const CafeItalianoApp({super.key, required this.store});
+  const CafeItalianoApp({super.key, required this.store, this.initialRoute = '/'});
 
   final CafeStore store;
+
+  /// The address the app was opened with; '/' means "no specific page".
+  final String initialRoute;
 
   @override
   State<CafeItalianoApp> createState() => _CafeItalianoAppState();
@@ -140,7 +148,9 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
     routerRefresh = _RouterRefresh(widget.store);
     widget.store.addListener(_onStore);
     router = GoRouter(
-      initialLocation: widget.store.hasAdmin ? '/login' : '/admin/setup',
+      initialLocation: widget.initialRoute.startsWith('/') && widget.initialRoute != '/'
+          ? widget.initialRoute
+          : (widget.store.hasAdmin ? '/login' : '/admin/setup'),
       refreshListenable: routerRefresh,
       redirect: (_, state) {
         final path = state.uri.path;
