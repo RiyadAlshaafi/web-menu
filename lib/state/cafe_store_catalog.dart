@@ -5,6 +5,7 @@ extension CafeStoreCatalog on CafeStore {
     final table = tableBySlug(tableSlug);
     final buffer = StringBuffer()
       ..write(locale)
+      ..write(guestLocale)
       ..write('|')
       ..write(canPlaceOrder)
       ..write('|')

@@ -419,17 +419,31 @@ class AppDatabase {
 
   Future<void> _runRefreshes(bool liveOnly) async {
     var live = liveOnly;
+    var interrupted = 0;
     do {
       _refreshRerun = false;
       final catalogFresh =
           _catalogAt != null &&
           DateTime.now().difference(_catalogAt!) < const Duration(seconds: 60);
       var failed = false;
+      var completed = true;
       try {
-        await _refreshFromDisk(liveOnly: live && catalogFresh);
+        completed = await _refreshFromDisk(liveOnly: live && catalogFresh);
       } catch (error, stack) {
         failed = true;
         reportError('supabase refresh', error, stack);
+      }
+      if (!completed && interrupted < 3) {
+        // A save landed mid-load and the results were dropped, which used to
+        // leave screens empty or stale until the next live update. Let the
+        // save finish, then load again.
+        interrupted++;
+        await Future.wait([_orderWrites, _cartWrites]).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => const [],
+        );
+        _refreshRerun = true;
+        if (!live) _refreshRerunFull = true;
       }
       _afterRefresh(failed: failed);
       live = !_refreshRerunFull;
@@ -524,7 +538,9 @@ class AppDatabase {
     }
   }
 
-  Future<void> _refreshFromDisk({bool liveOnly = false}) async {
+  /// Loads everything. Returns false when a local save happened mid-load and
+  /// the (now stale) results were dropped, so the caller should load again.
+  Future<bool> _refreshFromDisk({bool liveOnly = false}) async {
     final epoch = _epoch;
     final watch = Stopwatch()..start();
     _applyHeaders();
@@ -546,7 +562,7 @@ class AppDatabase {
         Future<dynamic>.value(null),
       client!.from('dining_tables').select(),
     ]);
-    if (epoch != _epoch) return;
+    if (epoch != _epoch) return false;
     anyAdmin = opened[0] as bool? ?? false;
     final profile = opened[1] as Map<String, dynamic>?;
     final tableList = opened[2] as List;
@@ -583,9 +599,9 @@ class AppDatabase {
       _expenses = [];
       _calls = [];
       loadedOnce = true; // Nothing to load for an unlinked device is still a result.
-      return;
+      return true;
     }
-    if (epoch != _epoch) return;
+    if (epoch != _epoch) return false;
     _tables = tableList
         .map(
           (row) => CafeTable(
@@ -632,10 +648,10 @@ class AppDatabase {
       loadCarts(),
       guest ? Future<dynamic>.value(null) : client!.from('staff_calls').select(),
       // Guests need the list too: they pick how they will pay on their bill.
-      _selectOrEmpty(client!.from('payment_types').select().order('sort_order'), 'payment types'),
+      _selectOrEmpty(client!.from('payment_types').select().order('sort_order', ascending: true), 'payment types'),
       guest
           ? Future<dynamic>.value(null)
-          : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order'), 'expense categories'),
+          : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
       guest ? Future<dynamic>.value(null) : client!.from('shift_expenses').select().order('created_at'),
       guest
           ? (guestTableId == null ? Future<dynamic>.value(<CafeOrder>[]) : _loadOpenOrdersForTable(guestTableId))
@@ -647,7 +663,7 @@ class AppDatabase {
           : Future<dynamic>.value(null),
       staffed ? _selectPayments(historyFrom, _salesTo, _salesLimit) : Future<dynamic>.value(null),
     ]);
-    if (epoch != _epoch) return;
+    if (epoch != _epoch) return false;
     if (!liveOnly) {
       final categoryRows = batch[1] as List;
       _categories = categoryRows
@@ -773,7 +789,7 @@ class AppDatabase {
             .map((row) => _mapExpense(Map<String, dynamic>.from(row as Map)))
             .toList();
         final paymentRows = batch[11] as List;
-        if (epoch != _epoch) return;
+        if (epoch != _epoch) return false;
         salesHasMore = paymentRows.length >= _salesLimit;
         final paymentIds = [for (final row in paymentRows) row['id'] as String];
         final changes = await _changesFor(paymentIds);
@@ -821,6 +837,7 @@ class AppDatabase {
     if (kDebugMode) {
       debugPrint('refreshFromDisk ${watch.elapsedMilliseconds}ms liveOnly=$liveOnly');
     }
+    return true;
   }
 
   Future<void> loadMoreSales() async {

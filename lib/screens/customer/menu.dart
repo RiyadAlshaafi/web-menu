@@ -209,9 +209,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                           itemCount: dishes.length,
                           itemBuilder: (context, index) {
                             final row = RepaintBoundary(child: _row(store, table.id, dishes[index]));
-                            // Only the first few rows animate in, so scrolling back never replays it.
                             if (index >= 6) return row;
-                            return FadeSlideIn(delay: Duration(milliseconds: 40 * index), child: row);
+                            // Keyed by dish so a row scrolled away and back does not replay it.
+                            return FadeSlideIn(
+                              id: dishes[index].id,
+                              delay: Duration(milliseconds: 40 * index),
+                              child: row,
+                            );
                           },
                         ),
                       ),
@@ -653,7 +657,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-      builder: (context) {
+      builder: (context) => guestLocalized(store, context, Builder(builder: (context) {
         return StatefulBuilder(
           builder: (context, setModal) {
             return Padding(
@@ -726,7 +730,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             );
           },
         );
-      },
+      })),
     );
   }
 }
@@ -753,7 +757,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
       isScrollControlled: true,
       isDismissible: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
+      builder: (sheetContext) => guestLocalized(store, sheetContext, Builder(builder: (sheetContext) {
         var sending = false;
         return StatefulBuilder(
           builder: (context, setLocal) {
@@ -947,7 +951,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
             );
           },
         );
-      },
+      })),
     );
     return sent ?? false;
   } finally {
@@ -963,6 +967,21 @@ String? guestLocationMessage(BuildContext context, CafeStore store) {
     GuestLocationStatus.checking => context.l10n.guestLocationChecking,
     GuestLocationStatus.off || GuestLocationStatus.allowed => null,
   };
+}
+
+/// Bottom sheets open on the app's root navigator, above the guest page's
+/// language override, so they would show the staff language. Re-apply the
+/// guest's language and reading direction inside the sheet.
+Widget guestLocalized(CafeStore store, BuildContext context, Widget child) {
+  final code = store.guestLocale;
+  return Localizations.override(
+    context: context,
+    locale: Locale(code),
+    child: Directionality(
+      textDirection: code == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+      child: child,
+    ),
+  );
 }
 
 void showGuestLocationBlock(BuildContext context, CafeStore store) {

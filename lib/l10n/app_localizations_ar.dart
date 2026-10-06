@@ -626,7 +626,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get layoutDishNameEnHint => 'مثال: Truffle tagliolini';
 
   @override
-  String get layoutPriceLabel => 'السعر (€ يورو) *';
+  String get layoutPriceLabel => 'السعر (د.ل) *';
 
   @override
   String get layoutDishPictureLabel => 'صورة الطبق';
@@ -1194,7 +1194,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierToleranceNote =>
-      'هامش التفاوت المسموح به في العدّ هو ±€2.00. يرجى التأكد من تسوية جميع فواتير الطاولات قبل إغلاق الصندوق.';
+      'هامش التفاوت المسموح به في العدّ هو ±2.000 د.ل. يرجى التأكد من تسوية جميع فواتير الطاولات قبل إغلاق الصندوق.';
 
   @override
   String get cashierActualCashCounted => 'النقد الفعلي المعدود';

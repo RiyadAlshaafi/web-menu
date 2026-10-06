@@ -749,9 +749,9 @@ Future<void> showAddDishDialog(
                     TextField(
                       controller: price,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        prefixText: '€  ',
-                        hintText: '18.50',
+                      decoration: InputDecoration(
+                        prefixText: Localizations.localeOf(context).languageCode == 'ar' ? 'د.ل  ' : 'LYD  ',
+                        hintText: '18.500',
                         fillColor: Color(0xFFFBF6F0),
                       ),
                     ),

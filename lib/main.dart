@@ -428,7 +428,10 @@ class _GuestSessionState extends State<GuestSession> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    // Start loading at once rather than after the first frame: a phone that
+    // locks or switches apps while the page opens draws no frames, which left
+    // guests on "Loading your table" until they came back.
+    Future.microtask(_load);
   }
 
   Future<void> _load() async {

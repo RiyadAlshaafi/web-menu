@@ -627,7 +627,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutDishNameEnHint => 'e.g., Truffle tagliolini';
 
   @override
-  String get layoutPriceLabel => 'PRICE (€ EUR) *';
+  String get layoutPriceLabel => 'PRICE (LYD) *';
 
   @override
   String get layoutDishPictureLabel => 'DISH PICTURE';
@@ -1196,7 +1196,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierToleranceNote =>
-      'Counting discrepancy tolerance is ±€2.00. Please ensure all dining table chits are settled before closing register.';
+      'Counting discrepancy tolerance is ±2.000 LYD. Please ensure all dining table chits are settled before closing register.';
 
   @override
   String get cashierActualCashCounted => 'Actual Cash Counted';

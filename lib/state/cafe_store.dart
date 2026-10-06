@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
@@ -391,17 +390,13 @@ class CafeStore extends ChangeNotifier {
 
   AppLocalizations get guestL10n => lookupAppLocalizations(Locale(guestLocale));
 
-  Future<void> _loadGuestLocale() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('guest_locale');
-    if (saved == 'en' || saved == 'ar') guestLocaleOverride = saved;
-  }
+  /// The guest's language is asked on every scan (each fresh page load) and kept
+  /// only for that visit; a choice saved on the phone used to skip the question.
+  Future<void> _loadGuestLocale() async {}
 
   Future<void> setGuestLocale(String value) async {
     if (value != 'en' && value != 'ar') return;
     guestLocaleOverride = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('guest_locale', value);
     notifyListeners();
   }
 
@@ -442,10 +437,12 @@ class CafeStore extends ChangeNotifier {
     }
     if (response.session == null) {
       await db.refreshFromDisk();
-      notifyListeners();
+      _afterRelink();
       return 'Confirm the account from the email Supabase sent, then sign in. In Supabase Auth, turn off Confirm email if you want to enter immediately.';
     }
     await db.refreshFromDisk();
+    _hydrateOperational();
+    _syncStampCache = null;
     admin = db.admin;
     authKind = AuthKind.admin;
     startLiveSync();
@@ -480,6 +477,11 @@ class CafeStore extends ChangeNotifier {
       return adminError;
     }
     await db.refreshFromDisk();
+    // Copy the signed-in data (sales, expenses, orders...) to the screens, not
+    // just the admin's name; otherwise the dashboard keeps the empty pre-login
+    // data until the next live update.
+    _hydrateOperational();
+    _syncStampCache = null;
     admin = db.admin;
     if (admin == null) {
       adminError = l10n.errNoAdmin;

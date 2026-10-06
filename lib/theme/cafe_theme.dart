@@ -124,10 +124,15 @@ class CafePageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 class CafeTheme {
+  /// Arabic glyphs come from the font bundled with the app. Without this the
+  /// web app downloaded an Arabic font from Google on first use, so Arabic text
+  /// showed as empty boxes for a moment (or for good when offline).
+  static const arabicFallback = ['NotoNaskhArabic'];
+
   static ThemeData get light => forSurfaces(CafeSurfaces.defaults);
 
   static ThemeData forSurfaces(CafeSurfaces surfaces) {
-    final textTheme = ThemeData(fontFamily: 'PlusJakartaSans').textTheme.apply(
+    final textTheme = ThemeData(fontFamily: 'PlusJakartaSans', fontFamilyFallback: arabicFallback).textTheme.apply(
       bodyColor: CafeColors.ink,
       displayColor: CafeColors.ink,
     );
@@ -140,6 +145,7 @@ class CafeTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'PlusJakartaSans',
+      fontFamilyFallback: arabicFallback,
       colorScheme: scheme,
       scaffoldBackgroundColor: surfaces.background,
       canvasColor: surfaces.background,
@@ -219,6 +225,7 @@ class CafeTheme {
 
   static const display = TextStyle(
         fontFamily: 'PlusJakartaSans',
+        fontFamilyFallback: arabicFallback,
         fontWeight: FontWeight.w600,
         color: CafeColors.ink,
         height: 1.15,
@@ -227,6 +234,7 @@ class CafeTheme {
 
   static const brand = TextStyle(
         fontFamily: 'PlusJakartaSans',
+        fontFamilyFallback: arabicFallback,
         fontWeight: FontWeight.w700,
         color: CafeColors.ink,
         letterSpacing: -0.4,

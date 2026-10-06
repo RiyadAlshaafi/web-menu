@@ -1259,7 +1259,7 @@ abstract class AppLocalizations {
   /// No description provided for @layoutPriceLabel.
   ///
   /// In en, this message translates to:
-  /// **'PRICE (€ EUR) *'**
+  /// **'PRICE (LYD) *'**
   String get layoutPriceLabel;
 
   /// No description provided for @layoutDishPictureLabel.
@@ -2261,7 +2261,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashierToleranceNote.
   ///
   /// In en, this message translates to:
-  /// **'Counting discrepancy tolerance is ±€2.00. Please ensure all dining table chits are settled before closing register.'**
+  /// **'Counting discrepancy tolerance is ±2.000 LYD. Please ensure all dining table chits are settled before closing register.'**
   String get cashierToleranceNote;
 
   /// No description provided for @cashierActualCashCounted.

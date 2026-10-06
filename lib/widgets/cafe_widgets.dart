@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -250,31 +251,61 @@ class _SoftCardState extends State<SoftCard> {
 }
 
 /// Opens a row on tap without joining the scroll gesture arena.
-/// Fades and lifts [child] into place once when it first builds. [delay] lets
-/// neighbours stagger. With reduced motion the child simply appears.
-class FadeSlideIn extends StatelessWidget {
-  const FadeSlideIn({super.key, required this.child, this.delay = Duration.zero});
+/// Fades and lifts [child] into place when it first appears. With an [id] the
+/// entrance plays only once per session: a list row that scrolls away and comes
+/// back appears instantly instead of animating again. With reduced motion the
+/// child simply appears.
+class FadeSlideIn extends StatefulWidget {
+  const FadeSlideIn({super.key, required this.child, this.delay = Duration.zero, this.id});
 
   final Widget child;
   final Duration delay;
+  final Object? id;
+
+  static final Set<Object> _played = {};
+
+  @override
+  State<FadeSlideIn> createState() => _FadeSlideInState();
+}
+
+class _FadeSlideInState extends State<FadeSlideIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    final total = widget.delay + CafeMotion.medium;
+    _controller = AnimationController(vsync: this, duration: total);
+    _progress = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(widget.delay.inMilliseconds / total.inMilliseconds, 1, curve: CafeMotion.easeOut),
+    );
+    final id = widget.id;
+    if (id != null && !FadeSlideIn._played.add(id)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    final total = delay + CafeMotion.medium;
-    final curve = Interval(
-      delay.inMilliseconds / total.inMilliseconds,
-      1,
-      curve: CafeMotion.easeOut,
-    );
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: total,
-      curve: curve,
-      child: child,
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: Transform.translate(offset: Offset(0, 12 * (1 - value)), child: child),
+    if (MediaQuery.disableAnimationsOf(context)) return widget.child;
+    // The wrapper stays the same shape at every value so the row is never
+    // rebuilt from scratch when the animation ends.
+    return AnimatedBuilder(
+      animation: _progress,
+      child: widget.child,
+      builder: (context, child) => Opacity(
+        opacity: _progress.value,
+        child: Transform.translate(offset: Offset(0, 12 * (1 - _progress.value)), child: child),
       ),
     );
   }
@@ -299,11 +330,20 @@ class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
   var _claimed = false;
   var _travel = 0.0;
   var _pressed = false;
+  Timer? _pressDelay;
 
   void claim() => _claimed = true;
 
   void _release() {
+    _pressDelay?.cancel();
+    _pressDelay = null;
     if (_pressed) setState(() => _pressed = false);
+  }
+
+  @override
+  void dispose() {
+    _pressDelay?.cancel();
+    super.dispose();
   }
 
   @override
@@ -313,7 +353,14 @@ class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
       onPointerDown: (_) {
         _moved = false;
         _travel = 0;
-        if (widget.onTap != null) setState(() => _pressed = true);
+        // Wait briefly before showing the press, so starting a scroll does not
+        // make the card under the finger dip and bounce back.
+        _pressDelay?.cancel();
+        if (widget.onTap != null) {
+          _pressDelay = Timer(const Duration(milliseconds: 90), () {
+            if (mounted && !_moved) setState(() => _pressed = true);
+          });
+        }
       },
       onPointerMove: (event) {
         _travel += event.delta.distance;
