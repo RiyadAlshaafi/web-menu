@@ -250,6 +250,36 @@ class _SoftCardState extends State<SoftCard> {
 }
 
 /// Opens a row on tap without joining the scroll gesture arena.
+/// Fades and lifts [child] into place once when it first builds. [delay] lets
+/// neighbours stagger. With reduced motion the child simply appears.
+class FadeSlideIn extends StatelessWidget {
+  const FadeSlideIn({super.key, required this.child, this.delay = Duration.zero});
+
+  final Widget child;
+  final Duration delay;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final total = delay + CafeMotion.medium;
+    final curve = Interval(
+      delay.inMilliseconds / total.inMilliseconds,
+      1,
+      curve: CafeMotion.easeOut,
+    );
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: total,
+      curve: curve,
+      child: child,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(offset: Offset(0, 12 * (1 - value)), child: child),
+      ),
+    );
+  }
+}
+
 class ScrollFriendlyTap extends StatefulWidget {
   const ScrollFriendlyTap({super.key, required this.onTap, required this.child});
 
@@ -268,8 +298,13 @@ class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
   var _moved = false;
   var _claimed = false;
   var _travel = 0.0;
+  var _pressed = false;
 
   void claim() => _claimed = true;
+
+  void _release() {
+    if (_pressed) setState(() => _pressed = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -278,17 +313,31 @@ class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
       onPointerDown: (_) {
         _moved = false;
         _travel = 0;
+        if (widget.onTap != null) setState(() => _pressed = true);
       },
       onPointerMove: (event) {
         _travel += event.delta.distance;
-        if (_travel > kTouchSlop) _moved = true;
+        if (_travel > kTouchSlop) {
+          _moved = true;
+          _release();
+        }
       },
       onPointerUp: (_) {
+        _release();
         if (!_moved && !_claimed) widget.onTap?.call();
         _claimed = false;
       },
-      onPointerCancel: (_) => _claimed = false,
-      child: widget.child,
+      onPointerCancel: (_) {
+        _release();
+        _claimed = false;
+      },
+      // Press state shows on finger-down; with reduced motion the card stays still.
+      child: AnimatedScale(
+        scale: _pressed && !MediaQuery.disableAnimationsOf(context) ? 0.98 : 1,
+        duration: CafeMotion.quick,
+        curve: CafeMotion.easeOut,
+        child: widget.child,
+      ),
     );
   }
 }

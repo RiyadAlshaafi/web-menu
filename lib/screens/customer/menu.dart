@@ -213,7 +213,12 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList.builder(
                           itemCount: dishes.length,
-                          itemBuilder: (context, index) => RepaintBoundary(child: _row(store, table.id, dishes[index])),
+                          itemBuilder: (context, index) {
+                            final row = RepaintBoundary(child: _row(store, table.id, dishes[index]));
+                            // Only the first few rows animate in, so scrolling back never replays it.
+                            if (index >= 6) return row;
+                            return FadeSlideIn(delay: Duration(milliseconds: 40 * index), child: row);
+                          },
                         ),
                       ),
                     ];
