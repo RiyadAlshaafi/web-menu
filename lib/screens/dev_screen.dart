@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/app_database.dart';
+import '../save_bytes.dart';
 import '../dev_logs.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -150,10 +151,12 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _saveCsv(BuildContext context, String title, String fileName, List<int> bytes) async {
     try {
-      final path = await FilePicker.platform.saveFile(
+      final path = await saveBytesFile(
         dialogTitle: title,
         fileName: fileName,
         bytes: Uint8List.fromList(bytes),
+        type: FileType.custom,
+        allowedExtensions: const ['csv'],
       );
       if (!context.mounted) return;
       if (path == null) {

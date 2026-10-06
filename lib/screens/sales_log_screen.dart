@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -9,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../ledger.dart';
+import '../save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../time_format.dart';
 import '../state/cafe_store.dart';
@@ -454,7 +456,16 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         'paid',
       ].map((value) => '"${'$value'.replaceAll('"', '""')}"').join(','));
     }
-    await FilePicker.platform.saveFile(dialogTitle: context.l10n.salesExportCsv, fileName: 'sales-log.csv', bytes: utf8.encode(buffer.toString()));
+    try {
+      await saveBytesFile(
+        dialogTitle: context.l10n.salesExportCsv,
+        fileName: 'sales-log.csv',
+        bytes: Uint8List.fromList(utf8.encode(buffer.toString())),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
+    }
   }
 
   Future<void> _exportPdf(CafeStore store, List<SaleLedgerRow> rows) async {

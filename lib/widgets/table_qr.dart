@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:menu_web_v1/save_bytes.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -15,15 +16,19 @@ Future<Uint8List?> tableQrPng(String data) async {
 Future<String?> saveTableQr({required String url, required String tableNumber}) async {
   final bytes = await tableQrPng(url);
   if (bytes == null) return 'Could not draw the QR code.';
-  final path = await FilePicker.platform.saveFile(
-    dialogTitle: 'Save table QR',
-    fileName: 'table-$tableNumber.png',
-    type: FileType.custom,
-    allowedExtensions: const ['png'],
-    bytes: bytes,
-  );
-  if (path == null) return null;
-  return null;
+  try {
+    final path = await saveBytesFile(
+      dialogTitle: 'Save table QR',
+      fileName: 'table-$tableNumber.png',
+      type: FileType.custom,
+      allowedExtensions: const ['png'],
+      bytes: bytes,
+    );
+    if (path == null) return null;
+    return null;
+  } catch (error) {
+    return '$error';
+  }
 }
 
 Future<String?> printTableQr({
