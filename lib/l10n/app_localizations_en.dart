@@ -1550,6 +1550,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cafeLocationSaved => 'Cafe location saved.';
 
   @override
+  String get adminAutoPrintReceipt =>
+      'Automatically print receipt after payment';
+
+  @override
+  String get adminAutoPrintReceiptHint =>
+      'Opens the print dialog when a dine-in or takeout sale is settled.';
+
+  @override
+  String get receiptThankYou => 'Thank you';
+
+  @override
+  String get receiptPrintFailed =>
+      'The sale was saved, but the receipt could not be printed.';
+
+  @override
   String get guestLocationTooFar =>
       'You\'re too far from the cafe to order. You can still browse the menu.';
 

@@ -45,6 +45,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
   Future<void> _pay(CafeStore store) async {
     if (paying || lines.isEmpty) return;
     setState(() => paying = true);
+    final known = store.payments.map((payment) => payment.id).toSet();
     final error = await store.checkoutTakeout(
       lines: [
         for (final line in lines)
@@ -68,6 +69,16 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
       };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;
+    }
+    if (store.autoPrintReceipt) {
+      final added = store.payments.where((payment) => !known.contains(payment.id));
+      final payment = added.isEmpty ? null : added.first;
+      if (payment != null) {
+        unawaited(showReceiptPrint(store, payment, context.l10n).catchError((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.receiptPrintFailed)));
+        }));
+      }
     }
     setState(lines.clear);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.quickTakeoutPaid)));

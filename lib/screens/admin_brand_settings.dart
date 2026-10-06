@@ -105,6 +105,32 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(context.l10n.adminAutoPrintReceipt, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                        const SizedBox(height: 6),
+                        Text(context.l10n.adminAutoPrintReceiptHint, style: const TextStyle(color: CafeColors.inkMuted)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: store.autoPrintReceipt,
+                    onChanged: (value) => store.setAutoPrintReceipt(value),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SoftCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(context.l10n.catalogAppearance, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 12),
               _swatch(context.l10n.catalogHeaderColor, header, (color) => setState(() => header = color)),

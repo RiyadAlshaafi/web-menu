@@ -60,6 +60,13 @@ extension CafeStoreSettings on CafeStore {
   String get databasePath => db.databasePath;
   bool get isSqlite => db.isSqlite;
   double get serviceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0.10;
+  bool get autoPrintReceipt => cafe['autoPrintReceipt'] as bool? ?? true;
+
+  Future<void> setAutoPrintReceipt(bool value) async {
+    cafe = {...cafe, 'autoPrintReceipt': value};
+    notifyListeners();
+    await db.writeAutoPrintReceipt(value);
+  }
   double get taxRate => (cafe['taxRate'] as num?)?.toDouble() ?? 0;
   Future<void> setLocale(String value) async {
     locale = value;

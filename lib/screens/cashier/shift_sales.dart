@@ -280,8 +280,13 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                         child: Align(
                                           alignment: Alignment.centerRight,
                                           child: TextButton.icon(
-                                            onPressed: () =>
-                                                _cashierUnavailable(context),
+                                            onPressed: () {
+                                              final host = context;
+                                              showReceiptPrint(store, payment, host.l10n).catchError((error) {
+                                                if (!host.mounted) return;
+                                                ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
+                                              });
+                                            },
                                             icon: const Icon(
                                               Icons.print_outlined,
                                               size: 14,

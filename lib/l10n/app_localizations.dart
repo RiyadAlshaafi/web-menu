@@ -2882,6 +2882,30 @@ abstract class AppLocalizations {
   /// **'Cafe location saved.'**
   String get cafeLocationSaved;
 
+  /// No description provided for @adminAutoPrintReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically print receipt after payment'**
+  String get adminAutoPrintReceipt;
+
+  /// No description provided for @adminAutoPrintReceiptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the print dialog when a dine-in or takeout sale is settled.'**
+  String get adminAutoPrintReceiptHint;
+
+  /// No description provided for @receiptThankYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you'**
+  String get receiptThankYou;
+
+  /// No description provided for @receiptPrintFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The sale was saved, but the receipt could not be printed.'**
+  String get receiptPrintFailed;
+
   /// No description provided for @guestLocationTooFar.
   ///
   /// In en, this message translates to:

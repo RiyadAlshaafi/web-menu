@@ -76,6 +76,7 @@ class AppDatabase {
     'name': '',
     'serviceChargeRate': 0.10,
     'taxRate': 0,
+    'autoPrintReceipt': true,
   };
   String _locale = 'en';
   AdminAccount? _admin;
@@ -165,7 +166,7 @@ class AppDatabase {
     cashierToken = null;
     guestSlug = null;
     anyAdmin = false;
-    _cafe = {'name': '', 'serviceChargeRate': 0.10, 'taxRate': 0};
+    _cafe = {'name': '', 'serviceChargeRate': 0.10, 'taxRate': 0, 'autoPrintReceipt': true};
     _locale = 'en';
     _admin = null;
     _cashiers = [];
@@ -319,7 +320,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color',
+          'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt',
         )
         .eq('id', id)
         .maybeSingle();
@@ -335,6 +336,7 @@ class AppDatabase {
       'serviceChargeRate':
           (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
       'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
+      'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
     };
   }
 
@@ -828,6 +830,12 @@ class AppDatabase {
   Future<void> writeOtp(Map<String, dynamic>? value) async {}
   Future<void> writeRememberAdmin(bool value) async => _rememberAdmin = value;
   Future<void> writeAdmin(AdminAccount? admin) async => _admin = admin;
+
+  Future<void> writeAutoPrintReceipt(bool value) async {
+    _cafe = {..._cafe, 'autoPrintReceipt': value};
+    if (client == null || restaurantId == null) return;
+    await client!.from('restaurants').update({'auto_print_receipt': value}).eq('id', restaurantId!);
+  }
 
   Future<void> writeLocale(String locale) async {
     _locale = locale;

@@ -1546,6 +1546,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cafeLocationSaved => 'تم حفظ موقع المقهى.';
 
   @override
+  String get adminAutoPrintReceipt => 'طباعة الإيصال تلقائياً بعد الدفع';
+
+  @override
+  String get adminAutoPrintReceiptHint =>
+      'يفتح نافذة الطباعة عند تسوية طلب داخلي أو سفري.';
+
+  @override
+  String get receiptThankYou => 'شكراً لكم';
+
+  @override
+  String get receiptPrintFailed => 'تم حفظ البيع، لكن تعذرت طباعة الإيصال.';
+
+  @override
   String get guestLocationTooFar =>
       'أنت بعيد عن المقهى ولا يمكن إرسال الطلب. يمكنك تصفح القائمة.';
 

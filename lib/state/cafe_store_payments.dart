@@ -20,6 +20,13 @@ extension CafeStorePayments on CafeStore {
     );
   }
 
+  Payment? paymentForOrder(String? orderId) {
+    if (orderId == null) return null;
+    final matches = payments.where((payment) => payment.orderId == orderId).toList()
+      ..sort((a, b) => b.paidAt.compareTo(a.paidAt));
+    return matches.isEmpty ? null : matches.first;
+  }
+
   String receiptNumber(Payment payment) {
     if (payment.monthlyOrderNumber == null) {
       return payment.monthlyDisplayNumber ?? '—';

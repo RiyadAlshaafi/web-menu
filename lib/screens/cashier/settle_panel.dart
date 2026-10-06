@@ -10,6 +10,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
     return;
   }
+  final host = context;
   final controller = TextEditingController();
   final navigator = Navigator.of(context, rootNavigator: true);
   var applyService = store.serviceChargeRate > 0;
@@ -127,6 +128,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                           expanded: false,
                           label: context.l10n.cashierSettleCloseBill(store.currency.format(due)),
                           onPressed: () async {
+                            final orderId = store.openOrderFor(tableId)?.id;
                             final error = await store.settleCash(
                               tableId: tableId,
                               cashReceived: received,
@@ -142,6 +144,12 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                               return;
                             }
                             navigator.pop();
+                            final payment = store.paymentForOrder(orderId);
+                            if (!store.autoPrintReceipt || payment == null || !host.mounted) return;
+                            unawaited(showReceiptPrint(store, payment, host.l10n).catchError((_) {
+                              if (!host.mounted) return;
+                              ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
+                            }));
                           },
                         ),
                       ],
