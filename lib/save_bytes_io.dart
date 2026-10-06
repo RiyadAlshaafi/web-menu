@@ -15,7 +15,6 @@ Future<String?> saveBytesFile({
     fileName: fileName,
     type: type,
     allowedExtensions: allowedExtensions,
-    lockParentWindow: true,
   );
   if (path == null) return null;
   await writeBytesAt(path, bytes);

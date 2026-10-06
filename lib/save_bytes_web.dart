@@ -11,14 +11,17 @@ Future<String?> saveBytesFile({
   FileType type = FileType.any,
   List<String>? allowedExtensions,
 }) async {
-  final blob = Blob([bytes.toJS].toJS);
+  final blob = Blob([bytes.toJS].toJS, BlobPropertyBag(type: 'text/csv;charset=utf-8'));
   final url = URL.createObjectURL(blob);
   final anchor = HTMLAnchorElement()
     ..href = url
     ..download = fileName;
   document.body?.append(anchor);
   anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  // Revoking in the same turn cancels the browser download before it starts.
+  Future<void>.delayed(const Duration(seconds: 1), () {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  });
   return fileName;
 }
