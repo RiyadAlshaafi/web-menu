@@ -80,7 +80,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                 final stack = constraints.maxWidth < 980;
                 final alerts = ListView(
                     children: [
-                      if (store.tables.isEmpty)
+                      if (store.activeTables.isEmpty)
                         SoftCard(radius: 16, child: EmptyHint(context.l10n.noTables))
                       else if (orders.isEmpty && calls.isEmpty && bills.isEmpty)
                         SoftCard(radius: 16, child: EmptyHint(context.l10n.noOrders))

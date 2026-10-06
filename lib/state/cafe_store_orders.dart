@@ -2,11 +2,14 @@ part of 'cafe_store.dart';
 
 extension CafeStoreOrders on CafeStore {
   CafeTable? tableBySlug(String slug) {
-    final matches = tables.where((table) => table.qrSlug == slug || table.id == slug);
+    final matches = tables.where((table) => !table.archived && (table.qrSlug == slug || table.id == slug));
     return matches.isEmpty ? null : matches.first;
   }
 
   CafeTable tableById(String id) => tables.firstWhere((table) => table.id == id);
+
+  /// Tables that are still in use (not archived).
+  List<CafeTable> get activeTables => tables.where((table) => !table.archived).toList();
 
   CartState cartFor(String tableId) =>
       carts.putIfAbsent(tableId, () => CartState(tableId: tableId));
@@ -163,7 +166,8 @@ extension CafeStoreOrders on CafeStore {
     return named.isEmpty ? null : named.first;
   }
 
-  List<CafeTable> get diningTables => tables.where((table) => !isServiceCounter(table)).toList();
+  List<CafeTable> get diningTables =>
+      tables.where((table) => !table.archived && !isServiceCounter(table)).toList();
 
   Future<String?> checkoutTakeout({
     required List<OrderLine> lines,

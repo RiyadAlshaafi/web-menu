@@ -166,11 +166,11 @@ class AdminShell extends StatelessWidget {
                       ),
                     OutlinedButton.icon(
                       onPressed: () {
-                        if (store.tables.isEmpty) {
+                        if (store.activeTables.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
                           return;
                         }
-                        context.go('/t/${store.tables.first.qrSlug}');
+                        context.go('/t/${store.activeTables.first.qrSlug}');
                       },
                       icon: const Icon(Icons.visibility_outlined, size: 16, color: CafeColors.terracotta),
                       label: drawer
@@ -252,12 +252,12 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final filtered = store.tables.where((table) {
+    final filtered = store.activeTables.where((table) {
       if (query.isEmpty) return true;
       return table.number.toLowerCase().contains(query.toLowerCase());
     }).toList();
     selectedId ??= filtered.isEmpty ? null : filtered.first.id;
-    final selected = store.tables.where((table) => table.id == selectedId);
+    final selected = store.activeTables.where((table) => table.id == selectedId);
     final table = selected.isEmpty ? null : selected.first;
 
     return Padding(
@@ -293,14 +293,14 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
               ),
               const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: store.tables.isEmpty ? null : () => store.regenerateAllTableQrs(),
+                onPressed: store.activeTables.isEmpty ? null : () => store.regenerateAllTableQrs(),
                 child: Text(context.l10n.adminRegenerateAllQr),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: store.tables.isEmpty
+            child: store.activeTables.isEmpty
                 ? SoftCard(child: EmptyHint(context.l10n.noTables))
                 : LayoutBuilder(
                     builder: (context, constraints) {
@@ -481,6 +481,10 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
   }
 
   Future<void> _confirmDelete(BuildContext context, CafeStore store, CafeTable table) async {
+    if (store.tableHasOpenOrder(table.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.adminDeleteTableBusy)));
+      return;
+    }
     final ok = await showCafeConfirmDialog(
       context,
       title: context.l10n.adminDeleteTableTitle,

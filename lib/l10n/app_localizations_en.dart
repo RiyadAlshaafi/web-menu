@@ -506,7 +506,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminDeleteTableMessage =>
-      'Do you want to delete this table? This action cannot be undone and will permanently remove it from the floor plan and ordering system.';
+      'Do you want to delete this table? It will be removed from the floor plan, QR codes and ordering. Its past receipts and sales history are kept.';
 
   @override
   String get adminDeleteTableConfirm => 'Delete Table';
@@ -1721,4 +1721,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authSetupCodeInvalid =>
       'The setup code is not valid for this cafe.';
+
+  @override
+  String get adminDeleteTableBusy =>
+      'This table has an open order. Settle or cancel it before deleting the table.';
 }

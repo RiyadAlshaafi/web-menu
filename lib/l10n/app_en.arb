@@ -210,7 +210,7 @@
   "adminTableNumberLabel": "Table number / name",
   "adminCreate": "Create",
   "adminDeleteTableTitle": "Delete Table?",
-  "adminDeleteTableMessage": "Do you want to delete this table? This action cannot be undone and will permanently remove it from the floor plan and ordering system.",
+  "adminDeleteTableMessage": "Do you want to delete this table? It will be removed from the floor plan, QR codes and ordering. Its past receipts and sales history are kept.",
   "adminDeleteTableConfirm": "Delete Table",
   "layoutTitle": "Menu Layout & Display Editor",
   "layoutSavedSnack": "Menu layout saved.",
@@ -906,5 +906,6 @@
   "authSetupCode": "Setup code",
   "authSetupCodeHint": "Code from your provider",
   "authDeviceNotLinked": "This device is not linked to a cafe yet. Ask your provider to link it from the developer tools.",
-  "authSetupCodeInvalid": "The setup code is not valid for this cafe."
+  "authSetupCodeInvalid": "The setup code is not valid for this cafe.",
+  "adminDeleteTableBusy": "This table has an open order. Settle or cancel it before deleting the table."
 }

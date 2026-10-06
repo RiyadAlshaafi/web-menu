@@ -247,7 +247,8 @@ class CafeStore extends ChangeNotifier {
         ..write(table.id)
         ..write(table.status.name)
         ..write(table.guests)
-        ..write(table.number);
+        ..write(table.number)
+        ..write(table.archived);
     }
     for (final order in orders) {
       buffer
@@ -624,7 +625,7 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> ensureGuest(String slug) async {
-    if (db.guestSlug == slug && tables.any((table) => table.qrSlug == slug)) {
+    if (db.guestSlug == slug && tables.any((table) => !table.archived && table.qrSlug == slug)) {
       return;
     }
     await db.setGuestSlug(slug);

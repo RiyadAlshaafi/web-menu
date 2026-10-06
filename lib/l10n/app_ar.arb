@@ -162,7 +162,7 @@
   "adminTableNumberLabel": "رقم الطاولة / اسمها",
   "adminCreate": "إنشاء",
   "adminDeleteTableTitle": "حذف الطاولة؟",
-  "adminDeleteTableMessage": "هل تريد حذف هذه الطاولة؟ لا يمكن التراجع عن هذا الإجراء، وستتم إزالتها نهائيًا من مخطط الصالة ونظام الطلبات.",
+  "adminDeleteTableMessage": "هل تريد حذف هذه الطاولة؟ ستُزال من مخطط الصالة ورموز QR والطلبات، وتبقى إيصالاتها وسجل مبيعاتها السابق محفوظة.",
   "adminDeleteTableConfirm": "حذف الطاولة",
   "layoutTitle": "محرر تخطيط القائمة وطريقة العرض",
   "layoutSavedSnack": "تم حفظ تخطيط القائمة.",
@@ -541,5 +541,6 @@
   "authSetupCode": "رمز الإعداد",
   "authSetupCodeHint": "الرمز المقدَّم من المزوّد",
   "authDeviceNotLinked": "هذا الجهاز غير مرتبط بمقهى بعد. اطلب من المزوّد ربطه من أدوات المطوّر.",
-  "authSetupCodeInvalid": "رمز الإعداد غير صالح لهذا المقهى."
+  "authSetupCodeInvalid": "رمز الإعداد غير صالح لهذا المقهى.",
+  "adminDeleteTableBusy": "هذه الطاولة عليها طلب مفتوح. أغلقه أو ألغه قبل حذف الطاولة."
 }

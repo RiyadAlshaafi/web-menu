@@ -1043,7 +1043,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminDeleteTableMessage.
   ///
   /// In en, this message translates to:
-  /// **'Do you want to delete this table? This action cannot be undone and will permanently remove it from the floor plan and ordering system.'**
+  /// **'Do you want to delete this table? It will be removed from the floor plan, QR codes and ordering. Its past receipts and sales history are kept.'**
   String get adminDeleteTableMessage;
 
   /// No description provided for @adminDeleteTableConfirm.
@@ -3199,6 +3199,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The setup code is not valid for this cafe.'**
   String get authSetupCodeInvalid;
+
+  /// No description provided for @adminDeleteTableBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'This table has an open order. Settle or cancel it before deleting the table.'**
+  String get adminDeleteTableBusy;
 }
 
 class _AppLocalizationsDelegate

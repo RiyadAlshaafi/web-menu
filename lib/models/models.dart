@@ -205,6 +205,7 @@ class CafeTable {
     this.seats = 4,
     this.status = TableStatus.free,
     this.guests = 0,
+    this.archived = false,
   });
 
   final String id;
@@ -214,6 +215,10 @@ class CafeTable {
   int seats;
   TableStatus status;
   int guests;
+
+  /// A deleted table is only archived: it disappears from the floor, QR codes
+  /// and guest menu, but its receipts keep pointing at it.
+  bool archived;
 
   factory CafeTable.fromJson(Map<String, dynamic> json) => CafeTable(
     id: json['id'] as String,
@@ -226,6 +231,7 @@ class CafeTable {
       orElse: () => TableStatus.free,
     ),
     guests: json['guests'] as int? ?? 0,
+    archived: json['archived'] as bool? ?? false,
   );
 
   Map<String, dynamic> toJson() => {

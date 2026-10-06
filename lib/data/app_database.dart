@@ -568,6 +568,7 @@ class AppDatabase {
               orElse: () => TableStatus.free,
             ),
             guests: row['guests'] as int? ?? 0,
+            archived: row['archived'] as bool? ?? false,
           ),
         )
         .toList();
@@ -1315,12 +1316,10 @@ class AppDatabase {
         'seats': item.seats,
         'status': item.status.name,
         'guests': item.guests,
+        'archived': item.archived,
       });
     }
-    await _deleteMissing(
-      'dining_tables',
-      items.map((item) => item.id).toList(),
-    );
+    // Tables are never hard-deleted: that would cascade to their receipts.
   }
 
   Future<void> writeCategories(List<MenuCategory> items) async {

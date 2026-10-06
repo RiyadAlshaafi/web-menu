@@ -505,7 +505,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminDeleteTableMessage =>
-      'هل تريد حذف هذه الطاولة؟ لا يمكن التراجع عن هذا الإجراء، وستتم إزالتها نهائيًا من مخطط الصالة ونظام الطلبات.';
+      'هل تريد حذف هذه الطاولة؟ ستُزال من مخطط الصالة ورموز QR والطلبات، وتبقى إيصالاتها وسجل مبيعاتها السابق محفوظة.';
 
   @override
   String get adminDeleteTableConfirm => 'حذف الطاولة';
@@ -1713,4 +1713,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authSetupCodeInvalid => 'رمز الإعداد غير صالح لهذا المقهى.';
+
+  @override
+  String get adminDeleteTableBusy =>
+      'هذه الطاولة عليها طلب مفتوح. أغلقه أو ألغه قبل حذف الطاولة.';
 }

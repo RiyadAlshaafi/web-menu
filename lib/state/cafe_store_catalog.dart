@@ -223,15 +223,20 @@ extension CafeStoreCatalog on CafeStore {
   }
 
   Future<void> regenerateAllTableQrs() async {
-    for (final table in tables) {
+    for (final table in activeTables) {
       table.qrSlug = Secrets.publicId();
     }
     await db.writeTables(tables);
     notifyListeners();
   }
 
+  /// Whether [id] still has an unpaid order, which blocks deleting it.
+  bool tableHasOpenOrder(String id) => openOrderFor(id) != null;
+
+  /// "Deletes" a table by archiving it, so its receipts and order history stay.
   Future<void> deleteTable(String id) async {
-    tables.removeWhere((table) => table.id == id);
+    final table = tableById(id);
+    table.archived = true;
     await db.writeTables(tables);
     notifyListeners();
   }
