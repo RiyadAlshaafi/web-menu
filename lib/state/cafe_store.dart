@@ -364,8 +364,7 @@ class CafeStore extends ChangeNotifier {
 
   /// Links this install to cafe [slot] and reloads that cafe's data.
   Future<String?> linkDeviceToSlot(int slot) async {
-    // From the developer tools, keep the developer's own sign-in.
-    if (authKind != AuthKind.none) signOut(keepAuthSession: db.devToolsActive);
+    if (authKind != AuthKind.none) signOut();
     final error = await db.bindSlot(slot);
     if (error == null) _afterRelink();
     return error;
@@ -656,9 +655,7 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Signs the cashier or admin out of this device. [keepAuthSession] keeps
-  /// the Supabase account signed in (the developer tools need it).
-  void signOut({bool keepAuthSession = false}) {
+  void signOut() {
     final token = db.cashierToken;
     if (token != null) unawaited(db.cashierLogout(token));
     authKind = AuthKind.none;
@@ -667,7 +664,7 @@ class CafeStore extends ChangeNotifier {
     pinBuffer = '';
     db.cashierToken = null;
     stopLiveSync();
-    if (!keepAuthSession) db.client?.auth.signOut();
+    db.client?.auth.signOut();
     notifyListeners();
   }
 

@@ -927,68 +927,30 @@ class _DevLogoState extends State<_DevLogo> {
     if (taps < 7) return;
     taps = 0;
     started = null;
-    // The tools need the developer's own account as well as the dev password,
-    // so ask for the account too unless someone is already signed in.
-    final needsSignIn = AppDatabase.instance.client?.auth.currentUser == null;
-    final email = TextEditingController();
-    final account = TextEditingController();
     final password = TextEditingController();
-    final submitted = await showDialog<bool>(
+    final entered = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Developer Tools'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (needsSignIn) ...[
-              TextField(
-                controller: email,
-                autofocus: true,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Developer account email'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: account,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Account password'),
-              ),
-              const SizedBox(height: 8),
-            ],
-            TextField(
-              controller: password,
-              obscureText: true,
-              autofocus: !needsSignIn,
-              decoration: const InputDecoration(labelText: 'Developer password'),
-              onSubmitted: (_) => Navigator.pop(context, true),
-            ),
-          ],
+        title: const Text('Developer Password'),
+        content: TextField(
+          controller: password,
+          obscureText: true,
+          autofocus: true,
+          onSubmitted: (value) => Navigator.pop(context, value),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, password.text),
             child: const Text('OK'),
           ),
         ],
       ),
     );
-    final value = password.text;
-    final mail = email.text;
-    final secret = account.text;
-    email.dispose();
-    account.dispose();
+    final value = entered ?? '';
     password.dispose();
-    if (!mounted || submitted != true || value.isEmpty) return;
-    final error = await AppDatabase.instance.openDevTools(
-      email: needsSignIn ? mail : null,
-      accountPassword: needsSignIn ? secret : null,
-      devPassword: value,
-    );
-    if (!mounted) return;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-      return;
-    }
+    if (!mounted || value.isEmpty) return;
+    final allowed = await AppDatabase.instance.checkDevAccess(value);
+    if (!mounted || !allowed) return;
     context.go('/dev', extra: value);
   }
 

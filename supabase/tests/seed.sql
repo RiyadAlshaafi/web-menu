@@ -1,5 +1,5 @@
--- Test data for tool/test_db.sh: an owner admin for cafe slot 1 (created the
--- way the app does it, through a setup code) and a developer password.
+-- Test data for tool/test_db.sh: an admin for cafe slot 1 (created the way the
+-- app does it, through a setup code) and a developer password.
 
 insert into public.restaurant_setup (restaurant_id, code_hash)
 values ((select id from public.restaurants where slot = 1), extensions.crypt('SETUPCODE1', extensions.gen_salt('bf')));

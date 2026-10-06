@@ -3,8 +3,8 @@
 -- (20261008110000_lock_down_direct_writes.sql) removes the direct writes once
 -- the app that uses the RPCs below is deployed.
 --
--- 1. Developer tools need the developer's own sign-in as well as the dev
---    password. Anonymous callers can no longer reach them at all.
+-- 1. Developer tools stay password-only (restores the live project after a
+--    short-lived sign-in lock).
 -- 2. Guests cannot order dishes that are unavailable or sold out, huge
 --    quantities, or through an archived table's QR code.
 -- 3. Settling a bill charges only what was sent to the kitchen. Unsent cart
@@ -15,38 +15,12 @@
 
 -- ------------------------------------------------------------ developer tools
 
-create table if not exists private.developers (
-  user_id uuid primary key references auth.users (id) on delete cascade,
-  created_at timestamptz not null default now()
-);
+-- The developer tools stay password-only: they are used on a customer's device
+-- to link it to a cafe slot, where nobody is signed in. This puts back what
+-- 20261006160000_dev_access_hardening.sql set up, undoing a developer-sign-in
+-- lock that was applied to the live project for a short while. On a database
+-- that never had that lock, it changes nothing.
 
-alter table private.developers enable row level security;
-revoke all on table private.developers from anon, authenticated;
-
--- The admin of cafe slot 1 (the owner of the database) is the developer.
--- Add others in the SQL editor: insert into private.developers (user_id) values ('<auth user id>');
-insert into private.developers (user_id)
-select p.id
-from public.profiles p
-join public.restaurants r on r.id = p.restaurant_id
-where r.slot = 1
-on conflict do nothing;
-
-create or replace function private.is_developer()
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select auth.uid() is not null
-    and exists (select 1 from private.developers d where d.user_id = auth.uid());
-$$;
-
-revoke all on function private.is_developer() from public, anon, authenticated;
-
--- Anyone who is not signed in as a developer is refused before the password is
--- even compared, so strangers can neither guess it nor trip the lockout.
 create or replace function public.check_dev_access(p_password text)
 returns boolean
 language plpgsql
@@ -57,10 +31,6 @@ as $$
 declare
   rec public.dev_access%rowtype;
 begin
-  if not private.is_developer() then
-    return false;
-  end if;
-
   select * into rec
   from public.dev_access
   where password_hash like '$2%'
@@ -92,41 +62,6 @@ begin
 end;
 $$;
 
--- "Reset admin" must not delete the developer's own account: that would lock
--- the developer out of these tools.
-create or replace function public.dev_reset_admin(p_password text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  actor uuid := private.dev_restaurant_id();
-  removed integer := 0;
-begin
-  if not private.dev_allowed(p_password) then
-    return jsonb_build_object('ok', false);
-  end if;
-  if actor is null then
-    return jsonb_build_object('ok', false, 'error', 'no restaurant');
-  end if;
-  if exists (
-    select 1
-    from public.profiles p
-    join private.developers d on d.user_id = p.id
-    where p.restaurant_id = actor
-  ) then
-    return jsonb_build_object('ok', false, 'error', 'the developer account cannot be removed from the app');
-  end if;
-  delete from auth.users
-  where id in (select id from public.profiles where restaurant_id = actor and role = 'admin');
-  get diagnostics removed = row_count;
-  return jsonb_build_object('ok', true, 'removed', removed);
-end;
-$$;
-
--- Signed-in users only. Every dev_* function also re-checks the developer
--- sign-in through private.dev_allowed -> check_dev_access.
 do $$
 declare
   fn regprocedure;
@@ -138,10 +73,13 @@ begin
     where n.nspname = 'public'
       and (p.proname like 'dev\_%' or p.proname = 'check_dev_access')
   loop
-    execute format('revoke all on function %s from public, anon', fn);
-    execute format('grant execute on function %s to authenticated', fn);
+    execute format('revoke all on function %s from public', fn);
+    execute format('grant execute on function %s to anon, authenticated', fn);
   end loop;
 end $$;
+
+drop function if exists private.is_developer();
+drop table if exists private.developers;
 
 -- ------------------------------------------------------------ helpers
 

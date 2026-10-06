@@ -26,8 +26,7 @@ build() {
     quiet -d "$DB" -f "$file"
   done
   quiet -d "$DB" -f supabase/tests/seed.sql
-  # Part 1 seeds the developer from the slot 1 admin, who exists only now.
-  # Running it again also checks it can be applied twice.
+  # Part 1 again: it must be safe to apply twice.
   quiet -d "$DB" -f "$PART1"
 }
 

@@ -89,13 +89,6 @@ class AppDatabase {
   /// Slot the developer tools are working on (sent as the x-dev-slot header).
   int? devSlot;
 
-  /// True while the developer tools screen is open.
-  bool devToolsActive = false;
-
-  /// True when the developer signed in only to open the developer tools; the
-  /// session is signed out again when the tools close.
-  bool devSignedInForTools = false;
-
   Map<String, dynamic> _cafe = {
     'name': '',
     'serviceChargeRate': 0.10,
@@ -1540,55 +1533,6 @@ class AppDatabase {
       reportError('dev access', error, stackTrace);
       return false;
     }
-  }
-
-  /// The developer tools need the developer's own account as well as the dev
-  /// password. Signs in with [email] first when given, then checks the
-  /// password. Returns an error to show, or null when the tools may open.
-  Future<String?> openDevTools({
-    String? email,
-    String? accountPassword,
-    required String devPassword,
-  }) async {
-    final current = client;
-    if (current == null) return 'Supabase is not configured.';
-    var signedIn = false;
-    if (email != null) {
-      try {
-        await current.auth.signInWithPassword(
-          email: email.trim().toLowerCase(),
-          password: accountPassword ?? '',
-        );
-        signedIn = true;
-      } on AuthException catch (error) {
-        return error.message;
-      } catch (error, stackTrace) {
-        reportError('developer sign in', error, stackTrace);
-        return '$error';
-      }
-    }
-    if (await checkDevAccess(devPassword)) {
-      if (signedIn) devSignedInForTools = true;
-      return null;
-    }
-    if (signedIn) await current.auth.signOut();
-    return 'Access denied.';
-  }
-
-  /// Ends a session that was opened only for the developer tools, and drops
-  /// that account's cafe so the device goes back to the cafe it is linked to.
-  Future<void> closeDevTools() async {
-    devToolsActive = false;
-    devSlot = null;
-    if (!devSignedInForTools) return;
-    devSignedInForTools = false;
-    try {
-      await client?.auth.signOut();
-    } catch (error, stackTrace) {
-      reportError('developer sign out', error, stackTrace);
-    }
-    restaurantId = null;
-    await refreshFromDisk();
   }
 
   Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {

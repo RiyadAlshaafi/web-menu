@@ -34,13 +34,12 @@ class _DevScreenState extends State<DevScreen> {
   @override
   void initState() {
     super.initState();
-    AppDatabase.instance.devToolsActive = true;
     unawaited(_loadSlots());
   }
 
   @override
   void dispose() {
-    unawaited(AppDatabase.instance.closeDevTools());
+    AppDatabase.instance.devSlot = null;
     super.dispose();
   }
 
@@ -185,8 +184,7 @@ class _DevScreenState extends State<DevScreen> {
     }
     await store.db.refreshFromDisk();
     store.admin = null;
-    // Keep the developer's own sign-in: the next step still needs it.
-    store.signOut(keepAuthSession: true);
+    store.signOut();
     // A new admin now needs a setup code, so issue one right away.
     final slot = selectedSlot;
     if (slot != null) {

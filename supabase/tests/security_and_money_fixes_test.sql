@@ -1,7 +1,7 @@
 -- Checks the rules from 20261008100000_security_and_money_fixes.sql and
 -- 20261008110000_lock_down_direct_writes.sql as each kind of caller: a guest
--- (QR slug header), a cashier (PIN token header), a stranger and the developer
--- (signed-in users). Run by tool/test_db.sh after both migrations. Everything
+-- (QR slug header), a cashier (PIN token header) and someone opening the
+-- developer tools. Run by tool/test_db.sh after both migrations. Everything
 -- is rolled back; any failed check aborts with its message.
 
 begin;
@@ -20,11 +20,8 @@ declare
   oid uuid;
   oid2 uuid;
   lid uuid;
-  dev uuid;
   sid uuid;
-  stranger uuid := gen_random_uuid();
   n integer;
-  fa integer;
   st text;
 begin
   insert into public.restaurants (name, service_charge_rate) values ('test cafe', 0.10) returning id into rid;
@@ -70,13 +67,6 @@ begin
   begin
     insert into public.orders (restaurant_id, table_id, status) values (rid, tid, 'served');
     assert false, 'a guest must not insert orders directly';
-  exception when insufficient_privilege then
-    null;
-  end;
-
-  begin
-    perform public.dev_wipe_menu('x');
-    assert false, 'anonymous callers must not reach the developer tools';
   exception when insufficient_privilege then
     null;
   end;
@@ -157,27 +147,13 @@ begin
   assert st = '10.00', 'shift must close with the counted cash';
 
   -- ---------------------------------------------------------------- developer tools
-  select p.id into dev from public.profiles p join public.restaurants rr on rr.id = p.restaurant_id where rr.slot = 1;
-  select failed_attempts into fa from public.dev_access limit 1;
-
-  perform set_config('request.jwt.claims', json_build_object('sub', stranger, 'role', 'authenticated')::text, true);
-  execute 'set local role authenticated';
-  assert not public.check_dev_access('devpw'), 'a stranger must be refused even with the right password';
+  -- Password-only, as before: used on a customer's device where nobody is
+  -- signed in.
+  execute 'set local role anon';
+  assert not public.check_dev_access('nope'), 'the wrong dev password must be refused';
+  assert public.check_dev_access('devpw'), 'the dev password alone must open the tools';
   r := public.dev_list_slots('devpw');
-  assert not (r->>'ok')::boolean, 'a stranger must not list slots';
-  execute 'reset role';
-  select failed_attempts into n from public.dev_access limit 1;
-  assert n = fa, 'strangers must not move the lockout counter';
-
-  perform set_config('request.jwt.claims', json_build_object('sub', dev, 'role', 'authenticated')::text, true);
-  execute 'set local role authenticated';
-  assert not public.check_dev_access('nope'), 'the wrong password must be refused';
-  assert public.check_dev_access('devpw'), 'the developer with the right password must get in';
-  r := public.dev_list_slots('devpw');
-  assert (r->>'ok')::boolean, 'the developer must list slots';
-  perform set_config('request.headers', json_build_object('x-dev-slot', '1')::text, true);
-  r := public.dev_reset_admin('devpw');
-  assert not (r->>'ok')::boolean, 'the developer account must not be removable from the app';
+  assert (r->>'ok')::boolean, 'the dev tools must list the cafe slots';
   execute 'reset role';
 
   raise notice 'security_and_money_fixes_test: all checks passed';
