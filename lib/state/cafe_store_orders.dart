@@ -8,6 +8,13 @@ extension CafeStoreOrders on CafeStore {
 
   CafeTable tableById(String id) => tables.firstWhere((table) => table.id == id);
 
+  /// A line's dish name in the guest's language. Lines keep the name they were
+  /// added with (the cafe's language), so look the dish up again.
+  String guestLineName(OrderLine line) {
+    final match = menuItems.where((item) => item.id == line.menuItemId);
+    return match.isEmpty ? line.name : match.first.displayName(guestLocale);
+  }
+
   /// Tables that are still in use (not archived).
   List<CafeTable> get activeTables => tables.where((table) => !table.archived).toList();
 
@@ -229,15 +236,7 @@ extension CafeStoreOrders on CafeStore {
     if (!force && !canRequestBill(tableId)) return null;
     final table = tableById(tableId);
     final takeout = serviceForTable(tableId) == 'takeout';
-    if (!takeout) {
-      table.status = TableStatus.billRequested;
-      try {
-        await db.updateTableStatus(table);
-      } catch (error, stack) {
-        reportError('request bill', error, stack);
-        return '$error';
-      }
-    }
+    if (!takeout) table.status = TableStatus.billRequested;
     final openBill = calls.any((call) => call.tableId == tableId && call.kind == 'bill' && !call.resolved);
     if (!openBill) {
       calls.add(
@@ -250,7 +249,17 @@ extension CafeStoreOrders on CafeStore {
         ),
       );
     }
-    await db.writeCalls(calls);
+    // The table status and the bill call are independent writes; sending them
+    // together halves the wait before the cashier sees the request.
+    try {
+      await Future.wait([
+        if (!takeout) db.updateTableStatus(table),
+        db.writeCalls(calls),
+      ]);
+    } catch (error, stack) {
+      reportError('request bill', error, stack);
+      return '$error';
+    }
     notifyListeners();
     return null;
   }

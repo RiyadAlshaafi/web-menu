@@ -121,11 +121,11 @@ class CustomerBillScreen extends StatelessWidget {
                           decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(12)),
                           child: Column(
                             children: [
-                              _kv(context.l10n.guestSubtotal, store.currency.format(subtotal)),
-                              _kv(context.l10n.guestServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
-                              _kv(context.l10n.guestVatIncluded, store.currency.format(0)),
+                              _kv(context.l10n.guestSubtotal, store.guestCurrency.format(subtotal)),
+                              _kv(context.l10n.guestServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.guestCurrency.format(service)),
+                              _kv(context.l10n.guestVatIncluded, store.guestCurrency.format(0)),
                               const SizedBox(height: 8),
-                              _kv(context.l10n.guestTotalDue, store.currency.format(total), big: true),
+                              _kv(context.l10n.guestTotalDue, store.guestCurrency.format(total), big: true),
                             ],
                           ),
                         ),
@@ -191,8 +191,8 @@ class CustomerBillScreen extends StatelessWidget {
             child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700))),
-          Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
+          Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w700))),
+          Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
         ],
       ),
     );

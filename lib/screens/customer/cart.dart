@@ -80,7 +80,7 @@ class CustomerCartScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               children: [
-                                Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700))),
+                                Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w700))),
                                 _blockedOr(
                                   context,
                                   store,
@@ -102,7 +102,7 @@ class CustomerCartScreen extends StatelessWidget {
                                     icon: Icon(Icons.add, size: 16, color: store.canPlaceOrder ? null : CafeColors.inkMuted),
                                   ),
                                 ),
-                                Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
                               ],
                             ),
                           );
@@ -125,7 +125,7 @@ class CustomerCartScreen extends StatelessWidget {
                           children: [
                             Text(context.l10n.guestKitchenTicketTotal, style: const TextStyle(fontWeight: FontWeight.w700)),
                             const Spacer(),
-                            MoneyText(store.currency.format(store.tabSubtotal(table.id)), style: const TextStyle(fontSize: 20)),
+                            MoneyText(store.guestCurrency.format(store.tabSubtotal(table.id)), style: const TextStyle(fontSize: 20)),
                           ],
                         ),
                       ],
@@ -212,8 +212,8 @@ class CustomerCartScreen extends StatelessWidget {
         children: [
           Text('${line.qty}×', style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800)),
           const SizedBox(width: 8),
-          Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w600))),
-          Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
+          Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w600))),
+          Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
         ],
       ),
     );

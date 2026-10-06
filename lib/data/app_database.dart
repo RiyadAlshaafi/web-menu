@@ -494,6 +494,36 @@ class AppDatabase {
     }
   }
 
+  List<PaymentType> _mapPaymentTypes(List? rows) => rows == null
+      ? []
+      : [
+          for (final row in rows)
+            PaymentType(
+              id: row['id'] as String,
+              nameEn: row['name_en'] as String? ?? '',
+              nameAr: row['name_ar'] as String? ?? '',
+              enabled: row['enabled'] as bool? ?? true,
+              sortOrder: row['sort_order'] as int? ?? 0,
+              archived: row['archived'] as bool? ?? false,
+            ),
+        ];
+
+  /// True once data has been loaded successfully at least once this run.
+  bool loadedOnce = false;
+
+  /// Retries the first load for up to [timeout] so the app does not open empty
+  /// because of a slow or briefly failing network. Returns when data is loaded
+  /// or time runs out; the normal retry loop keeps going afterwards.
+  Future<void> waitForFirstLoad(Duration timeout) async {
+    if (client == null) return;
+    final deadline = DateTime.now().add(timeout);
+    while (!loadedOnce && DateTime.now().isBefore(deadline)) {
+      await refreshFromDisk();
+      if (loadedOnce) return;
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+  }
+
   Future<void> _refreshFromDisk({bool liveOnly = false}) async {
     final epoch = _epoch;
     final watch = Stopwatch()..start();
@@ -552,6 +582,7 @@ class AppDatabase {
       _shifts = [];
       _expenses = [];
       _calls = [];
+      loadedOnce = true; // Nothing to load for an unlinked device is still a result.
       return;
     }
     if (epoch != _epoch) return;
@@ -600,9 +631,8 @@ class AppDatabase {
           : client!.from('menu_items').select(),
       loadCarts(),
       guest ? Future<dynamic>.value(null) : client!.from('staff_calls').select(),
-      guest
-          ? Future<dynamic>.value(null)
-          : _selectOrEmpty(client!.from('payment_types').select().order('sort_order'), 'payment types'),
+      // Guests need the list too: they pick how they will pay on their bill.
+      _selectOrEmpty(client!.from('payment_types').select().order('sort_order'), 'payment types'),
       guest
           ? Future<dynamic>.value(null)
           : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order'), 'expense categories'),
@@ -687,6 +717,7 @@ class AppDatabase {
         ),
     };
     if (guest) {
+      _paymentTypes = _mapPaymentTypes(batch[5] as List?);
       _calls = [];
       _orders = (batch[8] as List).cast<CafeOrder>();
       _payments = [];
@@ -785,6 +816,8 @@ class AppDatabase {
         salesHasMore = false;
       }
     }
+    _rememberWritten();
+    loadedOnce = true;
     if (kDebugMode) {
       debugPrint('refreshFromDisk ${watch.elapsedMilliseconds}ms liveOnly=$liveOnly');
     }
@@ -1368,12 +1401,56 @@ class AppDatabase {
     await _deleteMissing('menu_items', items.map((item) => item.id).toList());
   }
 
-  Future<void> writeOrders(List<CafeOrder> items) async {
+  Future<void> _orderWrites = Future.value();
+
+  /// What the database is known to hold, so unchanged orders and calls are not
+  /// rewritten (an order rewrite is three requests; the call list grows daily).
+  final Map<String, String> _orderWritten = {};
+  final Map<String, bool> _callWritten = {};
+
+  String _orderSignature(CafeOrder order) {
+    final lines = [
+      for (final line in order.lines)
+        '${line.menuItemId}|${line.name}|${line.qty}|${line.unitPrice}|${line.listUnitPrice}|${line.round}',
+    ];
+    return [
+      order.tableId,
+      order.status.name,
+      order.notes,
+      order.cashierId ?? '',
+      order.createdAt.toIso8601String(),
+      ...lines,
+    ].join('~');
+  }
+
+  void _rememberWritten() {
+    _orderWritten
+      ..clear()
+      ..addEntries([for (final order in _orders) MapEntry(order.id, _orderSignature(order))]);
+    _callWritten
+      ..clear()
+      ..addEntries([for (final call in _calls) MapEntry(call.id, call.resolved)]);
+  }
+
+  /// Writes open orders one request batch at a time. Two overlapping writers
+  /// each deleted the order's lines and then inserted them again, which left
+  /// every line twice on the receipt, so writes now queue behind each other.
+  Future<void> writeOrders(List<CafeOrder> items) {
     _epoch++;
     _orders = items;
+    final next = _orderWrites.then((_) => _writeOrders(items));
+    _orderWrites = next.catchError((Object error, StackTrace stackTrace) {
+      reportError('write orders', error, stackTrace);
+    });
+    return next;
+  }
+
+  Future<void> _writeOrders(List<CafeOrder> items) async {
     if (client == null || restaurantId == null) return;
-    for (final item in items) {
+    for (final item in List<CafeOrder>.of(items)) {
       if (item.status == OrderStatus.paid) continue;
+      final signature = _orderSignature(item);
+      if (_orderWritten[item.id] == signature) continue;
       await client!.from('orders').upsert({
         'id': item.id,
         'restaurant_id': restaurantId,
@@ -1405,6 +1482,7 @@ class AppDatabase {
                 )
                 .toList(),
           );
+      _orderWritten[item.id] = signature;
     }
   }
 
@@ -1733,7 +1811,8 @@ class AppDatabase {
   Future<void> writeCalls(List<StaffCall> items) async {
     _calls = items;
     if (client == null || restaurantId == null) return;
-    for (final item in items) {
+    for (final item in List<StaffCall>.of(items)) {
+      if (_callWritten[item.id] == item.resolved) continue;
       await client!.from('staff_calls').upsert({
         'id': item.id,
         'restaurant_id': restaurantId,
@@ -1742,6 +1821,7 @@ class AppDatabase {
         'resolved': item.resolved,
         'created_at': item.createdAt.toIso8601String(),
       });
+      _callWritten[item.id] = item.resolved;
     }
   }
 

@@ -30,6 +30,9 @@ class CafeStore extends ChangeNotifier {
   final AppDatabase db;
   CafeMoney get currency => CafeMoney(locale);
 
+  /// Prices on guest screens follow the language the guest picked.
+  CafeMoney get guestCurrency => CafeMoney(guestLocale);
+
   late Map<String, dynamic> cafe;
   String locale = 'en';
   String? guestLocaleOverride;
@@ -80,6 +83,8 @@ class CafeStore extends ChangeNotifier {
 
   Future<void> load() async {
     await db.init();
+    // Don't open on an empty app: give the first data load up to 15 seconds.
+    await db.waitForFirstLoad(const Duration(seconds: 15));
     cafe = db.cafe;
     locale = db.locale;
     await _loadGuestLocale();

@@ -291,8 +291,8 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                         children: [...previous, ?current],
                                       ),
                                       child: Text(
-                                        store.currency.format(store.cartFor(table.id).total),
-                                        key: ValueKey(store.currency.format(store.cartFor(table.id).total)),
+                                        store.guestCurrency.format(store.cartFor(table.id).total),
+                                        key: ValueKey(store.guestCurrency.format(store.cartFor(table.id).total)),
                                         style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: 16),
                                       ),
                                     ),
@@ -521,7 +521,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _price(CafeStore store, MenuItem item, {double fontSize = 14}) {
     if (!item.hasDiscount) {
       return Text(
-        store.currency.format(item.salePrice),
+        store.guestCurrency.format(item.salePrice),
         style: TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: fontSize),
       );
     }
@@ -530,7 +530,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
-          store.currency.format(item.price),
+          store.guestCurrency.format(item.price),
           style: TextStyle(
             color: CafeColors.inkMuted,
             fontWeight: FontWeight.w600,
@@ -539,7 +539,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
           ),
         ),
         Text(
-          store.currency.format(item.salePrice),
+          store.guestCurrency.format(item.salePrice),
           style: TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: fontSize),
         ),
       ],
@@ -710,7 +710,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                     context,
                     store,
                     TerracottaButton(
-                      label: context.l10n.guestAddToOrder(store.currency.format(item.salePrice * qty)),
+                      label: context.l10n.guestAddToOrder(store.guestCurrency.format(item.salePrice * qty)),
                       onPressed: store.canPlaceOrder
                           ? () {
                               for (var i = 0; i < qty; i++) {
@@ -826,8 +826,8 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                                            Text(store.currency.format(line.unitPrice * count), style: const TextStyle(fontWeight: FontWeight.w800)),
+                                            Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                            Text(store.guestCurrency.format(line.unitPrice * count), style: const TextStyle(fontWeight: FontWeight.w800)),
                                           ],
                                         ),
                                       ),
@@ -863,7 +863,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                     children: [
                                       Text(context.l10n.guestSubtotal, style: const TextStyle(color: CafeColors.inkMuted)),
                                       const Spacer(),
-                                      Text(store.currency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                      Text(store.guestCurrency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w700)),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
@@ -878,7 +878,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                           ],
                                         ),
                                       ),
-                                      Text(store.currency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: CafeColors.terracotta)),
+                                      Text(store.guestCurrency.format(subtotal), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: CafeColors.terracotta)),
                                     ],
                                   ),
                                 ],
