@@ -1325,6 +1325,29 @@ class AppDatabase {
     }
   }
 
+  Future<bool> checkDevAccess(String password) async {
+    if (client == null) return false;
+    try {
+      final raw = await client!.rpc('check_dev_access', params: {'p_password': password});
+      return raw == true;
+    } catch (error, stackTrace) {
+      reportError('dev access', error, stackTrace);
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> devCall(String name, String password) async {
+    if (client == null) return null;
+    try {
+      final raw = await client!.rpc(name, params: {'p_password': password});
+      if (raw is Map) return Map<String, dynamic>.from(raw);
+      return null;
+    } catch (error, stackTrace) {
+      reportError(name, error, stackTrace);
+      return null;
+    }
+  }
+
   Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {
     if (client == null) return 'Supabase is not configured.';
     _applyHeaders();

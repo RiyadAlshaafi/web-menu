@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -72,7 +73,9 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
           children: [
             Row(
               children: [
-                CafeLogo(size: 42, subtitle: context.l10n.authPosTerminalSubtitle, compact: true),
+                _DevLogo(
+                  child: CafeLogo(size: 42, subtitle: context.l10n.authPosTerminalSubtitle, compact: true),
+                ),
                 const Spacer(),
                 GhostChip(
                   label: context.l10n.authSwitchToAdminSignIn,
@@ -360,7 +363,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
         children: [
           Row(
             children: [
-              const CafeLogo(compact: true, size: 40),
+              const _DevLogo(child: CafeLogo(compact: true, size: 40)),
               const Spacer(),
               GhostChip(
                 label: context.l10n.authStaffPos,
@@ -872,5 +875,62 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
+  }
+}
+
+class _DevLogo extends StatefulWidget {
+  const _DevLogo({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DevLogo> createState() => _DevLogoState();
+}
+
+class _DevLogoState extends State<_DevLogo> {
+  int taps = 0;
+  DateTime? started;
+
+  Future<void> _hit() async {
+    final now = DateTime.now();
+    if (started == null || now.difference(started!) > const Duration(seconds: 3)) {
+      started = now;
+      taps = 1;
+    } else {
+      taps += 1;
+    }
+    if (taps < 7) return;
+    taps = 0;
+    started = null;
+    final password = TextEditingController();
+    final entered = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Developer Password'),
+        content: TextField(
+          controller: password,
+          obscureText: true,
+          autofocus: true,
+          onSubmitted: (value) => Navigator.pop(context, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, password.text),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    final value = entered ?? '';
+    password.dispose();
+    if (!mounted || value.isEmpty) return;
+    final allowed = await AppDatabase.instance.checkDevAccess(value);
+    if (!mounted || !allowed) return;
+    context.go('/dev', extra: value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(onTap: _hit, child: widget.child);
   }
 }

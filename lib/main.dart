@@ -12,6 +12,7 @@ import 'screens/admin_screens.dart' deferred as admin_ui;
 import 'screens/auth_screens.dart' deferred as auth_ui;
 import 'screens/cashier_screens.dart' deferred as cashier_ui;
 import 'screens/customer_screens.dart';
+import 'screens/dev_screen.dart';
 import 'screens/sales_log_screen.dart' deferred as sales_ui;
 import 'screens/dish_availability_screen.dart' deferred as dishes_ui;
 import 'state/cafe_store.dart';
@@ -160,6 +161,11 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           }
           return null;
         }
+        if (path == '/dev') {
+          final key = state.extra;
+          if (key is! String || key.isEmpty) return '/login';
+          return null;
+        }
         if (auth) return null;
         if (path.startsWith('/pos') && widget.store.authKind != AuthKind.cashier) {
           return '/login';
@@ -172,6 +178,10 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
       routes: [
         GoRoute(path: '/', redirect: (_, _) => widget.store.hasAdmin ? '/login' : '/admin/setup'),
         GoRoute(path: '/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.PinLoginScreen())),
+        GoRoute(
+          path: '/dev',
+          builder: (_, state) => DevScreen(password: state.extra as String),
+        ),
         GoRoute(path: '/admin/setup', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.AdminAuthScreen(setup: true))),
         GoRoute(path: '/admin/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.AdminAuthScreen())),
         GoRoute(
