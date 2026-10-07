@@ -46,6 +46,8 @@ String? applyQuickTakeout({
       id: paymentId,
       orderId: orderId,
       tableId: counter.id,
+      tableNumber: counter.number,
+      isTakeout: true,
       totalDue: due,
       cashReceived: due,
       changeDue: 0,

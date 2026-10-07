@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ import '../data/app_database.dart';
 import '../device_location.dart';
 import '../models/models.dart';
 import '../money.dart';
+import '../offline/offline_sync.dart';
+import '../offline/outbox_store.dart';
 import '../report_error.dart';
 import '../takeout_receipt.dart';
 import '../theme/cafe_theme.dart';
@@ -18,6 +21,7 @@ part 'cafe_store_catalog.dart';
 part 'cafe_store_orders.dart';
 part 'cafe_store_payments.dart';
 part 'cafe_store_location.dart';
+part 'cafe_store_offline.dart';
 
 enum AuthKind { none, admin, cashier }
 
@@ -76,14 +80,42 @@ class CafeStore extends ChangeNotifier {
   bool _guestLocationBusy = false;
   bool _takeoutBusy = false;
 
+  /// Local outbox and uploader (desktop only; null on the web or if the file can't open).
+  OfflineSync? offline;
+  final List<OutboxItem> _localItems = [];
+  Timer? _cashierPulse;
+  int _lastFailedCount = 0;
+
+  /// The server could not be reached at startup (or since); the till can run from its saved copy.
+  bool serverUnreachable = false;
+
+  /// A saved copy of the menu exists, so offline mode can start.
+  bool canStartOffline = false;
+
+  /// Running without internet and without a signed-in cashier (started offline).
+  bool offlineSession = false;
+
+  /// The connection came back during an offline session; the offline work needs a cashier.
+  bool reconnectPending = false;
+  Timer? _reconnectProbe;
+  String? _savedSnapshot;
+
+  /// False while no cashier device is online; guests can then only browse the menu.
+  bool guestOrderingOpen = true;
+  Timer? _guestOrderingPoll;
+  String? _guestOrderingSlug;
+
   bool get canPlaceOrder =>
-      guestLocation == GuestLocationStatus.off ||
-      guestLocation == GuestLocationStatus.allowed;
+      guestOrderingOpen &&
+      (guestLocation == GuestLocationStatus.off ||
+          guestLocation == GuestLocationStatus.allowed);
 
   Future<void> load() async {
     await db.init();
+    await _initOffline();
+    await _checkConnectionAtStart();
     // Don't open on an empty app: give the first data load up to 15 seconds.
-    await db.waitForFirstLoad(const Duration(seconds: 15));
+    if (!serverUnreachable) await db.waitForFirstLoad(const Duration(seconds: 15));
     cafe = db.cafe;
     locale = db.locale;
     await _loadGuestLocale();
@@ -100,6 +132,7 @@ class CafeStore extends ChangeNotifier {
     shifts = db.shifts;
     expenses = db.expenses;
     calls = db.calls;
+    _mergeLocalItems();
     _syncStampCache = null;
     if (db.adminFromOtherCafe) {
       // A saved session from another cafe must not reopen this device's cafe.
@@ -139,6 +172,9 @@ class CafeStore extends ChangeNotifier {
   @override
   void dispose() {
     stopLiveSync();
+    _cashierPulse?.cancel();
+    _guestOrderingPoll?.cancel();
+    _reconnectProbe?.cancel();
     super.dispose();
   }
 
@@ -296,6 +332,7 @@ class CafeStore extends ChangeNotifier {
         ..write(payment.id)
         ..write(payment.totalDue)
         ..write(payment.paymentTypeId)
+        ..write(payment.paymentTypeNameEn)
         ..write(payment.changes.length);
     }
     for (final type in paymentTypes) {
@@ -354,6 +391,7 @@ class CafeStore extends ChangeNotifier {
     shifts = db.shifts;
     expenses = db.expenses;
     calls = db.calls;
+    _mergeLocalItems();
     if (currentShift != null) {
       final match = shifts.where((shift) => shift.id == currentShift!.id);
       currentShift = match.isEmpty ? currentShift : match.first;
@@ -618,6 +656,7 @@ class CafeStore extends ChangeNotifier {
     await ensureShiftNumbers();
     if (authKind != AuthKind.cashier) return false;
     startLiveSync();
+    _startCashierPulse();
     notifyListeners();
     return true;
   }
@@ -657,6 +696,7 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> ensureGuest(String slug) async {
+    _watchGuestOrdering(slug);
     if (db.guestSlug == slug && tables.any((table) => !table.archived && table.qrSlug == slug)) {
       return;
     }
@@ -686,6 +726,9 @@ class CafeStore extends ChangeNotifier {
     currentShift = null;
     pinBuffer = '';
     db.cashierToken = null;
+    // Leaving an offline session keeps its saved work; the next cashier is asked about it.
+    offlineSession = false;
+    _stopCashierPulse();
     stopLiveSync();
     db.client?.auth.signOut();
     notifyListeners();

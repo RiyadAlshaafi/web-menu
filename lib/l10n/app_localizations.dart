@@ -3271,6 +3271,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can order up to 99 of one dish at a time.'**
   String get guestQtyTooLarge;
+
+  /// No description provided for @guestOrderingPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordering is paused right now because the cashier is offline. You can still browse the menu.'**
+  String get guestOrderingPaused;
+
+  /// No description provided for @offlineWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — {count} waiting to upload'**
+  String offlineWaiting(int count);
+
+  /// No description provided for @offlineUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {count}…'**
+  String offlineUploading(int count);
+
+  /// No description provided for @offlineNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — sales are saved on this device'**
+  String get offlineNoConnection;
+
+  /// No description provided for @offlineNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} saved item(s) could not be uploaded'**
+  String offlineNeedsReview(int count);
+
+  /// No description provided for @offlineNoNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.'**
+  String get offlineNoNumbers;
+
+  /// No description provided for @offlineOnlyTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline. Only quick takeout and expenses work until the connection returns.'**
+  String get offlineOnlyTakeout;
+
+  /// No description provided for @offlinePendingNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get offlinePendingNumber;
+
+  /// No description provided for @offlineUnassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline (no cashier yet)'**
+  String get offlineUnassigned;
+
+  /// No description provided for @offlineCloseShiftNeedsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'This shift was started offline. It can be closed after the connection returns and a cashier takes it.'**
+  String get offlineCloseShiftNeedsConnection;
+
+  /// No description provided for @offlineStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get offlineStartTitle;
+
+  /// No description provided for @offlineStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.'**
+  String get offlineStartBody;
+
+  /// No description provided for @offlineStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Use offline'**
+  String get offlineStartButton;
+
+  /// No description provided for @offlineNeverOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has not been online yet, so it has no saved menu. Connect to the internet once to use offline mode.'**
+  String get offlineNeverOnline;
+
+  /// No description provided for @offlineReconnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection is back'**
+  String get offlineReconnectTitle;
+
+  /// No description provided for @offlineReconnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} receipt(s) and expense(s) were made offline. Which cashier do they belong to?'**
+  String offlineReconnectBody(int count);
+
+  /// No description provided for @offlineReconnectPin.
+  ///
+  /// In en, this message translates to:
+  /// **'That cashier enters their PIN to upload them.'**
+  String get offlineReconnectPin;
+
+  /// No description provided for @offlineReconnectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign and upload'**
+  String get offlineReconnectButton;
+
+  /// No description provided for @offlineReconnectLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get offlineReconnectLater;
+
+  /// No description provided for @offlineReconnectBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection is back. Choose the cashier for the offline receipts to upload them.'**
+  String get offlineReconnectBanner;
+
+  /// No description provided for @offlineAssignBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} receipt(s) made offline have no cashier yet. Choose who they belong to and they will upload.'**
+  String offlineAssignBanner(int count);
+
+  /// No description provided for @offlineAssignButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose cashier'**
+  String get offlineAssignButton;
+
+  /// No description provided for @offlineSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this on the device ({error}). Nothing was recorded; please try again.'**
+  String offlineSaveFailed(String error);
+
+  /// No description provided for @offlineSignInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to upload {count} saved item(s). Your session expired.'**
+  String offlineSignInAgain(int count);
+
+  /// No description provided for @offlineSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in has expired. Sign in again to keep working and uploading.'**
+  String get offlineSessionExpired;
+
+  /// No description provided for @adminRequireCashierOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause guest ordering when no cashier is online'**
+  String get adminRequireCashierOnline;
+
+  /// No description provided for @adminRequireCashierOnlineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests can still read the menu, but cannot order, call staff or ask for the bill while no signed-in cashier device is connected. Turn this on once every till runs the updated app.'**
+  String get adminRequireCashierOnlineHint;
 }
 
 class _AppLocalizationsDelegate

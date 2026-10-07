@@ -137,6 +137,10 @@ class CustomerCartScreen extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () {
+                            if (!store.guestOrderingOpen) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderingPaused)));
+                              return;
+                            }
                             store.callStaff(table.id);
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestRequestSent)));
                           },

@@ -40,7 +40,9 @@
   "dishBulkMessage": "This changes every dish in {category}.",
   "@dishBulkMessage": {
     "placeholders": {
-      "category": {"type": "String"}
+      "category": {
+        "type": "String"
+      }
     }
   },
   "salesSearchHint": "Search table, cashier, or transaction",
@@ -58,7 +60,9 @@
   "salesReceiptLine": "Receipt No. {number}",
   "@salesReceiptLine": {
     "placeholders": {
-      "number": {"type": "String"}
+      "number": {
+        "type": "String"
+      }
     }
   },
   "salesColWhen": "Date & time",
@@ -77,8 +81,12 @@
   "salesPage": "Page {page} of {pages}",
   "@salesPage": {
     "placeholders": {
-      "page": {"type": "int"},
-      "pages": {"type": "int"}
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
     }
   },
   "navQuickTakeout": "Quick Takeout",
@@ -503,7 +511,9 @@
   "cashierCustomerPay": "Customer wants to pay: {name}",
   "@cashierCustomerPay": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "cashierSettleCloseBill": "Settle & Close Bill ({amount})",
@@ -534,14 +544,20 @@
   "cashierActiveTables": "{active} / {total} Active",
   "@cashierActiveTables": {
     "placeholders": {
-      "active": {"type": "String"},
-      "total": {"type": "String"}
+      "active": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "cashierServiceCharge": "Service charge ({percent})",
   "@cashierServiceCharge": {
     "placeholders": {
-      "percent": {"type": "String"}
+      "percent": {
+        "type": "String"
+      }
     }
   },
   "cashierBillRequestedBadge": "BILL REQUESTED",
@@ -549,13 +565,17 @@
   "cashierElapsedMinutes": "{minutes}m",
   "@cashierElapsedMinutes": {
     "placeholders": {
-      "minutes": {"type": "String"}
+      "minutes": {
+        "type": "String"
+      }
     }
   },
   "cashierOrderItemsCount": "Order items ({count})",
   "@cashierOrderItemsCount": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "cashierTotalPayable": "Total Payable",
@@ -565,7 +585,9 @@
   "guestItemRemoved": "Item removed: {name} — currently unavailable.",
   "@guestItemRemoved": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "guestConfirmRequestBill": "Confirm and request bill",
@@ -580,7 +602,9 @@
   "cashierAvgTicket": "Avg ticket {amount}",
   "@cashierAvgTicket": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "cashierCall": "Call",
@@ -633,7 +657,6 @@
   "cashierAvailable": "Available",
   "cashierDiningActive": "Dining active",
   "cashierBillPending": "Bill pending",
-  "cashierTotalPayable": "Total Payable",
   "cashierSoloStationSync": "SOLO STATION  •  Live Register Sync",
   "cashierShiftSalesTitle": "Shift Sales & Register Logs",
   "cashierExportSummary": "Export Summary (PDF/CSV)",
@@ -698,11 +721,12 @@
   "guestViewOrder": "View Order",
   "guestOrderButton": "Order",
   "guestConfirmOrderTitle": "Verify Your Order",
-  "guestDineInOrder": "Dine-in Order",
   "guestItemsInOrder": "Items in order ({count})",
   "@guestItemsInOrder": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "guestConfirmSendKitchen": "Confirm & Send to Kitchen",
@@ -710,7 +734,9 @@
   "guestBilledToTable": "Billed to table {table}",
   "@guestBilledToTable": {
     "placeholders": {
-      "table": {"type": "String"}
+      "table": {
+        "type": "String"
+      }
     }
   },
   "guestCloseReview": "Close review",
@@ -810,10 +836,18 @@
   "payChanged": "Payment method changed from {oldName} to {newName} by {name} at {time}",
   "@payChanged": {
     "placeholders": {
-      "oldName": {"type": "String"},
-      "newName": {"type": "String"},
-      "name": {"type": "String"},
-      "time": {"type": "String"}
+      "oldName": {
+        "type": "String"
+      },
+      "newName": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "guestLoadingTable": "Loading your table...",
@@ -831,7 +865,9 @@
   "payDeleteTitle": "Delete {name}?",
   "@payDeleteTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "payDeleteMessage": "Past sales using this method will keep showing it.",
@@ -918,15 +954,95 @@
   "catalogDeleteCashierMessage": "{name} will no longer be able to sign in. Their past sales stay in the records.",
   "@catalogDeleteCashierMessage": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "catalogDeleteCashierConfirm": "Remove",
   "guestItemsUnavailable": "Sorry, these dishes are no longer available: {items}. Remove them from your order and try again.",
   "@guestItemsUnavailable": {
     "placeholders": {
-      "items": {"type": "String"}
+      "items": {
+        "type": "String"
+      }
     }
   },
-  "guestQtyTooLarge": "You can order up to 99 of one dish at a time."
+  "guestQtyTooLarge": "You can order up to 99 of one dish at a time.",
+  "guestOrderingPaused": "Ordering is paused right now because the cashier is offline. You can still browse the menu.",
+  "offlineWaiting": "Offline — {count} waiting to upload",
+  "@offlineWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineUploading": "Uploading {count}…",
+  "@offlineUploading": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineNoConnection": "Offline — sales are saved on this device",
+  "offlineNeedsReview": "{count} saved item(s) could not be uploaded",
+  "@offlineNeedsReview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineNoNumbers": "No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.",
+  "offlineOnlyTakeout": "You are offline. Only quick takeout and expenses work until the connection returns.",
+  "offlinePendingNumber": "Pending",
+  "offlineUnassigned": "Offline (no cashier yet)",
+  "offlineCloseShiftNeedsConnection": "This shift was started offline. It can be closed after the connection returns and a cashier takes it.",
+  "offlineStartTitle": "No internet connection",
+  "offlineStartBody": "You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.",
+  "offlineStartButton": "Use offline",
+  "offlineNeverOnline": "This device has not been online yet, so it has no saved menu. Connect to the internet once to use offline mode.",
+  "offlineReconnectTitle": "The connection is back",
+  "offlineReconnectBody": "{count} receipt(s) and expense(s) were made offline. Which cashier do they belong to?",
+  "@offlineReconnectBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineReconnectPin": "That cashier enters their PIN to upload them.",
+  "offlineReconnectButton": "Assign and upload",
+  "offlineReconnectLater": "Later",
+  "offlineReconnectBanner": "The connection is back. Choose the cashier for the offline receipts to upload them.",
+  "offlineAssignBanner": "{count} receipt(s) made offline have no cashier yet. Choose who they belong to and they will upload.",
+  "@offlineAssignBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineAssignButton": "Choose cashier",
+  "offlineSaveFailed": "Could not save this on the device ({error}). Nothing was recorded; please try again.",
+  "@offlineSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSignInAgain": "Sign in again to upload {count} saved item(s). Your session expired.",
+  "@offlineSignInAgain": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineSessionExpired": "Your sign-in has expired. Sign in again to keep working and uploading.",
+  "adminRequireCashierOnline": "Pause guest ordering when no cashier is online",
+  "adminRequireCashierOnlineHint": "Guests can still read the menu, but cannot order, call staff or ask for the bill while no signed-in cashier device is connected. Turn this on once every till runs the updated app."
 }

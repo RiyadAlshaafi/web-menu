@@ -489,12 +489,23 @@ class Payment {
     this.monthlyOrderNumber,
     this.shiftDisplayNumber,
     this.monthlyDisplayNumber,
+    this.tableNumber = '',
+    this.isTakeout = false,
+    this.cashierName = '',
+    this.paymentTypeNameEn,
+    this.paymentTypeNameAr,
     List<PaymentMethodChange>? changes,
   }) : changes = changes ?? [];
 
   final String id;
   final String orderId;
   final String tableId;
+  /// Copies saved with the receipt, so it reads the same after a table, cashier or method is removed.
+  final String tableNumber;
+  final bool isTakeout;
+  final String cashierName;
+  final String? paymentTypeNameEn;
+  final String? paymentTypeNameAr;
   final double totalDue;
   final double cashReceived;
   final double changeDue;
@@ -525,12 +536,22 @@ class Payment {
     monthlyOrderNumber: (json['monthlyOrderNumber'] as num?)?.toInt(),
     shiftDisplayNumber: json['shiftDisplayNumber'] as String?,
     monthlyDisplayNumber: json['monthlyDisplayNumber'] as String?,
+    tableNumber: json['tableNumber'] as String? ?? '',
+    isTakeout: json['isTakeout'] as bool? ?? false,
+    cashierName: json['cashierName'] as String? ?? '',
+    paymentTypeNameEn: json['paymentTypeNameEn'] as String?,
+    paymentTypeNameAr: json['paymentTypeNameAr'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'orderId': orderId,
     'tableId': tableId,
+    'tableNumber': tableNumber,
+    'isTakeout': isTakeout,
+    'cashierName': cashierName,
+    'paymentTypeNameEn': paymentTypeNameEn,
+    'paymentTypeNameAr': paymentTypeNameAr,
     'totalDue': totalDue,
     'cashReceived': cashReceived,
     'changeDue': changeDue,
@@ -626,11 +647,16 @@ class ShiftExpense {
     this.categoryId,
     this.categoryNameEn,
     this.categoryNameAr,
+    this.cashierName = '',
+    this.paidToCashierName = '',
   });
 
   final String id;
   final String shiftId;
   final String cashierId;
+  /// Names saved with the expense, so it reads the same after a cashier is deleted.
+  final String cashierName;
+  final String paidToCashierName;
   final bool paidToCafe;
   final String? paidToCashierId;
   final double amount;

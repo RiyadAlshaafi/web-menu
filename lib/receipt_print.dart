@@ -64,7 +64,7 @@ Future<Uint8List> receiptPdfBytes(CafeStore store, Payment payment, AppLocalizat
           if (row.discount > 0) pdfPair(l10n.salesColDiscount, store.currency.format(row.discount)),
           if (service > 0.009) pdfPair(l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
           pdfPair(l10n.cashierTotalPayable, store.currency.format(row.total)),
-          pdfText('${l10n.salesColMethod} ${store.typeName(payment.paymentTypeId)}'),
+          pdfText('${l10n.salesColMethod} ${store.paymentLabel(payment)}'),
           pw.SizedBox(height: 8),
           pdfText(l10n.receiptThankYou, align: pw.TextAlign.center),
         ],

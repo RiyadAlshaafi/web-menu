@@ -180,13 +180,20 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
         if (path.startsWith('/pos') && widget.store.authKind != AuthKind.cashier) {
           return '/login';
         }
+        // Offline (started without internet) only quick takeout and shift expenses work.
+        if (widget.store.offlineSession && path.startsWith('/pos') && path != '/pos/takeout' && path != '/pos/shifts') {
+          return '/pos/takeout';
+        }
         if (path.startsWith('/admin') && widget.store.authKind != AuthKind.admin) {
           return widget.store.hasAdmin ? '/admin/login' : '/admin/setup';
         }
         return null;
       },
       routes: [
-        GoRoute(path: '/', redirect: (_, _) => widget.store.hasAdmin ? '/login' : '/admin/setup'),
+        GoRoute(
+          path: '/',
+          redirect: (_, _) => widget.store.hasAdmin || widget.store.serverUnreachable ? '/login' : '/admin/setup',
+        ),
         // /c/<cafe> links this browser to that cafe, then opens its sign-in.
         GoRoute(
           path: '/c/:slug',

@@ -31,7 +31,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   final search = TextEditingController();
   DateTime? from;
   DateTime? to;
-  String? cashierId;
+  String? cashierName;
   String? categoryId;
 
   @override
@@ -48,7 +48,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     final summed = expenseLedgerRows(
       store,
       query: search.text,
-      cashierId: cashierId,
+      cashierName: cashierName,
       categoryId: categoryId,
       from: window.from,
       to: window.to,
@@ -95,13 +95,14 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               _date(context.l10n.salesDateFrom, from, (value) => setState(() => from = value)),
               _date(context.l10n.salesDateTo, to, (value) => setState(() => to = value)),
               DropdownButton<String?>(
-                value: cashierId,
+                value: cashierName,
                 items: [
                   DropdownMenuItem(value: null, child: Text(context.l10n.salesAllCashiers)),
-                  for (final cashier in store.cashiers)
-                    DropdownMenuItem(value: cashier.id, child: Text(cashier.name)),
+                  // One entry per name, taken from the expenses themselves, so removed cashiers never repeat.
+                  for (final name in (store.expenses.map((e) => expenseCashierName(store, e)).where((n) => n.isNotEmpty).toSet().toList()..sort()))
+                    DropdownMenuItem(value: name, child: Text(name)),
                 ],
-                onChanged: (value) => setState(() => cashierId = value),
+                onChanged: (value) => setState(() => cashierName = value),
               ),
               DropdownButton<String?>(
                 value: categoryId,
@@ -145,7 +146,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   List<ShiftExpense> _rows(CafeStore store) => expenseLedgerRows(
         store,
         query: search.text,
-        cashierId: cashierId,
+        cashierName: cashierName,
         categoryId: categoryId,
         from: from,
         to: to,
@@ -197,7 +198,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   }
 
   Widget _line(BuildContext context, CafeStore store, ShiftExpense row) {
-    final cashier = store.cashiers.where((item) => item.id == row.cashierId);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -219,7 +219,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 ),
               ),
               Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt))),
-              Expanded(flex: 2, child: Text(cashier.isEmpty ? row.cashierId : cashier.first.name)),
+              Expanded(flex: 2, child: Text(expenseCashierName(store, row))),
               Expanded(flex: 2, child: Text(store.expenseCategoryLabel(row))),
               Expanded(flex: 3, child: Text(row.description)),
               Expanded(
@@ -276,11 +276,10 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   Future<void> _exportCsv(CafeStore store, List<ShiftExpense> rows) async {
     final buffer = StringBuffer('id,when,cashier,type,description,amount\n');
     for (final row in rows) {
-      final cashier = store.cashiers.where((item) => item.id == row.cashierId);
       buffer.writeln([
         row.shortId,
         formatTripoliDateTime(row.createdAt),
-        cashier.isEmpty ? row.cashierId : cashier.first.name,
+        expenseCashierName(store, row),
         store.expenseCategoryLabel(row),
         row.description,
         row.amount,
@@ -324,7 +323,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                     [
                       row.shortId,
                       formatTripoliDateTime(row.createdAt),
-                      row.cashierId,
+                      expenseCashierName(store, row),
                       store.expenseCategoryLabel(row),
                       row.description,
                       row.amount.toString(),

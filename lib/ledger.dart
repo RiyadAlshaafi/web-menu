@@ -34,13 +34,17 @@ SaleLedgerRow saleLedgerRow(CafeStore store, Payment payment) {
   final discount = lines.fold<double>(0, (sum, line) => sum + line.discountAmount);
   final charged = lines.fold<double>(0, (sum, line) => sum + line.total);
   final cashier = store.cashiers.where((item) => item.id == payment.cashierId);
+  final takeout = payment.isTakeout || (order.isNotEmpty && order.first.serviceType == 'takeout');
+  // The copies saved with the receipt win; live tables and cashiers are only a fallback for old rows.
   return SaleLedgerRow(
     payment: payment,
-    tableNumber: order.isNotEmpty && order.first.serviceType == 'takeout'
+    tableNumber: takeout
         ? ''
-        : (table.isEmpty ? '' : table.first.number),
-    takeout: order.isNotEmpty && order.first.serviceType == 'takeout',
-    cashierName: cashier.isEmpty ? payment.cashierId : cashier.first.name,
+        : (payment.tableNumber.isNotEmpty ? payment.tableNumber : (table.isEmpty ? '' : table.first.number)),
+    takeout: takeout,
+    cashierName: payment.cashierName.isNotEmpty
+        ? payment.cashierName
+        : (cashier.isEmpty ? payment.cashierId : cashier.first.name),
     itemCount: order.isEmpty ? 0 : order.first.itemCount,
     lines: lines,
     subtotal: charged + discount,
@@ -52,9 +56,9 @@ SaleLedgerRow saleLedgerRow(CafeStore store, Payment payment) {
 List<SaleLedgerRow> saleLedgerRows(
   CafeStore store, {
   String query = '',
-  String? cashierId,
+  String? cashierName,
   String? ownCashierId,
-  String? tableId,
+  String? tableNumber,
   String? methodId,
   String? shiftId,
   DateTime? from,
@@ -63,8 +67,8 @@ List<SaleLedgerRow> saleLedgerRows(
   final needle = query.trim().toLowerCase();
   final list = store.payments.where((payment) {
     if (ownCashierId != null && payment.cashierId != ownCashierId) return false;
-    if (cashierId != null && payment.cashierId != cashierId) return false;
-    if (tableId != null && payment.tableId != tableId) return false;
+    if (cashierName != null && saleLedgerRow(store, payment).cashierName != cashierName) return false;
+    if (tableNumber != null && saleLedgerRow(store, payment).tableNumber != tableNumber) return false;
     if (methodId != null && payment.paymentTypeId != methodId) return false;
     if (shiftId != null && payment.shiftId != shiftId) return false;
     if (!inTripoliDateRange(payment.paidAt, from: from, to: to)) return false;
@@ -90,10 +94,17 @@ bool _expenseMatchesCategory(CafeStore store, ShiftExpense expense, String categ
   return false;
 }
 
+/// Cashier name of an expense: the copy saved with it, else a live lookup for old rows.
+String expenseCashierName(CafeStore store, ShiftExpense expense) {
+  if (expense.cashierName.isNotEmpty) return expense.cashierName;
+  final match = store.cashiers.where((item) => item.id == expense.cashierId);
+  return match.isEmpty ? '' : match.first.name;
+}
+
 List<ShiftExpense> expenseLedgerRows(
   CafeStore store, {
   String query = '',
-  String? cashierId,
+  String? cashierName,
   String? categoryId,
   DateTime? from,
   DateTime? to,
@@ -101,14 +112,13 @@ List<ShiftExpense> expenseLedgerRows(
   final needle = query.trim().toLowerCase();
   final list = store.expenses.where((expense) {
     if (expense.voided) return false;
-    if (cashierId != null && expense.cashierId != cashierId) return false;
+    if (cashierName != null && expenseCashierName(store, expense) != cashierName) return false;
     if (categoryId != null && !_expenseMatchesCategory(store, expense, categoryId)) {
       return false;
     }
     if (!inTripoliDateRange(expense.createdAt, from: from, to: to)) return false;
     if (needle.isEmpty) return true;
-    final cashier = store.cashiers.where((item) => item.id == expense.cashierId);
-    final name = cashier.isEmpty ? '' : cashier.first.name.toLowerCase();
+    final name = expenseCashierName(store, expense).toLowerCase();
     return expense.description.toLowerCase().contains(needle) ||
         expense.shortId.toLowerCase().contains(needle) ||
         name.contains(needle);

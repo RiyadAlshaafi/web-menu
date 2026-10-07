@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +15,7 @@ import '../theme/cafe_theme.dart';
 import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/scroll_when_short.dart';
 
 
 part 'cashier/shell.dart';

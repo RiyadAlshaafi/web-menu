@@ -47,6 +47,13 @@ extension CafeStorePayments on CafeStore {
         : match.first.label(locale);
   }
 
+  /// Method name of a sale, read from the copy saved with the receipt first.
+  String paymentLabel(Payment payment) {
+    final saved = locale == 'ar' ? payment.paymentTypeNameAr : payment.paymentTypeNameEn;
+    if (saved != null && saved.isNotEmpty) return saved;
+    return typeName(payment.paymentTypeId);
+  }
+
   List<PaymentType> get enabledPaymentTypes =>
       paymentTypes.where((type) => type.enabled && !type.archived).toList();
 
@@ -192,16 +199,38 @@ extension CafeStorePayments on CafeStore {
     required double amount,
     required String description,
   }) async {
-    final shift = currentShift ?? openShift;
+    var shift = currentShift ?? openShift;
     final cashier = currentCashier;
     final category = expenseCategories.where((item) => item.id == categoryId);
-    if (shift == null || cashier == null) return l10n.errNoOpenShift;
+    if (shift == null && cashier != null && offlineEnabled) {
+      try {
+        shift = await _openLocalShift(cashier);
+      } catch (error, stackTrace) {
+        reportError('open local shift', error, stackTrace);
+        return l10n.offlineSaveFailed('$error');
+      }
+    }
+    if (shift == null || (cashier == null && !offlineSession)) return l10n.errNoOpenShift;
     if (category.isEmpty ||
         !category.first.enabled ||
         amount <= 0 ||
         description.trim().isEmpty) {
       return l10n.cashierExpenseInvalid;
     }
+    if (offlineEnabled) {
+      final localShift = shift;
+      return _guarded(
+        'save expense on device',
+        () => _addExpenseLocal(
+          shift: localShift,
+          cashier: cashier,
+          category: category.first,
+          amount: amount,
+          description: description.trim(),
+        ),
+      );
+    }
+    if (cashier == null) return l10n.errNoOpenShift;
     final withdrawal = category.first.nameEn == 'Cash Withdrawal';
     // The shift row already exists on the server (opened at sign-in), so the
     // stale local totals are not written back here.
@@ -268,8 +297,15 @@ extension CafeStorePayments on CafeStore {
   /// Closes the signed-in cashier's shift. The server sets only the counted
   /// cash and the closing time; it keeps its own sales totals.
   Future<String?> closeShift({required double actualCash}) async {
+    // An offline session's shift belongs to whoever claims it later; it can't be closed yet.
+    if (offlineSession) return l10n.offlineCloseShiftNeedsConnection;
     final shift = currentShift ?? openShift;
     if (shift == null) return l10n.errNoOpenShift;
+    final cashier = currentCashier;
+    // Offline, or sales still waiting to upload: close on the device so the close uploads after them.
+    if (offlineEnabled && cashier != null && (isOffline || offline!.pendingCount > 0)) {
+      return _guarded('close shift on device', () => _closeShiftLocal(shift, cashier, actualCash));
+    }
     if (db.client == null) {
       shift
         ..actualCash = actualCash
@@ -278,6 +314,9 @@ extension CafeStorePayments on CafeStore {
     } else {
       final failure = await db.closeShift(actualCash);
       if (failure != null) {
+        if (offlineEnabled && cashier != null && isNetworkError(failure)) {
+          return _guarded('close shift on device', () => _closeShiftLocal(shift, cashier, actualCash));
+        }
         if (_sessionExpired(failure)) return failure;
         return failure == 'no open shift' ? l10n.errNoOpenShift : failure;
       }

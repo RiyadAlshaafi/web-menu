@@ -71,7 +71,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
         ),
         child: Column(
           children: [
-            if (!store.deviceLinked) ...[
+            if (store.serverUnreachable) ...[
+              _OfflineStartCard(store: store),
+              const SizedBox(height: 16),
+            ] else if (!store.deviceLinked) ...[
               Text(context.l10n.authDeviceNotLinked, style: const TextStyle(color: CafeColors.alert, fontSize: 13, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
             ],
@@ -231,6 +234,53 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
     }
     if (!mounted) return;
     context.go('/pos');
+  }
+}
+
+/// Shown at startup when the server can't be reached: offers to keep selling offline.
+class _OfflineStartCard extends StatelessWidget {
+  const _OfflineStartCard({required this.store});
+  final CafeStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: SoftCard(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.cloud_off, color: CafeColors.alert),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(context.l10n.offlineStartTitle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                store.canStartOffline ? context.l10n.offlineStartBody : context.l10n.offlineNeverOnline,
+                style: const TextStyle(color: CafeColors.inkMuted, height: 1.35),
+              ),
+              if (store.canStartOffline) ...[
+                const SizedBox(height: 14),
+                TerracottaButton(
+                  label: context.l10n.offlineStartButton,
+                  onPressed: () {
+                    store.startOfflineSession();
+                    context.go('/pos/takeout');
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

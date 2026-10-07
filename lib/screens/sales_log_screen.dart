@@ -34,8 +34,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   final search = TextEditingController();
   DateTime? from;
   DateTime? to;
-  String? cashierId;
-  String? tableId;
+  String? cashierName;
+  String? tableNumber;
   String? methodId;
   String? shiftId;
   _Sort sort = _Sort.when;
@@ -94,16 +94,17 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               }),
               if (!widget.ownSalesOnly)
                 _menu<String?>(
-                  cashierId,
-                  [null, ...store.cashiers.map((item) => item.id)],
-                  (id) => id == null ? context.l10n.salesAllCashiers : _cashierName(store, id),
-                  (value) => setState(() { cashierId = value; page = 0; }),
+                  cashierName,
+                  // Names come from the receipts themselves, so removed cashiers stay filterable and never appear twice.
+                  [null, ...(store.payments.map((p) => saleLedgerRow(store, p).cashierName).where((n) => n.isNotEmpty).toSet().toList()..sort())],
+                  (name) => name ?? context.l10n.salesAllCashiers,
+                  (value) => setState(() { cashierName = value; page = 0; }),
                 ),
               _menu<String?>(
-                tableId,
-                [null, ...store.tables.map((item) => item.id)],
-                (id) => id == null ? context.l10n.salesAllTables : store.tableById(id).number,
-                (value) => setState(() { tableId = value; page = 0; }),
+                tableNumber,
+                [null, ...(store.payments.map((p) => saleLedgerRow(store, p).tableNumber).where((n) => n.isNotEmpty).toSet().toList()..sort())],
+                (number) => number ?? context.l10n.salesAllTables,
+                (value) => setState(() { tableNumber = value; page = 0; }),
               ),
               _menu<String?>(
                 methodId,
@@ -238,7 +239,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
           cell(store.currency.format(row.subtotal)),
           cell(store.currency.format(row.discount)),
           cell(store.currency.format(row.total)),
-          cell(store.typeName(row.payment.paymentTypeId)),
+          cell(store.paymentLabel(row.payment)),
           Expanded(
             flex: 2,
             child: Align(
@@ -264,9 +265,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final rows = saleLedgerRows(
       store,
       query: search.text,
-      cashierId: cashierId,
+      cashierName: cashierName,
       ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
-      tableId: tableId,
+      tableNumber: tableNumber,
       methodId: methodId,
       shiftId: shiftId,
       from: window.from,
@@ -325,9 +326,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final list = saleLedgerRows(
       store,
       query: search.text,
-      cashierId: cashierId,
+      cashierName: cashierName,
       ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
-      tableId: tableId,
+      tableNumber: tableNumber,
       methodId: methodId,
       shiftId: shiftId,
       from: from,
@@ -343,17 +344,12 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         _Sort.subtotal => a.subtotal.compareTo(b.subtotal),
         _Sort.discount => a.discount.compareTo(b.discount),
         _Sort.total => a.total.compareTo(b.total),
-        _Sort.method => store.typeName(a.payment.paymentTypeId).compareTo(store.typeName(b.payment.paymentTypeId)),
+        _Sort.method => store.paymentLabel(a.payment).compareTo(store.paymentLabel(b.payment)),
         _Sort.status => 0,
       };
       return ascending ? result : -result;
     });
     return list;
-  }
-
-  String _cashierName(CafeStore store, String id) {
-    final match = store.cashiers.where((item) => item.id == id);
-    return match.isEmpty ? id : match.first.name;
   }
 
   String _shiftLabel(CafeStore store, String id) {
@@ -405,7 +401,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                     Text('${context.l10n.salesColSubtotal}: ${live.currency.format(row.subtotal)}'),
                     Text('${context.l10n.salesColDiscount}: ${live.currency.format(row.discount)}'),
                     Text('${context.l10n.salesColTotal}: ${live.currency.format(row.total)}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                    Text('${context.l10n.salesColMethod}: ${live.typeName(current.paymentTypeId)}'),
+                    Text('${context.l10n.salesColMethod}: ${live.paymentLabel(current)}'),
                     if (choices.isNotEmpty)
                       DropdownButton<String>(
                         value: choices.contains(current.paymentTypeId) ? current.paymentTypeId : null,
@@ -454,7 +450,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.subtotal,
         row.discount,
         row.total,
-        store.typeName(row.payment.paymentTypeId),
+        store.paymentLabel(row.payment),
         'paid',
       ].map(csvCell).join(','));
     }
@@ -512,7 +508,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                           store.currency.format(row.subtotal),
                           store.currency.format(row.discount),
                           store.currency.format(row.total),
-                          store.typeName(row.payment.paymentTypeId),
+                          store.paymentLabel(row.payment),
                           'Paid',
                         ])
                     .toList(),

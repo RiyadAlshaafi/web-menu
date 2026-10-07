@@ -128,6 +128,27 @@ class _AdminBrandSettingsState extends State<AdminBrandSettings> {
         ),
         const SizedBox(height: 16),
         SoftCard(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.adminRequireCashierOnline, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                    const SizedBox(height: 6),
+                    Text(context.l10n.adminRequireCashierOnlineHint, style: const TextStyle(color: CafeColors.inkMuted)),
+                  ],
+                ),
+              ),
+              Switch(
+                value: store.requireCashierOnline,
+                onChanged: (value) => store.setRequireCashierOnline(value),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SoftCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

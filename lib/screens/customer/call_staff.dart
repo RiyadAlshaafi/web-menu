@@ -55,6 +55,10 @@ class CustomerShell {
           InkWell(
             onTap: () {
               if (table == null) return;
+              if (!store.guestOrderingOpen) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderingPaused)));
+                return;
+              }
               store.callStaff(table.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(context.l10n.guestRequestSent)),

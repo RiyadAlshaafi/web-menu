@@ -1757,4 +1757,109 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get guestQtyTooLarge =>
       'يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة.';
+
+  @override
+  String get guestOrderingPaused =>
+      'الطلب متوقف حالياً لأن الكاشير غير متصل. يمكنك تصفح القائمة.';
+
+  @override
+  String offlineWaiting(int count) {
+    return 'غير متصل — $count بانتظار الرفع';
+  }
+
+  @override
+  String offlineUploading(int count) {
+    return 'جارٍ رفع $count…';
+  }
+
+  @override
+  String get offlineNoConnection => 'غير متصل — المبيعات تُحفظ على هذا الجهاز';
+
+  @override
+  String offlineNeedsReview(int count) {
+    return 'تعذر رفع $count من العناصر المحفوظة';
+  }
+
+  @override
+  String get offlineNoNumbers =>
+      'لا توجد أرقام إيصالات محجوزة على هذا الجهاز. اتصل بالإنترنت مرة واحدة لمتابعة البيع دون اتصال.';
+
+  @override
+  String get offlineOnlyTakeout =>
+      'أنت غير متصل. يعمل التيك أواي السريع والمصروفات فقط حتى يعود الاتصال.';
+
+  @override
+  String get offlinePendingNumber => 'قيد الانتظار';
+
+  @override
+  String get offlineUnassigned => 'دون اتصال (بلا كاشير بعد)';
+
+  @override
+  String get offlineCloseShiftNeedsConnection =>
+      'بدأت هذه الوردية دون اتصال. يمكن إغلاقها بعد عودة الاتصال واستلام كاشير لها.';
+
+  @override
+  String get offlineStartTitle => 'لا يوجد اتصال بالإنترنت';
+
+  @override
+  String get offlineStartBody =>
+      'يمكنك متابعة بيع التيك أواي السريع وتسجيل المصروفات. يُحفظ كل شيء على هذا الجهاز ويُرفع عند عودة الاتصال.';
+
+  @override
+  String get offlineStartButton => 'العمل دون اتصال';
+
+  @override
+  String get offlineNeverOnline =>
+      'لم يتصل هذا الجهاز بالإنترنت من قبل، لذا لا توجد قائمة محفوظة. اتصل بالإنترنت مرة واحدة لاستخدام وضع عدم الاتصال.';
+
+  @override
+  String get offlineReconnectTitle => 'عاد الاتصال';
+
+  @override
+  String offlineReconnectBody(int count) {
+    return 'تم إنشاء $count من الإيصالات والمصروفات دون اتصال. لأي كاشير تعود؟';
+  }
+
+  @override
+  String get offlineReconnectPin => 'يدخل ذلك الكاشير رمزه السري لرفعها.';
+
+  @override
+  String get offlineReconnectButton => 'تعيين ورفع';
+
+  @override
+  String get offlineReconnectLater => 'لاحقاً';
+
+  @override
+  String get offlineReconnectBanner =>
+      'عاد الاتصال. اختر الكاشير لإيصالات وضع عدم الاتصال لرفعها.';
+
+  @override
+  String offlineAssignBanner(int count) {
+    return '$count من الإيصالات أُنشئت دون اتصال وليس لها كاشير بعد. اختر لمن تعود وسيتم رفعها.';
+  }
+
+  @override
+  String get offlineAssignButton => 'اختر الكاشير';
+
+  @override
+  String offlineSaveFailed(String error) {
+    return 'تعذر الحفظ على الجهاز ($error). لم يُسجَّل شيء، حاول مرة أخرى.';
+  }
+
+  @override
+  String offlineSignInAgain(int count) {
+    return 'سجّل الدخول مجدداً لرفع $count من العناصر المحفوظة. انتهت جلستك.';
+  }
+
+  @override
+  String get offlineSessionExpired =>
+      'انتهت جلسة تسجيل الدخول. سجّل الدخول مجدداً لمتابعة العمل والرفع.';
+
+  @override
+  String get adminRequireCashierOnline =>
+      'إيقاف طلبات الزبائن عند عدم اتصال أي كاشير';
+
+  @override
+  String get adminRequireCashierOnlineHint =>
+      'يبقى بإمكان الزبائن تصفح القائمة، لكن لا يمكنهم الطلب أو استدعاء الموظف أو طلب الفاتورة ما دام لا يوجد جهاز كاشير مسجَّل الدخول ومتصل. فعّل هذا الخيار بعد تحديث تطبيق كل الكاشيرات.';
 }

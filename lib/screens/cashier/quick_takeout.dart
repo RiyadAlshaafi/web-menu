@@ -109,7 +109,9 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final stacked = constraints.maxWidth < 980;
+                // Dishes on the left and the cart on the right keep Pay in view; only a really narrow
+                // window stacks them.
+                final stacked = constraints.maxWidth < 760;
                 final catalog = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -270,11 +272,15 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                   ),
                 );
                 if (stacked) {
+                  // The cart's fixed parts (title, payment type, total, Pay) take about 230 px, so it
+                  // always gets at least 340 px: otherwise the list of items in the cart has no room
+                  // and the cashier can't see what was added.
+                  final ticketHeight = (constraints.maxHeight * 0.42).clamp(340.0, 460.0);
                   return Column(
                     children: [
-                      Expanded(flex: 3, child: catalog),
+                      Expanded(child: catalog),
                       const SizedBox(height: 12),
-                      Expanded(flex: 2, child: ticket),
+                      SizedBox(height: ticketHeight, child: ticket),
                     ],
                   );
                 }

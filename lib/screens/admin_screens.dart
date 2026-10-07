@@ -11,6 +11,7 @@ import '../theme/cafe_theme.dart';
 import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/scroll_when_short.dart';
 import '../widgets/table_qr.dart';
 
 export 'admin_menu_layout_screen.dart';
@@ -38,7 +39,10 @@ class AdminShell extends StatelessWidget {
             color: surfaces.sidebar,
             child: SizedBox(
               width: railWidth,
-              child: Column(
+              // In a short window the menu scrolls instead of cutting off its last entries.
+              child: ScrollWhenShort(
+                minHeight: 640,
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
@@ -140,6 +144,7 @@ class AdminShell extends StatelessWidget {
                   ),
                 ],
               ),
+              ),
             ),
           );
     return Scaffold(
@@ -184,7 +189,13 @@ class AdminShell extends StatelessWidget {
                     ),
                   ],
                 ),
-                Expanded(child: ColoredBox(color: surfaces.background, child: child)),
+                Expanded(
+                  child: ColoredBox(
+                    color: surfaces.background,
+                    // A short or narrow window scrolls the page instead of cutting its bottom off.
+                    child: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
+                  ),
+                ),
               ],
             ),
           ),

@@ -50,7 +50,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             return _guestHeader(table, header.split('\u0001').first);
           }),
           Builder(builder: (context) {
-            context.select<CafeStore, GuestLocationStatus>((store) => store.guestLocation);
+            context.select<CafeStore, (GuestLocationStatus, bool)>((store) => (store.guestLocation, store.guestOrderingOpen));
             return _locationBanner(context.read<CafeStore>());
           }),
           Builder(builder: (context) {
@@ -960,6 +960,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
 }
 
 String? guestLocationMessage(BuildContext context, CafeStore store) {
+  if (!store.guestOrderingOpen) return context.l10n.guestOrderingPaused;
   return switch (store.guestLocation) {
     GuestLocationStatus.tooFar => context.l10n.guestLocationTooFar,
     GuestLocationStatus.denied => context.l10n.guestLocationDenied,
@@ -1002,6 +1003,10 @@ String guestOrderErrorText(BuildContext context, Object error) {
   var text = '$error';
   const prefix = 'Bad state: ';
   if (text.startsWith(prefix)) text = text.substring(prefix.length);
+  if (text.contains('cashier_offline')) {
+    context.read<CafeStore>().guestOrderingClosed();
+    return context.l10n.guestOrderingPaused;
+  }
   if (text.contains('too_far')) return context.l10n.guestLocationTooFar;
   if (text.contains('location_required')) return context.l10n.guestLocationDenied;
   if (text.startsWith(AppDatabase.unavailableItemsError)) {

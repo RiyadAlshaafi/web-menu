@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../offline/offline_sync.dart' show isNetworkError;
 import '../time_format.dart';
 import '../report_error.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
@@ -410,7 +411,7 @@ class AppDatabase {
   /// keeps an older, slower load from overwriting newer data, and guarantees a
   /// caller that just wrote something reads it back.
   Future<void> refreshFromDisk({bool liveOnly = false}) {
-    if (client == null) return Future<void>.value();
+    if (client == null || offlineMode) return Future<void>.value();
     final running = _refreshInFlight;
     if (running != null) {
       _refreshRerun = true;
@@ -484,7 +485,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt',
+          'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online',
         )
         .eq('id', id)
         .maybeSingle();
@@ -501,6 +502,7 @@ class AppDatabase {
           (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
       'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
       'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
+      'requireCashierOnline': restaurant['require_cashier_online'] as bool? ?? false,
     };
   }
 
@@ -668,7 +670,7 @@ class AppDatabase {
       guest
           ? Future<dynamic>.value(null)
           : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
-      guest ? Future<dynamic>.value(null) : client!.from('shift_expenses').select().order('created_at'),
+      staffed ? client!.from('shift_expenses').select().order('created_at') : Future<dynamic>.value(null),
       guest
           ? (guestTableId == null ? Future<dynamic>.value(<CafeOrder>[]) : _loadOpenOrdersForTable(guestTableId))
           : _loadOrders(historyFrom, const {}),
@@ -826,7 +828,7 @@ class AppDatabase {
             .map(
               (row) => CashShift(
                 id: row['id'] as String,
-                cashierId: row['cashier_id'] as String,
+                cashierId: row['cashier_id'] as String? ?? '',
                 openedAt: DateTime.parse(row['opened_at'] as String),
                 closedAt: row['closed_at'] == null
                     ? null
@@ -943,11 +945,16 @@ class AppDatabase {
     return Payment(
       id: id,
       orderId: row['order_id'] as String,
-      tableId: row['table_id'] as String,
+      tableId: row['table_id'] as String? ?? '',
+      tableNumber: row['table_number'] as String? ?? '',
+      isTakeout: row['is_takeout'] as bool? ?? false,
+      cashierName: row['cashier_name'] as String? ?? '',
+      paymentTypeNameEn: row['payment_type_name_en'] as String?,
+      paymentTypeNameAr: row['payment_type_name_ar'] as String?,
       totalDue: (row['total_due'] as num).toDouble(),
       cashReceived: (row['cash_received'] as num).toDouble(),
       changeDue: (row['change_due'] as num).toDouble(),
-      cashierId: row['cashier_id'] as String,
+      cashierId: row['cashier_id'] as String? ?? '',
       shiftId: row['shift_id'] as String,
       paidAt: DateTime.parse(row['paid_at'] as String),
       paymentTypeId: row['payment_type_id'] as String?,
@@ -1013,8 +1020,11 @@ class AppDatabase {
     final table = _tables.where((item) => item.id == row['table_id']);
     return CafeOrder(
       id: row['id'] as String,
-      tableId: row['table_id'] as String,
-      tableNumber: table.isEmpty ? '' : table.first.number,
+      tableId: row['table_id'] as String? ?? '',
+      // The number saved with the order wins, so a deleted table can't blank or duplicate it.
+      tableNumber: (row['table_number'] as String? ?? '').isNotEmpty
+          ? row['table_number'] as String
+          : (table.isEmpty ? '' : table.first.number),
       status: OrderStatus.values.firstWhere(
         (value) => value.name == row['status'],
         orElse: () => OrderStatus.received,
@@ -1053,6 +1063,12 @@ class AppDatabase {
     _cafe = {..._cafe, 'autoPrintReceipt': value};
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({'auto_print_receipt': value}).eq('id', restaurantId!);
+  }
+
+  Future<void> writeRequireCashierOnline(bool value) async {
+    _cafe = {..._cafe, 'requireCashierOnline': value};
+    if (client == null || restaurantId == null) return;
+    await client!.from('restaurants').update({'require_cashier_online': value}).eq('id', restaurantId!);
   }
 
   Future<void> writeLocale(String locale) async {
@@ -1667,7 +1683,9 @@ class AppDatabase {
   ShiftExpense _mapExpense(Map<String, dynamic> row) => ShiftExpense(
     id: row['id'] as String,
     shiftId: row['shift_id'] as String,
-    cashierId: row['cashier_id'] as String,
+    cashierId: row['cashier_id'] as String? ?? '',
+    cashierName: row['cashier_name'] as String? ?? '',
+    paidToCashierName: row['paid_to_cashier_name'] as String? ?? '',
     paidToCashierId: row['paid_to_cashier_id'] as String?,
     paidToCafe: row['paid_to_cafe'] as bool? ?? false,
     amount: _asDouble(row['amount']) ?? 0,
@@ -1765,6 +1783,103 @@ class AppDatabase {
   /// Prefix of the error [sendTableCart] returns when dishes in the cart were
   /// switched off; the dish names follow it, comma separated.
   static const unavailableItemsError = 'items_unavailable:';
+
+  /// While true the app runs from the saved copy and does not load from the server.
+  bool offlineMode = false;
+
+  /// Whether the server answers at all (any reply counts, even a refusal).
+  Future<bool> serverReachable({Duration timeout = const Duration(seconds: 4)}) async {
+    if (client == null) return false;
+    try {
+      await callRpc('guest_ordering_open', {'p_qr_slug': ''}, timeout: timeout);
+      return true;
+    } catch (error) {
+      return !isNetworkError(error);
+    }
+  }
+
+  /// What the till needs to start without internet: cafe, menu, tables, payment methods,
+  /// expense types and cashier names. Saved on the device while online.
+  Map<String, dynamic> offlineSnapshot() => {
+    'restaurantId': restaurantId,
+    'boundSlot': boundSlot,
+    'boundRestaurantId': boundRestaurantId,
+    'boundSlug': boundSlug,
+    'boundHasAdmin': boundHasAdmin,
+    'anyAdmin': anyAdmin,
+    'cafe': _cafe,
+    'locale': _locale,
+    'tables': [for (final t in _tables) {...t.toJson(), 'archived': t.archived}],
+    'categories': [for (final c in _categories) c.toJson()],
+    'menuItems': [for (final m in _menuItems) m.toJson()],
+    'paymentTypes': [
+      for (final p in _paymentTypes)
+        {'id': p.id, 'nameEn': p.nameEn, 'nameAr': p.nameAr, 'enabled': p.enabled, 'sortOrder': p.sortOrder, 'archived': p.archived},
+    ],
+    'expenseCategories': [
+      for (final e in _expenseCategories)
+        {'id': e.id, 'nameEn': e.nameEn, 'nameAr': e.nameAr, 'enabled': e.enabled, 'sortOrder': e.sortOrder},
+    ],
+    'cashiers': [for (final c in _cashiers) {'id': c.id, 'name': c.name, 'initials': c.initials}],
+  };
+
+  /// Loads a copy saved by [offlineSnapshot] so the till can open without internet.
+  void applyOfflineSnapshot(Map<String, dynamic> s) {
+    List<Map<String, dynamic>> rows(String key) =>
+        [for (final row in (s[key] as List? ?? const [])) Map<String, dynamic>.from(row as Map)];
+    restaurantId = s['restaurantId'] as String?;
+    boundSlot = s['boundSlot'] as int?;
+    boundRestaurantId = s['boundRestaurantId'] as String?;
+    boundSlug = s['boundSlug'] as String?;
+    boundHasAdmin = s['boundHasAdmin'] as bool? ?? false;
+    anyAdmin = s['anyAdmin'] as bool? ?? false;
+    _cafe = Map<String, dynamic>.from(s['cafe'] as Map? ?? const {});
+    _locale = s['locale'] as String? ?? 'en';
+    _tables = [for (final r in rows('tables')) CafeTable.fromJson(r)];
+    _categories = [for (final r in rows('categories')) MenuCategory.fromJson(r)];
+    _menuItems = [for (final r in rows('menuItems')) MenuItem.fromJson(r)];
+    _paymentTypes = [
+      for (final r in rows('paymentTypes'))
+        PaymentType(
+          id: r['id'] as String,
+          nameEn: r['nameEn'] as String? ?? '',
+          nameAr: r['nameAr'] as String? ?? '',
+          enabled: r['enabled'] as bool? ?? true,
+          sortOrder: r['sortOrder'] as int? ?? 0,
+          archived: r['archived'] as bool? ?? false,
+        ),
+    ];
+    _expenseCategories = [
+      for (final r in rows('expenseCategories'))
+        ExpenseCategory(
+          id: r['id'] as String,
+          nameEn: r['nameEn'] as String? ?? '',
+          nameAr: r['nameAr'] as String? ?? '',
+          enabled: r['enabled'] as bool? ?? true,
+          sortOrder: r['sortOrder'] as int? ?? 0,
+        ),
+    ];
+    _cashiers = [
+      for (final r in rows('cashiers'))
+        Cashier(id: r['id'] as String, name: r['name'] as String, pinHash: '', pinSalt: '', initials: r['initials'] as String? ?? 'C'),
+    ];
+    _orders = [];
+    _payments = [];
+    _shifts = [];
+    _expenses = [];
+    _calls = [];
+    _carts = {};
+    loadedOnce = true;
+  }
+
+  /// Calls a server function with this device's headers, giving up after [timeout] so a dead
+  /// connection never freezes the till. Throws on network failure (used by the offline uploader).
+  Future<dynamic> callRpc(String name, Map<String, dynamic> params, {Duration timeout = const Duration(seconds: 10)}) {
+    final current = client;
+    if (current == null) throw StateError('Supabase is not configured.');
+    _applyHeaders();
+    return current.rpc(name, params: params).timeout(timeout);
+  }
 
   /// Calls an RPC that answers `{ok, error, ...}`. Returns the answer, or an
   /// `{ok: false, error}` map when the call itself failed.

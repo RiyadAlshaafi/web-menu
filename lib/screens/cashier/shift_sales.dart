@@ -226,7 +226,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                               ),
                                               TextSpan(
                                                 text:
-                                                    '  •  ${store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(store.tableById(payment.tableId).number)}',
+                                                    '  •  ${payment.isTakeout || store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(payment.tableNumber)}',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w800,
                                                 ),

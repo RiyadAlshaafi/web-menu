@@ -2,7 +2,9 @@ import 'dart:io';
 
 Future<Map<String, String>> loadLocalEnv() async {
   final merged = <String, String>{};
-  for (final file in _envFiles()) {
+  // Later files win. _envFiles lists the highest priority first (the file next to the program,
+  // then the working folder, then its parents), so read them in reverse.
+  for (final file in _envFiles().toList().reversed) {
     if (!file.existsSync()) continue;
     merged.addAll(_parse(file.readAsStringSync()));
   }
@@ -31,6 +33,9 @@ Iterable<File> _envFiles() sync* {
     return file;
   }
 
+  // Highest priority first: the file next to the program, then the working folder and its parents.
+  final besideExe = add('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}.env');
+  if (besideExe != null) yield besideExe;
   var dir = Directory.current;
   for (var i = 0; i < 8; i++) {
     final file = add('${dir.path}${Platform.pathSeparator}.env');
@@ -39,8 +44,6 @@ Iterable<File> _envFiles() sync* {
     if (parent.path == dir.path) break;
     dir = parent;
   }
-  final besideExe = add('${File(Platform.resolvedExecutable).parent.path}${Platform.pathSeparator}.env');
-  if (besideExe != null) yield besideExe;
 }
 
 Map<String, String> _parse(String raw) {

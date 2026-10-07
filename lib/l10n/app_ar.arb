@@ -47,7 +47,9 @@
   "salesReceiptLine": "رقم الإيصال {number}",
   "@salesReceiptLine": {
     "placeholders": {
-      "number": {"type": "String"}
+      "number": {
+        "type": "String"
+      }
     }
   },
   "salesColWhen": "التاريخ والوقت",
@@ -298,7 +300,9 @@
   "cashierCustomerPay": "يريد الزبون الدفع: {name}",
   "@cashierCustomerPay": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "cashierSettleCloseBill": "تسوية وإغلاق الفاتورة ({amount})",
@@ -325,7 +329,7 @@
   "cashierDineIn": "تناول في المطعم",
   "cashierElapsedMinutes": "{minutes} د",
   "cashierOrderItemsCount": "أصناف الطلب ({count})",
-  "cashierTotalPayable": "الإجمالي المستحق",
+  "cashierTotalPayable": "الإجمالي المستحق الدفع",
   "cashierActionUnavailable": "هذا الإجراء غير متاح في هذا الصندوق.",
   "cashierRefuse": "رفض",
   "cashierItemRefused": "تمت إزالة الصنف وتمييزه كغير متاح",
@@ -355,7 +359,6 @@
   "cashierAvailable": "متاحة",
   "cashierDiningActive": "جلسة طعام نشطة",
   "cashierBillPending": "الفاتورة معلّقة",
-  "cashierTotalPayable": "الإجمالي المستحق الدفع",
   "cashierSoloStationSync": "محطة فردية  •  مزامنة مباشرة للصندوق",
   "cashierShiftSalesTitle": "مبيعات الوردية وسجلات الصندوق",
   "cashierExportSummary": "تصدير الملخص (PDF/CSV)",
@@ -392,7 +395,6 @@
   "guestViewOrder": "عرض الطلب",
   "guestOrderButton": "اطلب",
   "guestConfirmOrderTitle": "راجع طلبك",
-  "guestDineInOrder": "طلب داخل المطعم",
   "guestItemsInOrder": "أصناف الطلب ({count})",
   "guestConfirmSendKitchen": "تأكيد وإرسال للمطبخ",
   "guestModifyOrder": "تعديل الطلب والعودة للقائمة",
@@ -445,10 +447,18 @@
   "payChanged": "تغيّرت طريقة الدفع من {oldName} إلى {newName} بواسطة {name} في {time}",
   "@payChanged": {
     "placeholders": {
-      "oldName": {"type": "String"},
-      "newName": {"type": "String"},
-      "name": {"type": "String"},
-      "time": {"type": "String"}
+      "oldName": {
+        "type": "String"
+      },
+      "newName": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "guestLoadingTable": "جاري تحميل طاولتك...",
@@ -466,7 +476,9 @@
   "payDeleteTitle": "حذف {name}؟",
   "@payDeleteTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "payDeleteMessage": "المبيعات السابقة التي استخدمت هذه الطريقة ستبقى كما هي.",
@@ -553,5 +565,32 @@
   "catalogDeleteCashierMessage": "لن يتمكن {name} من تسجيل الدخول بعد الآن. تبقى مبيعاته السابقة محفوظة في السجلات.",
   "catalogDeleteCashierConfirm": "إزالة",
   "guestItemsUnavailable": "عذراً، هذه الأطباق لم تعد متوفرة: {items}. احذفها من طلبك وحاول مرة أخرى.",
-  "guestQtyTooLarge": "يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة."
+  "guestQtyTooLarge": "يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة.",
+  "guestOrderingPaused": "الطلب متوقف حالياً لأن الكاشير غير متصل. يمكنك تصفح القائمة.",
+  "offlineWaiting": "غير متصل — {count} بانتظار الرفع",
+  "offlineUploading": "جارٍ رفع {count}…",
+  "offlineNoConnection": "غير متصل — المبيعات تُحفظ على هذا الجهاز",
+  "offlineNeedsReview": "تعذر رفع {count} من العناصر المحفوظة",
+  "offlineNoNumbers": "لا توجد أرقام إيصالات محجوزة على هذا الجهاز. اتصل بالإنترنت مرة واحدة لمتابعة البيع دون اتصال.",
+  "offlineOnlyTakeout": "أنت غير متصل. يعمل التيك أواي السريع والمصروفات فقط حتى يعود الاتصال.",
+  "offlinePendingNumber": "قيد الانتظار",
+  "offlineUnassigned": "دون اتصال (بلا كاشير بعد)",
+  "offlineCloseShiftNeedsConnection": "بدأت هذه الوردية دون اتصال. يمكن إغلاقها بعد عودة الاتصال واستلام كاشير لها.",
+  "offlineStartTitle": "لا يوجد اتصال بالإنترنت",
+  "offlineStartBody": "يمكنك متابعة بيع التيك أواي السريع وتسجيل المصروفات. يُحفظ كل شيء على هذا الجهاز ويُرفع عند عودة الاتصال.",
+  "offlineStartButton": "العمل دون اتصال",
+  "offlineNeverOnline": "لم يتصل هذا الجهاز بالإنترنت من قبل، لذا لا توجد قائمة محفوظة. اتصل بالإنترنت مرة واحدة لاستخدام وضع عدم الاتصال.",
+  "offlineReconnectTitle": "عاد الاتصال",
+  "offlineReconnectBody": "تم إنشاء {count} من الإيصالات والمصروفات دون اتصال. لأي كاشير تعود؟",
+  "offlineReconnectPin": "يدخل ذلك الكاشير رمزه السري لرفعها.",
+  "offlineReconnectButton": "تعيين ورفع",
+  "offlineReconnectLater": "لاحقاً",
+  "offlineReconnectBanner": "عاد الاتصال. اختر الكاشير لإيصالات وضع عدم الاتصال لرفعها.",
+  "offlineAssignBanner": "{count} من الإيصالات أُنشئت دون اتصال وليس لها كاشير بعد. اختر لمن تعود وسيتم رفعها.",
+  "offlineAssignButton": "اختر الكاشير",
+  "offlineSaveFailed": "تعذر الحفظ على الجهاز ({error}). لم يُسجَّل شيء، حاول مرة أخرى.",
+  "offlineSignInAgain": "سجّل الدخول مجدداً لرفع {count} من العناصر المحفوظة. انتهت جلستك.",
+  "offlineSessionExpired": "انتهت جلسة تسجيل الدخول. سجّل الدخول مجدداً لمتابعة العمل والرفع.",
+  "adminRequireCashierOnline": "إيقاف طلبات الزبائن عند عدم اتصال أي كاشير",
+  "adminRequireCashierOnlineHint": "يبقى بإمكان الزبائن تصفح القائمة، لكن لا يمكنهم الطلب أو استدعاء الموظف أو طلب الفاتورة ما دام لا يوجد جهاز كاشير مسجَّل الدخول ومتصل. فعّل هذا الخيار بعد تحديث تطبيق كل الكاشيرات."
 }

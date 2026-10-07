@@ -197,8 +197,18 @@ extension CafeStoreOrders on CafeStore {
     if (table == null) return 'takeout_table';
     if (lines.isEmpty) return l10n.cashierExpenseInvalid;
     final cashier = currentCashier;
-    final shift = currentShift ?? openShift;
-    if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
+    var shift = currentShift ?? openShift;
+    // After a shift was closed on this device, the next sale opens a new one here too.
+    if (shift == null && cashier != null && offlineEnabled) {
+      try {
+        shift = await _openLocalShift(cashier);
+      } catch (error, stackTrace) {
+        reportError('open local shift', error, stackTrace);
+        return l10n.offlineSaveFailed('$error');
+      }
+    }
+    // An offline session has no cashier yet; its sales are assigned when the connection returns.
+    if ((cashier == null && !offlineSession) || shift == null) return l10n.errCashierSignInFirst;
     final ticket = [
       for (final line in lines)
         OrderLine(
@@ -213,6 +223,22 @@ extension CafeStoreOrders on CafeStore {
     notifyListeners();
     try {
       await Future<void>.delayed(Duration.zero);
+      if (offlineEnabled) {
+        try {
+          return await _checkoutTakeoutLocal(
+            counter: table,
+            ticket: ticket,
+            paymentTypeId: paymentTypeId,
+            cashier: cashier,
+            shift: shift,
+          );
+        } catch (error, stackTrace) {
+          // e.g. the local file is full or locked: tell the cashier instead of leaving Pay stuck.
+          reportError('save takeout on device', error, stackTrace);
+          return l10n.offlineSaveFailed('$error');
+        }
+      }
+      if (cashier == null) return l10n.errCashierSignInFirst;
       if (db.client == null) {
         final stamp = DateTime.now().microsecondsSinceEpoch;
         final error = applyQuickTakeout(
@@ -268,6 +294,10 @@ extension CafeStoreOrders on CafeStore {
       qrSlug: authKind == AuthKind.none ? table.qrSlug : null,
       tableId: authKind == AuthKind.none ? null : tableId,
     );
+    if (error != null && error.contains('cashier_offline')) {
+      guestOrderingClosed();
+      return l10n.guestOrderingPaused;
+    }
     if (error != null) return error;
     notifyListeners();
     return null;

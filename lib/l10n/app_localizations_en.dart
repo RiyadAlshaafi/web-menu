@@ -1766,4 +1766,110 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guestQtyTooLarge =>
       'You can order up to 99 of one dish at a time.';
+
+  @override
+  String get guestOrderingPaused =>
+      'Ordering is paused right now because the cashier is offline. You can still browse the menu.';
+
+  @override
+  String offlineWaiting(int count) {
+    return 'Offline — $count waiting to upload';
+  }
+
+  @override
+  String offlineUploading(int count) {
+    return 'Uploading $count…';
+  }
+
+  @override
+  String get offlineNoConnection => 'Offline — sales are saved on this device';
+
+  @override
+  String offlineNeedsReview(int count) {
+    return '$count saved item(s) could not be uploaded';
+  }
+
+  @override
+  String get offlineNoNumbers =>
+      'No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.';
+
+  @override
+  String get offlineOnlyTakeout =>
+      'You are offline. Only quick takeout and expenses work until the connection returns.';
+
+  @override
+  String get offlinePendingNumber => 'Pending';
+
+  @override
+  String get offlineUnassigned => 'Offline (no cashier yet)';
+
+  @override
+  String get offlineCloseShiftNeedsConnection =>
+      'This shift was started offline. It can be closed after the connection returns and a cashier takes it.';
+
+  @override
+  String get offlineStartTitle => 'No internet connection';
+
+  @override
+  String get offlineStartBody =>
+      'You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.';
+
+  @override
+  String get offlineStartButton => 'Use offline';
+
+  @override
+  String get offlineNeverOnline =>
+      'This device has not been online yet, so it has no saved menu. Connect to the internet once to use offline mode.';
+
+  @override
+  String get offlineReconnectTitle => 'The connection is back';
+
+  @override
+  String offlineReconnectBody(int count) {
+    return '$count receipt(s) and expense(s) were made offline. Which cashier do they belong to?';
+  }
+
+  @override
+  String get offlineReconnectPin =>
+      'That cashier enters their PIN to upload them.';
+
+  @override
+  String get offlineReconnectButton => 'Assign and upload';
+
+  @override
+  String get offlineReconnectLater => 'Later';
+
+  @override
+  String get offlineReconnectBanner =>
+      'The connection is back. Choose the cashier for the offline receipts to upload them.';
+
+  @override
+  String offlineAssignBanner(int count) {
+    return '$count receipt(s) made offline have no cashier yet. Choose who they belong to and they will upload.';
+  }
+
+  @override
+  String get offlineAssignButton => 'Choose cashier';
+
+  @override
+  String offlineSaveFailed(String error) {
+    return 'Could not save this on the device ($error). Nothing was recorded; please try again.';
+  }
+
+  @override
+  String offlineSignInAgain(int count) {
+    return 'Sign in again to upload $count saved item(s). Your session expired.';
+  }
+
+  @override
+  String get offlineSessionExpired =>
+      'Your sign-in has expired. Sign in again to keep working and uploading.';
+
+  @override
+  String get adminRequireCashierOnline =>
+      'Pause guest ordering when no cashier is online';
+
+  @override
+  String get adminRequireCashierOnlineHint =>
+      'Guests can still read the menu, but cannot order, call staff or ask for the bill while no signed-in cashier device is connected. Turn this on once every till runs the updated app.';
 }

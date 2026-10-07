@@ -72,6 +72,15 @@ extension CafeStoreSettings on CafeStore {
     notifyListeners();
     await db.writeAutoPrintReceipt(value);
   }
+  /// Guests can only order while a cashier device is online (off until the admin turns it on).
+  bool get requireCashierOnline => cafe['requireCashierOnline'] as bool? ?? false;
+
+  Future<void> setRequireCashierOnline(bool value) async {
+    cafe = {...cafe, 'requireCashierOnline': value};
+    notifyListeners();
+    await db.writeRequireCashierOnline(value);
+  }
+
   double get taxRate => (cafe['taxRate'] as num?)?.toDouble() ?? 0;
   Future<void> setLocale(String value) async {
     locale = value;
