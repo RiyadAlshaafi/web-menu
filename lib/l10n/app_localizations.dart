@@ -548,6 +548,12 @@ abstract class AppLocalizations {
   /// **'No admin account exists yet.'**
   String get errNoAdmin;
 
+  /// No description provided for @errNoAdminForCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin found for this cafe.'**
+  String get errNoAdminForCafe;
+
   /// No description provided for @errBadCredentials.
   ///
   /// In en, this message translates to:

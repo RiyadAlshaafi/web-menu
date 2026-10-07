@@ -243,6 +243,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errNoAdmin => 'No admin account exists yet.';
 
   @override
+  String get errNoAdminForCafe => 'No admin found for this cafe.';
+
+  @override
   String get errBadCredentials => 'Invalid email or password.';
 
   @override

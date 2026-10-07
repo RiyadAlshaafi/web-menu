@@ -243,6 +243,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errNoAdmin => 'لا يوجد حساب مدير بعد.';
 
   @override
+  String get errNoAdminForCafe => 'لا يوجد مسؤول لهذا المقهى.';
+
+  @override
   String get errBadCredentials => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
 
   @override

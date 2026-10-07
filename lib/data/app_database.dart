@@ -86,6 +86,10 @@ class AppDatabase {
   String? boundSlug;
   bool boundHasAdmin = false;
 
+  /// Whether the signed-in Supabase user is an admin of a different cafe than
+  /// the one this device is linked to.
+  bool adminFromOtherCafe = false;
+
   /// Slot the developer tools are working on (sent as the x-dev-slot header).
   int? devSlot;
 
@@ -253,6 +257,7 @@ class AppDatabase {
     cashierToken = null;
     guestSlug = null;
     anyAdmin = false;
+    adminFromOtherCafe = false;
     _cafe = {'name': '', 'serviceChargeRate': 0.10, 'taxRate': 0, 'autoPrintReceipt': true};
     _locale = 'en';
     _admin = null;
@@ -566,8 +571,19 @@ class AppDatabase {
     anyAdmin = opened[0] as bool? ?? false;
     final profile = opened[1] as Map<String, dynamic>?;
     final tableList = opened[2] as List;
-    if (user != null) {
-      restaurantId = profile?['restaurant_id'] as String?;
+    final profileRestaurant = profile?['restaurant_id'] as String?;
+    // A device linked to a cafe slot only accepts that cafe's admin; an admin
+    // of another cafe must not sign in here (e.g. on an empty slot).
+    adminFromOtherCafe =
+        user != null &&
+        boundRestaurantId != null &&
+        profileRestaurant != boundRestaurantId;
+    if (adminFromOtherCafe) {
+      restaurantId = boundRestaurantId;
+      _admin = null;
+      _rememberAdmin = false;
+    } else if (user != null) {
+      restaurantId = profileRestaurant;
       _admin = AdminAccount(
         email: user.email ?? '',
         passwordHash: '',

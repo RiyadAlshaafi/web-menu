@@ -101,7 +101,10 @@ class CafeStore extends ChangeNotifier {
     expenses = db.expenses;
     calls = db.calls;
     _syncStampCache = null;
-    if (db.rememberAdmin && admin != null) {
+    if (db.adminFromOtherCafe) {
+      // A saved session from another cafe must not reopen this device's cafe.
+      await _dropForeignAdmin();
+    } else if (db.rememberAdmin && admin != null) {
       authKind = AuthKind.admin;
     }
     notifyListeners();
@@ -477,6 +480,14 @@ class CafeStore extends ChangeNotifier {
       return adminError;
     }
     await db.refreshFromDisk();
+    if (db.adminFromOtherCafe) {
+      // Supabase accepted the password, but this admin belongs to another
+      // cafe slot. Drop the session so this device's cafe stays locked.
+      await _dropForeignAdmin();
+      adminError = l10n.errNoAdminForCafe;
+      notifyListeners();
+      return adminError;
+    }
     // Copy the signed-in data (sales, expenses, orders...) to the screens, not
     // just the admin's name; otherwise the dashboard keeps the empty pre-login
     // data until the next live update.
@@ -653,6 +664,18 @@ class CafeStore extends ChangeNotifier {
     _hydrateOperational();
     startLiveSync();
     notifyListeners();
+  }
+
+  Future<void> _dropForeignAdmin() async {
+    try {
+      await db.client?.auth.signOut();
+    } catch (error, stackTrace) {
+      reportError('sign out foreign admin', error, stackTrace);
+    }
+    await db.refreshFromDisk();
+    _hydrateOperational();
+    admin = null;
+    authKind = AuthKind.none;
   }
 
   void signOut() {
