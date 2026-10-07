@@ -97,6 +97,7 @@
   "errPasswordsMismatch": "Passwords must match exactly.",
   "errWeakPassword": "Password must include 8+ characters, a capital letter, a number, and a special symbol.",
   "errNoAdmin": "No admin account exists yet.",
+  "errNoAdminForCafe": "No admin found for this cafe.",
   "errBadCredentials": "Invalid email or password.",
   "errBadCode": "Invalid or expired code.",
   "errVerifyCodeFirst": "Verify the safe code first.",
