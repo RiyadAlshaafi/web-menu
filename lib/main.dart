@@ -72,7 +72,7 @@ class _StaffBootState extends State<StaffBoot> {
 
   @override
   Widget build(BuildContext context) {
-    if (_ready) return CafeItalianoApp(store: widget.store, initialRoute: widget.initialRoute);
+    if (_ready) return TawlaApp(store: widget.store, initialRoute: widget.initialRoute);
     return const StaffOpeningApp();
   }
 }
@@ -122,8 +122,8 @@ class StaffOpeningBody extends StatelessWidget {
   }
 }
 
-class CafeItalianoApp extends StatefulWidget {
-  const CafeItalianoApp({super.key, required this.store, this.initialRoute = '/'});
+class TawlaApp extends StatefulWidget {
+  const TawlaApp({super.key, required this.store, this.initialRoute = '/'});
 
   final CafeStore store;
 
@@ -131,10 +131,10 @@ class CafeItalianoApp extends StatefulWidget {
   final String initialRoute;
 
   @override
-  State<CafeItalianoApp> createState() => _CafeItalianoAppState();
+  State<TawlaApp> createState() => _TawlaAppState();
 }
 
-class _CafeItalianoAppState extends State<CafeItalianoApp> {
+class _TawlaAppState extends State<TawlaApp> {
   late final GoRouter router;
   late final _RouterRefresh routerRefresh;
   late String locale;
@@ -210,6 +210,9 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
           },
         ),
         GoRoute(path: '/login', builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.PinLoginScreen())),
+        // The developer password travels in state.extra on purpose, never in
+        // the URL. A browser refresh loses it and the redirect above sends the
+        // page back to /login, so the tools need the password again.
         GoRoute(
           path: '/dev',
           builder: (_, state) => DevScreen(password: state.extra as String),

@@ -413,7 +413,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                           if (value == null || value == current.paymentTypeId) return;
                           final error = await live.changePaymentType(current.id, value);
                           if (!context.mounted || error == null) return;
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                         },
                       ),
                     ...current.changes.map((change) => Padding(

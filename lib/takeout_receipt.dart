@@ -1,3 +1,4 @@
+import 'data/error_codes.dart';
 import 'models/models.dart';
 
 /// Records one paid takeout sale. Takeout is a label on the order and receipt, not a
@@ -24,7 +25,7 @@ String? applyQuickTakeout({
           listUnitPrice: line.listUnitPrice,
         ),
   ];
-  if (ticket.isEmpty) return 'cart is empty';
+  if (ticket.isEmpty) return ErrorCodes.cartEmpty;
   final due = ticket.fold<double>(0, (sum, line) => sum + line.total);
   final when = paidAt ?? DateTime.now().toUtc();
   orders.add(

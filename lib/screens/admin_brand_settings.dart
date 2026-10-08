@@ -22,18 +22,22 @@ class CompanyInfoCard extends StatefulWidget {
 
 class _CompanyInfoCardState extends State<CompanyInfoCard> {
   late final TextEditingController name;
+  late final TextEditingController menuUrl;
   String? pendingLogo;
   bool removeLogo = false;
 
   @override
   void initState() {
     super.initState();
-    name = TextEditingController(text: (context.read<CafeStore>().cafe['name'] as String?) ?? '');
+    final cafe = context.read<CafeStore>().cafe;
+    name = TextEditingController(text: (cafe['name'] as String?) ?? '');
+    menuUrl = TextEditingController(text: (cafe['publicMenuUrl'] as String?) ?? '');
   }
 
   @override
   void dispose() {
     name.dispose();
+    menuUrl.dispose();
     super.dispose();
   }
 
@@ -66,11 +70,21 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
           const SizedBox(height: 14),
           LabeledField(label: context.l10n.catalogCafeName, child: TextField(controller: name)),
           const SizedBox(height: 14),
+          LabeledField(
+            label: context.l10n.catalogPublicMenuUrl,
+            child: TextField(
+              controller: menuUrl,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(hintText: context.l10n.catalogPublicMenuUrlHint),
+            ),
+          ),
+          const SizedBox(height: 14),
           NavyButton(
             label: context.l10n.catalogSaveCompany,
             onPressed: () async {
               await store.saveCompany(
                 name: name.text,
+                publicMenuUrl: menuUrl.text,
                 logoDataUrl: pendingLogo != null && pendingLogo!.startsWith('data:') ? pendingLogo : null,
                 removeLogo: removeLogo,
               );

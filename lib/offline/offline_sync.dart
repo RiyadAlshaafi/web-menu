@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../data/error_codes.dart';
 import '../money.dart';
 import 'outbox_store.dart';
 
@@ -67,6 +68,7 @@ class NumberBlock {
 bool isNetworkError(Object error) {
   if (error is TimeoutException) return true;
   final text = '$error';
+  if (text == ErrorCodes.network) return true;
   const signs = [
     'SocketException',
     'ClientException',

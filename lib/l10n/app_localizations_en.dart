@@ -10,12 +10,6 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get helloWorld => 'Hello World';
-
-  @override
-  String get welcomeMessage => 'Welcome to Café Italiano';
-
-  @override
   String get noTables => 'No tables have been created yet.';
 
   @override
@@ -29,9 +23,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMenu => 'No menu items available.';
-
-  @override
-  String get menuSoon => 'Menu coming soon';
 
   @override
   String get noSales => 'No sales recorded yet.';
@@ -270,7 +261,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errCashierSignInFirst => 'Sign in as a cashier first.';
 
   @override
-  String get errNoOpenBill => 'No open bill for this table.';
+  String get errNoOpenBill => 'This table has no open bill.';
 
   @override
   String get guestOrderFirst => 'Place an order first.';
@@ -305,8 +296,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignIn => 'Sign In';
 
   @override
-  String get authPosFooter =>
-      'Café Italiano POS System  •  Terminal Station 04  •  Secure Hospitality Gateway';
+  String authPosFooter(String cafe) {
+    return '$cafe  •  Tawla POS';
+  }
 
   @override
   String get authPinClear => 'Clear';
@@ -423,8 +415,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authReturnToStaffSignIn => '←  Return to Staff Sign In';
 
   @override
-  String get authChangePasswordFooter =>
-      '© Café Italiano Firenze 1984   •   Terminal Auth Gateway v4.9';
+  String authChangePasswordFooter(String cafe, String version) {
+    return '$cafe  •  Tawla $version';
+  }
 
   @override
   String get adminConsoleLabel => 'ADMIN CONSOLE';
@@ -440,9 +433,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminWorkspace => 'Workspace';
-
-  @override
-  String get adminTerminalBadge => '●  Terminal #01  ·  Secure Node';
 
   @override
   String get adminCustomerView => 'Customer View';
@@ -718,10 +708,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogCafeName => 'Cafe name';
 
   @override
-  String get catalogPublicMenuUrl => 'Public menu URL';
+  String get catalogPublicMenuUrl =>
+      'Guest menu address (used in table QR codes)';
 
   @override
-  String get catalogPublicMenuUrlHint => 'https://your-cafe.vercel.app';
+  String get catalogPublicMenuUrlHint => 'https://menu.your-cafe.ly';
 
   @override
   String get catalogChooseLogo => 'Choose logo';
@@ -808,9 +799,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierLanguage => 'Language';
-
-  @override
-  String get cashierPosTerminal => 'POS TERMINAL 01';
 
   @override
   String get cashierSoloShiftLive => 'Solo Shift Live';
@@ -1374,7 +1362,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestPaymentSuccessful => 'Payment Successful';
 
   @override
-  String get guestThankYou => 'Thank you for dining with Cafe Italiano!';
+  String guestThankYou(String cafe) {
+    return 'Thank you for dining with $cafe!';
+  }
 
   @override
   String get guestSubtotal => 'Subtotal';
@@ -2095,4 +2085,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get brandTagline => 'Cafe POS & QR ordering';
+
+  @override
+  String get adminSaveQrPng => 'Save QR image';
+
+  @override
+  String get devPasswordTitle => 'Developer password';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get errNotConfigured =>
+      'The app is not connected to its server. Contact your provider.';
+
+  @override
+  String get errNetwork =>
+      'Could not reach the server. Check the internet connection and try again.';
+
+  @override
+  String get errResetEmailFailed =>
+      'The reset email could not be sent. Try again in a minute.';
+
+  @override
+  String get errPasswordNotChanged =>
+      'The password was not changed. Try again.';
+
+  @override
+  String get authConfirmEmailFirst =>
+      'Confirm the account from the email we sent, then sign in.';
+
+  @override
+  String get errGeneric => 'Something went wrong. Try again.';
+
+  @override
+  String get errSessionExpired => 'Your session ended. Sign in again.';
+
+  @override
+  String get errSignInAsCashier => 'Sign in as a cashier first.';
+
+  @override
+  String get errLineNotFound => 'That dish is no longer on the order.';
+
+  @override
+  String get errCartEmpty => 'The cart is empty.';
 }

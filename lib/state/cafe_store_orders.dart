@@ -108,9 +108,7 @@ extension CafeStoreOrders on CafeStore {
     } else {
       existing.first.qty += 1;
     }
-    db.writeCarts(carts).whenComplete(() {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
-    });
+    db.writeCarts(carts).whenComplete(_writeFinished);
     _pendingWrites += 1;
     notifyListeners();
   }
@@ -123,9 +121,7 @@ extension CafeStoreOrders on CafeStore {
       line.qty = qty;
     }
     _pendingWrites += 1;
-    db.writeCarts(carts).whenComplete(() {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
-    });
+    db.writeCarts(carts).whenComplete(_writeFinished);
     notifyListeners();
   }
 
@@ -171,7 +167,7 @@ extension CafeStoreOrders on CafeStore {
       if (error != null) throw StateError(error);
       _hydrateOperational();
     } finally {
-      if (_pendingWrites > 0) _pendingWrites -= 1;
+      _writeFinished();
       _sendingTables.remove(tableId);
       // Reload the menu so the dishes the server refused show as unavailable.
       if (dishesChanged) unawaited(syncFromDisk());

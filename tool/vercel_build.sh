@@ -13,8 +13,12 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
   exit 1
 fi
 
+# Pinned so a new Flutter release can't change production without a commit.
+# Update it on purpose, after testing locally with the same version.
+FLUTTER_VERSION="3.47.6"
+
 if ! command -v flutter >/dev/null 2>&1; then
-  git clone https://github.com/flutter/flutter.git -b stable --depth 1 "$HOME/flutter"
+  git clone https://github.com/flutter/flutter.git -b "$FLUTTER_VERSION" --depth 1 "$HOME/flutter"
   export PATH="$HOME/flutter/bin:$PATH"
 fi
 flutter config --enable-web

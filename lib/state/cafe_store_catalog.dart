@@ -57,7 +57,7 @@ extension CafeStoreCatalog on CafeStore {
     // re-price every other line and could drop a round the guest just sent.
     final lineId = line.id;
     if (db.client != null) {
-      if (lineId == null) return 'line not found';
+      if (lineId == null) return ErrorCodes.lineNotFound;
       final failure = await db.removeOrderLine(lineId);
       if (failure != null) {
         if (_sessionExpired(failure)) return failure;

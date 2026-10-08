@@ -21,27 +21,19 @@ enum StaffRole { admin, cashier }
 class AdminAccount {
   AdminAccount({
     required this.email,
-    required this.passwordHash,
-    required this.passwordSalt,
     this.displayName = 'Admin',
   });
 
   final String email;
-  String passwordHash;
-  String passwordSalt;
   String displayName;
 
   factory AdminAccount.fromJson(Map<String, dynamic> json) => AdminAccount(
     email: json['email'] as String,
-    passwordHash: json['passwordHash'] as String,
-    passwordSalt: json['passwordSalt'] as String,
     displayName: json['displayName'] as String? ?? 'Admin',
   );
 
   Map<String, dynamic> toJson() => {
     'email': email,
-    'passwordHash': passwordHash,
-    'passwordSalt': passwordSalt,
     'displayName': displayName,
   };
 }
@@ -50,24 +42,18 @@ class Cashier {
   Cashier({
     required this.id,
     required this.name,
-    required this.pinHash,
-    required this.pinSalt,
     required this.initials,
     this.active = true,
   });
 
   final String id;
   String name;
-  String pinHash;
-  String pinSalt;
   String initials;
   bool active;
 
   factory Cashier.fromJson(Map<String, dynamic> json) => Cashier(
     id: json['id'] as String,
     name: json['name'] as String,
-    pinHash: json['pinHash'] as String,
-    pinSalt: json['pinSalt'] as String,
     initials: json['initials'] as String,
     active: json['active'] as bool? ?? true,
   );
@@ -75,8 +61,6 @@ class Cashier {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'pinHash': pinHash,
-    'pinSalt': pinSalt,
     'initials': initials,
     'active': active,
   };

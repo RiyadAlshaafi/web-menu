@@ -342,7 +342,7 @@ class _ClaimOfflineDialogState extends State<_ClaimOfflineDialog> {
                 onSubmitted: (_) => _submit(store),
               ),
             ],
-            if (error != null) Text(error!, style: const TextStyle(color: CafeColors.alert, fontSize: 12)),
+            if (error != null) Text(context.l10n.errorText(error!), style: const TextStyle(color: CafeColors.alert, fontSize: 12)),
           ],
         ),
       ),

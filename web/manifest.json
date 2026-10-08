@@ -3,9 +3,9 @@
     "short_name": "Tawla",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#E7EEF2",
+    "theme_color": "#1B3A4B",
+    "description": "Tawla — cafe POS and QR ordering.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

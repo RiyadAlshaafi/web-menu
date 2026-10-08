@@ -217,7 +217,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
             ),
             const SizedBox(height: 24),
             Text(
-              context.l10n.authPosFooter,
+              context.l10n.authPosFooter(context.watch<CafeStore>().cafeName),
               style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11),
               textAlign: TextAlign.center,
             ),
@@ -633,8 +633,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _send() async {
     final store = context.read<CafeStore>();
-    await store.requestPasswordReset(email.text);
-    setState(() => cooldown = 44);
+    final failure = await store.requestPasswordReset(email.text);
+    if (!mounted) return;
+    setState(() {
+      error = failure;
+      if (failure == null) cooldown = 44;
+    });
   }
 
   String get code => digits.map((item) => item.text).join();
@@ -936,7 +940,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
           const SizedBox(height: 24),
           Text(
-            context.l10n.authChangePasswordFooter,
+            context.l10n.authChangePasswordFooter(
+              context.watch<CafeStore>().cafeName,
+              context.watch<CafeStore>().appVersion,
+            ),
             style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11),
           ),
         ],
@@ -984,7 +991,7 @@ class _DevLogoState extends State<_DevLogo> {
     final entered = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Developer Password'),
+        title: Text(context.l10n.devPasswordTitle),
         content: TextField(
           controller: password,
           obscureText: true,
@@ -994,7 +1001,7 @@ class _DevLogoState extends State<_DevLogo> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, password.text),
-            child: const Text('OK'),
+            child: Text(context.l10n.commonOk),
           ),
         ],
       ),

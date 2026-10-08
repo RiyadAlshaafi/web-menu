@@ -64,7 +64,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     if (error != null) {
       final message = switch (error) {
         'in_flight' => context.l10n.quickTakeoutBusy,
-        _ => error,
+        _ => context.l10n.errorText(error),
       };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;

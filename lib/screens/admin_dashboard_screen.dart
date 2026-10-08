@@ -83,7 +83,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 setState(() => period = value);
               },
             ),
-            Text(_rangeLabel(window), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: TawlaTokens.muted)),
+            Text(_rangeLabel(window, store.locale), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: TawlaTokens.muted)),
           ],
         ),
         const SizedBox(height: 20),
@@ -161,13 +161,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  String _rangeLabel(SummaryWindow window) {
+  String _rangeLabel(SummaryWindow window, String locale) {
     final from = window.from;
     final to = window.to;
     if (from == null || to == null) return '';
-    if (from == to) return DateFormat.yMMMd().format(from);
-    if (from.year == to.year && from.month == to.month) return '${from.day} – ${to.day} ${DateFormat.MMMM().format(to)}';
-    return '${DateFormat.MMMd().format(from)} – ${DateFormat.yMMMd().format(to)}';
+    if (from == to) return DateFormat.yMMMd(locale).format(from);
+    if (from.year == to.year && from.month == to.month) return '${from.day} – ${to.day} ${DateFormat.MMMM(locale).format(to)}';
+    return '${DateFormat.MMMd(locale).format(from)} – ${DateFormat.yMMMd(locale).format(to)}';
   }
 
   /// Daily bars: the two weeks up to the end of the period, or the chosen range (up to a month).
@@ -231,12 +231,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Expanded(
                     child: Semantics(
                       label: context.l10n.dashboardChartBar(
-                        DateFormat.MMMd().format(p.day),
+                        DateFormat.MMMd(store.locale).format(p.day),
                         store.currency.format(p.sales),
                         store.currency.format(p.expenses),
                       ),
                       child: Tooltip(
-                        message: '${DateFormat.MMMd().format(p.day)} · ${store.currency.format(p.sales)} · ${store.currency.format(p.expenses)}',
+                        message: '${DateFormat.MMMd(store.locale).format(p.day)} · ${store.currency.format(p.sales)} · ${store.currency.format(p.expenses)}',
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 3),
                           child: Row(

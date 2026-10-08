@@ -362,7 +362,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (!confirmed || !mounted) return;
     final error = await store.deleteCashier(member.id);
     if (error == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
   }
 
   @override
@@ -705,7 +705,7 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
     if (!context.mounted) return;
     if (editingId == type.id) _close();
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
     }
   }
 
@@ -726,7 +726,7 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
     }
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
       return;
     }
     _close();
@@ -763,7 +763,7 @@ class _PaymentTypesCardState extends State<PaymentTypesCard> {
                 if (!context.mounted) return;
                 if (error != null) {
                   type.enabled = previous;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                 }
               },
             ),
@@ -818,7 +818,7 @@ class _ExpenseCategoriesCardState extends State<ExpenseCategoriesCard> {
     if (!context.mounted) return;
     if (editingId == category.id) _close();
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
     }
   }
 
@@ -839,7 +839,7 @@ class _ExpenseCategoriesCardState extends State<ExpenseCategoriesCard> {
     }
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
       return;
     }
     _close();
@@ -876,7 +876,7 @@ class _ExpenseCategoriesCardState extends State<ExpenseCategoriesCard> {
                 if (!context.mounted) return;
                 if (error != null) {
                   category.enabled = previous;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                 }
               },
             ),

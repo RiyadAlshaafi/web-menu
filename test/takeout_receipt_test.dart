@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/data/error_codes.dart';
 import 'package:menu_web_v1/ledger.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
@@ -91,7 +92,7 @@ void main() {
         orderId: 'o3',
         paymentId: 'p3',
       ),
-      'cart is empty',
+      ErrorCodes.cartEmpty,
     );
     expect(orders, hasLength(2));
     expect(payments, hasLength(2));
@@ -103,7 +104,7 @@ void main() {
     if (AppDatabase.instance.client != null) return;
     // No takeout table at all: takeout is only a label.
     store.tables = [dining()];
-    store.currentCashier = Cashier(id: 'c1', name: 'Ada', pinHash: '', pinSalt: '', initials: 'A');
+    store.currentCashier = Cashier(id: 'c1', name: 'Ada', initials: 'A');
     store.currentShift = CashShift(id: 's1', cashierId: 'c1', openedAt: DateTime.utc(2026, 10, 5), openingCash: 0);
     final kept = [espresso()];
     final first = store.checkoutTakeout(lines: kept, paymentTypeId: 'cash');

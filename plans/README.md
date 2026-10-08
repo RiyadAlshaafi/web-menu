@@ -1,14 +1,14 @@
 # Animation plans
 
-Written against commit `1ca29f8`.
+Written against commit `1ca29f8`. All five are implemented; their files are in `done/`.
 
 | # | Plan | Severity | Status |
 | --- | --- | --- | --- |
-| 001 | [Replace the page transition and respect reduce motion](001-page-transition-and-reduced-motion.md) | HIGH | DONE |
-| 002 | [Make cashier and admin sidebar tab switches instant](002-instant-sidebar-tabs.md) | HIGH | DONE |
-| 003 | [Slide the guest cart bar in and crossfade its totals](003-guest-cart-bar-entrance.md) | MEDIUM | DONE |
-| 004 | [Shake the PIN dots when sign-in fails](004-pin-error-shake.md) | LOW | DONE |
-| 005 | [Highlight new staff calls and bill requests](005-highlight-new-staff-calls.md) | LOW | DONE |
+| 001 | [Replace the page transition and respect reduce motion](done/001-page-transition-and-reduced-motion.md) | HIGH | DONE |
+| 002 | [Make cashier and admin sidebar tab switches instant](done/002-instant-sidebar-tabs.md) | HIGH | DONE |
+| 003 | [Slide the guest cart bar in and crossfade its totals](done/003-guest-cart-bar-entrance.md) | MEDIUM | DONE |
+| 004 | [Shake the PIN dots when sign-in fails](done/004-pin-error-shake.md) | LOW | DONE |
+| 005 | [Highlight new staff calls and bill requests](done/005-highlight-new-staff-calls.md) | LOW | DONE |
 
 ## Order
 

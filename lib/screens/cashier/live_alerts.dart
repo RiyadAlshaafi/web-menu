@@ -162,7 +162,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                         setState(() => selectedOrderId = order.id);
                                         final error = await store.setOrderStatus(order.id, next);
                                         if (error == null || !context.mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                                       },
                               );
                             },
@@ -526,7 +526,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               onPressed: () async {
                 final error = await store.setOrderStatus(order.id, next);
                 if (error == null || !context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
               },
               style: FilledButton.styleFrom(
                 backgroundColor: (order.status == OrderStatus.ready ? _AlertTone.ready : _AlertTone.order).colors.$1,

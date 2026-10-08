@@ -39,6 +39,7 @@ build
 loud -d "$DB" -f supabase/tests/security_and_money_fixes_test.sql
 loud -d "$DB" -f supabase/tests/takeout_and_numbers_test.sql
 loud -d "$DB" -f supabase/tests/app_updates_test.sql
+loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do
@@ -47,6 +48,7 @@ for down in supabase/rollbacks/*.down.sql; do
   quiet -d "$DB" -f "$up"
 done
 loud -d "$DB" -f supabase/tests/app_updates_test.sql
+loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

@@ -10,12 +10,6 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get helloWorld => 'مرحباً بالعالم';
-
-  @override
-  String get welcomeMessage => 'مرحباً بك في كافيه إيطاليانو';
-
-  @override
   String get noTables => 'لم يتم إنشاء طاولات بعد.';
 
   @override
@@ -29,9 +23,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noMenu => 'لا توجد عناصر في القائمة.';
-
-  @override
-  String get menuSoon => 'القائمة قريباً';
 
   @override
   String get noSales => 'لا توجد مبيعات بعد.';
@@ -305,8 +296,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authSignIn => 'تسجيل الدخول';
 
   @override
-  String get authPosFooter =>
-      'نظام نقاط البيع Café Italiano  •  المحطة الطرفية 04  •  بوابة ضيافة آمنة';
+  String authPosFooter(String cafe) {
+    return '$cafe  •  نظام طاولة لنقاط البيع';
+  }
 
   @override
   String get authPinClear => 'مسح';
@@ -422,8 +414,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authReturnToStaffSignIn => '→  العودة إلى دخول الموظفين';
 
   @override
-  String get authChangePasswordFooter =>
-      '© Café Italiano فلورنسا 1984   •   بوابة مصادقة الطرفية v4.9';
+  String authChangePasswordFooter(String cafe, String version) {
+    return '$cafe  •  طاولة $version';
+  }
 
   @override
   String get adminConsoleLabel => 'لوحة الإدارة';
@@ -439,9 +432,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminWorkspace => 'مساحة العمل';
-
-  @override
-  String get adminTerminalBadge => '●  الجهاز رقم 01  ·  اتصال آمن';
 
   @override
   String get adminCustomerView => 'واجهة العميل';
@@ -717,10 +707,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogCafeName => 'اسم المقهى';
 
   @override
-  String get catalogPublicMenuUrl => 'رابط القائمة العام';
+  String get catalogPublicMenuUrl =>
+      'عنوان قائمة الزبائن (يُستخدم في رموز QR للطاولات)';
 
   @override
-  String get catalogPublicMenuUrlHint => 'https://your-cafe.vercel.app';
+  String get catalogPublicMenuUrlHint => 'https://menu.your-cafe.ly';
 
   @override
   String get catalogChooseLogo => 'اختيار الشعار';
@@ -807,9 +798,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierLanguage => 'اللغة';
-
-  @override
-  String get cashierPosTerminal => 'جهاز POS رقم 01';
 
   @override
   String get cashierSoloShiftLive => 'وردية فردية مباشرة';
@@ -1371,7 +1359,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestPaymentSuccessful => 'تم الدفع بنجاح';
 
   @override
-  String get guestThankYou => 'شكرًا لتناولكم الطعام في Cafe Italiano!';
+  String guestThankYou(String cafe) {
+    return 'شكرًا لتناولكم الطعام في $cafe!';
+  }
 
   @override
   String get guestSubtotal => 'المجموع الفرعي';
@@ -2084,4 +2074,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get brandTagline => 'نقاط بيع وطلبات QR للمقاهي';
+
+  @override
+  String get adminSaveQrPng => 'حفظ صورة رمز QR';
+
+  @override
+  String get devPasswordTitle => 'كلمة مرور المطوّر';
+
+  @override
+  String get commonOk => 'موافق';
+
+  @override
+  String get errNotConfigured =>
+      'التطبيق غير متصل بالخادم. تواصل مع مزوّد الخدمة.';
+
+  @override
+  String get errNetwork =>
+      'تعذّر الوصول إلى الخادم. تحقّق من اتصال الإنترنت وحاول مجددًا.';
+
+  @override
+  String get errResetEmailFailed =>
+      'تعذّر إرسال بريد إعادة التعيين. حاول بعد دقيقة.';
+
+  @override
+  String get errPasswordNotChanged => 'لم يتم تغيير كلمة المرور. حاول مجددًا.';
+
+  @override
+  String get authConfirmEmailFirst =>
+      'أكّد الحساب من البريد الذي أرسلناه، ثم سجّل الدخول.';
+
+  @override
+  String get errGeneric => 'حدث خطأ. حاول مجددًا.';
+
+  @override
+  String get errSessionExpired => 'انتهت الجلسة. سجّل الدخول مجددًا.';
+
+  @override
+  String get errSignInAsCashier => 'سجّل الدخول كأمين صندوق أولًا.';
+
+  @override
+  String get errLineNotFound => 'هذا الطبق لم يعد في الطلب.';
+
+  @override
+  String get errCartEmpty => 'السلة فارغة.';
 }

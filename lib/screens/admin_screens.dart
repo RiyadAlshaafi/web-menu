@@ -234,7 +234,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                 : () async {
                     final error = await printTableQr(url: url, tableNumber: item.number, cafeName: store.cafeName);
                     if (error != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                     }
                   },
           ),
@@ -251,14 +251,14 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
               const SizedBox(width: 8),
               IconAction(
                 icon: Icons.download_outlined,
-                tooltip: 'Save PNG',
+                tooltip: context.l10n.adminSaveQrPng,
                 size: 44,
                 onPressed: url.isEmpty
                     ? null
                     : () async {
                         final error = await saveTableQr(url: url, tableNumber: item.number);
                         if (error != null && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                         }
                       },
               ),

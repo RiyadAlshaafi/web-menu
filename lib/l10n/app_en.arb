@@ -1,19 +1,10 @@
 {
   "@@locale": "en",
-  "helloWorld": "Hello World",
-  "@helloWorld": {
-    "description": "Sample greeting"
-  },
-  "welcomeMessage": "Welcome to Café Italiano",
-  "@welcomeMessage": {
-    "description": "Welcome line shown when a locale is active"
-  },
   "noTables": "No tables have been created yet.",
   "noOrders": "No active orders.",
   "noCalls": "No assistance calls.",
   "noBills": "No pending bill requests.",
   "noMenu": "No menu items available.",
-  "menuSoon": "Menu coming soon",
   "noSales": "No sales recorded yet.",
   "noCashiers": "No cashiers have been created yet.",
   "noTransactions": "No transactions yet.",
@@ -141,7 +132,12 @@
   "authCashierSignInSubtitle": "Select cashier profile and enter 4-digit PIN",
   "authAuthenticatingAs": "Authenticating as ",
   "authSignIn": "Sign In",
-  "authPosFooter": "Café Italiano POS System  •  Terminal Station 04  •  Secure Hospitality Gateway",
+  "authPosFooter": "{cafe}  •  Tawla POS",
+  "@authPosFooter": {
+    "placeholders": {
+      "cafe": {"type": "String"}
+    }
+  },
   "authPinClear": "Clear",
   "authStaffPos": "Staff POS  →",
   "authCreateAdminAccess": "Create Admin Access",
@@ -185,13 +181,18 @@
   "authReqSymbol": "Special symbol",
   "authUpdatePasswordCta": "Update Password & Continue  →",
   "authReturnToStaffSignIn": "←  Return to Staff Sign In",
-  "authChangePasswordFooter": "© Café Italiano Firenze 1984   •   Terminal Auth Gateway v4.9",
+  "authChangePasswordFooter": "{cafe}  •  Tawla {version}",
+  "@authChangePasswordFooter": {
+    "placeholders": {
+      "cafe": {"type": "String"},
+      "version": {"type": "String"}
+    }
+  },
   "adminConsoleLabel": "ADMIN CONSOLE",
   "adminManagementHeading": "MANAGEMENT",
   "adminDefaultName": "Admin",
   "adminGeneralManager": "General Manager",
   "adminWorkspace": "Workspace",
-  "adminTerminalBadge": "●  Terminal #01  ·  Secure Node",
   "adminCustomerView": "Customer View",
   "adminFloorOrderingHeading": "FLOOR & ORDERING",
   "adminTablesQrHub": "Tables & QR Hub",
@@ -371,7 +372,6 @@
   "catalogCashierPinLabel": "4-digit secret passcode",
   "catalogSaveCashier": "Save Cashier",
   "cashierLanguage": "Language",
-  "cashierPosTerminal": "POS TERMINAL 01",
   "cashierSoloShiftLive": "Solo Shift Live",
   "cashierAllInOne": "ALL-IN-ONE",
   "cashierRole": "Cashier",
@@ -807,7 +807,12 @@
   },
   "guestPaid": "PAID",
   "guestPaymentSuccessful": "Payment Successful",
-  "guestThankYou": "Thank you for dining with Cafe Italiano!",
+  "guestThankYou": "Thank you for dining with {cafe}!",
+  "@guestThankYou": {
+    "placeholders": {
+      "cafe": {"type": "String"}
+    }
+  },
   "guestSubtotal": "Subtotal",
   "guestServiceCharge": "Service Charge ({percent}%)",
   "@guestServiceCharge": {
@@ -1118,5 +1123,21 @@
   "guestPoweredBy": "Powered by",
   "payTypeLabel": "Payment type",
   "cashierCashOut": "Cash out",
-  "brandTagline": "Cafe POS & QR ordering"
+  "brandTagline": "Cafe POS & QR ordering",
+  "adminSaveQrPng": "Save QR image",
+  "devPasswordTitle": "Developer password",
+  "commonOk": "OK",
+  "errNotConfigured": "The app is not connected to its server. Contact your provider.",
+  "errNetwork": "Could not reach the server. Check the internet connection and try again.",
+  "errResetEmailFailed": "The reset email could not be sent. Try again in a minute.",
+  "errPasswordNotChanged": "The password was not changed. Try again.",
+  "authConfirmEmailFirst": "Confirm the account from the email we sent, then sign in.",
+  "catalogPublicMenuUrl": "Guest menu address (used in table QR codes)",
+  "catalogPublicMenuUrlHint": "https://menu.your-cafe.ly",
+  "errGeneric": "Something went wrong. Try again.",
+  "errSessionExpired": "Your session ended. Sign in again.",
+  "errNoOpenBill": "This table has no open bill.",
+  "errSignInAsCashier": "Sign in as a cashier first.",
+  "errLineNotFound": "That dish is no longer on the order.",
+  "errCartEmpty": "The cart is empty."
 }

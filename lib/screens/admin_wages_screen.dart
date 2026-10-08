@@ -312,12 +312,12 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               pw.TableHelper.fromTextArray(
                 cellBuilder: (index, data, rowNum) => pdfText('$data'),
                 headers: [
-                  pdfText('ID', bold: true),
-                  pdfText('When', bold: true),
-                  pdfText('Cashier', bold: true),
-                  pdfText('Type', bold: true),
-                  pdfText('Description', bold: true),
-                  pdfText('Amount', bold: true),
+                  pdfText(store.l10n.expenseColId, bold: true),
+                  pdfText(store.l10n.expenseColWhen, bold: true),
+                  pdfText(store.l10n.expenseColCashier, bold: true),
+                  pdfText(store.l10n.expenseColType, bold: true),
+                  pdfText(store.l10n.expenseColDescription, bold: true),
+                  pdfText(store.l10n.expenseColAmount, bold: true),
                 ],
                 data: [
                   for (final row in rows)

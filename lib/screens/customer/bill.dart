@@ -69,7 +69,7 @@ class CustomerBillScreen extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 Text(context.l10n.guestPaid, style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2, color: CafeColors.success)),
                                 Text(context.l10n.guestPaymentSuccessful, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-                                Text(context.l10n.guestThankYou, textAlign: TextAlign.center, style: const TextStyle(color: GuestTokens.muted)),
+                                Text(context.l10n.guestThankYou(store.cafeName), textAlign: TextAlign.center, style: const TextStyle(color: GuestTokens.muted)),
                               ],
                             ),
                           ),
@@ -148,7 +148,7 @@ class CustomerBillScreen extends StatelessWidget {
                       }
                       final error = await store.requestBill(table.id);
                       if (!context.mounted || error == null) return;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                     },
                   ),
               ],

@@ -171,7 +171,7 @@ class CustomerCartScreen extends StatelessWidget {
                                   final error = await store.requestBill(table.id);
                                   if (!context.mounted) return;
                                   if (error != null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                                     return;
                                   }
                                   context.go('/t/$tableSlug/bill');

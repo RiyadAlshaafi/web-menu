@@ -265,7 +265,6 @@ void main() {
     await again.load();
     expect(again.hasAdmin, isTrue);
     expect(again.admin?.email, 'admin@cafeitaliano.com');
-    expect(AppDatabase.instance.isSqlite, isFalse);
   });
 
   test('hidden categories stay off the guest menu', () async {

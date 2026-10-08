@@ -36,7 +36,7 @@ class CafeLogo extends StatelessWidget {
     } on ProviderNotFoundException {
       store = null;
     }
-    final title = store?.cafeName ?? 'Café Italiano';
+    final title = store?.cafeName ?? 'Tawla';
     final logo = store?.logoUrl ?? '';
     final titleColor = light ? Colors.white : CafeColors.ink;
     return Row(

@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
+import '../data/error_codes.dart';
 import '../device_location.dart';
 import '../models/models.dart';
 import '../money.dart';
@@ -137,7 +138,6 @@ class CafeStore extends ChangeNotifier {
     if (!serverUnreachable) await db.waitForFirstLoad(const Duration(seconds: 15));
     cafe = db.cafe;
     locale = db.locale;
-    await _loadGuestLocale();
     admin = db.admin;
     cashiers = db.cashiers;
     tables = db.tables;
@@ -223,8 +223,24 @@ class CafeStore extends ChangeNotifier {
   final Set<String> _sendingTables = {};
   final Set<String> _confirmingOrders = {};
 
+  /// A live update arrived while a local save was running.
+  bool _syncDeferred = false;
+
+  /// Ends one local save; runs the live update that arrived during it.
+  void _writeFinished() {
+    if (_pendingWrites > 0) _pendingWrites -= 1;
+    if (_pendingWrites == 0 && _syncDeferred) {
+      _syncDeferred = false;
+      unawaited(syncFromDisk());
+    }
+  }
+
   Future<void> syncFromDisk() async {
-    if (_pendingWrites > 0) return;
+    if (_pendingWrites > 0) {
+      // Loading now would bring back the pre-save copy; sync once it lands.
+      _syncDeferred = true;
+      return;
+    }
     await db.refreshFromDisk(liveOnly: true);
     final next = _stampFromDb();
     if (next != _syncStamp) {
@@ -250,10 +266,8 @@ class CafeStore extends ChangeNotifier {
     if (ids.isEmpty) return;
     _assigningNumbers = true;
     try {
-      for (final id in ids) {
-        final error = await db.assignShiftOrderNumber(id);
-        if (_sessionExpired(error)) return;
-      }
+      final error = await db.assignShiftOrderNumbers(ids);
+      if (_sessionExpired(error)) return;
       await db.refreshFromDisk(liveOnly: true);
       _hydrateOperational();
       _syncStampCache = null;
@@ -453,9 +467,7 @@ class CafeStore extends ChangeNotifier {
   AppLocalizations get guestL10n => lookupAppLocalizations(Locale(guestLocale));
 
   /// The guest's language is asked on every scan (each fresh page load) and kept
-  /// only for that visit; a choice saved on the phone used to skip the question.
-  Future<void> _loadGuestLocale() async {}
-
+  /// only for that visit, so nothing is saved on the phone.
   Future<void> setGuestLocale(String value) async {
     if (value != 'en' && value != 'ar') return;
     guestLocaleOverride = value;
@@ -478,7 +490,7 @@ class CafeStore extends ChangeNotifier {
     if (password != confirm) return l10n.errPasswordsMismatch;
     if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
     if (db.client == null) {
-      return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before creating an admin.';
+      return l10n.errNotConfigured;
     }
     final AuthResponse response;
     try {
@@ -495,12 +507,12 @@ class CafeStore extends ChangeNotifier {
       return error.message;
     } catch (error, stackTrace) {
       reportError('create admin', error, stackTrace);
-      return 'Could not reach Supabase: $error';
+      return l10n.errNetwork;
     }
     if (response.session == null) {
       await db.refreshFromDisk();
       _afterRelink();
-      return 'Confirm the account from the email Supabase sent, then sign in. In Supabase Auth, turn off Confirm email if you want to enter immediately.';
+      return l10n.authConfirmEmailFirst;
     }
     await db.refreshFromDisk();
     _hydrateOperational();
@@ -518,7 +530,7 @@ class CafeStore extends ChangeNotifier {
     bool remember = false,
   }) async {
     if (db.client == null) {
-      return 'Add SUPABASE_URL and SUPABASE_ANON_KEY before signing in.';
+      return l10n.errNotConfigured;
     }
     try {
       await db.client!.auth.signInWithPassword(
@@ -534,7 +546,7 @@ class CafeStore extends ChangeNotifier {
       return adminError;
     } catch (error, stackTrace) {
       reportError('admin sign in', error, stackTrace);
-      adminError = 'Could not reach Supabase: $error';
+      adminError = l10n.errNetwork;
       notifyListeners();
       return adminError;
     }
@@ -566,15 +578,25 @@ class CafeStore extends ChangeNotifier {
     return null;
   }
 
-  Future<void> requestPasswordReset(String email) async {
+  /// Sends the recovery code. Returns a translated error, or null when sent.
+  Future<String?> requestPasswordReset(String email) async {
+    final client = db.client;
+    if (client == null) return l10n.errNotConfigured;
     otpEmail = email.trim().toLowerCase();
     otpVerified = false;
+    try {
+      await client.auth.resetPasswordForEmail(otpEmail);
+    } on AuthException catch (error, stackTrace) {
+      reportError('password reset email', error, stackTrace);
+      return l10n.errResetEmailFailed;
+    } catch (error, stackTrace) {
+      reportError('password reset email', error, stackTrace);
+      return l10n.errNetwork;
+    }
     otpSentAt = DateTime.now();
     otpResendAt = DateTime.now().add(const Duration(seconds: 44));
-    if (db.client != null) {
-      await db.client!.auth.resetPasswordForEmail(otpEmail);
-    }
     notifyListeners();
+    return null;
   }
 
   bool get canResendOtp =>
@@ -603,8 +625,17 @@ class CafeStore extends ChangeNotifier {
     if (!otpVerified) return l10n.errVerifyCodeFirst;
     if (password != confirm) return l10n.errPasswordsMismatch;
     if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
-    if (db.client == null) return l10n.errNoAdmin;
-    await db.client!.auth.updateUser(UserAttributes(password: password));
+    final client = db.client;
+    if (client == null) return l10n.errNotConfigured;
+    try {
+      await client.auth.updateUser(UserAttributes(password: password));
+    } on AuthException catch (error, stackTrace) {
+      reportError('complete password reset', error, stackTrace);
+      return l10n.errPasswordNotChanged;
+    } catch (error, stackTrace) {
+      reportError('complete password reset', error, stackTrace);
+      return l10n.errNetwork;
+    }
     otpVerified = false;
     notifyListeners();
     return null;
@@ -756,7 +787,14 @@ class CafeStore extends ChangeNotifier {
     offlineSession = false;
     _stopCashierPulse();
     stopLiveSync();
-    db.client?.auth.signOut();
+    final auth = db.client?.auth;
+    if (auth != null) {
+      unawaited(
+        auth.signOut().catchError((Object error, StackTrace stackTrace) {
+          reportError('sign out', error, stackTrace);
+        }),
+      );
+    }
     notifyListeners();
   }
 
@@ -809,7 +847,7 @@ class CafeStore extends ChangeNotifier {
       return l10n.catalogCurrentPasswordWrong;
     } catch (error, stackTrace) {
       reportError('change password check', error, stackTrace);
-      return 'Could not reach Supabase: $error';
+      return l10n.errNetwork;
     }
     try {
       await client.auth.updateUser(UserAttributes(password: next));
@@ -818,7 +856,7 @@ class CafeStore extends ChangeNotifier {
       return error.message;
     } catch (error, stackTrace) {
       reportError('change password', error, stackTrace);
-      return 'Could not reach Supabase: $error';
+      return l10n.errNetwork;
     }
     return null;
   }

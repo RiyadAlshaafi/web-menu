@@ -152,7 +152,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                     ],
                     if (failure != null) ...[
                       const SizedBox(height: 8),
-                      Text(failure!, style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
+                      Text(context.l10n.errorText(failure!), style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
                     ],
                     const SizedBox(height: 14),
                     SizedBox(

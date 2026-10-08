@@ -10,6 +10,8 @@ import '../models/models.dart';
 import '../offline/offline_sync.dart' show isNetworkError;
 import '../time_format.dart';
 import '../report_error.dart';
+import 'error_codes.dart';
+import 'image_shrink.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
 import 'sales_history.dart';
 
@@ -96,7 +98,7 @@ class AppDatabase {
 
   Map<String, dynamic> _cafe = {
     'name': '',
-    'serviceChargeRate': 0.10,
+    'serviceChargeRate': 0.0,
     'taxRate': 0,
     'autoPrintReceipt': true,
   };
@@ -117,8 +119,6 @@ class AppDatabase {
   List<StaffCall> _calls = [];
 
   bool get isConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
-  String get databasePath => isConfigured ? 'supabase' : 'not configured';
-  bool get isSqlite => false;
   SupabaseClient? get client => _ready ? Supabase.instance.client : null;
 
   Map<String, dynamic> get cafe => Map<String, dynamic>.from(_cafe);
@@ -138,8 +138,6 @@ class AppDatabase {
   List<CashShift> get shifts => List<CashShift>.from(_shifts);
   List<ShiftExpense> get expenses => List<ShiftExpense>.from(_expenses);
   List<StaffCall> get calls => List<StaffCall>.from(_calls);
-  Map<String, dynamic>? get otp => null;
-  int get nextOrderId => 1001;
 
   Future<void> init({bool memory = false}) async {
     if (memory) {
@@ -228,7 +226,7 @@ class AppDatabase {
       return null;
     } catch (error, stack) {
       reportError('bind slot', error, stack);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -259,7 +257,7 @@ class AppDatabase {
     guestSlug = null;
     anyAdmin = false;
     adminFromOtherCafe = false;
-    _cafe = {'name': '', 'serviceChargeRate': 0.10, 'taxRate': 0, 'autoPrintReceipt': true};
+    _cafe = {'name': '', 'serviceChargeRate': 0.0, 'taxRate': 0, 'autoPrintReceipt': true};
     _locale = 'en';
     _admin = null;
     _cashiers = [];
@@ -285,6 +283,7 @@ class AppDatabase {
     final channel = _syncChannel;
     _syncChannel = null;
     _listening = false;
+    _listenRestaurantId = null;
     _realtimeLive = false;
     _realtimeSeenDrop = false;
     if (channel != null) {
@@ -301,83 +300,95 @@ class AppDatabase {
     }
   }
 
+  /// Tables whose changes refresh this device, all carrying `restaurant_id`.
+  static const _liveTables = [
+    'orders',
+    'order_lines',
+    'carts',
+    'cart_lines',
+    'staff_calls',
+    'menu_items',
+    'menu_categories',
+    'dining_tables',
+    'shift_expenses',
+    'shifts',
+    'payments',
+    'payment_types',
+    'expense_categories',
+  ];
+
+  /// The cafe the open realtime channel is filtered on.
+  String? _listenRestaurantId;
+
+  /// Subscribes to this cafe's changes only. Without a cafe yet (a guest's
+  /// first load) nothing is subscribed; [_relistenIfCafeChanged] opens the
+  /// channel once the cafe is known.
   void _listen() {
     if (_listening || client == null) return;
+    final rid = restaurantId ?? boundRestaurantId;
+    if (rid == null) return;
     try {
       _listening = true;
+      _listenRestaurantId = rid;
       void scheduleLive() {
         _liveRefresh?.cancel();
         _liveRefresh = Timer(const Duration(milliseconds: 300), _emitLive);
       }
 
-      _syncChannel = client!
-          .channel('cafe-sync')
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'orders',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'order_lines',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'carts',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'cart_lines',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'staff_calls',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'menu_items',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'dining_tables',
-            callback: (_) => scheduleLive(),
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'shift_expenses',
-            callback: (_) => scheduleLive(),
-          )
-          .subscribe((status, _) {
-            if (status == RealtimeSubscribeStatus.subscribed) {
-              final reconnect = _realtimeSeenDrop;
-              _realtimeSeenDrop = false;
-              _realtimeLive = true;
-              if (reconnect) _emitLive();
-            } else if (status == RealtimeSubscribeStatus.closed ||
-                status == RealtimeSubscribeStatus.channelError ||
-                status == RealtimeSubscribeStatus.timedOut) {
-              if (_realtimeLive) _realtimeSeenDrop = true;
-              _realtimeLive = false;
-            }
-          });
+      var channel = client!.channel('cafe-sync:$rid');
+      for (final table in _liveTables) {
+        channel = channel.onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: table,
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'restaurant_id',
+            value: rid,
+          ),
+          callback: (_) => scheduleLive(),
+        );
+      }
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'restaurants',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'id',
+          value: rid,
+        ),
+        callback: (_) => scheduleLive(),
+      );
+      _syncChannel = channel.subscribe((status, _) {
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          final reconnect = _realtimeSeenDrop;
+          _realtimeSeenDrop = false;
+          _realtimeLive = true;
+          if (reconnect) _emitLive();
+        } else if (status == RealtimeSubscribeStatus.closed ||
+            status == RealtimeSubscribeStatus.channelError ||
+            status == RealtimeSubscribeStatus.timedOut) {
+          if (_realtimeLive) _realtimeSeenDrop = true;
+          _realtimeLive = false;
+        }
+      });
     } catch (error, stack) {
       _listening = false;
       _syncChannel = null;
+      _listenRestaurantId = null;
       reportError('realtime setup', error, stack);
     }
+  }
+
+  /// Reopens the channel when the device's cafe changed (sign-in, relink,
+  /// a guest's first load), so it never listens to the wrong cafe.
+  void _relistenIfCafeChanged() {
+    if (onLiveChange == null && !_listening) return;
+    final rid = restaurantId ?? boundRestaurantId;
+    if (rid == _listenRestaurantId) return;
+    stopRealtime();
+    _listen();
   }
 
   void _applyHeaders() {
@@ -485,7 +496,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online',
+          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online',
         )
         .eq('id', id)
         .maybeSingle();
@@ -494,12 +505,13 @@ class AppDatabase {
     _cafe = {
       'name': restaurant['name'] ?? '',
       'logoUrl': restaurant['logo_url'] ?? '',
+      'publicMenuUrl': restaurant['public_menu_url'] ?? '',
       'headerColor': restaurant['header_color'] ?? '',
       'sidebarColor': restaurant['sidebar_color'] ?? '',
       'backgroundColor': restaurant['background_color'] ?? '',
       'buttonColor': restaurant['button_color'] ?? '',
       'serviceChargeRate':
-          (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0.10,
+          (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0,
       'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
       'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
       'requireCashierOnline': restaurant['require_cashier_online'] as bool? ?? false,
@@ -552,13 +564,13 @@ class AppDatabase {
     final watch = Stopwatch()..start();
     _applyHeaders();
     final user = client!.auth.currentUser;
+    final cafeId = restaurantId ?? boundRestaurantId;
     final opened = await Future.wait<dynamic>([
-      client!.rpc(
-        'has_any_admin',
-        params: (restaurantId ?? boundRestaurantId) == null
-            ? null
-            : {'p_restaurant_id': restaurantId ?? boundRestaurantId},
-      ),
+      // An unlinked device has no cafe whose admin it could sign in, so it
+      // is sent to the setup screen, which asks for the device to be linked.
+      cafeId == null
+          ? Future<dynamic>.value(false)
+          : client!.rpc('has_any_admin', params: {'p_restaurant_id': cafeId}),
       if (user != null)
         client!
             .from('profiles')
@@ -588,8 +600,6 @@ class AppDatabase {
       restaurantId = profileRestaurant;
       _admin = AdminAccount(
         email: user.email ?? '',
-        passwordHash: '',
-        passwordSalt: '',
         displayName: profile?['display_name'] as String? ?? 'Admin',
       );
       _rememberAdmin = true;
@@ -637,9 +647,6 @@ class AppDatabase {
           ),
         )
         .toList();
-    final previousImages = {
-      for (final item in _menuItems) item.id: item.imageUrl,
-    };
     final guestTableId = guest
         ? _tables
               .where((table) => table.qrSlug == guestSlug)
@@ -649,8 +656,12 @@ class AppDatabase {
     final staffed = !guest && (client!.auth.currentUser != null || cashierToken != null);
     final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
     Future<List<dynamic>> loadCarts() async {
+      if (!guest) {
+        // Only carts that hold something; empty carts outnumber them and
+        // change nothing on staff screens.
+        return await client!.from('carts').select('*, cart_lines!inner(*)') as List;
+      }
       final query = client!.from('carts').select('*, cart_lines(*)');
-      if (!guest) return await query as List;
       if (guestTableId == null) return const [];
       return await query.eq('table_id', guestTableId) as List;
     }
@@ -660,21 +671,27 @@ class AppDatabase {
       liveOnly ? Future<dynamic>.value(null) : client!.from('menu_categories').select(),
       liveOnly
           ? client!.from('menu_items').select(
-              'id, name_it, name_en, description, price, category_id, available, sold_out, featured, sort_order, discount_percent, discount_applied',
+              'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied',
             )
           : client!.from('menu_items').select(),
       loadCarts(),
-      guest ? Future<dynamic>.value(null) : client!.from('staff_calls').select(),
+      guest ? Future<dynamic>.value(null) : _selectCalls(),
       // Guests need the list too: they pick how they will pay on their bill.
       _selectOrEmpty(client!.from('payment_types').select().order('sort_order', ascending: true), 'payment types'),
       guest
           ? Future<dynamic>.value(null)
           : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
-      staffed ? client!.from('shift_expenses').select().order('created_at') : Future<dynamic>.value(null),
+      staffed
+          ? client!
+                .from('shift_expenses')
+                .select()
+                .gte('created_at', historyFrom.toUtc().toIso8601String())
+                .order('created_at')
+          : Future<dynamic>.value(null),
       guest
           ? (guestTableId == null ? Future<dynamic>.value(<CafeOrder>[]) : _loadOpenOrdersForTable(guestTableId))
           : _loadOrders(historyFrom, const {}),
-      staffed ? client!.from('shifts').select() : Future<dynamic>.value(null),
+      staffed ? _selectShifts(historyFrom) : Future<dynamic>.value(null),
       // An unlinked device has no cafe to list cashiers for.
       (!liveOnly && !guest && restaurantId != null)
           ? client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId})
@@ -703,8 +720,6 @@ class AppDatabase {
         return Cashier(
           id: map['id'] as String,
           name: map['name'] as String,
-          pinHash: '',
-          pinSalt: '',
           initials: map['initials'] as String? ?? 'C',
         );
       }).toList();
@@ -719,9 +734,7 @@ class AppDatabase {
             description: row['description'] as String? ?? '',
             price: (row['price'] as num).toDouble(),
             categoryId: row['category_id'] as String,
-            imageUrl: liveOnly
-                ? (previousImages[row['id'] as String] ?? '')
-                : (row['image_url'] as String? ?? ''),
+            imageUrl: row['image_url'] as String? ?? '',
             available: row['available'] as bool? ?? true,
             soldOut: row['sold_out'] as bool? ?? false,
             featured: row['featured'] as bool? ?? false,
@@ -771,21 +784,7 @@ class AppDatabase {
           resolved: row['resolved'] as bool? ?? false,
         );
       }).toList();
-      final typeRows = batch[5] as List?;
-      _paymentTypes = typeRows == null
-          ? []
-          : typeRows
-                .map(
-                  (row) => PaymentType(
-                    id: row['id'] as String,
-                    nameEn: row['name_en'] as String? ?? '',
-                    nameAr: row['name_ar'] as String? ?? '',
-                    enabled: row['enabled'] as bool? ?? true,
-                    sortOrder: row['sort_order'] as int? ?? 0,
-                    archived: row['archived'] as bool? ?? false,
-                  ),
-                )
-                .toList();
+      _paymentTypes = _mapPaymentTypes(batch[5] as List?);
       final expenseCategoryRows = batch[6] as List?;
       _expenseCategories = expenseCategoryRows == null
           ? []
@@ -851,11 +850,38 @@ class AppDatabase {
       }
     }
     _rememberWritten();
+    _relistenIfCafeChanged();
     loadedOnce = true;
     if (kDebugMode) {
       debugPrint('refreshFromDisk ${watch.elapsedMilliseconds}ms liveOnly=$liveOnly');
     }
     return true;
+  }
+
+  /// Open calls plus the last day of resolved ones; older calls are history
+  /// nobody reads on a till.
+  Future<List<dynamic>> _selectCalls() async {
+    final since = DateTime.now()
+        .subtract(const Duration(hours: 24))
+        .toUtc()
+        .toIso8601String();
+    return await client!
+            .from('staff_calls')
+            .select()
+            .or('resolved.eq.false,created_at.gte.$since')
+            .order('created_at', ascending: false)
+            .limit(500)
+        as List;
+  }
+
+  /// Open shifts plus those opened inside the sales window.
+  Future<List<dynamic>> _selectShifts(DateTime from) async {
+    return await client!
+            .from('shifts')
+            .select()
+            .or('closed_at.is.null,opened_at.gte.${from.toUtc().toIso8601String()}')
+            .order('opened_at', ascending: false)
+        as List;
   }
 
   Future<void> loadMoreSales() async {
@@ -1054,8 +1080,6 @@ class AppDatabase {
     );
   }
 
-  Future<int> takeNextOrderId() async => nextOrderId;
-  Future<void> writeOtp(Map<String, dynamic>? value) async {}
   Future<void> writeRememberAdmin(bool value) async => _rememberAdmin = value;
   Future<void> writeAdmin(AdminAccount? admin) async => _admin = admin;
 
@@ -1088,11 +1112,12 @@ class AppDatabase {
         .update({
           'name': cafe['name'] ?? '',
           'logo_url': cafe['logoUrl'] ?? '',
+          'public_menu_url': cafe['publicMenuUrl'] ?? '',
           'header_color': cafe['headerColor'] ?? '',
           'sidebar_color': cafe['sidebarColor'] ?? '',
           'background_color': cafe['backgroundColor'] ?? '',
           'button_color': cafe['buttonColor'] ?? '',
-          'service_charge_rate': cafe['serviceChargeRate'] ?? 0.10,
+          'service_charge_rate': cafe['serviceChargeRate'] ?? 0,
           'tax_rate': cafe['taxRate'] ?? 0,
           'locale': _locale,
         })
@@ -1118,7 +1143,7 @@ class AppDatabase {
     String pin,
   ) async {
     if (client == null) {
-      return {'ok': false, 'error': 'Supabase is not configured.'};
+      return {'ok': false, 'error': ErrorCodes.notConfigured};
     }
     try {
       final raw = await client!.rpc(
@@ -1135,7 +1160,7 @@ class AppDatabase {
       return result;
     } catch (error, stackTrace) {
       reportError('cashier login', error, stackTrace);
-      return {'ok': false, 'error': '$error'};
+      return {'ok': false, 'error': _errorCode(error)};
     }
   }
 
@@ -1145,7 +1170,7 @@ class AppDatabase {
     bool applyService = true,
     String? paymentTypeId,
   }) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     try {
       _applyHeaders();
       final raw = await client!.rpc(
@@ -1165,7 +1190,7 @@ class AppDatabase {
       return result['error'] as String? ?? 'Payment failed.';
     } catch (error, stackTrace) {
       reportError('settle cash', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1218,7 +1243,7 @@ class AppDatabase {
   }
 
   Future<String?> assignShiftOrderNumber(String orderId) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     final raw = await client!.rpc(
       'assign_shift_order_number',
@@ -1229,8 +1254,32 @@ class AppDatabase {
     return result['error'] as String? ?? 'Order number was not assigned.';
   }
 
+  /// Numbers several open orders in one call. Falls back to one call per
+  /// order on a server that does not have the batch function yet.
+  Future<String?> assignShiftOrderNumbers(List<String> orderIds) async {
+    if (client == null) return ErrorCodes.notConfigured;
+    if (orderIds.isEmpty) return null;
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(
+        'assign_shift_order_numbers',
+        params: {'p_order_ids': orderIds},
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) return null;
+      return result['error'] as String? ?? 'Order number was not assigned.';
+    } on PostgrestException catch (error) {
+      if (error.code != 'PGRST202') rethrow;
+      for (final id in orderIds) {
+        final failure = await assignShiftOrderNumber(id);
+        if (failure == 'session expired, sign in again') return failure;
+      }
+      return null;
+    }
+  }
+
   Future<String?> setTablePaymentType(String qrSlug, String typeId) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     final raw = await client!.rpc(
       'set_table_payment_type',
@@ -1245,7 +1294,7 @@ class AppDatabase {
   }
 
   Future<String?> changePaymentType(String paymentId, String typeId) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     final raw = await client!.rpc(
       'change_payment_type',
@@ -1261,7 +1310,7 @@ class AppDatabase {
 
   Future<String?> addPaymentType(String nameEn, String nameAr) async {
     if (client == null || restaurantId == null) {
-      return 'Supabase is not configured.';
+      return ErrorCodes.notConfigured;
     }
     final sort =
         _paymentTypes.fold<int>(
@@ -1280,12 +1329,12 @@ class AppDatabase {
       return null;
     } catch (error, stackTrace) {
       reportError('add payment type', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
   Future<String?> savePaymentType(PaymentType type) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!
           .from('payment_types')
@@ -1300,25 +1349,25 @@ class AppDatabase {
       return null;
     } catch (error, stackTrace) {
       reportError('save payment type', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
   Future<String?> deletePaymentType(String id) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!.from('payment_types').delete().eq('id', id);
       await refreshFromDisk();
       return null;
     } catch (error, stackTrace) {
       reportError('delete payment type', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
   Future<String?> addExpenseCategory(String nameEn, String nameAr) async {
     if (client == null || restaurantId == null) {
-      return 'Supabase is not configured.';
+      return ErrorCodes.notConfigured;
     }
     final sort =
         _expenseCategories.fold<int>(
@@ -1337,12 +1386,12 @@ class AppDatabase {
       return null;
     } catch (error, stackTrace) {
       reportError('add expense category', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
   Future<String?> saveExpenseCategory(ExpenseCategory category) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!
           .from('expense_categories')
@@ -1356,19 +1405,19 @@ class AppDatabase {
       return null;
     } catch (error, stackTrace) {
       reportError('save expense category', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
   Future<String?> deleteExpenseCategory(String id) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!.from('expense_categories').delete().eq('id', id);
       await refreshFromDisk();
       return null;
     } catch (error, stackTrace) {
       reportError('delete expense category', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1385,7 +1434,7 @@ class AppDatabase {
       return null;
     } catch (error, stackTrace) {
       reportError('deactivate cashier', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1444,11 +1493,18 @@ class AppDatabase {
     Iterable<MenuItem> changed = const [],
     Iterable<String> deleted = const [],
   }) async {
+    final previousImages = {
+      for (final item in _menuItems) item.id: item.imageUrl,
+    };
     _menuItems = all;
     if (client == null || restaurantId == null) return;
     final rows = <Map<String, dynamic>>[];
     for (final item in changed) {
-      final image = await _storeImage(item.id, item.imageUrl);
+      final image = await _storeImage(
+        item.id,
+        item.imageUrl,
+        previous: previousImages[item.id],
+      );
       item.imageUrl = image;
       rows.add({
         'id': item.id,
@@ -1535,7 +1591,7 @@ class AppDatabase {
     required int radiusM,
   }) async {
     if (client == null || restaurantId == null) {
-      return 'Supabase is not configured.';
+      return ErrorCodes.notConfigured;
     }
     try {
       final raw = await client!.rpc(
@@ -1568,7 +1624,7 @@ class AppDatabase {
   }
 
   Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {
-    if (client == null) return {'ok': false, 'error': 'Supabase is not configured.'};
+    if (client == null) return {'ok': false, 'error': ErrorCodes.notConfigured};
     try {
       _applyHeaders();
       final raw = await client!.rpc(name, params: {'p_password': password, ...?extra});
@@ -1576,12 +1632,12 @@ class AppDatabase {
       return {'ok': false, 'error': 'Unexpected response from $name.'};
     } catch (error, stackTrace) {
       reportError(name, error, stackTrace);
-      return {'ok': false, 'error': '$error'};
+      return {'ok': false, 'error': _errorCode(error)};
     }
   }
 
   Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     try {
       final raw = await client!.rpc(
@@ -1603,7 +1659,7 @@ class AppDatabase {
       return result['error'] as String? ?? 'Payment failed.';
     } catch (error, stackTrace) {
       reportError('quick takeout', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1615,7 +1671,7 @@ class AppDatabase {
     double? lng,
     double? accuracyM,
   }) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     await _cartWrites;
     _applyHeaders();
     final cart = _carts[tableId];
@@ -1746,7 +1802,7 @@ class AppDatabase {
       return result['error'] as String? ?? 'not_found';
     } catch (error, stackTrace) {
       reportError('shift expense', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1756,7 +1812,7 @@ class AppDatabase {
     required double amount,
     required String description,
   }) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     try {
       final raw = await client!.rpc(
@@ -1776,7 +1832,7 @@ class AppDatabase {
       return result['error'] as String? ?? 'not_found';
     } catch (error, stackTrace) {
       reportError('edit cash movement', error, stackTrace);
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -1861,7 +1917,7 @@ class AppDatabase {
     ];
     _cashiers = [
       for (final r in rows('cashiers'))
-        Cashier(id: r['id'] as String, name: r['name'] as String, pinHash: '', pinSalt: '', initials: r['initials'] as String? ?? 'C'),
+        Cashier(id: r['id'] as String, name: r['name'] as String, initials: r['initials'] as String? ?? 'C'),
     ];
     _orders = [];
     _payments = [];
@@ -1891,7 +1947,7 @@ class AppDatabase {
       return {'ok': false, 'error': 'Unexpected response from $name.'};
     } catch (error, stackTrace) {
       reportError(label, error, stackTrace);
-      return {'ok': false, 'error': '$error'};
+      return {'ok': false, 'error': _errorCode(error)};
     }
   }
 
@@ -1998,7 +2054,7 @@ class AppDatabase {
   }
 
   Future<String?> setItemAvailable(String itemId, bool available) async {
-    if (client == null) return 'Supabase is not configured.';
+    if (client == null) return ErrorCodes.notConfigured;
     final match = _menuItems.where((item) => item.id == itemId);
     final previous = match.isEmpty ? null : match.first.available;
     if (match.isNotEmpty) match.first.available = available;
@@ -2013,7 +2069,7 @@ class AppDatabase {
       if (match.isNotEmpty && previous != null) {
         match.first.available = previous;
       }
-      return '$error';
+      return _errorCode(error);
     }
   }
 
@@ -2043,31 +2099,67 @@ class AppDatabase {
     }
   }
 
-  Future<String> storeLogo(String value) => _storeImage('logo', value);
+  Future<String> storeLogo(String value) =>
+      _storeImage('logo', value, previous: _cafe['logoUrl'] as String?);
 
-  Future<String> _storeImage(String itemId, String value) async {
+  /// Uploads a picked image (a data: URL) shrunk to [maxImageSide], under a
+  /// new name each time so phones and the CDN never show the old picture,
+  /// then removes [previous] from storage. Anything that is not a data: URL
+  /// is already stored and is returned unchanged.
+  Future<String> _storeImage(
+    String itemId,
+    String value, {
+    String? previous,
+  }) async {
     if (client == null || restaurantId == null || !value.startsWith('data:')) {
       return value;
     }
     final comma = value.indexOf(',');
     if (comma < 0) return value;
     final meta = value.substring(5, comma);
-    final bytes = base64Decode(value.substring(comma + 1));
-    final ext = meta.contains('png') ? 'png' : 'jpg';
-    final path = '$restaurantId/$itemId.$ext';
-    await client!.storage
-        .from('menu-images')
-        .uploadBinary(
-          path,
-          Uint8List.fromList(bytes),
-          fileOptions: FileOptions(
-            upsert: true,
-            contentType: meta.split(';').first,
-          ),
-        );
-    return client!.storage.from('menu-images').getPublicUrl(path);
+    final original = base64Decode(value.substring(comma + 1));
+    final shrunk = shrinkImage(original);
+    final bytes = shrunk?.bytes ?? original;
+    final ext = shrunk?.extension ?? (meta.contains('png') ? 'png' : 'jpg');
+    final contentType = shrunk?.contentType ?? meta.split(';').first;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final path = '$restaurantId/$itemId-$stamp.$ext';
+    final bucket = client!.storage.from(_imageBucket);
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: contentType),
+    );
+    final oldPath = _storedImagePath(previous);
+    if (oldPath != null && oldPath != path) {
+      try {
+        await bucket.remove([oldPath]);
+      } catch (error, stackTrace) {
+        // A left-over file only costs storage; the new picture is saved.
+        reportError('remove old image', error, stackTrace);
+      }
+    }
+    return bucket.getPublicUrl(path);
+  }
+
+  static const _imageBucket = 'menu-images';
+
+  /// The storage path of [url] when it is a picture this cafe stored, else null.
+  String? _storedImagePath(String? url) {
+    if (url == null || url.isEmpty || restaurantId == null) return null;
+    const marker = '/object/public/$_imageBucket/';
+    final at = url.indexOf(marker);
+    if (at < 0) return null;
+    final path = Uri.decodeComponent(
+      url.substring(at + marker.length).split('?').first,
+    );
+    return path.startsWith('$restaurantId/') ? path : null;
   }
 }
+
+/// What a failed server call tells the screens; the details were logged.
+String _errorCode(Object error) =>
+    isNetworkError(error) ? ErrorCodes.network : ErrorCodes.failed;
 
 class Secrets {
   static final _random = Random.secure();
@@ -2076,8 +2168,6 @@ class Secrets {
     final bytes = List<int>.generate(length, (_) => _random.nextInt(256));
     return base64UrlEncode(bytes);
   }
-
-  static String hash(String value, String salt) => value;
 
   static String publicId([int length = 12]) {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';

@@ -18,7 +18,7 @@ void main() {
     await AppDatabase.instance.resetEmpty();
     final store = CafeStore(AppDatabase.instance);
     await store.load();
-    await tester.pumpWidget(CafeItalianoApp(store: store));
+    await tester.pumpWidget(TawlaApp(store: store));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Create Admin Access'), findsOneWidget);
@@ -47,7 +47,7 @@ void main() {
     await AppDatabase.instance.resetEmpty();
     final store = CafeStore(AppDatabase.instance);
     await store.load();
-    await tester.pumpWidget(CafeItalianoApp(store: store));
+    await tester.pumpWidget(TawlaApp(store: store));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Staff POS  →'));
@@ -67,7 +67,7 @@ void main() {
     await AppDatabase.instance.resetEmpty();
     final store = CafeStore(AppDatabase.instance);
     await store.load();
-    await tester.pumpWidget(CafeItalianoApp(store: store));
+    await tester.pumpWidget(TawlaApp(store: store));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 

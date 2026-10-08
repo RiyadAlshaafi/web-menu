@@ -98,18 +98,6 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// Sample greeting
-  ///
-  /// In en, this message translates to:
-  /// **'Hello World'**
-  String get helloWorld;
-
-  /// Welcome line shown when a locale is active
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to Café Italiano'**
-  String get welcomeMessage;
-
   /// No description provided for @noTables.
   ///
   /// In en, this message translates to:
@@ -139,12 +127,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No menu items available.'**
   String get noMenu;
-
-  /// No description provided for @menuSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Menu coming soon'**
-  String get menuSoon;
 
   /// No description provided for @noSales.
   ///
@@ -599,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @errNoOpenBill.
   ///
   /// In en, this message translates to:
-  /// **'No open bill for this table.'**
+  /// **'This table has no open bill.'**
   String get errNoOpenBill;
 
   /// No description provided for @guestOrderFirst.
@@ -665,8 +647,8 @@ abstract class AppLocalizations {
   /// No description provided for @authPosFooter.
   ///
   /// In en, this message translates to:
-  /// **'Café Italiano POS System  •  Terminal Station 04  •  Secure Hospitality Gateway'**
-  String get authPosFooter;
+  /// **'{cafe}  •  Tawla POS'**
+  String authPosFooter(String cafe);
 
   /// No description provided for @authPinClear.
   ///
@@ -887,8 +869,8 @@ abstract class AppLocalizations {
   /// No description provided for @authChangePasswordFooter.
   ///
   /// In en, this message translates to:
-  /// **'© Café Italiano Firenze 1984   •   Terminal Auth Gateway v4.9'**
-  String get authChangePasswordFooter;
+  /// **'{cafe}  •  Tawla {version}'**
+  String authChangePasswordFooter(String cafe, String version);
 
   /// No description provided for @adminConsoleLabel.
   ///
@@ -919,12 +901,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Workspace'**
   String get adminWorkspace;
-
-  /// No description provided for @adminTerminalBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'●  Terminal #01  ·  Secure Node'**
-  String get adminTerminalBadge;
 
   /// No description provided for @adminCustomerView.
   ///
@@ -1427,13 +1403,13 @@ abstract class AppLocalizations {
   /// No description provided for @catalogPublicMenuUrl.
   ///
   /// In en, this message translates to:
-  /// **'Public menu URL'**
+  /// **'Guest menu address (used in table QR codes)'**
   String get catalogPublicMenuUrl;
 
   /// No description provided for @catalogPublicMenuUrlHint.
   ///
   /// In en, this message translates to:
-  /// **'https://your-cafe.vercel.app'**
+  /// **'https://menu.your-cafe.ly'**
   String get catalogPublicMenuUrlHint;
 
   /// No description provided for @catalogChooseLogo.
@@ -1603,12 +1579,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get cashierLanguage;
-
-  /// No description provided for @cashierPosTerminal.
-  ///
-  /// In en, this message translates to:
-  /// **'POS TERMINAL 01'**
-  String get cashierPosTerminal;
 
   /// No description provided for @cashierSoloShiftLive.
   ///
@@ -2567,8 +2537,8 @@ abstract class AppLocalizations {
   /// No description provided for @guestThankYou.
   ///
   /// In en, this message translates to:
-  /// **'Thank you for dining with Cafe Italiano!'**
-  String get guestThankYou;
+  /// **'Thank you for dining with {cafe}!'**
+  String guestThankYou(String cafe);
 
   /// No description provided for @guestSubtotal.
   ///
@@ -3811,6 +3781,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cafe POS & QR ordering'**
   String get brandTagline;
+
+  /// No description provided for @adminSaveQrPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Save QR image'**
+  String get adminSaveQrPng;
+
+  /// No description provided for @devPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer password'**
+  String get devPasswordTitle;
+
+  /// No description provided for @commonOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get commonOk;
+
+  /// No description provided for @errNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'The app is not connected to its server. Contact your provider.'**
+  String get errNotConfigured;
+
+  /// No description provided for @errNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check the internet connection and try again.'**
+  String get errNetwork;
+
+  /// No description provided for @errResetEmailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The reset email could not be sent. Try again in a minute.'**
+  String get errResetEmailFailed;
+
+  /// No description provided for @errPasswordNotChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The password was not changed. Try again.'**
+  String get errPasswordNotChanged;
+
+  /// No description provided for @authConfirmEmailFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the account from the email we sent, then sign in.'**
+  String get authConfirmEmailFirst;
+
+  /// No description provided for @errGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get errGeneric;
+
+  /// No description provided for @errSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session ended. Sign in again.'**
+  String get errSessionExpired;
+
+  /// No description provided for @errSignInAsCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as a cashier first.'**
+  String get errSignInAsCashier;
+
+  /// No description provided for @errLineNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That dish is no longer on the order.'**
+  String get errLineNotFound;
+
+  /// No description provided for @errCartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The cart is empty.'**
+  String get errCartEmpty;
 }
 
 class _AppLocalizationsDelegate
