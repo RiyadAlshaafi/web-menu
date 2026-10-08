@@ -1,0 +1,61 @@
+# Builds the Windows cashier app on every push to main (or by hand from the Actions tab) and puts
+# the zip on the "windows-latest-build" release, so tills can be updated without a Windows PC
+# set up for Flutter. Unzip over the till's app folder; offline sales live in the app-data folder
+# and are not touched.
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # The publishable key is public (every web page carries it); repo secrets win when set.
+      - name: Write .env
+        shell: bash
+        env:
+          URL_SECRET: ${{ secrets.SUPABASE_URL }}
+          KEY_SECRET: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "SUPABASE_URL=${URL_SECRET:-https://kzafgozkgvcflcizuemr.supabase.co}" > .env
+          echo "SUPABASE_ANON_KEY=${KEY_SECRET:-sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj}" >> .env
+
+      - run: flutter pub get
+
+      - run: flutter build windows --release --dart-define-from-file=.env
+
+      - name: Zip the app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath CafePOS-windows.zip
+          "Built from ${{ github.sha }} on $(Get-Date -Format 'yyyy-MM-dd HH:mm') UTC" | Out-File BUILD.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CafePOS-windows
+          path: CafePOS-windows.zip
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-latest-build
+          name: Windows cashier app (latest build)
+          body_path: BUILD.txt
+          files: CafePOS-windows.zip
+          make_latest: false
