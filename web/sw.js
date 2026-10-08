@@ -15,18 +15,20 @@ self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
+// An open page can still be loading the previous build when this worker takes over, so the
+// previous build's files are kept until the next page load (see page()); deleting them here
+// could hand that page a mix of old and new app files.
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      for (const key of await caches.keys()) {
-        if (key.startsWith('menu-') && key !== APP_CACHE && key !== ENGINE_CACHE) {
-          await caches.delete(key);
-        }
-      }
-      await self.clients.claim();
-    })(),
-  );
+  event.waitUntil(self.clients.claim());
 });
+
+async function dropOldCaches() {
+  for (const key of await caches.keys()) {
+    if (key.startsWith('menu-') && key !== APP_CACHE && key !== ENGINE_CACHE) {
+      await caches.delete(key);
+    }
+  }
+}
 
 function cacheFor(url) {
   return url.pathname.startsWith('/canvaskit/') ? ENGINE_CACHE : APP_CACHE;
@@ -34,6 +36,10 @@ function cacheFor(url) {
 
 function keepable(url) {
   return url.origin === self.location.origin && url.pathname !== '/sw.js';
+}
+
+function isPage(response) {
+  return (response.headers.get('content-type') || '').startsWith('text/html');
 }
 
 async function store(cacheName, request, response) {
@@ -46,7 +52,12 @@ async function store(cacheName, request, response) {
 
 // The page itself: newest when the network answers quickly, the kept copy otherwise.
 async function page(request) {
-  const network = fetch(request).then((response) => store(APP_CACHE, PAGE, response));
+  // A new page load runs entirely on this build, so the previous build's files can go now.
+  await dropOldCaches();
+  // Only an HTML answer is kept as the page (not, say, an image opened directly).
+  const network = fetch(request).then((response) =>
+    isPage(response) ? store(APP_CACHE, PAGE, response) : response,
+  );
   network.catch(() => {}); // answered from the kept copy below when this fails
   const timeout = new Promise((resolve) => setTimeout(resolve, PAGE_TIMEOUT_MS));
   try {
@@ -60,11 +71,22 @@ async function page(request) {
 }
 
 // App and engine files: the kept copy first, the network only the first time.
+// Until the next page load, a page started on the previous build still finds its own files.
 async function file(request, url) {
   const name = cacheFor(url);
-  const kept = await caches.match(request, { cacheName: name });
+  const kept =
+    (await caches.match(request, { cacheName: name })) || (await keptElsewhere(request));
   if (kept) return kept;
   return store(name, request, await fetch(request));
+}
+
+async function keptElsewhere(request) {
+  for (const key of await caches.keys()) {
+    if (!key.startsWith('menu-')) continue;
+    const kept = await caches.match(request, { cacheName: key });
+    if (kept) return kept;
+  }
+  return undefined;
 }
 
 self.addEventListener('fetch', (event) => {
