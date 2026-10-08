@@ -10,6 +10,7 @@ import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/tawla_mark.dart';
 import '../widgets/update_panel.dart';
 
 class PinLoginScreen extends StatefulWidget {
@@ -83,7 +84,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
             Row(
               children: [
                 _DevLogo(
-                  child: CafeLogo(size: 42, subtitle: context.l10n.authPosTerminalSubtitle, compact: true),
+                  child: _AuthBrand(subtitle: context.l10n.authPosTerminalSubtitle.replaceAll('\n', ' ')),
                 ),
                 const Spacer(),
                 GhostChip(
@@ -421,7 +422,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
         children: [
           Row(
             children: [
-              const _DevLogo(child: CafeLogo(compact: true, size: 40)),
+              const _DevLogo(child: _AuthBrand()),
               const Spacer(),
               GhostChip(
                 label: context.l10n.authStaffPos,
@@ -645,7 +646,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           Row(
             children: [
-              const CafeLogo(compact: true, size: 40),
+              const _AuthBrand(),
               const Spacer(),
               GhostChip(
                 label: context.l10n.authAdminSignIn,
@@ -806,7 +807,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: CafeLogo(compact: true, size: 42, subtitle: context.l10n.authHospitalityCoreAdmin),
+            child: _AuthBrand(subtitle: context.l10n.authHospitalityCoreAdmin),
           ),
           const SizedBox(height: 28),
           SoftCard(
@@ -1009,5 +1010,40 @@ class _DevLogoState extends State<_DevLogo> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(onTap: _hit, child: widget.child);
+  }
+}
+
+/// The Tawla lockup with the cafe's name beside it, at the top of every sign-in page.
+class _AuthBrand extends StatelessWidget {
+  const _AuthBrand({this.subtitle});
+
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = context.watch<CafeStore>().cafeName;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Directionality(textDirection: TextDirection.ltr, child: TawlaLockup(size: 30)),
+        Container(width: 1, height: 26, margin: const EdgeInsets.symmetric(horizontal: 14), color: CafeColors.line),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: CafeColors.ink)),
+              Text(
+                (subtitle ?? context.l10n.brandTagline).toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: CafeColors.inkMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

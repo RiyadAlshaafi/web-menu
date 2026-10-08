@@ -1993,4 +1993,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestPayLabel => 'Payment method';
+
+  @override
+  String dishActiveCount(int active, int total) {
+    return '$active of $total active';
+  }
+
+  @override
+  String salesReceiptsTotal(int count, String total) {
+    return '$count receipts · $total';
+  }
+
+  @override
+  String dashboardSettledReceipts(int count) {
+    return '$count settled receipts';
+  }
+
+  @override
+  String get dashboardExpensesCaption => 'Wages, supplies and cash-outs';
+
+  @override
+  String get dashboardNetCaption => 'Sales minus expenses';
+
+  @override
+  String get dashboardSalesVsExpenses => 'Sales vs expenses';
+
+  @override
+  String dashboardChartBar(String day, String sales, String expenses) {
+    return '$day: sales $sales, expenses $expenses';
+  }
+
+  @override
+  String get catalogActivePromos => 'ACTIVE PROMOS';
+
+  @override
+  String get catalogNoActivePromos => 'No promos are running.';
+
+  @override
+  String get catalogRemovePromo => 'Remove';
+
+  @override
+  String catalogEditDishDiscount(String dish) {
+    return 'Discount for $dish';
+  }
+
+  @override
+  String get layoutNoCategorySelected =>
+      'Choose a category on the left to see its dishes.';
+
+  @override
+  String get layoutRenameCategory => 'Rename category';
+
+  @override
+  String get layoutShowOnMenu => 'Show on the menu';
+
+  @override
+  String get layoutMoveEarlier => 'Move earlier';
+
+  @override
+  String get layoutMoveLater => 'Move later';
+
+  @override
+  String get layoutEditDish => 'Edit dish';
+
+  @override
+  String get layoutNewCategoryLabel => 'NEW CATEGORY';
+
+  @override
+  String get settingsOrderingTitle => 'Ordering & receipts';
+
+  @override
+  String get cafeLocationRequireHint =>
+      'Guests outside the radius can still browse the menu.';
+
+  @override
+  String get catalogCashierPinMasked => 'PIN ••••';
+
+  @override
+  String get commonRemove => 'Remove';
+
+  @override
+  String get catalogLogoPlaceholder => 'LOGO';
+
+  @override
+  String get catalogPreviewButton => 'Button';
+
+  @override
+  String get commonEdit => 'Edit';
+
+  @override
+  String get guestOpenMenu => 'Open the menu';
+
+  @override
+  String get guestPoweredBy => 'Powered by';
+
+  @override
+  String get payTypeLabel => 'Payment type';
+
+  @override
+  String get cashierCashOut => 'Cash out';
+
+  @override
+  String get brandTagline => 'Cafe POS & QR ordering';
 }

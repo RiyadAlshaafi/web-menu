@@ -24,7 +24,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 14),
+          const SizedBox(height: 4),
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 900;
@@ -32,6 +32,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 _mini(
                   context.l10n.cashierTotalShiftGrossSales,
                   store.currency.format(sales),
+                  color: CafeSurfaces.of(context).header,
                   expand: !stacked,
                 ),
                 _mini(
@@ -47,6 +48,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 _mini(
                   context.l10n.cashierActivePendingBalance,
                   store.currency.format(pending),
+                  color: const Color(0xFF95600F),
                   detail: store.billTables.isEmpty
                       ? null
                       : store.billTables
@@ -69,223 +71,63 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                   ],
                 );
               }
-              return Row(children: cards);
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [for (var i = 0; i < cards.length; i++) ...[if (i > 0) const SizedBox(width: 14), cards[i]]],
+              );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final shiftId = shift?.id;
+                final events = <Object>[
+                  ...store.payments,
+                  ...store.expenses.where((item) => !item.voided && (shiftId == null || item.shiftId == shiftId)),
+                ]..sort((a, b) {
+                    DateTime at(Object item) => item is Payment ? item.paidAt : (item as ShiftExpense).createdAt;
+                    return at(b).compareTo(at(a));
+                  });
                 final ledger = WideTable(
-                  minWidth: 820,
-                  child: SoftCard(
-                  radius: 16,
-                  child: store.payments.isEmpty &&
-                          (shift == null ||
-                              store.expenses.every(
-                                (item) => item.voided || item.shiftId != shift.id,
-                              ))
-                      ? EmptyHint(context.l10n.noTransactions)
-                      : ListView(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      context.l10n.cashierColOrderTable,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                        color: CafeColors.inkMuted,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 64,
-                                    child: Text(
-                                      context.l10n.cashierColTime,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                        color: CafeColors.inkMuted,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      context.l10n.cashierColAmount,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                        color: CafeColors.inkMuted,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 72,
-                                    child: Text(
-                                      context.l10n.cashierColStatus,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                        color: CafeColors.inkMuted,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 140,
-                                    child: Text(
-                                      context.l10n.cashierColActions,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                        color: CafeColors.inkMuted,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                  minWidth: 860,
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: events.isEmpty
+                        ? EmptyHint(context.l10n.noTransactions)
+                        : ListView(
+                            children: [
+                              _ledgerRow(
+                                header: true,
+                                first: TableHead(context.l10n.cashierColOrderTable),
+                                time: TableHead(context.l10n.cashierColTime),
+                                method: TableHead(context.l10n.salesColMethod),
+                                status: TableHead(context.l10n.cashierColStatus),
+                                amount: TableHead(context.l10n.cashierColAmount, align: TextAlign.end),
+                                actions: TableHead(context.l10n.cashierColActions, align: TextAlign.end),
                               ),
-                            ),
-                            ...(() {
-                              final shiftId = shift?.id;
-                              final events = <Object>[
-                                ...store.payments,
-                                ...store.expenses.where(
-                                  (item) =>
-                                      !item.voided &&
-                                      (shiftId == null || item.shiftId == shiftId),
-                                ),
-                              ]..sort((a, b) {
-                                  DateTime at(Object item) => item is Payment
-                                      ? item.paidAt
-                                      : (item as ShiftExpense).createdAt;
-                                  return at(b).compareTo(at(a));
-                                });
-                              return events.map((event) {
-                                if (event is ShiftExpense) {
-                                  return _expenseLedgerRow(context, store, event);
-                                }
-                                final payment = event as Payment;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
+                              for (final event in events)
+                                if (event is ShiftExpense)
+                                  _expenseLedgerRow(context, store, event)
+                                else
+                                  _paymentLedgerRow(context, store, event as Payment),
+                              if (store.salesHasMore)
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Align(
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: TextButton(
+                                      onPressed: () => store.loadMoreSales(),
+                                      child: Text(context.l10n.salesLoadMore),
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text.rich(
-                                          TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: store.receiptNumber(
-                                                  payment,
-                                                ),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text:
-                                                    '  ·  ${context.l10n.cashierOrderNumber(store.orderNumber(payment.shiftOrderNumber))}',
-                                                style: const TextStyle(
-                                                  color: CafeColors.inkMuted,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text:
-                                                    '  •  ${payment.isTakeout || store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableShort(payment.tableNumber)}',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 64,
-                                        child: Text(
-                                          formatTripoliTime(payment.paidAt),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 80,
-                                        child: Text(
-                                          store.currency.format(
-                                            payment.totalDue,
-                                          ),
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 72,
-                                        child: Text(
-                                          context.l10n.cashierSettled,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 12,
-                                            color: CafeColors.success,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        width: 140,
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: OutlinedButton.icon(
-                                            style: _rowActionStyle,
-                                            onPressed: () {
-                                              final host = context;
-                                              showReceiptPrint(store, payment, host.l10n).catchError((error) {
-                                                if (!host.mounted) return;
-                                                ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
-                                              });
-                                            },
-                                            icon: const Icon(
-                                              Icons.print_outlined,
-                                              size: 16,
-                                            ),
-                                            label: Text(
-                                              context.l10n.cashierPrintChit,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList();
-                            }()),
-                            if (store.salesHasMore)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton(
-                                  onPressed: () => store.loadMoreSales(),
-                                  child: Text(context.l10n.salesLoadMore),
                                 ),
-                              ),
-                          ],
-                        ),
+                            ],
+                          ),
                   ),
                 );
-                final bar = SoftCard(
-                  radius: 16,
+                final bar = TawlaPanel(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Wrap(
                     spacing: 12,
@@ -313,6 +155,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                         child: FilledButton.icon(
                           onPressed: shift == null ? null : () => _closeRegister(context, store, shift),
                           style: FilledButton.styleFrom(
+                            backgroundColor: CafeSurfaces.of(context).button,
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -343,35 +186,81 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     String label,
     String value, {
     String? detail,
+    Color? color,
     bool expand = true,
   }) {
-    final card = Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: SoftCard(
-        radius: 16,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-            ),
-            Text(value, style: CafeTheme.display.copyWith(fontSize: 24)),
-            if (detail != null)
-              Text(
-                detail,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: CafeColors.inkMuted,
-                  fontSize: 12,
-                ),
-              ),
-          ],
-        ),
+    final card = FigureCard(label: label, value: value, caption: detail, valueColor: color ?? CafeColors.ink);
+    return expand ? Expanded(child: card) : card;
+  }
+
+  /// One line of the shift ledger; the header uses the same column widths.
+  Widget _ledgerRow({
+    bool header = false,
+    Color? background,
+    required Widget first,
+    required Widget time,
+    required Widget method,
+    required Widget status,
+    required Widget amount,
+    required Widget actions,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: header ? 14 : 10),
+      decoration: BoxDecoration(
+        color: background,
+        border: const Border(bottom: BorderSide(color: TawlaTokens.hairline)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: first),
+          SizedBox(width: 90, child: time),
+          SizedBox(width: 120, child: Align(alignment: AlignmentDirectional.centerStart, child: method)),
+          SizedBox(width: 110, child: Align(alignment: AlignmentDirectional.centerStart, child: status)),
+          SizedBox(width: 120, child: amount),
+          SizedBox(width: 150, child: Align(alignment: AlignmentDirectional.centerEnd, child: actions)),
+        ],
       ),
     );
-    return expand ? Expanded(child: card) : card;
+  }
+
+  Widget _twoLines(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+        Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: TawlaTokens.muted, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _paymentLedgerRow(BuildContext context, CafeStore store, Payment payment) {
+    final place = payment.isTakeout || store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableNumber(payment.tableNumber);
+    return _ledgerRow(
+      first: _twoLines(
+        context.l10n.salesReceiptLine(store.receiptNumber(payment)),
+        '$place  ·  ${context.l10n.cashierOrderNumber(store.orderNumber(payment.shiftOrderNumber))}',
+      ),
+      time: Text(formatTripoliTime(payment.paidAt), style: const TextStyle(fontSize: 14)),
+      method: StatusBadge(store.typeName(payment.paymentTypeId), tone: BadgeTone.navy),
+      status: StatusBadge(context.l10n.cashierSettled, tone: BadgeTone.success, dot: true),
+      amount: Text(
+        store.currency.format(payment.totalDue),
+        textAlign: TextAlign.end,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+      ),
+      actions: OutlinedButton.icon(
+        style: _rowActionStyle,
+        onPressed: () {
+          final host = context;
+          showReceiptPrint(store, payment, host.l10n).catchError((error) {
+            if (!host.mounted) return;
+            ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
+          });
+        },
+        icon: const Icon(Icons.print_outlined, size: 16),
+        label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+      ),
+    );
   }
 
   Widget _expenseLedgerRow(
@@ -386,84 +275,33 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         open.isOpen &&
         open.id == expense.shiftId &&
         !expense.voided;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-            children: [
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: expense.shortId,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      TextSpan(
-                        text: '  ${expense.description}',
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      TextSpan(
-                        text:
-                            '  •  ${store.expenseCategoryLabel(expense)}',
-                        style: const TextStyle(
-                          color: CafeColors.inkMuted,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 64,
-                child: Text(formatTripoliTime(expense.createdAt)),
-              ),
-              SizedBox(
-                width: 80,
-                child: Text(
-                  store.currency.format(-expense.amount),
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: CafeColors.alert,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 72,
-                child: Center(
-                  child: _expenseStatusPill(
-                    context,
-                    label: expense.editedFrom == null
-                        ? context.l10n.expenseLogged
-                        : context.l10n.expenseEdited,
-                    edited: expense.editedFrom != null,
-                    onTap: expense.editedFrom == null
-                        ? null
-                        : () => _showOriginal(context, store, expense),
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 140,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: canEdit
-                      ? OutlinedButton.icon(
-                          style: _rowActionStyle,
-                          onPressed: () =>
-                              _addExpense(context, store, editing: expense),
-                          icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: Text(
-                            context.l10n.expenseEdit,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-            ],
+    return _ledgerRow(
+      background: CafeColors.card,
+      first: _twoLines(
+        store.expenseCategoryLabel(expense),
+        [expense.shortId, if (expense.description.isNotEmpty) expense.description].join('  ·  '),
       ),
+      time: Text(formatTripoliTime(expense.createdAt), style: const TextStyle(fontSize: 14)),
+      method: StatusBadge(context.l10n.cashierCashOut, tone: BadgeTone.terracotta),
+      status: _expenseStatusPill(
+        context,
+        label: expense.editedFrom == null ? context.l10n.expenseLogged : context.l10n.expenseEdited,
+        edited: expense.editedFrom != null,
+        onTap: expense.editedFrom == null ? null : () => _showOriginal(context, store, expense),
+      ),
+      amount: Text(
+        store.currency.format(-expense.amount),
+        textAlign: TextAlign.end,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: CafeColors.alert),
+      ),
+      actions: canEdit
+          ? OutlinedButton.icon(
+              style: _rowActionStyle,
+              onPressed: () => _addExpense(context, store, editing: expense),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: Text(context.l10n.expenseEdit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -473,19 +311,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     required bool edited,
     VoidCallback? onTap,
   }) {
-    final color = edited ? CafeColors.alert : CafeColors.inkMuted;
-    final pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 11),
-      ),
-    );
+    final pill = StatusBadge(label, tone: edited ? BadgeTone.danger : BadgeTone.navy, dot: true);
     if (onTap == null) return pill;
     return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: pill);
   }

@@ -3631,6 +3631,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment method'**
   String get guestPayLabel;
+
+  /// No description provided for @dishActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} of {total} active'**
+  String dishActiveCount(int active, int total);
+
+  /// No description provided for @salesReceiptsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} receipts · {total}'**
+  String salesReceiptsTotal(int count, String total);
+
+  /// No description provided for @dashboardSettledReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} settled receipts'**
+  String dashboardSettledReceipts(int count);
+
+  /// No description provided for @dashboardExpensesCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Wages, supplies and cash-outs'**
+  String get dashboardExpensesCaption;
+
+  /// No description provided for @dashboardNetCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales minus expenses'**
+  String get dashboardNetCaption;
+
+  /// No description provided for @dashboardSalesVsExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales vs expenses'**
+  String get dashboardSalesVsExpenses;
+
+  /// No description provided for @dashboardChartBar.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}: sales {sales}, expenses {expenses}'**
+  String dashboardChartBar(String day, String sales, String expenses);
+
+  /// No description provided for @catalogActivePromos.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE PROMOS'**
+  String get catalogActivePromos;
+
+  /// No description provided for @catalogNoActivePromos.
+  ///
+  /// In en, this message translates to:
+  /// **'No promos are running.'**
+  String get catalogNoActivePromos;
+
+  /// No description provided for @catalogRemovePromo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get catalogRemovePromo;
+
+  /// No description provided for @catalogEditDishDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount for {dish}'**
+  String catalogEditDishDiscount(String dish);
+
+  /// No description provided for @layoutNoCategorySelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category on the left to see its dishes.'**
+  String get layoutNoCategorySelected;
+
+  /// No description provided for @layoutRenameCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename category'**
+  String get layoutRenameCategory;
+
+  /// No description provided for @layoutShowOnMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on the menu'**
+  String get layoutShowOnMenu;
+
+  /// No description provided for @layoutMoveEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get layoutMoveEarlier;
+
+  /// No description provided for @layoutMoveLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get layoutMoveLater;
+
+  /// No description provided for @layoutEditDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit dish'**
+  String get layoutEditDish;
+
+  /// No description provided for @layoutNewCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW CATEGORY'**
+  String get layoutNewCategoryLabel;
+
+  /// No description provided for @settingsOrderingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordering & receipts'**
+  String get settingsOrderingTitle;
+
+  /// No description provided for @cafeLocationRequireHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests outside the radius can still browse the menu.'**
+  String get cafeLocationRequireHint;
+
+  /// No description provided for @catalogCashierPinMasked.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN ••••'**
+  String get catalogCashierPinMasked;
+
+  /// No description provided for @commonRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get commonRemove;
+
+  /// No description provided for @catalogLogoPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'LOGO'**
+  String get catalogLogoPlaceholder;
+
+  /// No description provided for @catalogPreviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Button'**
+  String get catalogPreviewButton;
+
+  /// No description provided for @commonEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get commonEdit;
+
+  /// No description provided for @guestOpenMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the menu'**
+  String get guestOpenMenu;
+
+  /// No description provided for @guestPoweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by'**
+  String get guestPoweredBy;
+
+  /// No description provided for @payTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment type'**
+  String get payTypeLabel;
+
+  /// No description provided for @cashierCashOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash out'**
+  String get cashierCashOut;
+
+  /// No description provided for @brandTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe POS & QR ordering'**
+  String get brandTagline;
 }
 
 class _AppLocalizationsDelegate

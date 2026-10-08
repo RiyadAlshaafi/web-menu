@@ -521,7 +521,7 @@ class _GuestSessionState extends State<GuestSession> {
     if (store.guestLocaleOverride == null) {
       return _localized(
         store,
-        GuestLanguageScreen(onChoose: (code) => store.setGuestLocale(code)),
+        GuestLanguageScreen(tableNumber: table.number, onChoose: (code) => store.setGuestLocale(code)),
       );
     }
     return _localized(store, widget.child);

@@ -71,11 +71,11 @@ class TawlaLockup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           TawlaMark(size: size, color: color),
-          const SizedBox(width: 8),
+          SizedBox(width: size * 0.4),
           ExcludeSemantics(
             child: Text(
               'Tawla',
-              style: TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: size * 0.72, letterSpacing: -0.8, color: color),
+              style: TextStyle(fontFamily: 'PlusJakartaSans', fontWeight: FontWeight.w800, fontSize: size * 0.67, letterSpacing: -0.9, color: color),
             ),
           ),
         ],

@@ -32,48 +32,55 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                 _stat(
                   context.l10n.cashierAssistanceCalls,
                   context.l10n.cashierCallsCount('${calls.length}'),
-                  calls.isEmpty ? context.l10n.noCalls : calls.map((call) => context.l10n.cashierTableShort(call.tableNumber)).join(' • '),
-                  Icons.notifications_active_outlined,
+                  calls.isEmpty ? null : context.l10n.cashierNeedsAttend,
+                  Icons.notifications_none_outlined,
+                  _AlertTone.call,
                   expand: !stacked,
                 ),
                 _stat(
                   context.l10n.cashierIncomingOrders,
                   context.l10n.cashierOrdersCount('${orders.length}'),
-                  orders.isEmpty ? context.l10n.noOrders : orders.map((order) => context.l10n.cashierTableShort(order.tableNumber)).join(' • '),
-                  Icons.restaurant_outlined,
+                  orders.any((order) => order.status == OrderStatus.received) ? context.l10n.cashierNeedsAccept : null,
+                  Icons.receipt_outlined,
+                  _AlertTone.order,
                   expand: !stacked,
                 ),
                 _stat(
                   context.l10n.cashierBillOutRequests,
                   context.l10n.cashierCheckoutsCount('${bills.length}'),
-                  bills.isEmpty
-                      ? context.l10n.noBills
-                      : bills.map((table) => '${context.l10n.cashierTableShort(table.number)} ${store.currency.format(store.tabTotal(table.id))}').join(' • '),
-                  Icons.receipt_long_outlined,
+                  bills.isEmpty ? null : context.l10n.cashierDueNow,
+                  Icons.payments_outlined,
+                  _AlertTone.bill,
                   expand: !stacked,
                 ),
               ];
               if (stacked) {
-                return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 8), child: card)]);
+                return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 10), child: card)]);
               }
-              return Row(children: cards);
+              return Row(children: [for (var i = 0; i < cards.length; i++) ...[if (i > 0) const SizedBox(width: 16), cards[i]]]);
             },
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              _chip(context.l10n.cashierFilterAllAlerts('${calls.length + orders.length + bills.length}'), filter == _AlertFilter.all, () => setState(() => filter = _AlertFilter.all)),
-              _chip(context.l10n.cashierFilterCallStaff('${calls.length}'), filter == _AlertFilter.calls, () => setState(() => filter = _AlertFilter.calls)),
-              _chip(context.l10n.cashierFilterNewOrders('${orders.length}'), filter == _AlertFilter.orders, () => setState(() => filter = _AlertFilter.orders)),
-              _chip(context.l10n.cashierFilterBillRequests('${bills.length}'), filter == _AlertFilter.bills, () => setState(() => filter = _AlertFilter.bills)),
-              _chip(context.l10n.cashierReadyToServe, filter == _AlertFilter.ready, () => setState(() => filter = _AlertFilter.ready)),
-              Text(context.l10n.cashierInstantAlerts, style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w700)),
-            ],
+          const SizedBox(height: 20),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 4),
+                  child: PanelTitle(context.l10n.cashierInstantAlerts, size: 18),
+                ),
+                FilterPill(label: context.l10n.cashierFilterAllAlerts('${calls.length + orders.length + bills.length}'), selected: filter == _AlertFilter.all, onTap: () => setState(() => filter = _AlertFilter.all)),
+                FilterPill(label: context.l10n.cashierFilterCallStaff('${calls.length}'), selected: filter == _AlertFilter.calls, onTap: () => setState(() => filter = _AlertFilter.calls)),
+                FilterPill(label: context.l10n.cashierFilterNewOrders('${orders.length}'), selected: filter == _AlertFilter.orders, onTap: () => setState(() => filter = _AlertFilter.orders)),
+                FilterPill(label: context.l10n.cashierFilterBillRequests('${bills.length}'), selected: filter == _AlertFilter.bills, onTap: () => setState(() => filter = _AlertFilter.bills)),
+                FilterPill(label: context.l10n.cashierReadyToServe, selected: filter == _AlertFilter.ready, onTap: () => setState(() => filter = _AlertFilter.ready)),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -81,23 +88,30 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                 final alerts = ListView(
                     children: [
                       if (store.activeTables.isEmpty)
-                        SoftCard(radius: 16, child: EmptyHint(context.l10n.noTables))
+                        TawlaPanel(child: EmptyHint(context.l10n.noTables))
                       else if (orders.isEmpty && calls.isEmpty && bills.isEmpty)
-                        SoftCard(radius: 16, child: EmptyHint(context.l10n.noOrders))
+                        TawlaPanel(child: EmptyHint(context.l10n.noOrders))
                       else ...[
                         if (filter == _AlertFilter.all || filter == _AlertFilter.bills)
                           ...bills.map((table) {
                             final order = store.openOrderFor(table.id);
+                            final method = order?.paymentTypeId;
+                            final arrived = store.openCalls.where((c) => c.kind == 'bill' && c.tableId == table.id).firstOrNull?.createdAt;
                             return _alert(
                               id: 'bill-${table.id}',
-                              arrivedAt: store.openCalls.where((c) => c.kind == 'bill' && c.tableId == table.id).firstOrNull?.createdAt,
+                              tone: _AlertTone.bill,
+                              arrivedAt: arrived,
                               table: table.number,
-                              title: context.l10n.cashierBillRequest,
-                              body: order == null ? context.l10n.noOrders : context.l10n.cashierItemsCount('${order.itemCount}'),
-                              time: order?.createdAt,
+                              badge: context.l10n.cashierBillRequest,
+                              detail: order == null ? null : context.l10n.cashierOrderNumber(store.shiftTicket(order)),
+                              body: order == null
+                                  ? context.l10n.noOrders
+                                  : method != null && method.isNotEmpty
+                                      ? context.l10n.cashierCustomerPay(store.typeName(method))
+                                      : context.l10n.cashierItemsCount('${order.itemCount}'),
+                              time: arrived ?? order?.createdAt,
                               amount: store.tabTotal(table.id),
                               action: context.l10n.cashierSettleBill,
-                              icon: Icons.payments_outlined,
                               onTap: () => showCashSettleDialog(context, store, table.id),
                               onAction: () => showCashSettleDialog(context, store, table.id),
                             );
@@ -106,15 +120,14 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                           ...calls.map(
                             (call) => _alert(
                               id: 'call-${call.id}',
+                              tone: _AlertTone.call,
                               arrivedAt: call.createdAt,
-                              table: store.openOrderFor(call.tableId)?.serviceType == 'takeout'
-                                  ? context.l10n.serviceTakeout
-                                  : call.tableNumber,
-                              title: context.l10n.cashierCallStaff,
+                              table: call.tableNumber,
+                              takeout: store.openOrderFor(call.tableId)?.serviceType == 'takeout',
+                              badge: context.l10n.cashierCallStaff,
                               body: context.l10n.cashierAssistanceRequested,
                               time: call.createdAt,
                               action: context.l10n.cashierAttended,
-                              icon: Icons.done,
                               onTap: () => store.resolveCall(call.id),
                               onAction: () => store.resolveCall(call.id),
                             ),
@@ -125,17 +138,22 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               final next = order.status.next;
                               return _alert(
                                 id: 'order-${order.id}',
-                                table: order.serviceType == 'takeout' ? context.l10n.serviceTakeout : order.tableNumber,
-                                title: context.l10n.cashierOrderNumber(store.shiftTicket(order)),
-                                body: [
-                                  _orderStatusLabel(context, order.status),
+                                tone: order.status == OrderStatus.ready ? _AlertTone.ready : _AlertTone.order,
+                                table: order.tableNumber,
+                                takeout: order.serviceType == 'takeout',
+                                badge: order.status == OrderStatus.received
+                                    ? context.l10n.cashierNewOrder
+                                    : order.status == OrderStatus.ready
+                                        ? context.l10n.cashierReadyToServe
+                                        : _orderStatusLabel(context, order.status),
+                                detail: [
+                                  context.l10n.cashierOrderNumber(store.shiftTicket(order)),
                                   if (order.latestRound > 1) context.l10n.orderRound(order.latestRound),
-                                  order.linesInRound(order.latestRound).map((line) => '${line.qty}× ${line.name}').join(', '),
                                 ].join(' · '),
+                                body: order.linesInRound(order.latestRound).map((line) => '${line.qty}× ${line.name}').join(', '),
                                 time: order.createdAt,
                                 amount: order.subtotal,
                                 action: next == null ? null : _nextStatusAction(context, next),
-                                icon: Icons.room_service_outlined,
                                 selected: order.id == selected?.id,
                                 onTap: () => setState(() => selectedOrderId = order.id),
                                 onAction: next == null
@@ -152,8 +170,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                       ],
                     ],
                 );
-                final side = SoftCard(
-                  radius: 16,
+                final side = TawlaPanel(
                   child: selected == null
                       ? EmptyHint(orders.isEmpty && bills.isEmpty ? context.l10n.noOrders : context.l10n.cashierTapOrderHint)
                       : _detail(context, store, selected),
@@ -171,9 +188,9 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 3, child: alerts),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     SizedBox(
-                      width: (constraints.maxWidth * 0.34).clamp(260, 360),
+                      width: (constraints.maxWidth * 0.34).clamp(280, 380),
                       child: side,
                     ),
                   ],
@@ -205,44 +222,45 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     };
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? CafeSurfaces.of(context).button : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line),
-          ),
-          child: Text(label, style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
-        ),
+  Widget _stat(String label, String value, String? badge, IconData icon, _AlertTone tone, {bool expand = true}) {
+    final (_, soft, ink) = tone.colors;
+    final card = Container(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Color(0x0F1B3A4B), blurRadius: 2, offset: Offset(0, 1))],
       ),
-    );
-  }
-
-  Widget _stat(String label, String value, String detail, IconData icon, {bool expand = true}) {
-    final card = Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: SoftCard(
-        radius: 16,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: ink, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Text(label, style: const TextStyle(fontSize: 12, color: CafeColors.inkMuted, fontWeight: FontWeight.w700))),
-                Icon(icon, size: 18, color: CafeColors.terracotta),
+                Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: CafeColors.ink)),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(value, style: CafeTheme.display.copyWith(fontSize: 26)),
-            Text(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+          ),
+          if (badge != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              height: 26,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(13)),
+              child: Text(badge, style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w700)),
+            ),
           ],
-        ),
+        ],
       ),
     );
     return expand ? Expanded(child: card) : card;
@@ -250,61 +268,138 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
 
   Widget _alert({
     required Object id,
+    required _AlertTone tone,
     DateTime? arrivedAt,
     required String table,
-    required String title,
+    bool takeout = false,
+    required String badge,
+    String? detail,
     required String body,
-    required IconData icon,
     DateTime? time,
     double? amount,
     String? action,
     bool selected = false,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
     VoidCallback? onAction,
   }) {
+    final (strong, soft, ink) = tone.colors;
+    final navy = CafeSurfaces.of(context).header;
+    final store = context.read<CafeStore>();
+    final fresh = arrivedAt != null && DateTime.now().difference(arrivedAt) < const Duration(minutes: 2);
+    final tile = Column(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: strong, borderRadius: BorderRadius.circular(14)),
+          child: takeout
+              ? const Icon(Icons.work_outline, color: Colors.white, size: 24)
+              : Text(
+                  context.l10n.cashierTableShort(table),
+                  maxLines: 1,
+                  style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                ),
+        ),
+        if (time != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.cashierElapsedMinutes('${DateTime.now().difference(time).inMinutes}'),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
+          ),
+        ],
+      ],
+    );
+    final header = Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Container(
+          height: 26,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(13)),
+          child: Center(
+            widthFactor: 1,
+            child: Text(badge.toUpperCase(), style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+          ),
+        ),
+        Text(takeout ? context.l10n.serviceTakeout : context.l10n.cashierTableNumber(table), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        if (detail != null && detail.isNotEmpty) Text(detail, style: const TextStyle(fontSize: 13, color: TawlaTokens.muted)),
+      ],
+    );
+    final hasFooter = amount != null || (action != null && onAction != null);
     return Padding(
       key: ValueKey(id),
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: _ArrivalFlash(
         arrivedAt: arrivedAt,
-        child: SoftCard(
-          radius: 16,
-          padding: const EdgeInsets.all(12),
-          selected: selected,
-          onTap: onTap,
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: CafeColors.terracotta, borderRadius: BorderRadius.circular(8)),
-                child: Text(context.l10n.cashierTableNumber(table), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      time == null ? title : '$title • ${context.l10n.cashierElapsedMinutes('${DateTime.now().difference(time).inMinutes}')}',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-                  ],
-                ),
-              ),
-              if (amount != null) MoneyText(context.read<CafeStore>().currency.format(amount)),
-              if (action != null && onAction != null) ...[
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: onAction,
-                  icon: Icon(icon, size: 16),
-                  label: Text(action),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Material(
+          color: selected ? CafeColors.card : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: selected
+                ? BorderSide(color: navy, width: 2)
+                : fresh
+                    ? BorderSide(color: strong, width: 2)
+                    : BorderSide.none,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      tile,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            header,
+                            const SizedBox(height: 8),
+                            Text(body, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: Color(0xFF3E4A50))),
+                          ],
+                        ),
+                      ),
+                      if (tone != _AlertTone.call) const Icon(Icons.chevron_right, color: TawlaTokens.muted),
+                    ],
                   ),
-                ),
-              ],
-            ],
+                  if (hasFooter)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 72, top: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: amount == null
+                                ? const SizedBox.shrink()
+                                : Text(store.currency.format(amount), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: navy)),
+                          ),
+                          if (action != null && onAction != null)
+                            SizedBox(
+                              height: 44,
+                              child: FilledButton(
+                                onPressed: onAction,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: strong,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: Text(action, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -321,16 +416,39 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Text(
-            order.serviceType == 'takeout'
-                ? '${context.l10n.serviceTakeout}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}'
-                : '${context.l10n.cashierTableNumber(order.tableNumber)}  ${context.l10n.cashierOrderNumber(store.shiftTicket(order))}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-          ),
+        Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: _AlertTone.order.colors.$1, borderRadius: BorderRadius.circular(12)),
+              child: order.serviceType == 'takeout'
+                  ? const Icon(Icons.work_outline, color: Colors.white, size: 20)
+                  : Text(context.l10n.cashierTableShort(order.tableNumber), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    order.serviceType == 'takeout' ? context.l10n.serviceTakeout : context.l10n.cashierTableNumber(order.tableNumber),
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                  ),
+                  Text(
+                    [
+                      context.l10n.cashierOrderNumber(store.shiftTicket(order)),
+                      if (order.latestRound > 1) context.l10n.orderRound(order.latestRound),
+                    ].join(' · '),
+                    style: const TextStyle(color: TawlaTokens.muted, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            StatusBadge(_orderStatusLabel(context, order.status), tone: BadgeTone.navy),
+          ],
         ),
-        Text(_orderStatusLabel(context, order.status), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700)),
         if (waiting)
           Padding(
             padding: const EdgeInsets.only(top: 6),
@@ -340,9 +458,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
               child: Text(context.l10n.cashierWaitingForBill, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11)),
             ),
           ),
-        const SizedBox(height: 12),
-        Text(context.l10n.cashierItemsToSettle, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
+        const Divider(height: 1, color: CafeColors.line),
+        const SizedBox(height: 14),
+        EyebrowLabel(context.l10n.cashierItemsToSettle),
+        const SizedBox(height: 10),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.only(right: 4),
@@ -400,3 +520,17 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
   }
 }
 
+/// Colour family of an alert: the strong tile colour, the soft badge background and the badge text.
+enum _AlertTone {
+  call,
+  order,
+  bill,
+  ready;
+
+  (Color, Color, Color) get colors => switch (this) {
+        _AlertTone.call => (const Color(0xFFBA5333), const Color(0xFFFFE6DD), const Color(0xFF9A3C1D)),
+        _AlertTone.order => (const Color(0xFF2F6F8F), const Color(0xFFE1EEF5), const Color(0xFF1F5873)),
+        _AlertTone.bill => (const Color(0xFF95600F), const Color(0xFFFBEFD8), const Color(0xFF7A4E0C)),
+        _AlertTone.ready => (const Color(0xFF4F7A45), const Color(0xFFE4EEDF), const Color(0xFF2F5228)),
+      };
+}

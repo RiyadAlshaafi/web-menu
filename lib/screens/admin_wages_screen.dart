@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -19,6 +18,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../time_format.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/tawla_ui.dart';
 
 class AdminWagesScreen extends StatefulWidget {
   const AdminWagesScreen({super.key});
@@ -45,57 +45,78 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     final store = context.watch<CafeStore>();
     final rows = _rows(store);
     final window = summaryWindow(from: from, to: to);
-    final summed = expenseLedgerRows(
+    final expensesTotal = expenseLedgerRows(
       store,
       query: search.text,
       cashierName: cashierName,
       categoryId: categoryId,
       from: window.from,
       to: window.to,
-    );
-    final total = summed.fold<double>(0, (sum, row) => sum + row.amount);
+    ).fold<double>(0, (sum, row) => sum + row.amount);
+    final salesTotal = saleLedgerRows(store, from: window.from, to: window.to).fold<double>(0, (sum, row) => sum + row.total);
+    final period = window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange;
+    final categories = store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.navWages, style: CafeTheme.display.copyWith(fontSize: 28)),
-          const SizedBox(height: 12),
-          SoftCard(
-            radius: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange,
-                  style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-                ),
-                Text(
-                  store.currency.format(-total),
-                  style: CafeTheme.display.copyWith(fontSize: 24, color: CafeColors.alert),
-                ),
-                Text(_rangeLabel(window), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cards = [
+                _figure(context, '${context.l10n.summarySales} · $period', store.currency.format(salesTotal)),
+                _figure(context, '${context.l10n.summaryExpenses} · $period', store.currency.format(expensesTotal), color: CafeColors.terracottaDark),
+                _figure(context, '${context.l10n.summaryNet} · $period', store.currency.format(salesTotal - expensesTotal), dark: true),
+              ];
+              if (constraints.maxWidth < 720) {
+                return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 12), child: card)]);
+              }
+              return Row(
+                children: [
+                  Expanded(child: cards[0]),
+                  const SizedBox(width: 14),
+                  Expanded(child: cards[1]),
+                  const SizedBox(width: 14),
+                  Expanded(child: cards[2]),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SegmentedPills<String?>(
+                options: [
+                  (null, context.l10n.expenseAllTypes),
+                  for (final category in categories) (category.id, category.label(store.locale)),
+                ],
+                selected: categoryId,
+                onSelected: (value) => setState(() => categoryId = value),
+              ),
+              OutlineAction(label: context.l10n.salesExportCsv, icon: Icons.file_download_outlined, height: 44, onPressed: () => _exportCsv(store, rows)),
+              OutlineAction(label: context.l10n.salesExportPdf, icon: Icons.picture_as_pdf_outlined, height: 44, onPressed: () => _exportPdf(store, rows)),
+            ],
           ),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
             children: [
               SizedBox(
-                width: 260,
-                child: TextField(
-                  controller: search,
-                  decoration: InputDecoration(hintText: context.l10n.salesSearchHint, prefixIcon: const Icon(Icons.search)),
-                  onChanged: (_) => setState(() {}),
-                ),
+                width: 320,
+                height: 48,
+                child: PageSearchField(controller: search, hint: context.l10n.salesSearchHint, onChanged: (_) => setState(() {})),
               ),
-              _date(context.l10n.salesDateFrom, from, (value) => setState(() => from = value)),
-              _date(context.l10n.salesDateTo, to, (value) => setState(() => to = value)),
-              DropdownButton<String?>(
+              DateBox(label: context.l10n.salesDateFrom, value: from, onPicked: (value) => setState(() => from = value)),
+              DateBox(label: context.l10n.salesDateTo, value: to, onPicked: (value) => setState(() => to = value)),
+              SelectBox<String?>(
                 value: cashierName,
+                height: 48,
                 items: [
                   DropdownMenuItem(value: null, child: Text(context.l10n.salesAllCashiers)),
                   // One entry per name, taken from the expenses themselves, so removed cashiers never repeat.
@@ -104,39 +125,49 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 ],
                 onChanged: (value) => setState(() => cashierName = value),
               ),
-              DropdownButton<String?>(
-                value: categoryId,
-                items: [
-                  DropdownMenuItem(value: null, child: Text(context.l10n.expenseAllTypes)),
-                  for (final category in store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
-                    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)))
-                    DropdownMenuItem(value: category.id, child: Text(category.label(store.locale))),
-                ],
-                onChanged: (value) => setState(() => categoryId = value),
-              ),
-              OutlinedButton(onPressed: () => _exportCsv(store, rows), child: Text(context.l10n.salesExportCsv)),
-              OutlinedButton(onPressed: () => _exportPdf(store, rows), child: Text(context.l10n.salesExportPdf)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Expanded(
-            child: SoftCard(
-              radius: 16,
+            child: TawlaPanel(
+              padding: EdgeInsets.zero,
               child: rows.isEmpty
                   ? EmptyHint(context.l10n.noTransactions)
-                  : WideTable(
-                      minWidth: 980,
-                      child: ListView.builder(
-                        // Header, then a divider + line per row, built lazily.
-                        itemCount: 1 + rows.length * 2,
-                        itemBuilder: (context, index) {
-                          if (index == 0) return _header(context);
-                          if (index.isOdd) return const Divider(height: 1);
-                          return _line(context, store, rows[index ~/ 2 - 1]);
-                        },
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: WideTable(
+                        minWidth: 980,
+                        child: ListView.builder(
+                          // Header, then a divider + line per row, built lazily.
+                          itemCount: 1 + rows.length * 2,
+                          itemBuilder: (context, index) {
+                            if (index == 0) return _header(context);
+                            if (index.isOdd) return const Divider(height: 1, color: TawlaTokens.hairline);
+                            return _line(context, store, rows[index ~/ 2 - 1]);
+                          },
+                        ),
                       ),
                     ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _figure(BuildContext context, String label, String value, {Color? color, bool dark = false}) {
+    final surfaces = CafeSurfaces.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(color: dark ? surfaces.header : Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: dark ? const Color(0xFFB9C7CF) : TawlaTokens.muted)),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: dark ? Colors.white : (color ?? surfaces.header)),
           ),
         ],
       ),
@@ -152,106 +183,76 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         to: to,
       );
 
-  String _rangeLabel(SummaryWindow window) {
-    final start = window.from == null ? '…' : DateFormat.yMd().format(window.from!);
-    final end = window.to == null ? '…' : DateFormat.yMd().format(window.to!);
-    return '$start – $end';
-  }
-
-  Widget _date(String label, DateTime? value, ValueChanged<DateTime?> onPick) {
-    return SizedBox(
-      width: 200,
-      child: OutlinedButton(
-        onPressed: () async {
-          final picked = await showDatePicker(
-            context: context,
-            firstDate: DateTime(2020),
-            lastDate: DateTime.now().add(const Duration(days: 1)),
-            initialDate: value ?? DateTime.now(),
-          );
-          onPick(picked);
-        },
-        child: Text(
-          value == null ? label : '$label ${DateFormat.yMd().format(value)}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
+  /// Wages read navy, café expenses terracotta and cash withdrawals amber, as in the sales log.
+  BadgeTone _tone(CafeStore store, ShiftExpense row) {
+    final match = store.expenseCategories.where((item) => item.id == row.categoryId);
+    final name = match.isNotEmpty ? match.first.nameEn : (row.categoryNameEn ?? (row.paidToCafe ? 'Café Expense' : 'Cash Withdrawal'));
+    final key = name.toLowerCase();
+    if (key.contains('wage')) return BadgeTone.navy;
+    if (key.contains('withdraw')) return BadgeTone.amber;
+    if (key.contains('expense')) return BadgeTone.terracotta;
+    return BadgeTone.neutral;
   }
 
   Widget _header(BuildContext context) {
-    final style = const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: CafeColors.inkMuted);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(context.l10n.expenseColId, style: style)),
-          Expanded(flex: 3, child: Text(context.l10n.expenseColWhen, style: style)),
-          Expanded(flex: 2, child: Text(context.l10n.expenseColCashier, style: style)),
-          Expanded(flex: 2, child: Text(context.l10n.expenseColType, style: style)),
-          Expanded(flex: 3, child: Text(context.l10n.expenseColDescription, style: style)),
-          Expanded(child: Text(context.l10n.expenseColAmount, textAlign: TextAlign.right, style: style)),
+          Expanded(flex: 2, child: TableHead(context.l10n.expenseColId)),
+          Expanded(flex: 3, child: TableHead(context.l10n.expenseColWhen)),
+          Expanded(flex: 3, child: TableHead(context.l10n.expenseColCashier)),
+          Expanded(flex: 3, child: TableHead(context.l10n.expenseColType)),
+          Expanded(flex: 4, child: TableHead(context.l10n.expenseColDescription)),
+          Expanded(flex: 2, child: TableHead(context.l10n.expenseColAmount, align: TextAlign.end)),
         ],
       ),
     );
   }
 
   Widget _line(BuildContext context, CafeStore store, ShiftExpense row) {
+    const body = TextStyle(fontSize: 14, color: CafeColors.ink);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
       child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Wrap(
-                  spacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(row.shortId, style: const TextStyle(fontWeight: FontWeight.w800)),
-                    _statusPill(
-                      context,
-                      label: row.editedFrom == null ? context.l10n.expenseLogged : context.l10n.expenseEdited,
-                      edited: row.editedFrom != null,
-                      onTap: row.editedFrom == null ? null : () => _original(context, store, row),
+        children: [
+          Expanded(flex: 2, child: Text(row.shortId, style: body.copyWith(fontWeight: FontWeight.w800))),
+          Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt), style: body)),
+          Expanded(flex: 3, child: Text(expenseCashierName(store, row), maxLines: 1, overflow: TextOverflow.ellipsis, style: body)),
+          Expanded(
+            flex: 3,
+            child: Align(alignment: AlignmentDirectional.centerStart, child: StatusBadge(store.expenseCategoryLabel(row), tone: _tone(store, row))),
+          ),
+          Expanded(
+            flex: 4,
+            child: Row(
+              children: [
+                Flexible(child: Text(row.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: body)),
+                if (row.editedFrom != null) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _original(context, store, row),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Text(context.l10n.expenseEdited, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF7A5512))),
                     ),
-                  ],
-                ),
-              ),
-              Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt))),
-              Expanded(flex: 2, child: Text(expenseCashierName(store, row))),
-              Expanded(flex: 2, child: Text(store.expenseCategoryLabel(row))),
-              Expanded(flex: 3, child: Text(row.description)),
-              Expanded(
-                child: Text(
-                  store.currency.format(-row.amount),
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.alert),
-                ),
-              ),
-            ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              store.currency.format(row.amount),
+              textAlign: TextAlign.end,
+              style: body.copyWith(fontWeight: FontWeight.w800, color: CafeColors.terracottaDark),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  Widget _statusPill(
-    BuildContext context, {
-    required String label,
-    required bool edited,
-    VoidCallback? onTap,
-  }) {
-    final color = edited ? CafeColors.alert : CafeColors.inkMuted;
-    final pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color),
-      ),
-      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 12)),
-    );
-    if (onTap == null) return pill;
-    return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(8), child: pill);
   }
 
   void _original(BuildContext context, CafeStore store, ShiftExpense row) {

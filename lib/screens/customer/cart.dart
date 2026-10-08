@@ -12,7 +12,7 @@ class CustomerCartScreen extends StatelessWidget {
       return CustomerShell.phone(context,
         child: Column(
           children: [
-            _cartHeader(context, CafeTable(id: 'missing', number: tableSlug, qrSlug: tableSlug)),
+            GuestHeader(table: CafeTable(id: 'missing', number: tableSlug, qrSlug: tableSlug)),
             Expanded(child: EmptyHint(context.l10n.noTables)),
             CustomerShell.nav(context, tableSlug, '/t/$tableSlug/cart'),
           ],
@@ -25,117 +25,141 @@ class CustomerCartScreen extends StatelessWidget {
     return CustomerShell.phone(context,
       child: Column(
         children: [
-          _cartHeader(context, table),
+          GuestHeader(table: table),
           RefusalNotice(tableId: table.id),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
               children: [
-                Row(
-                  children: [
-                    Text(context.l10n.guestTableBill, style: CafeTheme.display.copyWith(fontSize: 30, fontWeight: FontWeight.w700)),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: CafeColors.peach, borderRadius: BorderRadius.circular(20)),
-                      child: Text(context.l10n.guestLiveTab, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
                 if (order == null && cart.lines.isEmpty)
                   Padding(padding: const EdgeInsets.only(top: 48), child: EmptyHint(context.l10n.noOrders))
                 else ...[
                   if (order != null) ...[
-                    const SizedBox(height: 12),
-                    SoftCard(
-                      radius: 12,
+                    GuestCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                          Text(context.l10n.guestTableNumber(table.number), style: const TextStyle(color: CafeColors.inkMuted)),
-                          Text(context.l10n.guestSentToKitchenAt(formatTripoliTime(order.createdAt)), style: const TextStyle(color: CafeColors.inkMuted)),
-                          const SizedBox(height: 12),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(12)),
-                            child: Text(context.l10n.guestKitchenPreparing, style: const TextStyle(fontWeight: FontWeight.w700)),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    GuestEyebrow(context.l10n.guestLiveTab),
+                                    const SizedBox(height: 2),
+                                    Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    context.l10n.guestSentToKitchenAt(formatTripoliTime(order.createdAt)),
+                                    textAlign: TextAlign.end,
+                                    style: const TextStyle(color: GuestTokens.muted, fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           _status(context, order.status),
+                          if (order.status.index <= OrderStatus.preparing.index) ...[
+                            const SizedBox(height: 14),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                              decoration: BoxDecoration(color: GuestTokens.softAccent, borderRadius: BorderRadius.circular(12)),
+                              child: Text(
+                                context.l10n.guestKitchenPreparing,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.45, color: CafeColors.terracottaDark),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
+                    const SizedBox(height: 14),
                   ],
                   if (cart.lines.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Text(context.l10n.guestNewAdditions, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                    const SizedBox(height: 8),
-                    SoftCard(
-                      radius: 12,
+                    GuestCard(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
                       child: Column(
-                        children: cart.lines.map((line) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w700))),
-                                _blockedOr(
-                                  context,
-                                  store,
-                                  IconButton(
-                                    onPressed: store.canPlaceOrder
-                                        ? () => store.setCartQty(table.id, line.menuItemId, line.qty - 1)
-                                        : null,
-                                    icon: Icon(Icons.remove, size: 16, color: store.canPlaceOrder ? null : CafeColors.inkMuted),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(context.l10n.guestNewAdditions, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GuestTokens.muted)),
+                          const SizedBox(height: 6),
+                          ...cart.lines.map((line) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              decoration: const BoxDecoration(border: Border(top: BorderSide(color: GuestTokens.hairline))),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+                                  _blockedOr(
+                                    context,
+                                    store,
+                                    IconButton(
+                                      onPressed: store.canPlaceOrder ? () => store.setCartQty(table.id, line.menuItemId, line.qty - 1) : null,
+                                      icon: Icon(Icons.remove, size: 18, color: store.canPlaceOrder ? CafeColors.ink : GuestTokens.muted),
+                                    ),
                                   ),
-                                ),
-                                Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                                _blockedOr(
-                                  context,
-                                  store,
-                                  IconButton(
-                                    onPressed: store.canPlaceOrder
-                                        ? () => store.setCartQty(table.id, line.menuItemId, line.qty + 1)
-                                        : null,
-                                    icon: Icon(Icons.add, size: 16, color: store.canPlaceOrder ? null : CafeColors.inkMuted),
+                                  Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                  _blockedOr(
+                                    context,
+                                    store,
+                                    IconButton(
+                                      onPressed: store.canPlaceOrder ? () => store.setCartQty(table.id, line.menuItemId, line.qty + 1) : null,
+                                      icon: Icon(Icons.add, size: 18, color: store.canPlaceOrder ? CafeColors.ink : GuestTokens.muted),
+                                    ),
                                   ),
-                                ),
-                                Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                                  const SizedBox(width: 4),
+                                  Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 14),
                   ],
-                  const SizedBox(height: 16),
-                  SoftCard(
-                    radius: 12,
+                  GuestCard(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(context.l10n.guestTicketSummary, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(context.l10n.guestTicketSummary, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GuestTokens.muted)),
+                        ),
                         ...?order?.lines.map((line) => _line(store, line)),
                         ...cart.lines.map((line) => _line(store, line)),
-                        const Divider(),
-                        Row(
-                          children: [
-                            Text(context.l10n.guestKitchenTicketTotal, style: const TextStyle(fontWeight: FontWeight.w700)),
-                            const Spacer(),
-                            MoneyText(store.guestCurrency.format(store.tabSubtotal(table.id) + cart.total), style: const TextStyle(fontSize: 20)),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.only(top: 10),
+                          decoration: const BoxDecoration(border: Border(top: BorderSide(color: CafeColors.line))),
+                          child: Row(
+                            children: [
+                              Expanded(child: Text(context.l10n.guestKitchenTicketTotal, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+                              Text(
+                                store.guestCurrency.format(store.tabSubtotal(table.id) + cart.total),
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: CafeSurfaces.of(context).header),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: GuestOutlineButton(
+                          label: context.l10n.guestCallServer,
                           onPressed: () {
                             if (!store.guestOrderingOpen) {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderingPaused)));
@@ -144,13 +168,13 @@ class CustomerCartScreen extends StatelessWidget {
                             store.callStaff(table.id);
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestRequestSent)));
                           },
-                          icon: const Icon(Icons.notifications_active_outlined),
-                          label: Text(context.l10n.guestCallServer),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: GuestPrimaryButton(
+                          height: 52,
+                          label: context.l10n.guestRequestBill,
                           onPressed: store.canRequestBill(table.id)
                               ? () async {
                                   final error = await store.requestBill(table.id);
@@ -164,8 +188,6 @@ class CustomerCartScreen extends StatelessWidget {
                               : () {
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestBillAfterServed)));
                                 },
-                          icon: const Icon(Icons.receipt_long),
-                          label: Text(context.l10n.guestRequestBill),
                         ),
                       ),
                     ],
@@ -180,49 +202,11 @@ class CustomerCartScreen extends StatelessWidget {
     );
   }
 
-  Widget _cartHeader(BuildContext context, CafeTable table) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: guestHeaderDecoration(context),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: const Color(0x1A9A3C1D), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.restaurant, color: CafeColors.terracottaDark, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(context.watch<CafeStore>().cafeName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).onHeader)),
-                Text(context.l10n.guestTableDineIn(table.number), style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _line(CafeStore store, OrderLine line) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Text('${line.qty}×', style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(store.guestLineName(line), style: const TextStyle(fontWeight: FontWeight.w600))),
-          Text(store.guestCurrency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
+    return GuestTicketLine(qty: line.qty, name: store.guestLineName(line), amount: store.guestCurrency.format(line.total));
   }
 
+  /// Received → Preparing → Ready → Served, joined by a line that fills as the order moves.
   Widget _status(BuildContext context, OrderStatus status) {
     final labels = [
       context.l10n.guestStatusReceived,
@@ -230,21 +214,49 @@ class CustomerCartScreen extends StatelessWidget {
       context.l10n.guestStatusReady,
       context.l10n.guestStatusServed,
     ];
-    const icons = [Icons.check, Icons.sync, Icons.dinner_dining, Icons.table_restaurant];
+    final accent = CafeSurfaces.of(context).button;
     final current = status.index.clamp(0, 3);
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: List.generate(4, (index) {
-        final active = index <= current;
+        final reached = index <= current;
+        final done = index < current;
         return Expanded(
           child: Column(
             children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: active ? CafeColors.terracotta : CafeColors.line,
-                child: Icon(index < current ? Icons.check : icons[index], size: 14, color: Colors.white),
+              SizedBox(
+                height: 36,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: Container(height: 3, color: index == 0 ? Colors.transparent : (reached ? accent : GuestTokens.border))),
+                        Expanded(child: Container(height: 3, color: index == 3 ? Colors.transparent : (index < current ? accent : GuestTokens.border))),
+                      ],
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: reached ? accent : GuestTokens.stepIdle,
+                        shape: BoxShape.circle,
+                        boxShadow: index == current && !done ? [BoxShadow(color: accent.withValues(alpha: 0.18), spreadRadius: 4)] : null,
+                      ),
+                      child: done
+                          ? const Icon(Icons.check, size: 15, color: Colors.white)
+                          : Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 4),
-              Text(labels[index], style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: active ? CafeColors.terracotta : CafeColors.inkMuted)),
+              Text(
+                labels[index],
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: reached ? CafeColors.ink : const Color(0xFF6B7A83)),
+              ),
             ],
           ),
         );
@@ -252,4 +264,3 @@ class CustomerCartScreen extends StatelessWidget {
     );
   }
 }
-
