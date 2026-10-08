@@ -141,7 +141,7 @@ void main() {
         };
       },
     );
-    await sync.topUp(below: 2, count: 3);
+    await sync.topUp(monthBelow: 2, monthCount: 3, dayBelow: 2, dayCount: 3);
     expect(reserveCalls, 1);
     final a = await sync.takeNumber();
     final b = await sync.takeNumber();
@@ -221,5 +221,145 @@ void main() {
     await sync.enqueue(item('only'));
     await Future.wait([sync.flush(), sync.flush(), sync.flush()]);
     expect(calls, 1);
+  });
+
+  test('retry puts a refused item back in its place, ahead of later items', () async {
+    for (final store in <OutboxStore>[MemoryOutboxStore(), SqliteOutboxStore.open(':memory:')]) {
+      var refuse = true;
+      final sent = <String>[];
+      final sync = OfflineSync(
+        store: store,
+        rpc: (name, params) async {
+          final id = params['p_client_id'] as String;
+          if (id == 'sale' && refuse) return {'ok': false, 'error': 'unknown cashier'};
+          sent.add(id);
+          return {'ok': true};
+        },
+      );
+      await sync.enqueue(item('sale'));
+      expect(await sync.flush(), 0);
+      expect(sync.failedCount, 1);
+      // Queued after the refusal and not uploaded yet (the till went offline).
+      await sync.enqueue(item('close', 'shift_close'));
+      refuse = false;
+      await sync.retryFailed();
+      expect((await sync.pendingItems()).map((i) => i.id), ['sale', 'close']);
+      expect(await sync.flush(), 2);
+      expect(sent, ['sale', 'close'], reason: '${store.runtimeType}');
+    }
+  });
+
+  test('numbers are reserved only when short: month and day separately', () async {
+    final asked = <Map<String, dynamic>>[];
+    var now = DateTime.utc(2026, 10, 7, 10);
+    var month = 0;
+    var day = 0;
+    final sync = OfflineSync(
+      store: MemoryOutboxStore(),
+      clock: () => now,
+      rpc: (name, params) async {
+        asked.add(params);
+        final m = params['p_month_count'] as int;
+        final d = params['p_day_count'] as int;
+        final answer = <String, dynamic>{'ok': true, 'year_month': '2610'};
+        if (m > 0) answer.addAll({'first': month + 1, 'last': month + m});
+        if (d > 0) answer.addAll({'day_key': tripoliDayKey(now), 'day_first': day + 1, 'day_last': day + d});
+        month += m;
+        day += d;
+        return answer;
+      },
+    );
+    await sync.topUp();
+    expect(asked.single, {'p_month_count': 50, 'p_day_count': 10});
+    await sync.topUp();
+    expect(asked, hasLength(1), reason: 'enough of both: nothing reserved');
+    // Next day: plenty of monthly numbers left, only today's order numbers are missing.
+    now = DateTime.utc(2026, 10, 8, 10);
+    day = 0;
+    await sync.topUp();
+    expect(asked.last, {'p_month_count': 0, 'p_day_count': 10});
+    final n = await sync.takeNumber();
+    expect(n!.monthly, 1);
+    expect(n.day, 1);
+  });
+
+  test('upload errors: duplicate counts as done, expired sign-in waits, bad data is set aside', () async {
+    Object? fail;
+    final sync = OfflineSync(
+      store: MemoryOutboxStore(),
+      rpc: (name, params) async {
+        if (fail != null) throw fail;
+        return {'ok': true};
+      },
+    );
+    await sync.enqueue(item('a'));
+    fail = Exception('PostgrestException(message: duplicate key value violates unique constraint '
+        '"payments_client_id_key", code: 23505, details: Conflict, hint: null)');
+    expect(await sync.flush(), 1);
+    expect(sync.pendingCount, 0);
+    expect(sync.failedCount, 0);
+
+    await sync.enqueue(item('b'));
+    fail = Exception('PostgrestException(message: JWT expired, code: PGRST301, details: Unauthorized, hint: null)');
+    expect(await sync.flush(), 0);
+    expect(sync.needsSignIn, isTrue);
+    expect(sync.pendingCount, 1);
+    expect(sync.failedCount, 0);
+    sync.signedIn();
+
+    fail = Exception('PostgrestException(message: upstream error, code: PGRST000, details: null, hint: null)');
+    expect(await sync.flush(), 0);
+    expect(sync.pendingCount, 1, reason: 'a server problem is retried, not set aside');
+
+    fail = Exception('PostgrestException(message: invalid input syntax for type uuid, code: 22P02, details: null, hint: null)');
+    expect(await sync.flush(), 0);
+    expect(sync.failedCount, 1);
+    expect(sync.pendingCount, 0);
+  });
+
+  test('an offline shift gets the cashier chosen later; an empty one is dropped', () async {
+    final store = MemoryOutboxStore();
+    final sent = <String>[];
+    final sync = OfflineSync(
+      store: store,
+      rpc: (name, params) async {
+        sent.add('$name:${params['p_cashier_id']}');
+        return {'ok': true};
+      },
+    );
+    OutboxItem openShift(String id) => OutboxItem(
+      id: id,
+      kind: 'shift_open',
+      createdAt: DateTime.utc(2026, 10, 7),
+      payload: {
+        'params': {'p_client_id': 'shift-$id', 'p_cashier_id': null},
+        'local': {
+          'shift': {'id': 'shift-$id', 'cashierId': ''},
+        },
+      },
+    );
+    await sync.enqueue(openShift('1'));
+    expect(sync.unassignedCount, 0, reason: 'a shift alone is not work to assign');
+    expect(await sync.dropIdleUnassignedShifts(), 1);
+    expect(sync.pendingCount, 0);
+
+    await sync.enqueue(openShift('2'));
+    await sync.enqueue(
+      OutboxItem(
+        id: 'sale',
+        kind: 'takeout',
+        createdAt: DateTime.utc(2026, 10, 7),
+        payload: {
+          'params': {'p_client_id': 'sale', 'p_cashier_id': null, 'p_shift_id': 'shift-2'},
+        },
+      ),
+    );
+    expect(await sync.dropIdleUnassignedShifts(), 0, reason: 'a shift with sales is kept');
+    expect(sync.unassignedCount, 1);
+    await sync.assignCashier('cash-3');
+    final local = (await sync.pendingItems()).first.payload['local'] as Map;
+    expect((local['shift'] as Map)['cashierId'], 'cash-3');
+    expect(await sync.flush(), 2);
+    expect(sent, ['sync_offline_shift_open:cash-3', 'sync_offline_takeout:cash-3']);
   });
 }

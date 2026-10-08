@@ -208,10 +208,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickTakeoutPay => 'تحصيل الدفع';
 
   @override
-  String get quickTakeoutNeedTable =>
-      'أضف طاولة باسم Takeout من الطاولات ورمز QR، ثم أعد المحاولة.';
-
-  @override
   String get quickTakeoutBusy => 'هذا الإيصال قيد الحفظ.';
 
   @override

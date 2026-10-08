@@ -270,9 +270,9 @@ class _OfflineStartCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 TerracottaButton(
                   label: context.l10n.offlineStartButton,
-                  onPressed: () {
-                    store.startOfflineSession();
-                    context.go('/pos/takeout');
+                  onPressed: () async {
+                    await store.startOfflineSession();
+                    if (context.mounted) context.go('/pos/takeout');
                   },
                 ),
               ],

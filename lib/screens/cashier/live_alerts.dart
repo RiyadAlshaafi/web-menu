@@ -376,7 +376,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     final subtotal = store.tabSubtotal(order.tableId);
     final service = store.serviceCharge(subtotal);
     final total = store.tabTotal(order.tableId);
-    final waiting = store.tableById(order.tableId).status == TableStatus.billRequested;
+    // Takeout orders have no table.
+    final waiting = store.tables.where((t) => t.id == order.tableId).firstOrNull?.status == TableStatus.billRequested;
     final method = order.paymentTypeId;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

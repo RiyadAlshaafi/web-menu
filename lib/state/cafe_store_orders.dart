@@ -180,11 +180,6 @@ extension CafeStoreOrders on CafeStore {
     return openOrderFor(tableId);
   }
 
-  CafeTable? get takeoutCounter {
-    final named = tables.where(isServiceCounter);
-    return named.isEmpty ? null : named.first;
-  }
-
   List<CafeTable> get diningTables =>
       tables.where((table) => !table.archived && !isServiceCounter(table)).toList();
 
@@ -193,8 +188,6 @@ extension CafeStoreOrders on CafeStore {
     String? paymentTypeId,
   }) async {
     if (_takeoutBusy) return 'in_flight';
-    final table = takeoutCounter;
-    if (table == null) return 'takeout_table';
     if (lines.isEmpty) return l10n.cashierExpenseInvalid;
     final cashier = currentCashier;
     var shift = currentShift ?? openShift;
@@ -226,7 +219,6 @@ extension CafeStoreOrders on CafeStore {
       if (offlineEnabled) {
         try {
           return await _checkoutTakeoutLocal(
-            counter: table,
             ticket: ticket,
             paymentTypeId: paymentTypeId,
             cashier: cashier,
@@ -244,7 +236,6 @@ extension CafeStoreOrders on CafeStore {
         final error = applyQuickTakeout(
           orders: orders,
           payments: payments,
-          counter: table,
           lines: ticket,
           paymentTypeId: paymentTypeId,
           cashierId: cashier.id,

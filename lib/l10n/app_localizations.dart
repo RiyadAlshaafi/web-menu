@@ -482,12 +482,6 @@ abstract class AppLocalizations {
   /// **'Take payment'**
   String get quickTakeoutPay;
 
-  /// No description provided for @quickTakeoutNeedTable.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a table named Takeout in Tables & QR, then try again.'**
-  String get quickTakeoutNeedTable;
-
   /// No description provided for @quickTakeoutBusy.
   ///
   /// In en, this message translates to:

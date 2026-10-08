@@ -58,6 +58,9 @@ abstract class OutboxStore {
   Future<void> updatePayload(String id, Map<String, dynamic> payload);
   Future<void> noteAttempt(String id, String error);
   Future<void> markFailed(String id, String error);
+
+  /// Puts every refused item back in the queue at its original place, so order is kept.
+  Future<void> requeueFailed();
   Future<String?> readValue(String key);
   Future<void> writeValue(String key, String? value);
 }
@@ -103,6 +106,21 @@ class MemoryOutboxStore implements OutboxStore {
 
   @override
   Future<void> markFailed(String id, String error) async => _replace(id, failed: true, error: error);
+
+  @override
+  Future<void> requeueFailed() async {
+    for (var i = 0; i < _items.length; i++) {
+      final old = _items[i];
+      if (!old.failed) continue;
+      _items[i] = OutboxItem(
+        id: old.id,
+        kind: old.kind,
+        payload: old.payload,
+        createdAt: old.createdAt,
+        attempts: old.attempts,
+      );
+    }
+  }
 
   void _replace(String id, {required bool failed, required String error}) {
     final index = _items.indexWhere((item) => item.id == id);

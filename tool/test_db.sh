@@ -37,6 +37,7 @@ loud -d "$DB" -f supabase/tests/old_app_compat_test.sql
 echo "== Parts 1 and 2: the new rules"
 build
 loud -d "$DB" -f supabase/tests/security_and_money_fixes_test.sql
+loud -d "$DB" -f supabase/tests/takeout_and_numbers_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

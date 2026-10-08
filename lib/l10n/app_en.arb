@@ -94,7 +94,6 @@
   "quickTakeoutAll": "All",
   "quickTakeoutEmpty": "Tap a dish to start the ticket.",
   "quickTakeoutPay": "Take payment",
-  "quickTakeoutNeedTable": "Add a table named Takeout in Tables & QR, then try again.",
   "quickTakeoutBusy": "That receipt is already being saved.",
   "quickTakeoutPaid": "Takeout paid.",
   "navLiveAlerts": "Live Alerts & Queue",

@@ -63,7 +63,6 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     setState(() => paying = false);
     if (error != null) {
       final message = switch (error) {
-        'takeout_table' => context.l10n.quickTakeoutNeedTable,
         'in_flight' => context.l10n.quickTakeoutBusy,
         _ => error,
       };
