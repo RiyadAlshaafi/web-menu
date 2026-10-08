@@ -38,6 +38,15 @@ echo "== Parts 1 and 2: the new rules"
 build
 loud -d "$DB" -f supabase/tests/security_and_money_fixes_test.sql
 loud -d "$DB" -f supabase/tests/takeout_and_numbers_test.sql
+loud -d "$DB" -f supabase/tests/app_updates_test.sql
+
+echo "== Rollbacks undo their migration, and the migration applies again afterwards"
+for down in supabase/rollbacks/*.down.sql; do
+  up="supabase/migrations/$(basename "$down" .down.sql).sql"
+  quiet -d "$DB" -f "$down"
+  quiet -d "$DB" -f "$up"
+done
+loud -d "$DB" -f supabase/tests/app_updates_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

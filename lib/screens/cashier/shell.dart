@@ -174,6 +174,7 @@ class CashierShell extends StatelessWidget {
                   actions: const [HeaderClock(), LanguageButton()],
                 ),
                 const OfflineStatusBanner(),
+                const UpdateReadyStrip(),
                 Expanded(
                   child: ColoredBox(
                     color: surfaces.background,

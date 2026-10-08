@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_database.dart';
@@ -15,6 +16,10 @@ import '../offline/outbox_store.dart';
 import '../report_error.dart';
 import '../takeout_receipt.dart';
 import '../theme/cafe_theme.dart';
+import '../update/app_version.dart';
+import '../update/release_info.dart';
+import '../update/update_checks.dart';
+import '../update/update_platform.dart';
 
 part 'cafe_store_settings.dart';
 part 'cafe_store_catalog.dart';
@@ -22,6 +27,7 @@ part 'cafe_store_orders.dart';
 part 'cafe_store_payments.dart';
 part 'cafe_store_location.dart';
 part 'cafe_store_offline.dart';
+part 'cafe_store_update.dart';
 
 enum AuthKind { none, admin, cashier }
 
@@ -105,6 +111,19 @@ class CafeStore extends ChangeNotifier {
   Timer? _guestOrderingPoll;
   String? _guestOrderingSlug;
 
+  /// Self-update of the Windows app (cafe_store_update.dart).
+  UpdatePlatform updatePlatform = UpdatePlatform.create();
+  String appVersion = '';
+  String? minAppVersion;
+  ReleaseInfo? updateRelease;
+  String? updateFile;
+  bool updateBusy = false;
+  UpdateBlock? updateBlock;
+  UpdateNotice? updateNotice;
+  String? updateBackupPath;
+  ({UploadSummary local, UploadSummary server})? lastUploadCheck;
+  Timer? _updateTimer;
+
   bool get canPlaceOrder =>
       guestOrderingOpen &&
       (guestLocation == GuestLocationStatus.off ||
@@ -140,6 +159,7 @@ class CafeStore extends ChangeNotifier {
     } else if (db.rememberAdmin && admin != null) {
       authKind = AuthKind.admin;
     }
+    await _initUpdates();
     notifyListeners();
     startLiveSync();
   }
@@ -175,6 +195,7 @@ class CafeStore extends ChangeNotifier {
     _cashierPulse?.cancel();
     _guestOrderingPoll?.cancel();
     _reconnectProbe?.cancel();
+    _updateTimer?.cancel();
     super.dispose();
   }
 
@@ -614,6 +635,11 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<bool> signInCashier() async {
+    if (belowMinVersion) {
+      loginError = l10n.updateRequiredTitle;
+      notifyListeners();
+      return false;
+    }
     if (selectedCashierId.isEmpty) {
       loginError = l10n.errSelectCashier;
       notifyListeners();

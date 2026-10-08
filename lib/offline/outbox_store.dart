@@ -28,12 +28,28 @@ class OutboxItem {
   final bool failed;
 }
 
+/// A receipt or expense the server confirmed, remembered so it can be checked again later
+/// (before an app update the till asks the server to confirm all of them).
+class SentRecord {
+  const SentRecord({required this.id, required this.kind, required this.amount, required this.sentAt});
+
+  final String id;
+
+  /// `takeout` or `expense`.
+  final String kind;
+  final double amount;
+  final DateTime sentAt;
+}
+
 /// Durable queue of changes made on this device, plus a few saved values.
 abstract class OutboxStore {
   /// The device's store for the server at [serverUrl]: a SQLite file on desktop and mobile,
   /// memory on the web. Each server gets its own file, so work saved while connected to one
   /// database can never be uploaded to another.
   static Future<OutboxStore> open(String serverUrl) => impl.openOutboxStore(serverUrl);
+
+  /// File name of the outbox for [serverUrl] in the app's data folder.
+  static String fileNameFor(String serverUrl) => 'offline_outbox_${scopeOf(serverUrl)}.sqlite';
 
   /// Short stable name for [serverUrl], used in the file name.
   static String scopeOf(String serverUrl) {
@@ -63,12 +79,33 @@ abstract class OutboxStore {
   Future<void> requeueFailed();
   Future<String?> readValue(String key);
   Future<void> writeValue(String key, String? value);
+
+  /// Remembers an upload the server confirmed.
+  Future<void> recordSent(SentRecord record);
+
+  /// Uploads confirmed since [since], oldest first.
+  Future<List<SentRecord>> sentSince(DateTime since);
+
+  /// Writes a consistent copy of the whole store to [path] (for the backup before an update).
+  /// Returns false when this store keeps nothing on disk.
+  Future<bool> backupTo(String path);
 }
 
 /// Keeps everything in memory. Used on the web and in tests.
 class MemoryOutboxStore implements OutboxStore {
   final List<OutboxItem> _items = [];
   final Map<String, String> _values = {};
+  final Map<String, SentRecord> _sent = {};
+
+  @override
+  Future<void> recordSent(SentRecord record) async => _sent[record.id] = record;
+
+  @override
+  Future<List<SentRecord>> sentSince(DateTime since) async =>
+      _sent.values.where((r) => !r.sentAt.isBefore(since)).toList()..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+
+  @override
+  Future<bool> backupTo(String path) async => false;
 
   @override
   Future<void> add(OutboxItem item) async {

@@ -355,6 +355,7 @@ class _DevScreenState extends State<DevScreen> {
           ],
           const SizedBox(height: 16),
           _slotCard(),
+          if (selectedSlot != null) _DevicesCard(key: ValueKey(selectedSlot), password: widget.password),
           _card(
             title: 'Reset admin',
             body: 'Removes the current admin account so a new one can be created.',
@@ -542,4 +543,115 @@ String _expensesCsv(List<dynamic> expenses) {
     ].map(csvCell).join(','));
   }
   return buffer.toString();
+}
+
+/// App version of every signed-in till of the selected slot, and the oldest version still allowed.
+/// Old database columns or functions are removed only once every till shows the new version.
+class _DevicesCard extends StatefulWidget {
+  const _DevicesCard({super.key, required this.password});
+
+  final String password;
+
+  @override
+  State<_DevicesCard> createState() => _DevicesCardState();
+}
+
+class _DevicesCardState extends State<_DevicesCard> {
+  final minVersion = TextEditingController();
+  List<Map<String, dynamic>> devices = [];
+  String? message;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  @override
+  void dispose() {
+    minVersion.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final result = await AppDatabase.instance.devCall('dev_list_devices', widget.password);
+    if (!mounted) return;
+    setState(() {
+      loading = false;
+      if (result?['ok'] != true) {
+        message = 'Could not load the tills. Apply the app-updates migration first.';
+        return;
+      }
+      devices = [for (final row in (result!['devices'] as List? ?? const [])) Map<String, dynamic>.from(row as Map)];
+      minVersion.text = result['min_app_version'] as String? ?? '';
+    });
+  }
+
+  Future<void> _saveMin() async {
+    final result = await AppDatabase.instance.devCall(
+      'dev_set_min_app_version',
+      widget.password,
+      {'p_version': minVersion.text.trim()},
+    );
+    if (!mounted) return;
+    setState(
+      () => message = result?['ok'] == true
+          ? 'Minimum version is now ${result!['min_app_version']}. Older tills must update before signing in.'
+          : (result?['error'] as String? ?? 'Not saved.'),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = context.select<CafeStore, String>((store) => store.appVersion);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SoftCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tills and app versions', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 6),
+            Text('This device runs ${current.isEmpty ? 'an unknown version' : current}. Tills report their version while a cashier is signed in.'),
+            const SizedBox(height: 12),
+            if (loading)
+              const LinearProgressIndicator()
+            else if (devices.isEmpty)
+              const Text('No signed-in tills right now.')
+            else
+              for (final device in devices)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '${device['online'] == true ? '\u25cf' : '\u25cb'} '
+                    '${(device['cashier'] as String?)?.isNotEmpty == true ? device['cashier'] : 'Cashier'}'
+                    ' \u00b7 ${(device['app_version'] as String?)?.isNotEmpty == true ? 'version ${device['app_version']}' : 'old app (no version)'}',
+                  ),
+                ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                SizedBox(
+                  width: 160,
+                  child: TextField(
+                    controller: minVersion,
+                    decoration: const InputDecoration(labelText: 'Minimum version', hintText: '1.2.0'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(onPressed: _saveMin, child: const Text('Save')),
+                const SizedBox(width: 8),
+                TextButton(onPressed: _load, child: const Text('Refresh')),
+              ],
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(message!, style: const TextStyle(fontWeight: FontWeight.w700)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

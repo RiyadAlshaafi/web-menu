@@ -1,0 +1,64 @@
+# Full backup of the Supabase database: every day, and by hand before applying a migration
+# (Actions → "Database backup" → Run workflow). The dump is encrypted before it is stored,
+# because this repository is public. Keep it for 30 days.
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     the "Session pooler" connection string from Supabase → Connect,
+#                       with the database password filled in
+#   BACKUP_PASSPHRASE   a long password; without it the backup can't be opened, so keep a copy
+# Restore (see docs/RELEASING.md):
+#   gpg --decrypt backup.sql.gz.gpg | gunzip | psql "<connection string>"
+name: Database backup
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the secrets are set
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "Add the SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets first (see this file's header)." >&2
+            exit 1
+          fi
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump, compress and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -o pipefail
+          stamp="$(date -u +%Y-%m-%d_%H%M)"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" \
+              --schema=public --schema=private --schema=auth --schema=supabase_migrations \
+              --no-owner --no-privileges \
+            | gzip -9 \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$PASSPHRASE" \
+                -o "backup-$stamp.sql.gz.gpg"
+          ls -l "backup-$stamp.sql.gz.gpg"
+          test -s "backup-$stamp.sql.gz.gpg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ env.STAMP }}
+          path: backup-*.sql.gz.gpg
+          retention-days: 30

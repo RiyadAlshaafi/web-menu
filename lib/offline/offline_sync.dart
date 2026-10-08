@@ -149,6 +149,12 @@ class OfflineSync {
   /// Items made while no cashier was signed in (offline start); they wait until one is chosen.
   int unassignedCount = 0;
 
+  /// This app's version, sent with the heartbeat so the developer screen sees every till's version.
+  String appVersion = '';
+
+  /// The oldest app version the server still accepts (from the last heartbeat), or null if unknown.
+  String? minAppVersion;
+
   /// Called after anything above changes.
   void Function()? onChange;
 
@@ -307,8 +313,12 @@ class OfflineSync {
   /// Tells the server a cashier is here, which keeps guest ordering open. Returns whether it answered.
   Future<bool> heartbeat() async {
     try {
-      final raw = await rpc('cashier_heartbeat', const {});
+      final raw = await rpc('cashier_heartbeat_v2', {'p_app_version': appVersion});
       final ok = raw is Map && raw['ok'] == true;
+      if (ok && raw['min_app_version'] is String && raw['min_app_version'] != minAppVersion) {
+        minAppVersion = raw['min_app_version'] as String;
+        onChange?.call();
+      }
       if (!ok && raw is Map && '${raw['error']}'.contains('session expired')) _requireSignIn();
       _setOnline(true);
       return ok;
@@ -349,7 +359,7 @@ class OfflineSync {
           final answer = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{'ok': false, 'error': 'bad answer'};
           _setOnline(true);
           if (answer['ok'] == true) {
-            await store.remove(item.id);
+            await _done(item);
             uploaded++;
             continue;
           }
@@ -369,7 +379,7 @@ class OfflineSync {
               _requireSignIn();
               await store.noteAttempt(item.id, '$error');
             case UploadError.duplicate:
-              await store.remove(item.id);
+              await _done(item);
               uploaded++;
               continue;
             case UploadError.refused:
@@ -388,6 +398,22 @@ class OfflineSync {
       await _recount();
     }
     return uploaded;
+  }
+
+  /// The server has [item]: drop it from the queue and remember it, so it can be confirmed again
+  /// before an app update.
+  Future<void> _done(OutboxItem item) async {
+    final amount = switch (item.kind) {
+      'takeout' => ((item.payload['local'] as Map?)?['payment'] as Map?)?['totalDue'],
+      'expense' => (item.payload['params'] as Map?)?['p_amount'],
+      _ => null,
+    };
+    await store.remove(item.id);
+    if (amount is num) {
+      await store.recordSent(
+        SentRecord(id: item.id, kind: item.kind, amount: amount.toDouble(), sentAt: _clock().toUtc()),
+      );
+    }
   }
 
   /// Puts refused items back in the queue to try again (after the cause was fixed). Each keeps

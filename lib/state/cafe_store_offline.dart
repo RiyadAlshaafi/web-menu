@@ -98,7 +98,7 @@ extension CafeStoreOffline on CafeStore {
     if (sync == null) {
       // Web cashier: only the presence signal that keeps guest ordering open.
       try {
-        await db.callRpc('cashier_heartbeat', const {});
+        await db.callRpc('cashier_heartbeat_v2', {'p_app_version': appVersion});
       } catch (error, stackTrace) {
         reportError('cashier heartbeat', error, stackTrace);
       }
@@ -373,7 +373,7 @@ extension CafeStoreOffline on CafeStore {
   /// The offline shift is saved for upload first, with no cashier yet; whoever is chosen after the
   /// connection returns gets the shift and everything sold on it.
   Future<void> startOfflineSession() async {
-    if (!canStartOffline) return;
+    if (!canStartOffline || belowMinVersion) return;
     db.offlineMode = true;
     stopLiveSync();
     _hydrateOperational();

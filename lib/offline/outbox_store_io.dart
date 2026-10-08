@@ -8,7 +8,7 @@ import 'outbox_store.dart';
 Future<OutboxStore> openOutboxStore(String serverUrl) async {
   final folder = await getApplicationSupportDirectory();
   await folder.create(recursive: true);
-  return SqliteOutboxStore.open(p.join(folder.path, 'offline_outbox_${OutboxStore.scopeOf(serverUrl)}.sqlite'));
+  return SqliteOutboxStore.open(p.join(folder.path, OutboxStore.fileNameFor(serverUrl)));
 }
 
 /// Outbox kept in a SQLite file, so saved sales survive a crash or restart.
@@ -32,6 +32,13 @@ class SqliteOutboxStore implements OutboxStore {
         failed integer not null default 0
       )''');
     db.execute('create table if not exists kv (key text primary key, value text not null)');
+    db.execute('''
+      create table if not exists sent (
+        id text primary key,
+        kind text not null,
+        amount real not null,
+        sent_at text not null
+      )''');
     return SqliteOutboxStore._(db);
   }
 
@@ -78,6 +85,33 @@ class SqliteOutboxStore implements OutboxStore {
   @override
   Future<void> markFailed(String id, String error) async =>
       _db.execute('update outbox set attempts = attempts + 1, last_error = ?, failed = 1 where id = ?', [error, id]);
+
+  @override
+  Future<void> recordSent(SentRecord record) async => _db.execute(
+    'insert or replace into sent (id, kind, amount, sent_at) values (?, ?, ?, ?)',
+    [record.id, record.kind, record.amount, record.sentAt.toUtc().toIso8601String()],
+  );
+
+  @override
+  Future<List<SentRecord>> sentSince(DateTime since) async => [
+    for (final row in _db.select(
+      'select * from sent where sent_at >= ? order by sent_at',
+      [since.toUtc().toIso8601String()],
+    ))
+      SentRecord(
+        id: row['id'] as String,
+        kind: row['kind'] as String,
+        amount: (row['amount'] as num).toDouble(),
+        sentAt: DateTime.parse(row['sent_at'] as String),
+      ),
+  ];
+
+  @override
+  Future<bool> backupTo(String path) async {
+    // VACUUM INTO writes one consistent file even while the outbox is open (WAL mode).
+    _db.execute('vacuum into ?', [path]);
+    return true;
+  }
 
   @override
   Future<void> requeueFailed() async =>

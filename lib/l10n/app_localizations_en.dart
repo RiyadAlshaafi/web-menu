@@ -1868,4 +1868,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminRequireCashierOnlineHint =>
       'Guests can still read the menu, but cannot order, call staff or ask for the bill while no signed-in cashier device is connected. Turn this on once every till runs the updated app.';
+
+  @override
+  String get updateRequiredTitle => 'Update required';
+
+  @override
+  String get updateRequiredBody =>
+      'This version of the app is no longer accepted. Install the update to keep working.';
+
+  @override
+  String updateReady(String version) {
+    return 'Update $version is ready';
+  }
+
+  @override
+  String get updateInstallNow => 'Install now';
+
+  @override
+  String get updateInstalling => 'Checking data and installing…';
+
+  @override
+  String get updateDownloading => 'Downloading an update…';
+
+  @override
+  String updateReadyAfterSignOut(String version) {
+    return 'Update $version is ready. It installs from the sign-in screen.';
+  }
+
+  @override
+  String get updateSafetyNote =>
+      'Before installing, every sale is checked with the server and this till\'s data is backed up.';
+
+  @override
+  String get updateBlockSignedIn =>
+      'Sign out first. Updates install from the sign-in screen.';
+
+  @override
+  String get updateBlockOffline =>
+      'No connection to the server, so the uploads can\'t be checked. Try again when online.';
+
+  @override
+  String get updateBlockPending =>
+      'Some sales are still waiting to upload. Sign in so they upload, then sign out and update.';
+
+  @override
+  String get updateBlockFailed =>
+      'The server refused some uploads. Check them before updating.';
+
+  @override
+  String get updateBlockServerMissing =>
+      'The server is missing receipts or expenses from this till, so the update did not install.';
+
+  @override
+  String get updateBlockDownload =>
+      'The update could not be downloaded or failed its safety check. It will try again.';
+
+  @override
+  String get updateBlockBackup =>
+      'This till\'s data could not be backed up, so the update did not install.';
+
+  @override
+  String updateNoticeUpdated(String version) {
+    return 'Updated to $version. All sales were checked with the server.';
+  }
+
+  @override
+  String get updateNoticeNotInstalled =>
+      'The update did not install. Nothing was changed.';
+
+  @override
+  String get updateNoticeMismatch =>
+      'Updated, but the server and this till disagree about some sales. Contact support before closing the shift.';
+
+  @override
+  String updateBackupAt(String path) {
+    return 'Backup: $path';
+  }
 }
