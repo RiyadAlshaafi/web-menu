@@ -1018,7 +1018,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String cashierServiceCharge(String percent) {
-    return 'رسم الخدمة ($percent)';
+    return 'رسم الخدمة ($percent%)';
   }
 
   @override
@@ -1983,4 +1983,105 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guestPayLabel => 'طريقة الدفع';
+
+  @override
+  String dishActiveCount(int active, int total) {
+    return '$active من $total نشط';
+  }
+
+  @override
+  String salesReceiptsTotal(int count, String total) {
+    return '$count إيصال · $total';
+  }
+
+  @override
+  String dashboardSettledReceipts(int count) {
+    return '$count إيصال مدفوع';
+  }
+
+  @override
+  String get dashboardExpensesCaption => 'الأجور والمشتريات والسحوبات';
+
+  @override
+  String get dashboardNetCaption => 'المبيعات ناقص المصروفات';
+
+  @override
+  String get dashboardSalesVsExpenses => 'المبيعات مقابل المصروفات';
+
+  @override
+  String dashboardChartBar(String day, String sales, String expenses) {
+    return '$day: مبيعات $sales، مصروفات $expenses';
+  }
+
+  @override
+  String get catalogActivePromos => 'العروض النشطة';
+
+  @override
+  String get catalogNoActivePromos => 'لا توجد عروض نشطة.';
+
+  @override
+  String get catalogRemovePromo => 'إزالة';
+
+  @override
+  String catalogEditDishDiscount(String dish) {
+    return 'خصم $dish';
+  }
+
+  @override
+  String get layoutNoCategorySelected => 'اختر فئة من اليسار لعرض أطباقها.';
+
+  @override
+  String get layoutRenameCategory => 'إعادة تسمية الفئة';
+
+  @override
+  String get layoutShowOnMenu => 'إظهار في القائمة';
+
+  @override
+  String get layoutMoveEarlier => 'نقل للأمام';
+
+  @override
+  String get layoutMoveLater => 'نقل للخلف';
+
+  @override
+  String get layoutEditDish => 'تعديل الطبق';
+
+  @override
+  String get layoutNewCategoryLabel => 'فئة جديدة';
+
+  @override
+  String get settingsOrderingTitle => 'الطلبات والإيصالات';
+
+  @override
+  String get cafeLocationRequireHint =>
+      'يستطيع الضيوف خارج النطاق تصفح القائمة.';
+
+  @override
+  String get catalogCashierPinMasked => 'رمز ••••';
+
+  @override
+  String get commonRemove => 'إزالة';
+
+  @override
+  String get catalogLogoPlaceholder => 'الشعار';
+
+  @override
+  String get catalogPreviewButton => 'زر';
+
+  @override
+  String get commonEdit => 'تعديل';
+
+  @override
+  String get guestOpenMenu => 'افتح القائمة';
+
+  @override
+  String get guestPoweredBy => 'مدعوم من';
+
+  @override
+  String get payTypeLabel => 'نوع الدفع';
+
+  @override
+  String get cashierCashOut => 'صرف نقدي';
+
+  @override
+  String get brandTagline => 'نقاط بيع وطلبات QR للمقاهي';
 }

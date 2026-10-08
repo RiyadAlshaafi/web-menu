@@ -96,7 +96,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
           item.description.toLowerCase().contains(needle);
     }).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final button = CafeSurfaces.of(context).button;
+    final categoryNames = {for (final category in store.categories) category.id: category.label(store.locale)};
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
@@ -112,38 +112,34 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                 final catalog = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
+                    PageSearchField(
                       controller: search,
-                      decoration: InputDecoration(
-                        hintText: context.l10n.quickTakeoutSearch,
-                        prefixIcon: const Icon(Icons.search),
-                      ),
+                      hint: context.l10n.quickTakeoutSearch,
                       onChanged: (_) => setState(() {}),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _pill(context.l10n.quickTakeoutAll, categoryId == null, button, () => setState(() => categoryId = null)),
+                          FilterPill(label: context.l10n.quickTakeoutAll, selected: categoryId == null, onTap: () => setState(() => categoryId = null)),
                           for (final category in categories) ...[
                             const SizedBox(width: 8),
-                            _pill(
-                              category.label(store.locale),
-                              categoryId == category.id,
-                              button,
-                              () => setState(() => categoryId = category.id),
+                            FilterPill(
+                              label: category.label(store.locale),
+                              selected: categoryId == category.id,
+                              onTap: () => setState(() => categoryId = category.id),
                             ),
                           ],
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Expanded(
                       child: GridView.builder(
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 240,
-                          mainAxisExtent: 132,
+                          maxCrossAxisExtent: 260,
+                          mainAxisExtent: 124,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -152,6 +148,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                           final item = dishes[index];
                           final inTicket = lines.where((line) => line.menuItemId == item.id).fold<int>(0, (sum, line) => sum + line.qty);
                           return _TakeoutDishButton(
+                            category: categoryNames[item.categoryId] ?? '',
                             name: item.displayName(store.locale),
                             description: item.description,
                             price: store.currency.format(item.salePrice),
@@ -171,55 +168,43 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                     children: [
                       Row(
                         children: [
-                          Text(context.l10n.navQuickTakeout, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                          PanelTitle(context.l10n.navQuickTakeout, size: 18),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: button.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              context.l10n.serviceTakeout,
-                              style: TextStyle(color: button, fontWeight: FontWeight.w800, fontSize: 11),
-                            ),
-                          ),
+                          StatusBadge(context.l10n.serviceTakeout, tone: BadgeTone.navy),
                           const Spacer(),
                           if (lines.isNotEmpty)
                             Text(
                               context.l10n.cashierItemsCount('${lines.fold<int>(0, (sum, line) => sum + line.qty)}'),
-                              style: const TextStyle(color: CafeColors.inkMuted, fontSize: 13),
+                              style: const TextStyle(color: TawlaTokens.muted, fontSize: 13),
                             ),
                         ],
                       ),
-                      const Divider(height: 20),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
+                      const Divider(height: 1, color: CafeColors.line),
                       Expanded(
                         child: lines.isEmpty
                             ? EmptyHint(context.l10n.quickTakeoutEmpty)
                             : ListView(
                                 children: [
                                   for (final line in lines)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.hairline))),
                                       child: Row(
                                         children: [
-                                          Expanded(child: Text(line.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                          IconButton(
-                                            onPressed: () => setState(() {
-                                              line.qty -= 1;
-                                              if (line.qty <= 0) lines.remove(line);
-                                            }),
-                                            icon: const Icon(Icons.remove, size: 18),
-                                          ),
-                                          Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                                          IconButton(
-                                            onPressed: () => setState(() => line.qty += 1),
-                                            icon: const Icon(Icons.add, size: 18),
-                                          ),
+                                          Expanded(child: Text(line.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15))),
+                                          _stepButton(Icons.remove, () => setState(() {
+                                            line.qty -= 1;
+                                            if (line.qty <= 0) lines.remove(line);
+                                          })),
                                           SizedBox(
-                                            width: 72,
-                                            child: Text(store.currency.format(line.total), textAlign: TextAlign.right),
+                                            width: 36,
+                                            child: Text('${line.qty}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                          ),
+                                          _stepButton(Icons.add, () => setState(() => line.qty += 1)),
+                                          SizedBox(
+                                            width: 92,
+                                            child: Text(store.currency.format(line.total), textAlign: TextAlign.end, style: const TextStyle(fontSize: 14)),
                                           ),
                                         ],
                                       ),
@@ -227,9 +212,10 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                                 ],
                               ),
                       ),
+                      EyebrowLabel(context.l10n.payTypeLabel),
+                      const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         initialValue: paymentTypeId ?? (store.enabledPaymentTypes.isEmpty ? null : store.enabledPaymentTypes.first.id),
-                        decoration: InputDecoration(labelText: context.l10n.expenseType),
                         items: [
                           for (final type in store.enabledPaymentTypes)
                             DropdownMenuItem(value: type.id, child: Text(type.label(store.locale))),
@@ -241,7 +227,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
-                          Text(context.l10n.guestTotalDue, style: const TextStyle(color: CafeColors.inkMuted, fontWeight: FontWeight.w600)),
+                          Text(context.l10n.guestTotalDue, style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
                           const Spacer(),
                           Text(store.currency.format(total), style: CafeTheme.display.copyWith(fontSize: 28, fontWeight: FontWeight.w700, color: CafeSurfaces.of(context).header)),
                         ],
@@ -274,9 +260,9 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(flex: 8, child: catalog),
-                    const SizedBox(width: 16),
-                    Expanded(flex: 4, child: ticket),
+                    Expanded(flex: 5, child: catalog),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 3, child: ticket),
                   ],
                 );
               },
@@ -287,21 +273,14 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     );
   }
 
-  Widget _pill(String label, bool selected, Color button, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? button : CafeColors.paper,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? button : CafeColors.line),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700),
-        ),
+  Widget _stepButton(IconData icon, VoidCallback onPressed) {
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: IconButton.filled(
+        onPressed: onPressed,
+        style: IconButton.styleFrom(backgroundColor: CafeColors.creamDark, foregroundColor: CafeColors.ink),
+        icon: Icon(icon, size: 18),
       ),
     );
   }
@@ -310,6 +289,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
 /// A dish on the takeout counter. The whole card is the button; a badge shows how many are on the ticket.
 class _TakeoutDishButton extends StatelessWidget {
   const _TakeoutDishButton({
+    required this.category,
     required this.name,
     required this.description,
     required this.price,
@@ -318,6 +298,7 @@ class _TakeoutDishButton extends StatelessWidget {
     required this.onTap,
   });
 
+  final String category;
   final String name;
   final String description;
   final String price;
@@ -339,10 +320,10 @@ class _TakeoutDishButton extends StatelessWidget {
         color: enabled ? CafeColors.paper : CafeColors.creamDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: picked ? surfaces.button : CafeColors.line, width: picked ? 2 : 1.5),
+          side: picked ? BorderSide(color: surfaces.button, width: 1.5) : BorderSide.none,
         ),
         elevation: enabled ? 1 : 0,
-        shadowColor: const Color(0x331B3A4B),
+        shadowColor: const Color(0x221B3A4B),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: enabled ? onTap : null,
@@ -353,6 +334,18 @@ class _TakeoutDishButton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (category.isNotEmpty) ...[
+                      Padding(
+                        padding: EdgeInsetsDirectional.only(end: picked ? 30 : 0),
+                        child: Text(
+                          category.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: TawlaTokens.muted),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
                     Padding(
                       padding: EdgeInsetsDirectional.only(end: picked ? 30 : 0),
                       child: Text(

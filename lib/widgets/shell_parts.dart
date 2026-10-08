@@ -80,7 +80,7 @@ class ShellNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final surfaces = CafeSurfaces.of(context);
     final darkSidebar = surfaces.onSidebar != CafeColors.ink;
-    final activeBg = darkSidebar ? surfaces.button : Color.alphaBlend(surfaces.button.withValues(alpha: 0.16), surfaces.sidebar);
+    final activeBg = darkSidebar ? surfaces.button : Color.alphaBlend(surfaces.button.withValues(alpha: 0.22), surfaces.sidebar);
     final activeFg = darkSidebar ? surfaces.onButton : Color.lerp(surfaces.button, Colors.black, 0.3)!;
     final idleFg = darkSidebar ? surfaces.onSidebar : const Color(0xFF3E4A50);
     final fg = active ? activeFg : idleFg;
@@ -113,7 +113,7 @@ class ShellNavItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             onTap: () => context.go(section.path),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 54),
+              constraints: const BoxConstraints(minHeight: 52),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Row(
@@ -202,6 +202,56 @@ class ShellProfileCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           logOut,
+        ],
+      ),
+    );
+  }
+}
+
+/// Page frame shared by the cashier and admin consoles: the header runs the full width,
+/// and the side menu sits under it with a hairline between menu and page.
+class ShellFrame extends StatelessWidget {
+  const ShellFrame({
+    super.key,
+    required this.header,
+    required this.rail,
+    required this.drawer,
+    required this.drawerWidth,
+    required this.body,
+    this.banners = const [],
+  });
+
+  final Widget header;
+  final Widget rail;
+  final bool drawer;
+  final double drawerWidth;
+  final Widget body;
+  final List<Widget> banners;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaces = CafeSurfaces.of(context);
+    return Scaffold(
+      backgroundColor: surfaces.background,
+      drawer: drawer ? Drawer(width: drawerWidth, shape: const RoundedRectangleBorder(), child: rail) : null,
+      body: Column(
+        children: [
+          header,
+          ...banners,
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!drawer)
+                  DecoratedBox(
+                    position: DecorationPosition.foreground,
+                    decoration: const BoxDecoration(border: BorderDirectional(end: BorderSide(color: CafeColors.line))),
+                    child: rail,
+                  ),
+                Expanded(child: ColoredBox(color: surfaces.background, child: body)),
+              ],
+            ),
+          ),
         ],
       ),
     );

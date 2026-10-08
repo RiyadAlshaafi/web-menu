@@ -14,7 +14,7 @@ class LanguageButton extends StatelessWidget {
         CheckedPopupMenuItem(value: 'ar', checked: arabic, child: const Text('العربية')),
       ],
       child: IgnorePointer(
-        child: GhostChip(label: arabic ? 'العربية' : 'EN', icon: Icons.language, onTap: () {}),
+        child: HeaderAction(icon: Icons.language, label: arabic ? 'العربية' : 'EN', onPressed: () {}),
       ),
     );
   }
@@ -49,7 +49,7 @@ class CashierShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final drawer = AppSections.useDrawer(width);
     final compact = AppSections.compact(width) && !drawer;
-    final railWidth = drawer ? 280.0 : (AppSections.compact(width) ? 84.0 : 250.0);
+    final railWidth = drawer ? 280.0 : (AppSections.compact(width) ? 84.0 : 232.0);
 
     final surfaces = CafeSurfaces.of(context);
     final rail = Material(
@@ -60,7 +60,7 @@ class CashierShell extends StatelessWidget {
               child: ScrollWhenShort(
                 minHeight: 600,
                 child: Padding(
-                padding: EdgeInsets.fromLTRB(compact ? 8 : 16, 18, compact ? 8 : 16, 16),
+                padding: EdgeInsets.fromLTRB(compact ? 8 : 14, 20, compact ? 8 : 14, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -96,35 +96,19 @@ class CashierShell extends StatelessWidget {
               ),
             ),
           );
-    return Scaffold(
-      backgroundColor: surfaces.background,
-      drawer: drawer ? Drawer(width: 280, child: rail) : null,
-      body: Row(
-        children: [
-          if (!drawer) rail,
-          Expanded(
-            child: Column(
-              children: [
-                AppHeader(
-                  title: section.crumb(context),
-                  showMenu: drawer,
-                  actions: const [HeaderClock(), LanguageButton()],
-                ),
-                const OfflineStatusBanner(),
-                const UpdateReadyStrip(),
-                Expanded(
-                  child: ColoredBox(
-                    color: surfaces.background,
-                    // A short or narrow window scrolls the page instead of cutting its bottom off;
-                    // narrow windows stack the cards, which needs more height.
-                    child: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 680, child: child),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return ShellFrame(
+      drawer: drawer,
+      drawerWidth: 280,
+      rail: rail,
+      header: AppHeader(
+        title: section.crumb(context),
+        showMenu: drawer,
+        actions: const [HeaderClock(), LanguageButton()],
       ),
+      banners: const [OfflineStatusBanner(), UpdateReadyStrip()],
+      // A short or narrow window scrolls the page instead of cutting its bottom off;
+      // narrow windows stack the cards, which needs more height.
+      body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 680, child: child),
     );
   }
 

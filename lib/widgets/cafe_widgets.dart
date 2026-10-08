@@ -186,7 +186,7 @@ class SoftCard extends StatefulWidget {
     this.padding = const EdgeInsets.all(16),
     this.color = CafeColors.paper,
     this.onTap,
-    this.radius = 24,
+    this.radius = 16,
     this.selected = false,
     this.hoverable = false,
     this.lightShadow = false,
@@ -213,11 +213,14 @@ class _SoftCardState extends State<SoftCard> {
   @override
   Widget build(BuildContext context) {
     final interactive = widget.onTap != null || widget.hoverable;
+    // Cards sit flat on the page; only a selected or hovered card shows an outline.
     final borderColor = widget.selected
         ? CafeSurfaces.of(context).button
         : hover
             ? CafeSurfaces.of(context).button.withValues(alpha: 0.35)
-            : CafeColors.line;
+            : widget.color == CafeColors.paper
+                ? Colors.transparent
+                : CafeColors.line;
     final body = Container(
       padding: widget.padding,
       decoration: BoxDecoration(
@@ -225,8 +228,8 @@ class _SoftCardState extends State<SoftCard> {
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: borderColor, width: widget.selected ? 1.6 : 1),
         boxShadow: widget.lightShadow
-            ? const [BoxShadow(color: Color(0x14000000), blurRadius: 2, offset: Offset(0, 2))]
-            : const [BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6))],
+            ? const [BoxShadow(color: Color(0x141B3A4B), blurRadius: 6, offset: Offset(0, 2))]
+            : null,
       ),
       child: widget.child,
     );
@@ -495,9 +498,9 @@ class DishPhoto extends StatelessWidget {
     return Container(
       width: _w,
       height: size,
-      color: CafeColors.terracottaSoft,
+      color: const Color(0xFFE9D8C8),
       alignment: Alignment.center,
-      child: Icon(Icons.restaurant, color: CafeColors.terracottaDark, size: size * 0.38),
+      child: Icon(Icons.restaurant, color: const Color(0x669A3C1D), size: size * 0.3),
     );
   }
 }

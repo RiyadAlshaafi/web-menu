@@ -9,13 +9,13 @@ class CashierFloorScreen extends StatefulWidget {
 
 class _CashierFloorScreenState extends State<CashierFloorScreen> {
   _FloorFilter filter = _FloorFilter.all;
-  String? selectedId;
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final dining = store.diningTables;
     final callIds = store.openCalls.map((call) => call.tableId).toSet();
+    final occupied = dining.where((item) => item.status != TableStatus.free).length;
     final tables = dining.where((table) {
       switch (filter) {
         case _FloorFilter.all:
@@ -30,169 +30,60 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
           return table.status == TableStatus.free;
       }
     }).toList();
-    selectedId ??= tables.isEmpty ? null : tables.first.id;
-    final selected = store.tables.where((table) => table.id == selectedId);
-    final table = selected.isEmpty ? null : selected.first;
-    final order = table == null ? null : store.openOrderFor(table.id);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.cashierFloorManagement, style: const TextStyle(letterSpacing: 1.2, fontSize: 11, fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(context.l10n.cashierFloorOverviewTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
-              Text(context.l10n.cashierTablesCount('${dining.length}'), style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilterPill(label: context.l10n.cashierFloorAll('${dining.length}'), selected: filter == _FloorFilter.all, onTap: () => setState(() => filter = _FloorFilter.all)),
+                    FilterPill(label: context.l10n.cashierFloorOccupied('$occupied'), selected: filter == _FloorFilter.occupied, onTap: () => setState(() => filter = _FloorFilter.occupied)),
+                    FilterPill(label: context.l10n.cashierFloorBillDue('${store.billTables.length}'), selected: filter == _FloorFilter.billDue, onTap: () => setState(() => filter = _FloorFilter.billDue)),
+                    FilterPill(label: context.l10n.cashierFilterCallStaff('${store.openCalls.length}'), selected: filter == _FloorFilter.callStaff, onTap: () => setState(() => filter = _FloorFilter.callStaff)),
+                    FilterPill(label: context.l10n.cashierFloorAvailable('${dining.length - occupied}'), selected: filter == _FloorFilter.available, onTap: () => setState(() => filter = _FloorFilter.available)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  context.l10n.cashierActiveTables('$occupied', '${dining.length}'),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _floorChip(context.l10n.cashierFloorAll('${dining.length}'), filter == _FloorFilter.all, () => setState(() => filter = _FloorFilter.all)),
-              _floorChip(context.l10n.cashierFloorOccupied('${dining.where((item) => item.status != TableStatus.free).length}'), filter == _FloorFilter.occupied, () => setState(() => filter = _FloorFilter.occupied)),
-              _floorChip(context.l10n.cashierFloorBillDue('${store.billTables.length}'), filter == _FloorFilter.billDue, () => setState(() => filter = _FloorFilter.billDue)),
-              _floorChip(context.l10n.cashierFilterCallStaff('${store.openCalls.length}'), filter == _FloorFilter.callStaff, () => setState(() => filter = _FloorFilter.callStaff)),
-              _floorChip(context.l10n.cashierFloorAvailable('${dining.where((item) => item.status == TableStatus.free).length}'), filter == _FloorFilter.available, () => setState(() => filter = _FloorFilter.available)),
-            ],
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Expanded(
             child: dining.isEmpty
-                ? SoftCard(radius: 16, child: EmptyHint(context.l10n.noTables))
+                ? TawlaPanel(child: EmptyHint(context.l10n.noTables))
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      final stack = constraints.maxWidth < 980;
-                      final grid = GridView.count(
-                        crossAxisCount: AppSections.columnsFor(constraints.maxWidth, max: 3),
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1.15,
-                        children: tables.map((item) {
-                            final due = store.tabTotal(item.id);
-                            final calling = callIds.contains(item.id);
-                            final statusLabel = item.status == TableStatus.free
-                                ? context.l10n.cashierStatusCleanReady
-                                : item.status == TableStatus.billRequested
-                                    ? context.l10n.cashierStatusBillRequested
-                                    : calling
-                                        ? context.l10n.cashierStatusStaffCall
-                                        : context.l10n.cashierStatusDining;
-                            return SoftCard(
-                              radius: 16,
-                              selected: item.id == selectedId,
-                              onTap: () {
-                                setState(() => selectedId = item.id);
-                                if (item.status == TableStatus.billRequested) {
-                                  showCashSettleDialog(context, store, item.id);
-                                }
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(context.l10n.cashierTableNumber(item.number), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                                      const Spacer(),
-                                      Text(statusLabel, style: TextStyle(fontSize: 11, color: item.status == TableStatus.free ? CafeColors.success : CafeColors.terracottaDark, fontWeight: FontWeight.w700)),
-                                    ],
-                                  ),
-                                  Text(item.status == TableStatus.free ? context.l10n.cashierAvailable : context.l10n.cashierDiningActive, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-                                  if (store.openOrderFor(item.id) != null)
-                                    Text(
-                                      context.l10n.cashierOrderNumber(store.shiftTicket(store.openOrderFor(item.id)!)),
-                                      style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, fontWeight: FontWeight.w700),
-                                    ),
-                                  const Spacer(),
-                                  MoneyText(store.currency.format(due)),
-                                  if (item.status == TableStatus.dining && store.openOrderFor(item.id) != null) ...[
-                                    const SizedBox(height: 8),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 44,
-                                      child: OutlinedButton.icon(
-                                        onPressed: () => _showCart(context, store, item),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: CafeColors.ink,
-                                          side: const BorderSide(color: Color(0xFFE3DED5), width: 1.5),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                        ),
-                                        icon: const Icon(Icons.shopping_cart_outlined, size: 18),
-                                        label: Text(context.l10n.cashierViewCart, style: const TextStyle(fontWeight: FontWeight.w800)),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                      );
-                      final inspector = SizedBox(
-                        width: stack ? double.infinity : (constraints.maxWidth * 0.32).clamp(260, 340),
-                        height: stack ? 280 : null,
-                        child: SoftCard(
-                          radius: 16,
-                          child: table == null
-                              ? EmptyHint(context.l10n.noTables)
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(context.l10n.cashierTableNumber(table.number), style: CafeTheme.display.copyWith(fontSize: 24)),
-                                    Text(
-                                      switch (table.status) {
-                                        TableStatus.free => context.l10n.cashierFree,
-                                        TableStatus.dining => context.l10n.cashierStatusDining,
-                                        TableStatus.billRequested => context.l10n.cashierBillPending,
-                                      },
-                                      style: const TextStyle(color: CafeColors.inkMuted)),
-                                    if (order != null)
-                                      Text(context.l10n.cashierOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800)),
-                                    const SizedBox(height: 12),
-                                    if (order == null)
-                                      EmptyHint(context.l10n.noOrders)
-                                    else ...[
-                                      ..._orderLineRows(context, store, order),
-                                      const Divider(),
-                                      Row(
-                                        children: [
-                                          Text(context.l10n.cashierTotalPayable, style: const TextStyle(fontWeight: FontWeight.w800)),
-                                          const Spacer(),
-                                          MoneyText(store.currency.format(store.tabTotal(table.id))),
-                                        ],
-                                      ),
-                                    ],
-                                    const Spacer(),
-                                    TerracottaButton(
-                                      label: context.l10n.cashierSettleCloseBill(store.currency.format(store.tabTotal(table.id))),
-                                      onPressed: order == null
-                                          ? null
-                                          : () => showCashSettleDialog(context, store, table.id),
-                                    ),
-                                  ],
-                                ),
+                      final columns = constraints.maxWidth >= 1000
+                          ? 4
+                          : constraints.maxWidth >= 720
+                              ? 3
+                              : constraints.maxWidth >= 460
+                                  ? 2
+                                  : 1;
+                      return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                          mainAxisExtent: 190,
                         ),
-                      );
-                      if (stack) {
-                        return Column(
-                          children: [
-                            Expanded(child: grid),
-                            const SizedBox(height: 12),
-                            inspector,
-                          ],
-                        );
-                      }
-                      return Row(
-                        children: [
-                          Expanded(child: grid),
-                          const SizedBox(width: 12),
-                          inspector,
-                        ],
+                        itemCount: tables.length,
+                        itemBuilder: (context, index) => _tableCard(context, store, tables[index], callIds.contains(tables[index].id)),
                       );
                     },
                   ),
@@ -202,93 +93,199 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
     );
   }
 
-  /// What the table has ordered so far, without leaving the floor view.
+  Widget _tableCard(BuildContext context, CafeStore store, CafeTable item, bool calling) {
+    final order = store.openOrderFor(item.id);
+    final free = item.status == TableStatus.free;
+    final billDue = item.status == TableStatus.billRequested;
+    final (tileColor, badgeTone, statusLabel) = free
+        ? (CafeColors.creamDark, BadgeTone.success, context.l10n.cashierAvailable)
+        : billDue
+            ? (const Color(0xFF95600F), BadgeTone.amber, context.l10n.cashierStatusBillRequested)
+            : calling
+                ? (CafeColors.terracotta, BadgeTone.terracotta, context.l10n.cashierStatusStaffCall)
+                : (const Color(0xFF2F6F8F), BadgeTone.navy, context.l10n.cashierStatusDining);
+    final navy = CafeSurfaces.of(context).header;
+    Widget action;
+    if (billDue) {
+      action = _cardButton(context.l10n.cashierSettleBill, const Color(0xFF95600F), () => showCashSettleDialog(context, store, item.id));
+    } else if (calling) {
+      action = _cardButton(context.l10n.cashierAttended, CafeColors.terracotta, () {
+        for (final call in store.openCalls.where((call) => call.tableId == item.id).toList()) {
+          store.resolveCall(call.id);
+        }
+      });
+    } else if (order != null) {
+      action = SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: OutlinedButton.icon(
+          onPressed: () => _showCart(context, store, item),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: CafeColors.ink,
+            side: const BorderSide(color: TawlaTokens.border, width: 1.5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          icon: const Icon(Icons.shopping_cart_outlined, size: 18),
+          label: Text(context.l10n.cashierViewCart, style: const TextStyle(fontWeight: FontWeight.w800)),
+        ),
+      );
+    } else if (!free) {
+      action = const SizedBox.shrink();
+    } else {
+      action = Row(
+        children: [
+          const Icon(Icons.check, size: 16, color: CafeColors.success),
+          const SizedBox(width: 8),
+          Text(context.l10n.cashierStatusCleanReady, style: const TextStyle(fontSize: 13, color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
+        ],
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: tileColor, borderRadius: BorderRadius.circular(10)),
+                child: Text(
+                  context.l10n.cashierTableShort(item.number),
+                  maxLines: 1,
+                  style: TextStyle(color: free ? TawlaTokens.muted : Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.cashierTableNumber(item.number), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    StatusBadge(statusLabel, tone: badgeTone),
+                  ],
+                ),
+              ),
+              if (order != null)
+                Text(
+                  context.l10n.cashierElapsedMinutes('${DateTime.now().difference(order.createdAt).inMinutes}'),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
+                ),
+            ],
+          ),
+          const Spacer(),
+          if (order != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.cashierOrderItemsCount('${order.itemCount}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: TawlaTokens.muted),
+                    ),
+                  ),
+                  Text(store.currency.format(store.tabTotal(item.id)), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: navy)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          action,
+        ],
+      ),
+    );
+  }
+
+  Widget _cardButton(String label, Color color, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+      ),
+    );
+  }
+
+  /// What the table has ordered so far, without leaving the floor view. Items can be refused
+  /// here and the bill settled, since the floor has no side panel.
   void _showCart(BuildContext context, CafeStore store, CafeTable table) {
-    final order = store.openOrderFor(table.id);
-    if (order == null) return;
+    if (store.openOrderFor(table.id) == null) return;
+    final floorContext = context;
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        final lines = order.lines;
-        return AlertDialog(
-          title: Text(context.l10n.cashierCartTitle(context.l10n.cashierTableNumber(table.number))),
-          content: SizedBox(
-            width: 380,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  '${context.l10n.cashierOrderNumber(store.shiftTicket(order))}  ·  ${context.l10n.cashierItemsCount('${order.itemCount}')}',
-                  style: const TextStyle(color: CafeColors.inkMuted),
-                ),
-                const SizedBox(height: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 360),
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      for (final line in lines)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF1EDE7)))),
-                          child: Row(
+        return Builder(
+          builder: (context) {
+            final store = context.watch<CafeStore>();
+            final order = store.openOrderFor(table.id);
+            return AlertDialog(
+              title: Text(context.l10n.cashierCartTitle(context.l10n.cashierTableNumber(table.number))),
+              content: SizedBox(
+                width: 420,
+                child: order == null
+                    ? EmptyHint(context.l10n.noOrders)
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '${context.l10n.cashierOrderNumber(store.shiftTicket(order))}  ·  ${context.l10n.cashierItemsCount('${order.itemCount}')}',
+                            style: const TextStyle(color: TawlaTokens.muted),
+                          ),
+                          const SizedBox(height: 12),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 360),
+                            child: ListView(shrinkWrap: true, children: _orderLineRows(context, store, order)),
+                          ),
+                          const Divider(height: 20),
+                          Row(
                             children: [
-                              Container(
-                                width: 40,
-                                height: 28,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
-                                child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
+                              Text(context.l10n.cashierTotalPayable, style: const TextStyle(fontWeight: FontWeight.w800)),
+                              const Spacer(),
+                              Text(
+                                store.currency.format(store.tabTotal(table.id)),
+                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: CafeSurfaces.of(context).header),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w600))),
-                              Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
                             ],
                           ),
-                        ),
-                    ],
+                        ],
+                      ),
+              ),
+              actions: [
+                OutlineAction(
+                  label: MaterialLocalizations.of(context).closeButtonLabel,
+                  height: 44,
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+                if (order != null)
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      showCashSettleDialog(floorContext, store, table.id);
+                    },
+                    style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                    child: Text(context.l10n.cashierSettleCloseBill(store.currency.format(store.tabTotal(table.id)))),
                   ),
-                ),
-                const Divider(),
-                Row(
-                  children: [
-                    Text(context.l10n.cashierTotalPayable, style: const TextStyle(fontWeight: FontWeight.w800)),
-                    const Spacer(),
-                    MoneyText(store.currency.format(store.tabTotal(table.id))),
-                  ],
-                ),
               ],
-            ),
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(MaterialLocalizations.of(context).closeButtonLabel),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
-
-  Widget _floorChip(String label, bool selected, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? CafeSurfaces.of(context).button : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? CafeSurfaces.of(context).button : CafeColors.line),
-          ),
-          child: Text(label, style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 12)),
-        ),
-      ),
-    );
-  }
 }
-

@@ -11,10 +11,11 @@ import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
-
+import '../widgets/tawla_mark.dart';
 
 part 'customer/loading.dart';
 part 'customer/menu.dart';
 part 'customer/cart.dart';
 part 'customer/bill.dart';
 part 'customer/call_staff.dart';
+part 'customer/guest_parts.dart';

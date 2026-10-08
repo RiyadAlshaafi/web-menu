@@ -29,13 +29,13 @@ class AppSections {
       path: '/admin/dashboard',
       labelOf: (l) => l.navDashboard,
       crumbOf: (l) => l.navDashboard,
-      icon: Icons.grid_view_rounded,
+      icon: Icons.grid_view_outlined,
     ),
     AppSection(
       path: '/admin/menu',
       labelOf: (l) => l.navMenuCatalogLabel,
       crumbOf: (l) => l.navMenuCatalog,
-      icon: Icons.menu_book,
+      icon: Icons.chrome_reader_mode_outlined,
     ),
     AppSection(
       path: '/admin/discounts',
@@ -48,13 +48,13 @@ class AppSections {
       path: '/admin/tables',
       labelOf: (l) => l.navTablesQr,
       crumbOf: (l) => l.navTablesQr,
-      icon: Icons.qr_code_2,
+      icon: Icons.qr_code_scanner_outlined,
     ),
     AppSection(
       path: '/admin/sales',
       labelOf: (l) => l.navSalesLog,
       crumbOf: (l) => l.navSalesLog,
-      icon: Icons.receipt_long,
+      icon: Icons.receipt_outlined,
     ),
     AppSection(
       path: '/admin/wages',
@@ -66,7 +66,7 @@ class AppSections {
       path: '/admin/settings',
       labelOf: (l) => l.navSettings,
       crumbOf: (l) => l.navSettings,
-      icon: Icons.settings,
+      icon: Icons.settings_outlined,
     ),
   ];
 
@@ -75,20 +75,20 @@ class AppSections {
       path: '/pos/takeout',
       labelOf: (l) => l.navQuickTakeout,
       crumbOf: (l) => l.navQuickTakeout,
-      icon: Icons.point_of_sale_outlined,
+      icon: Icons.work_outline,
     ),
     AppSection(
       path: '/pos',
       labelOf: (l) => l.navLiveAlerts,
       crumbOf: (l) => l.navLiveAlerts,
-      icon: Icons.notifications_active_outlined,
+      icon: Icons.notifications_none_outlined,
       match: (location) => location == '/pos',
     ),
     AppSection(
       path: '/pos/tables',
       labelOf: (l) => l.navFloorOverview,
       crumbOf: (l) => l.navFloorOverview,
-      icon: Icons.table_restaurant_outlined,
+      icon: Icons.table_bar_outlined,
     ),
     AppSection(
       path: '/pos/dishes',
@@ -100,13 +100,13 @@ class AppSections {
       path: '/pos/log',
       labelOf: (l) => l.navCashierLog,
       crumbOf: (l) => l.navCashierLog,
-      icon: Icons.receipt_long,
+      icon: Icons.receipt_outlined,
     ),
     AppSection(
       path: '/pos/shifts',
       labelOf: (l) => l.navShiftSales,
       crumbOf: (l) => l.navShiftSales,
-      icon: Icons.receipt_long_outlined,
+      icon: Icons.bar_chart_outlined,
     ),
   ];
 

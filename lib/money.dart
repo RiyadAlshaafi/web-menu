@@ -75,6 +75,9 @@ class CafeMoney {
   final String locale;
   static final NumberFormat _digits = NumberFormat('#,##0.000', 'en');
 
+  /// The number alone, for table columns whose header already names the currency.
+  String amount(num value) => _digits.format(value);
+
   String format(num value) {
     final amount = _digits.format(value);
     return locale == 'ar' ? '$amount د.ل' : '$amount LYD';

@@ -12,51 +12,62 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
             style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 11),
           ),
         ),
-      ...order.linesInRound(round).map(
-            (line) {
-              final dish = store.menuItems.where((item) => item.id == line.menuItemId);
-              return Padding(
-              padding: const EdgeInsets.only(bottom: 6, right: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text('${line.qty}×  ${line.name}', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.ink)),
-                  ),
-                  if (dish.isNotEmpty)
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
-                      onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
-                      icon: Icon(dish.first.available ? Icons.block : Icons.check_circle_outline, color: CafeSurfaces.of(context).button, size: 18),
-                    ),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final error = await store.refuseOrderLine(order, line);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(error ?? context.l10n.cashierItemRefused)),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: CafeColors.terracottaDark,
-                      side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
-                      minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    icon: const Icon(Icons.remove_circle_outline, size: 16),
-                    label: Text(context.l10n.cashierRefuse, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 72,
-                    child: Text(store.currency.format(line.total), textAlign: TextAlign.right),
-                  ),
-                ],
+      ...order.linesInRound(round).map((line) {
+        final dish = store.menuItems.where((item) => item.id == line.menuItemId);
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(bottom: 8, end: 4),
+          child: Row(
+            children: [
+              Container(
+                constraints: const BoxConstraints(minWidth: 32),
+                height: 28,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: CafeColors.creamDark, borderRadius: BorderRadius.circular(8)),
+                child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
               ),
-            );
-            },
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      line.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    Text(store.currency.format(line.total), style: const TextStyle(color: TawlaTokens.muted, fontSize: 12)),
+                  ],
+                ),
+              ),
+              if (dish.isNotEmpty)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
+                  onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
+                  icon: Icon(dish.first.available ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: TawlaTokens.muted, size: 18),
+                ),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final error = await store.refuseOrderLine(order, line);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.cashierItemRefused)));
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: CafeColors.terracottaDark,
+                  side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: const Icon(Icons.block, size: 15),
+                label: Text(context.l10n.cashierRefuse, style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ],
           ),
+        );
+      }),
     ],
   ];
 }
@@ -73,7 +84,10 @@ class _ArrivalFlash extends StatefulWidget {
 
 class _ArrivalFlashState extends State<_ArrivalFlash> with SingleTickerProviderStateMixin {
   late final AnimationController fade = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-  late final Animation<double> tint = CurvedAnimation(parent: fade, curve: const Interval(0.3, 1.0, curve: CafeMotion.easeInOut));
+  late final Animation<double> tint = CurvedAnimation(
+    parent: fade,
+    curve: const Interval(0.3, 1.0, curve: CafeMotion.easeInOut),
+  );
 
   @override
   void initState() {
@@ -98,10 +112,7 @@ class _ArrivalFlashState extends State<_ArrivalFlash> with SingleTickerProviderS
       animation: tint,
       builder: (context, child) => DecoratedBox(
         position: DecorationPosition.foreground,
-        decoration: BoxDecoration(
-          color: Color.lerp(const Color(0x33BA5333), const Color(0x00BA5333), tint.value),
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(color: Color.lerp(const Color(0x33BA5333), const Color(0x00BA5333), tint.value), borderRadius: BorderRadius.circular(16)),
         child: child,
       ),
       child: widget.child,

@@ -164,9 +164,12 @@ class CafeTheme {
         style: ElevatedButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: onButton, shape: buttonShape),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(backgroundColor: surfaces.button, foregroundColor: onButton),
+      // On reads green and off reads grey, whatever the cafe's button colour.
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? onButton : null),
-        trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : null),
+        thumbColor: WidgetStateProperty.all(Colors.white),
+        trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? CafeColors.success : const Color(0xFFDDD9D0)),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? CafeColors.success : const Color(0xFFCFCAC0)),
+        thumbIcon: WidgetStateProperty.all(const Icon(null)),
       ),
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? surfaces.button : null),
@@ -181,16 +184,18 @@ class CafeTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
-        selectedColor: surfaces.button,
+        selectedColor: surfaces.header,
         disabledColor: CafeColors.line,
         labelStyle: TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700),
-        secondaryLabelStyle: TextStyle(color: onButton, fontWeight: FontWeight.w700),
-        checkmarkColor: onButton,
+        secondaryLabelStyle: TextStyle(color: surfaces.onHeader, fontWeight: FontWeight.w700),
+        checkmarkColor: surfaces.onHeader,
+        showCheckmark: false,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         side: WidgetStateBorderSide.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.button, width: 1.5);
-          return const BorderSide(color: CafeColors.line);
+          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.header, width: 1);
+          return const BorderSide(color: Color(0xFFE3DED5));
         }),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: const StadiumBorder(),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
@@ -218,7 +223,7 @@ class CafeTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: surfaces.button, width: 1.2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       ),
     );
   }

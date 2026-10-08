@@ -14,6 +14,7 @@ import '../widgets/cafe_widgets.dart';
 import '../widgets/scroll_when_short.dart';
 import '../widgets/shell_parts.dart';
 import '../widgets/table_qr.dart';
+import '../widgets/tawla_ui.dart';
 
 export 'admin_menu_layout_screen.dart';
 export 'admin_catalog_screens.dart';
@@ -33,7 +34,7 @@ class AdminShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final drawer = AppSections.useDrawer(width);
     final compact = AppSections.compact(width) && !drawer;
-    final railWidth = drawer ? 270.0 : (AppSections.compact(width) ? 76.0 : 244.0);
+    final railWidth = drawer ? 270.0 : (AppSections.compact(width) ? 76.0 : 232.0);
 
     final surfaces = CafeSurfaces.of(context);
     final rail = Material(
@@ -77,51 +78,30 @@ class AdminShell extends StatelessWidget {
               ),
             ),
           );
-    return Scaffold(
-      backgroundColor: surfaces.background,
-      drawer: drawer ? Drawer(width: 260, child: rail) : null,
-      body: Row(
-        children: [
-          if (!drawer) rail,
-          Expanded(
-            child: Column(
-              children: [
-                AppHeader(
-                  title: section.crumb(context),
-                  showMenu: drawer,
-                  actions: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        if (store.activeTables.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
-                          return;
-                        }
-                        context.go('/t/${store.activeTables.first.qrSlug}');
-                      },
-                      icon: const Icon(Icons.visibility_outlined, size: 16, color: CafeColors.terracotta),
-                      label: drawer
-                          ? const SizedBox.shrink()
-                          : Text(context.l10n.adminCustomerView, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700)),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: CafeColors.line),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      ),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: ColoredBox(
-                    color: surfaces.background,
-                    // A short or narrow window scrolls the page instead of cutting its bottom off.
-                    child: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
-                  ),
-                ),
-              ],
-            ),
+    return ShellFrame(
+      drawer: drawer,
+      drawerWidth: 260,
+      rail: rail,
+      header: AppHeader(
+        title: section.crumb(context),
+        showMenu: drawer,
+        actions: [
+          HeaderAction(
+            icon: Icons.smartphone_outlined,
+            label: drawer ? null : context.l10n.adminCustomerView,
+            tooltip: drawer ? context.l10n.adminCustomerView : null,
+            onPressed: () {
+              if (store.activeTables.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
+                return;
+              }
+              context.go('/t/${store.activeTables.first.qrSlug}');
+            },
           ),
         ],
       ),
+      // A short or narrow window scrolls the page instead of cutting its bottom off.
+      body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
     );
   }
 
@@ -144,190 +124,52 @@ class AdminTablesScreen extends StatefulWidget {
 
 class _AdminTablesScreenState extends State<AdminTablesScreen> {
   String query = '';
-  String? selectedId;
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final filtered = store.activeTables.where((table) {
       if (query.isEmpty) return true;
-      return table.number.toLowerCase().contains(query.toLowerCase());
+      return table.number.toLowerCase().contains(query.toLowerCase()) || table.zone.toLowerCase().contains(query.toLowerCase());
     }).toList();
-    selectedId ??= filtered.isEmpty ? null : filtered.first.id;
-    final selected = store.activeTables.where((table) => table.id == selectedId);
-    final table = selected.isEmpty ? null : selected.first;
 
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.adminFloorOrderingHeading, style: const TextStyle(letterSpacing: 1.2, fontSize: 11, fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(context.l10n.adminTablesQrHub, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width))),
-              _miniStat('${store.diningTables.length}', context.l10n.adminStations),
-              _miniStat('${store.diningTables.where((item) => item.status != TableStatus.free).length}', context.l10n.adminSessions),
-            ],
-          ),
-          const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(hintText: context.l10n.adminSearchTableHint, prefixIcon: const Icon(Icons.search)),
-                  onChanged: (value) => setState(() => query = value),
-                ),
+              Expanded(child: PageSearchField(hint: context.l10n.adminSearchTableHint, onChanged: (value) => setState(() => query = value))),
+              const SizedBox(width: 10),
+              OutlineAction(
+                label: context.l10n.adminRegenerateAllQr,
+                height: 52,
+                onPressed: store.activeTables.isEmpty ? null : () => _confirmRegenerate(context, store),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               TerracottaButton(
                 expanded: false,
                 label: context.l10n.adminAddTableButton,
                 onPressed: () => _addTable(context, store),
               ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: store.activeTables.isEmpty ? null : () => _confirmRegenerate(context, store),
-                child: Text(context.l10n.adminRegenerateAllQr),
-              ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Expanded(
             child: store.activeTables.isEmpty
-                ? SoftCard(child: EmptyHint(context.l10n.noTables))
+                ? TawlaPanel(child: EmptyHint(context.l10n.noTables))
                 : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final stackInspector = constraints.maxWidth < 980;
-                      final grid = GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: AppSections.columnsFor(constraints.maxWidth, max: 2),
-                          childAspectRatio: stackInspector ? 1.05 : 1.15,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final item = filtered[index];
-                          final url = store.guestLink(item.qrSlug);
-                          final selected = item.id == selectedId;
-                          return SoftCard(
-                            selected: selected,
-                            onTap: () => setState(() => selectedId = item.id),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        context.l10n.adminTableNumber(item.number),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          color: selected ? CafeSurfaces.of(context).button : CafeColors.ink,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(item.status == TableStatus.free ? context.l10n.adminTableAvailable : context.l10n.adminTableOccupied, style: const TextStyle(fontSize: 12, color: CafeColors.success)),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Expanded(
-                                  child: Center(
-                                    child: url.isEmpty
-                                        ? const Icon(Icons.qr_code_2, color: CafeColors.inkMuted)
-                                        : QrImageView(data: url, size: constraints.maxWidth < 600 ? 80 : 110, backgroundColor: Colors.white),
-                                  ),
-                                ),
-                                Text('/t/${item.qrSlug}', style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () => _confirmDelete(context, store, item),
-                                    child: Text(context.l10n.commonDelete, style: const TextStyle(color: CafeColors.alert)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                      final inspector = SoftCard(
-                        child: table == null
-                            ? EmptyHint(context.l10n.noTables)
-                            : Column(
-                                children: [
-                                  Text(context.l10n.adminTableNumber(table.number), style: CafeTheme.display.copyWith(fontSize: 28)),
-                                  const SizedBox(height: 8),
-                                  Flexible(
-                                    child: store.guestLink(table.qrSlug).isEmpty
-                                        ? const Icon(Icons.qr_code_2, size: 72, color: CafeColors.inkMuted)
-                                        : QrImageView(data: store.guestLink(table.qrSlug), size: 180, backgroundColor: Colors.white),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(context.l10n.adminScanToOrderPay, style: const TextStyle(fontWeight: FontWeight.w700)),
-                                  Text(
-                                    context.l10n.adminNoAppInstall,
-                                    style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const Spacer(),
-                                  SelectableText(store.guestLink(table.qrSlug), style: const TextStyle(fontSize: 12)),
-                                  const SizedBox(height: 8),
-                                  TerracottaButton(
-                                    label: context.l10n.adminPrintStandCard,
-                                    onPressed: store.guestLink(table.qrSlug).isEmpty
-                                        ? null
-                                        : () async {
-                                            final error = await printTableQr(
-                                              url: store.guestLink(table.qrSlug),
-                                              tableNumber: table.number,
-                                              cafeName: store.cafeName,
-                                            );
-                                            if (error != null && context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                                            }
-                                          },
-                                  ),
-                                  TextButton(
-                                    onPressed: store.guestLink(table.qrSlug).isEmpty
-                                        ? null
-                                        : () async {
-                                            final error = await saveTableQr(url: store.guestLink(table.qrSlug), tableNumber: table.number);
-                                            if (error != null && context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-                                            }
-                                          },
-                                    child: const Text('Save PNG'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => _confirmRegenerate(context, store, table: table),
-                                    child: Text(context.l10n.adminRegenerateQr),
-                                  ),
-                                ],
-                              ),
-                      );
-                      if (stackInspector) {
-                        return Column(
-                          children: [
-                            Expanded(flex: 3, child: grid),
-                            const SizedBox(height: 12),
-                            SizedBox(height: 280, child: inspector),
-                          ],
-                        );
-                      }
-                      return Row(
-                        children: [
-                          Expanded(child: grid),
-                          const SizedBox(width: 12),
-                          SizedBox(width: (constraints.maxWidth * 0.32).clamp(260, 360), child: inspector),
-                        ],
-                      );
-                    },
+                    builder: (context, constraints) => GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: (constraints.maxWidth / 270).floor().clamp(1, 4),
+                        mainAxisExtent: 284,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) => _tableCard(context, store, filtered[index]),
+                    ),
                   ),
           ),
         ],
@@ -335,19 +177,118 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
     );
   }
 
-  Widget _miniStat(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: CafeColors.line),
-      ),
+  Widget _tableCard(BuildContext context, CafeStore store, CafeTable item) {
+    final url = store.guestLink(item.qrSlug);
+    final free = item.status == TableStatus.free;
+    return TawlaPanel(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
-          Text(label, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.adminTableNumber(item.number),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: CafeColors.ink),
+                ),
+              ),
+              _statusPill(free ? context.l10n.adminTableAvailable : context.l10n.adminTableOccupied, free),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 106,
+                height: 106,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: TawlaTokens.hairline)),
+                child: url.isEmpty
+                    ? const Icon(Icons.qr_code_2, color: CafeColors.inkMuted, size: 48)
+                    : QrImageView(data: url, padding: EdgeInsets.zero, backgroundColor: Colors.white, semanticsLabel: context.l10n.adminTableNumber(item.number)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.adminScanToOrderPay, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: CafeColors.ink)),
+                    const SizedBox(height: 4),
+                    Text(context.l10n.adminNoAppInstall, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted)),
+                    const SizedBox(height: 2),
+                    Text('/t/${item.qrSlug}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: TawlaTokens.muted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          NavyButton(
+            label: context.l10n.adminPrintStandCard,
+            expanded: true,
+            onPressed: url.isEmpty
+                ? null
+                : () async {
+                    final error = await printTableQr(url: url, tableNumber: item.number, cafeName: store.cafeName);
+                    if (error != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                    }
+                  },
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Flexible(
+                child: OutlineAction(
+                  label: context.l10n.adminRegenerateQr,
+                  height: 44,
+                  onPressed: () => _confirmRegenerate(context, store, table: item),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconAction(
+                icon: Icons.download_outlined,
+                tooltip: 'Save PNG',
+                size: 44,
+                onPressed: url.isEmpty
+                    ? null
+                    : () async {
+                        final error = await saveTableQr(url: url, tableNumber: item.number);
+                        if (error != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                        }
+                      },
+              ),
+              const SizedBox(width: 8),
+              IconAction(
+                icon: Icons.delete_outline,
+                tooltip: context.l10n.commonDelete,
+                danger: true,
+                size: 44,
+                onPressed: () => _confirmDelete(context, store, item),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusPill(String label, bool free) {
+    final fg = free ? const Color(0xFF2F5228) : CafeColors.terracottaDark;
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(color: free ? const Color(0xFFE4EEDF) : const Color(0xFFFBE7DD), borderRadius: BorderRadius.circular(13)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: free ? CafeColors.success : CafeColors.terracotta, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
         ],
       ),
     );

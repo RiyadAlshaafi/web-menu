@@ -551,7 +551,7 @@
       }
     }
   },
-  "cashierServiceCharge": "Service charge ({percent})",
+  "cashierServiceCharge": "Service charge ({percent}%)",
   "@cashierServiceCharge": {
     "placeholders": {
       "percent": {
@@ -1083,5 +1083,40 @@
   "cashierTapOrderHint": "Tap an order to see what they ordered.",
   "cashierNewOrderPill": "New order",
   "cashierAllItemsRefused": "All items were refused.",
-  "guestPayLabel": "Payment method"
+  "guestPayLabel": "Payment method",
+  "dishActiveCount": "{active} of {total} active",
+  "@dishActiveCount": {"placeholders": {"active": {"type": "int"}, "total": {"type": "int"}}},
+  "salesReceiptsTotal": "{count} receipts · {total}",
+  "@salesReceiptsTotal": {"placeholders": {"count": {"type": "int"}, "total": {"type": "String"}}},
+  "dashboardSettledReceipts": "{count} settled receipts",
+  "@dashboardSettledReceipts": {"placeholders": {"count": {"type": "int"}}},
+  "dashboardExpensesCaption": "Wages, supplies and cash-outs",
+  "dashboardNetCaption": "Sales minus expenses",
+  "dashboardSalesVsExpenses": "Sales vs expenses",
+  "dashboardChartBar": "{day}: sales {sales}, expenses {expenses}",
+  "@dashboardChartBar": {"placeholders": {"day": {"type": "String"}, "sales": {"type": "String"}, "expenses": {"type": "String"}}},
+  "catalogActivePromos": "ACTIVE PROMOS",
+  "catalogNoActivePromos": "No promos are running.",
+  "catalogRemovePromo": "Remove",
+  "catalogEditDishDiscount": "Discount for {dish}",
+  "@catalogEditDishDiscount": {"placeholders": {"dish": {"type": "String"}}},
+  "layoutNoCategorySelected": "Choose a category on the left to see its dishes.",
+  "layoutRenameCategory": "Rename category",
+  "layoutShowOnMenu": "Show on the menu",
+  "layoutMoveEarlier": "Move earlier",
+  "layoutMoveLater": "Move later",
+  "layoutEditDish": "Edit dish",
+  "layoutNewCategoryLabel": "NEW CATEGORY",
+  "settingsOrderingTitle": "Ordering & receipts",
+  "cafeLocationRequireHint": "Guests outside the radius can still browse the menu.",
+  "catalogCashierPinMasked": "PIN ••••",
+  "commonRemove": "Remove",
+  "catalogLogoPlaceholder": "LOGO",
+  "catalogPreviewButton": "Button",
+  "commonEdit": "Edit",
+  "guestOpenMenu": "Open the menu",
+  "guestPoweredBy": "Powered by",
+  "payTypeLabel": "Payment type",
+  "cashierCashOut": "Cash out",
+  "brandTagline": "Cafe POS & QR ordering"
 }

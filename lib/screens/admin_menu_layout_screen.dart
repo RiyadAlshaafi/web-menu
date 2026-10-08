@@ -13,6 +13,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/tawla_ui.dart';
 
 class AdminMenuScreen extends StatefulWidget {
   const AdminMenuScreen({super.key});
@@ -22,14 +23,8 @@ class AdminMenuScreen extends StatefulWidget {
 }
 
 class _AdminMenuScreenState extends State<AdminMenuScreen> {
-  bool creating = false;
   final categoryName = TextEditingController();
   String? inspectingId;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -41,11 +36,225 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final categories = store.orderedCategories;
+    final inspecting = categories.where((item) => item.id == inspectingId).firstOrNull ?? categories.firstOrNull;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 8, 28, 18),
+    final tree = TawlaPanel(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          EyebrowLabel(context.l10n.layoutSequencingHeading, color: CafeColors.ink),
+          const SizedBox(height: 2),
+          Text(context.l10n.layoutReorderHint, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted)),
+          const SizedBox(height: 12),
+          for (var i = 0; i < categories.length; i++)
+            Padding(
+              key: ValueKey(categories[i].id),
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _CategoryRow(
+                category: categories[i],
+                selected: categories[i].id == inspecting?.id,
+                onTap: () => setState(() => inspectingId = categories[i].id),
+                onMoveUp: i > 0 ? () => store.reorderCategories(i, i - 1) : null,
+                onMoveDown: i < categories.length - 1 ? () => store.reorderCategories(i, i + 1) : null,
+              ),
+            ),
+          const Divider(height: 12, color: TawlaTokens.hairline),
+          const SizedBox(height: 8),
+          EyebrowLabel(context.l10n.layoutNewCategoryLabel, color: CafeColors.ink),
+          const SizedBox(height: 8),
+          TextField(
+            controller: categoryName,
+            decoration: InputDecoration(hintText: context.l10n.layoutCategoryNameHint),
+            onSubmitted: (_) => _createCategory(store),
+          ),
+          const SizedBox(height: 8),
+          OutlineAction(label: context.l10n.layoutCreateCategory, height: 44, expanded: true, onPressed: () => _createCategory(store)),
+        ],
+      ),
+    );
+
+    final inspector = inspecting == null
+        ? TawlaPanel(child: EmptyHint(context.l10n.layoutNoCategorySelected))
+        : _CategoryInspector(key: ValueKey(inspecting.id), category: inspecting);
+
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.layoutTitle,
+                style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width, min: 22, max: 26), fontWeight: FontWeight.w700),
+              ),
+            ),
+            TerracottaButton(
+              expanded: false,
+              height: 48,
+              label: context.l10n.layoutSaveMenu,
+              onPressed: () async {
+                await store.persistLayout();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.layoutSavedSnack)));
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 860) {
+              return Column(children: [tree, const SizedBox(height: 18), inspector]);
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: (constraints.maxWidth * 0.35).clamp(300.0, 420.0), child: tree),
+                const SizedBox(width: 18),
+                Expanded(child: inspector),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _createCategory(CafeStore store) async {
+    final name = categoryName.text.trim();
+    if (name.isEmpty) return;
+    final spotlight = name.toLowerCase().contains('special');
+    await store.addCategory(name, name, spotlight: spotlight);
+    categoryName.clear();
+    if (!mounted) return;
+    setState(() => inspectingId = store.orderedCategories.isEmpty ? null : store.orderedCategories.last.id);
+  }
+}
+
+/// One category in the sequencing list: name, dish count and the move arrows.
+class _CategoryRow extends StatelessWidget {
+  const _CategoryRow({required this.category, required this.selected, required this.onTap, this.onMoveUp, this.onMoveDown});
+
+  final MenuCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<CafeStore>();
+    final count = store.dishesIn(category.id).length;
+    final button = CafeSurfaces.of(context).button;
+    Widget arrow(IconData icon, String tooltip, VoidCallback? onPressed) => Tooltip(
+          message: tooltip,
+          child: Material(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: onPressed == null ? TawlaTokens.hairline : TawlaTokens.border)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: onPressed,
+              child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 18, color: onPressed == null ? const Color(0xFFD0CAC0) : CafeColors.ink)),
+            ),
+          ),
+        );
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? const Color(0xFFFFF4EF) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: selected ? button : TawlaTokens.border, width: selected ? 1.4 : 1),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(category.nameEn, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: CafeColors.ink)),
+                          ),
+                          if (category.spotlight) ...[
+                            const SizedBox(width: 6),
+                            StatusBadge(context.l10n.layoutSpotlight, tone: BadgeTone.terracotta),
+                          ],
+                          if (!category.visible) ...[
+                            const SizedBox(width: 6),
+                            const Icon(Icons.visibility_off_outlined, size: 16, color: TawlaTokens.muted),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        count == 1 ? context.l10n.layoutOneDish : context.l10n.layoutDishCount('$count'),
+                        style: const TextStyle(fontSize: 12, color: TawlaTokens.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                arrow(Icons.keyboard_arrow_up, context.l10n.layoutMoveEarlier, onMoveUp),
+                const SizedBox(width: 6),
+                arrow(Icons.keyboard_arrow_down, context.l10n.layoutMoveLater, onMoveDown),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The right-hand panel: the chosen category's settings and its dishes as cards.
+class _CategoryInspector extends StatefulWidget {
+  const _CategoryInspector({super.key, required this.category});
+
+  final MenuCategory category;
+
+  @override
+  State<_CategoryInspector> createState() => _CategoryInspectorState();
+}
+
+class _CategoryInspectorState extends State<_CategoryInspector> {
+  late final TextEditingController nameController = TextEditingController(text: widget.category.nameEn);
+  bool renaming = false;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    super.dispose();
+  }
+
+  void _rename(CafeStore store) {
+    final value = nameController.text.trim();
+    if (value.isEmpty) return;
+    store.saveCategory(
+      widget.category
+        ..nameEn = value
+        ..nameAr = value,
+    );
+    setState(() => renaming = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final category = widget.category;
+    final dishes = store.dishesIn(category.id);
+    return TawlaPanel(
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,455 +263,86 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.l10n.layoutTitle, style: CafeTheme.display.copyWith(fontSize: AppSections.titleSize(MediaQuery.sizeOf(context).width, min: 22, max: 36), fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 6),
-                    
+                    EyebrowLabel(context.l10n.layoutCurrentlyInspecting, color: CafeColors.ink),
+                    const SizedBox(height: 2),
+                    if (renaming)
+                      SizedBox(
+                        width: 320,
+                        child: TextField(
+                          controller: nameController,
+                          autofocus: true,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            suffixIcon: IconButton(
+                              tooltip: context.l10n.layoutRenameCategory,
+                              icon: const Icon(Icons.check, color: CafeColors.success),
+                              onPressed: () => _rename(store),
+                            ),
+                          ),
+                          onSubmitted: (_) => _rename(store),
+                        ),
+                      )
+                    else
+                      Row(
+                        children: [
+                          Flexible(child: Text(category.nameEn, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: CafeColors.ink))),
+                          IconButton(
+                            tooltip: context.l10n.layoutRenameCategory,
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () => setState(() => renaming = true),
+                            icon: const Icon(Icons.edit_outlined, size: 16, color: TawlaTokens.muted),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
-              FilledButton.icon(
-                onPressed: () async {
-                  await store.persistLayout();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.layoutSavedSnack)),
-                  );
-                },
-                icon: const Icon(Icons.save_outlined, size: 16),
-                label: Text(context.l10n.layoutSaveMenu, style: const TextStyle(fontWeight: FontWeight.w700)),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                ),
+              Tooltip(
+                message: context.l10n.layoutShowOnMenu,
+                child: Switch(value: category.visible, onChanged: (value) => store.saveCategory(category..visible = value)),
               ),
+              const SizedBox(width: 6),
+              IconAction(
+                icon: Icons.delete_outline,
+                tooltip: context.l10n.layoutDeleteCategoryConfirm,
+                danger: true,
+                size: 44,
+                onPressed: () => _confirmDeleteCategory(context, store, category),
+              ),
+              const SizedBox(width: 8),
+              NavyButton(label: context.l10n.layoutAddDish, icon: Icons.add, height: 44, onPressed: () => showAddDishDialog(context, store, categoryId: category.id)),
             ],
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                context.l10n.layoutSequencingHeading,
-                style: const TextStyle(fontSize: 11, letterSpacing: 1.1, fontWeight: FontWeight.w800, color: CafeColors.inkMuted),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEE6DC),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(context.l10n.layoutReorderHint, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted, fontWeight: FontWeight.w600)),
-              ),
-              TextButton.icon(
-                onPressed: () => setState(() => creating = !creating),
-                icon: Icon(Icons.add, size: 16, color: CafeSurfaces.of(context).button),
-                label: Text(
-                  creating ? context.l10n.layoutClose : context.l10n.layoutNewCategory,
-                  style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
+          const SizedBox(height: 14),
+          EyebrowLabel(
+            context.l10n.layoutDishesInCategory(category.nameEn.toUpperCase(), '${dishes.where((item) => item.available).length}'),
+            color: CafeColors.ink,
           ),
           const SizedBox(height: 10),
-          Expanded(
-            child: ListView(
-              children: [
-                if (creating) _newCategoryForm(store),
-                if (creating) const SizedBox(height: 12),
-                if (categories.isNotEmpty)
-                  Column(
-                    children: [
-                      for (var i = 0; i < categories.length; i++)
-                        Padding(
-                          key: ValueKey(categories[i].id),
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CategoryCard(
-                            index: store.orderedCategories.indexOf(categories[i]),
-                            category: categories[i],
-                            inspecting: inspectingId == categories[i].id,
-                            onInspect: () => setState(() {
-                              inspectingId = inspectingId == categories[i].id ? null : categories[i].id;
-                            }),
-                            onAddDish: () => showAddDishDialog(context, store, categoryId: categories[i].id),
-                            onMoveUp: i > 0 ? () => store.reorderCategories(i, i - 1) : null,
-                            onMoveDown: i < categories.length - 1 ? () => store.reorderCategories(i, i + 1) : null,
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = (constraints.maxWidth / 220).floor().clamp(1, 3);
+              final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (var i = 0; i < dishes.length; i++)
+                    SizedBox(
+                      key: ValueKey(dishes[i].id),
+                      width: width,
+                      child: _DishCard(
+                        dish: dishes[i],
+                        onMoveEarlier: i > 0 ? () => store.reorderDishes(category.id, i, i - 1) : null,
+                        onMoveLater: i < dishes.length - 1 ? () => store.reorderDishes(category.id, i, i + 1) : null,
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _newCategoryForm(CafeStore store) {
-    return DashedBorder(
-      color: CafeColors.terracotta.withValues(alpha: 0.55),
-      radius: 18,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F4),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: CafeColors.peach,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.create_new_folder_outlined, color: CafeColors.terracotta, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: categoryName,
-                decoration: InputDecoration(
-                  hintText: context.l10n.layoutCategoryNameHint,
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: () async {
-                if (categoryName.text.trim().isEmpty) return;
-                final name = categoryName.text.trim();
-                final spotlight = name.toLowerCase().contains('special');
-                await store.addCategory(name, name, spotlight: spotlight);
-                categoryName.clear();
-                setState(() {
-                  creating = store.categories.isEmpty;
-                  inspectingId = store.categories.isEmpty ? null : store.orderedCategories.last.id;
-                });
-              },
-              icon: const Icon(Icons.check, size: 16),
-              label: Text(context.l10n.layoutCreateCategory, style: const TextStyle(fontWeight: FontWeight.w700)),
-              style: FilledButton.styleFrom(
-                backgroundColor: CafeSurfaces.of(context).button,
-                foregroundColor: CafeSurfaces.of(context).onButton,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: () => setState(() {
-                creating = store.categories.isEmpty;
-                categoryName.clear();
-              }),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: CafeColors.ink,
-                side: const BorderSide(color: CafeColors.line),
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(context.l10n.commonCancel, style: const TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryCard extends StatefulWidget {
-  const _CategoryCard({
-    required this.index,
-    required this.category,
-    required this.inspecting,
-    required this.onInspect,
-    required this.onAddDish,
-    this.onMoveUp,
-    this.onMoveDown,
-  });
-
-  final int index;
-  final MenuCategory category;
-  final bool inspecting;
-  final VoidCallback onInspect;
-  final VoidCallback onAddDish;
-  final VoidCallback? onMoveUp;
-  final VoidCallback? onMoveDown;
-
-  @override
-  State<_CategoryCard> createState() => _CategoryCardState();
-}
-
-class _CategoryCardState extends State<_CategoryCard> {
-  late final TextEditingController nameController;
-
-  @override
-  void initState() {
-    super.initState();
-    nameController = TextEditingController(text: widget.category.nameEn);
-  }
-
-  @override
-  void didUpdateWidget(covariant _CategoryCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.category.nameEn != widget.category.nameEn && nameController.text != widget.category.nameEn) {
-      nameController.text = widget.category.nameEn;
-    }
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final store = context.read<CafeStore>();
-    final category = widget.category;
-    final inspecting = widget.inspecting;
-    final dishes = store.dishesIn(category.id);
-    final preview = inspecting ? dishes : dishes.take(2).toList();
-
-    return Material(
-      color: inspecting ? const Color(0xFFFFF6F1) : Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: inspecting ? const Color(0xFFFFF6F1) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: inspecting ? CafeSurfaces.of(context).button : const Color(0xFFE6E2DC),
-            width: inspecting ? 1.6 : 1,
-          ),
-          boxShadow: const [
-            BoxShadow(color: Color(0x14000000), blurRadius: 18, offset: Offset(0, 8)),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Column(
-                    children: [
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        onPressed: widget.onMoveUp,
-                        icon: const Icon(Icons.keyboard_arrow_up, color: Color(0xFFC4B8AE), size: 18),
-                      ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        onPressed: widget.onMoveDown,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFFC4B8AE), size: 18),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 28,
-                    height: 28,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: inspecting ? CafeSurfaces.of(context).button : CafeColors.peach,
-                      borderRadius: BorderRadius.circular(inspecting ? 8 : 14),
-                    ),
-                    child: Text(
-                      '${widget.index + 1}',
-                      style: TextStyle(
-                        color: inspecting ? CafeSurfaces.of(context).onButton : CafeColors.terracottaDark,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  if (inspecting)
-                    Expanded(
-                      child: Container(
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: CafeColors.line),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: nameController,
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  border: InputBorder.none,
-                                  filled: false,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                onSubmitted: (value) {
-                                  if (value.trim().isEmpty) return;
-                                  store.saveCategory(
-                                    category
-                                      ..nameEn = value.trim()
-                                      ..nameAr = value.trim(),
-                                  );
-                                },
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                if (nameController.text.trim().isEmpty) return;
-                                store.saveCategory(
-                                  category
-                                    ..nameEn = nameController.text.trim()
-                                    ..nameAr = nameController.text.trim(),
-                                );
-                              },
-                              icon: const Icon(Icons.check, size: 16, color: CafeColors.success),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    Expanded(
-                      child: InkWell(
-                        onTap: widget.onInspect,
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                category.nameEn,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            IconButton(
-                              onPressed: widget.onInspect,
-                              icon: const Icon(Icons.edit_outlined, size: 16, color: CafeColors.inkMuted),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            if (category.spotlight)
-                              Container(
-                                margin: const EdgeInsets.only(right: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: CafeColors.terracotta,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(context.l10n.layoutSpotlight, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.4)),
-                              ),
-                            Text(
-                              dishes.isEmpty
-                                  ? ''
-                                  : category.spotlight
-                                      ? '• ${dishes.length == 1 ? context.l10n.layoutOneDish : context.l10n.layoutDishCount('${dishes.length}')}'
-                                      : '• ${context.l10n.layoutItemCount('${dishes.length}')}',
-                              style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (inspecting) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6E6DE),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text('● ${context.l10n.layoutCurrentlyInspecting}', style: const TextStyle(color: CafeColors.terracottaDark, fontSize: 11, fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    onPressed: widget.onAddDish,
-                    icon: const Icon(Icons.add, size: 14),
-                    label: Text(context.l10n.layoutAddDish, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                    style: FilledButton.styleFrom(
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Switch(
-                    value: category.visible,
-                    onChanged: (value) => store.saveCategory(category..visible = value),
-                  ),
-                  IconButton(
-                    onPressed: () => _confirmDeleteCategory(context, store, category),
-                    icon: const Icon(Icons.delete_outline, color: CafeColors.inkMuted),
-                  ),
-                ],
-              ),
-              if (inspecting) ...[
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Text(
-                      context.l10n.layoutDishesInCategory(
-                        category.nameEn.toUpperCase(),
-                        '${dishes.where((item) => item.available).length}',
-                      ),
-                      style: const TextStyle(fontSize: 11, letterSpacing: 0.8, fontWeight: FontWeight.w800, color: CafeColors.terracotta),
-                    ),
-                    const Spacer(),
-                    Text(context.l10n.layoutReorderHint, style: const TextStyle(fontSize: 11, color: CafeColors.inkMuted)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-                  if (preview.isNotEmpty)
-                    Column(
-                      children: [
-                        for (var i = 0; i < preview.length; i++)
-                          Padding(
-                            key: ValueKey(preview[i].id),
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _DishRow(
-                              dish: preview[i],
-                              rank: inspecting ? i + 1 : null,
-                              inspecting: inspecting,
-                              onMoveUp: inspecting && i > 0
-                                  ? () => store.reorderDishes(category.id, i, i - 1)
-                                  : null,
-                              onMoveDown: inspecting && i < preview.length - 1
-                                  ? () => store.reorderDishes(category.id, i, i + 1)
-                                  : null,
-                            ),
-                          ),
-                      ],
-                    ),
-              if (inspecting) ...[
-                const SizedBox(height: 4),
-                DashedBorder(
-                  color: const Color(0xFFD8CCC2),
-                  radius: 14,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Text(
-                      '↓ ${context.l10n.layoutDropDishHint(category.nameEn)}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -518,126 +358,139 @@ class _CategoryCardState extends State<_CategoryCard> {
   }
 }
 
-class _DishRow extends StatelessWidget {
-  const _DishRow({
-    required this.dish,
-    this.rank,
-    required this.inspecting,
-    this.onMoveUp,
-    this.onMoveDown,
-  });
+/// A dish in the inspector: photo, names, price, the Hero/List choice and delete.
+class _DishCard extends StatelessWidget {
+  const _DishCard({required this.dish, this.onMoveEarlier, this.onMoveLater});
 
   final MenuItem dish;
-  final int? rank;
-  final bool inspecting;
-  final VoidCallback? onMoveUp;
-  final VoidCallback? onMoveDown;
+  final VoidCallback? onMoveEarlier;
+  final VoidCallback? onMoveLater;
 
   @override
   Widget build(BuildContext context) {
     final store = context.read<CafeStore>();
-    final selected = inspecting && dish.featured;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xFFFFF4EE) : const Color(0xFFFBF7F2),
-        borderRadius: BorderRadius.circular(14),
-        border: selected ? Border.all(color: CafeSurfaces.of(context).button.withValues(alpha: 0.55), width: 1.2) : null,
+    final surfaces = CafeSurfaces.of(context);
+    final hero = dish.featured;
+    Widget overlayButton(IconData icon, String tooltip, VoidCallback? onPressed) => Tooltip(
+          message: tooltip,
+          child: Material(
+            color: Colors.white.withValues(alpha: onPressed == null ? 0.5 : 0.92),
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPressed,
+              child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 18, color: onPressed == null ? TawlaTokens.muted : CafeColors.ink)),
+            ),
+          ),
+        );
+    return Material(
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: hero ? surfaces.button : TawlaTokens.border, width: hero ? 1.4 : 1),
       ),
-      child: Row(
-        children: [
-          if (inspecting) ...[
-            Column(
-              children: [
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: onMoveUp,
-                  icon: const Icon(Icons.keyboard_arrow_up, size: 18, color: Color(0xFFC4B8AE)),
-                ),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: onMoveDown,
-                  icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFFC4B8AE)),
-                ),
-              ],
-            ),
-            const SizedBox(width: 4),
-          ],
-          DishPhoto(path: dish.imageUrl, size: 40, radius: 12),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              children: [
-                Text(
-                  dish.nameIt.isEmpty ? dish.nameEn : dish.nameIt,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-                ),
-                if (dish.featured && !inspecting)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(color: CafeColors.terracotta, borderRadius: BorderRadius.circular(5)),
-                    child: Text(context.l10n.layoutHeroCard, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
+      child: InkWell(
+        onTap: () => showAddDishDialog(context, store, existing: dish, categoryId: dish.categoryId),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 112,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  LayoutBuilder(builder: (context, c) => DishPhoto(path: dish.imageUrl, size: 112, width: c.maxWidth, radius: 0)),
+                  PositionedDirectional(
+                    top: 8,
+                    end: 8,
+                    child: StatusBadge(
+                      dish.available ? context.l10n.layoutActive : context.l10n.dishInactive,
+                      tone: dish.available ? BadgeTone.success : BadgeTone.neutral,
+                    ),
                   ),
-                if (rank != null && inspecting)
-                  Text('#$rank', style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 12)),
-                Text(
-                  store.currency.format(dish.price),
-                  style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w800, fontSize: 13),
-                ),
-              ],
+                  if (hero)
+                    PositionedDirectional(
+                      top: 8,
+                      start: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: surfaces.button, borderRadius: BorderRadius.circular(12)),
+                        child: Text(context.l10n.layoutHeroCard, style: TextStyle(color: surfaces.onButton, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
+                      ),
+                    ),
+                  PositionedDirectional(
+                    bottom: 8,
+                    start: 8,
+                    child: Row(
+                      children: [
+                        overlayButton(Icons.chevron_left, context.l10n.layoutMoveEarlier, onMoveEarlier),
+                        const SizedBox(width: 6),
+                        overlayButton(Icons.chevron_right, context.l10n.layoutMoveLater, onMoveLater),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (!inspecting)
-            IconButton(
-              tooltip: dish.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
-              onPressed: () => store.setItemAvailable(dish.id, !dish.available),
-              icon: Icon(dish.available ? Icons.block : Icons.check_circle_outline, color: dish.available ? CafeColors.inkMuted : CafeSurfaces.of(context).button),
-            ),
-          if (!inspecting && dish.available)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Text(context.l10n.layoutActive, style: const TextStyle(color: CafeColors.success, fontWeight: FontWeight.w700, fontSize: 12)),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(dish.nameEn.isEmpty ? dish.nameIt : dish.nameEn, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: CafeColors.ink)),
+                  if (dish.nameIt.isNotEmpty && dish.nameIt != dish.nameEn)
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Text(dish.nameIt, textDirection: TextDirection.rtl, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: TawlaTokens.muted)),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(store.currency.format(dish.price), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: surfaces.header)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(10)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _segment(context, context.l10n.layoutHero, hero, () => store.saveMenuItem(dish..featured = true)),
+                            _segment(context, context.l10n.layoutList, !hero, () => store.saveMenuItem(dish..featured = false)),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      IconAction(icon: Icons.edit_outlined, tooltip: context.l10n.layoutEditDish, onPressed: () => showAddDishDialog(context, store, existing: dish, categoryId: dish.categoryId)),
+                      const SizedBox(width: 6),
+                      IconAction(icon: Icons.delete_outline, tooltip: context.l10n.commonDelete, danger: true, onPressed: () => _confirmDelete(context, store)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          if (inspecting) ...[
-            _heroToggle(context, false, !dish.featured, () => store.saveMenuItem(dish..featured = false)),
-            const SizedBox(width: 4),
-            _heroToggle(context, true, dish.featured, () => store.saveMenuItem(dish..featured = true)),
           ],
-          IconButton(
-            onPressed: () => showAddDishDialog(context, store, existing: dish, categoryId: dish.categoryId),
-            icon: const Icon(Icons.edit_outlined, size: 16, color: CafeColors.inkMuted),
-          ),
-          IconButton(
-            onPressed: () => _confirmDelete(context, store),
-            icon: const Icon(Icons.delete_outline, size: 16, color: CafeColors.inkMuted),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _heroToggle(BuildContext context, bool hero, bool selected, VoidCallback onTap) {
-    return Material(
-      color: selected ? (hero ? CafeSurfaces.of(context).button : Colors.white) : Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
+  Widget _segment(BuildContext context, String label, bool selected, VoidCallback onTap) {
+    final surfaces = CafeSurfaces.of(context);
+    final fg = selected ? (label == context.l10n.layoutHero ? surfaces.button : CafeColors.ink) : TawlaTokens.muted;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? Colors.white : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: selected && hero ? CafeSurfaces.of(context).button : CafeColors.line),
-          ),
-          child: Text(
-            hero ? context.l10n.layoutHero : context.l10n.layoutList,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: selected && hero ? CafeSurfaces.of(context).onButton : CafeColors.inkMuted,
-            ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: selected ? null : onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 34),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(widthFactor: 1, child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg))),
           ),
         ),
       ),

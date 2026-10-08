@@ -6,7 +6,7 @@ import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
-import '../widgets/cafe_widgets.dart';
+import '../widgets/tawla_ui.dart';
 
 enum _DishStatus { all, active, inactive }
 
@@ -34,39 +34,41 @@ class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
     final query = search.text.trim().toLowerCase();
     final categories = store.orderedCategories.where((category) => categoryId == null || category.id == categoryId);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.navDishAvailability, style: CafeTheme.display.copyWith(fontSize: 28)),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 260,
-                child: TextField(
-                  controller: search,
-                  decoration: InputDecoration(hintText: context.l10n.dishSearchHint, prefixIcon: const Icon(Icons.search)),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              DropdownButton<String?>(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final search = PageSearchField(controller: this.search, hint: context.l10n.dishSearchHint, onChanged: (_) => setState(() {}));
+              final pills = SegmentedPills<_DishStatus>(
+                options: [
+                  (_DishStatus.all, context.l10n.dishFilterAll),
+                  (_DishStatus.active, context.l10n.dishFilterActive),
+                  (_DishStatus.inactive, context.l10n.dishFilterInactive),
+                ],
+                selected: status,
+                onSelected: (value) => setState(() => status = value),
+              );
+              final select = SelectBox<String?>(
                 value: categoryId,
+                minWidth: 190,
                 items: [
                   DropdownMenuItem(value: null, child: Text(context.l10n.dishAllCategories)),
                   ...store.orderedCategories.map((category) => DropdownMenuItem(value: category.id, child: Text(category.nameEn))),
                 ],
                 onChanged: (value) => setState(() => categoryId = value),
-              ),
-              _statusChip(context.l10n.dishFilterAll, status == _DishStatus.all, () => setState(() => status = _DishStatus.all)),
-              _statusChip(context.l10n.dishFilterActive, status == _DishStatus.active, () => setState(() => status = _DishStatus.active)),
-              _statusChip(context.l10n.dishFilterInactive, status == _DishStatus.inactive, () => setState(() => status = _DishStatus.inactive)),
-            ],
+              );
+              if (constraints.maxWidth < 760) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [search, const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: [pills, select])],
+                );
+              }
+              return Row(children: [Expanded(child: search), const SizedBox(width: 12), pills, const SizedBox(width: 12), select]);
+            },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           Expanded(
             child: ListView(
               children: [
@@ -80,25 +82,9 @@ class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
     );
   }
 
-  Widget _statusChip(String label, bool selected, VoidCallback onTap) {
-    final button = CafeSurfaces.of(context).button;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? button : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? button : CafeColors.line),
-        ),
-        child: Text(label, style: TextStyle(color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink, fontWeight: FontWeight.w700)),
-      ),
-    );
-  }
-
   Widget _category(BuildContext context, CafeStore store, MenuCategory category, String query) {
-    final dishes = store.dishesIn(category.id).where((dish) {
+    final all = store.dishesIn(category.id).toList();
+    final dishes = all.where((dish) {
       final name = '${dish.nameEn} ${dish.nameIt}'.toLowerCase();
       if (query.isNotEmpty && !name.contains(query)) return false;
       return switch (status) {
@@ -109,62 +95,64 @@ class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
     }).toList();
     if (dishes.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(category.nameEn, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18))),
-              TextButton(onPressed: () => _bulk(context, store, category, true), child: Text(context.l10n.dishActivateAll)),
-              TextButton(onPressed: () => _bulk(context, store, category, false), child: Text(context.l10n.dishDeactivateAll)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          for (final dish in dishes) _dish(context, store, dish),
-        ],
+      padding: const EdgeInsets.only(bottom: 18),
+      child: TawlaPanel(
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.hairline))),
+              child: Row(
+                children: [
+                  Flexible(child: PanelTitle(category.nameEn)),
+                  const SizedBox(width: 10),
+                  Text(
+                    context.l10n.dishActiveCount(all.where((dish) => dish.available).length, all.length),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
+                  ),
+                  const Spacer(),
+                  OutlineAction(label: context.l10n.dishActivateAll, onPressed: () => _bulk(context, store, category, true)),
+                  const SizedBox(width: 10),
+                  OutlineAction(label: context.l10n.dishDeactivateAll, danger: true, onPressed: () => _bulk(context, store, category, false)),
+                ],
+              ),
+            ),
+            for (final dish in dishes) _dish(context, store, dish),
+          ],
+        ),
       ),
     );
   }
 
   Widget _dish(BuildContext context, CafeStore store, MenuItem dish) {
     final inactive = !dish.available;
-    return Opacity(
-      opacity: inactive ? 0.55 : 1,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: SoftCard(
-          radius: 12,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              DishPhoto(path: dish.imageUrl, size: 48, radius: 8),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      dish.nameEn.isEmpty ? dish.nameIt : dish.nameEn,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: inactive ? CafeColors.inkMuted : CafeColors.ink,
-                        decoration: inactive ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-                    Text(store.currency.format(dish.price), style: const TextStyle(color: CafeColors.inkMuted)),
-                    if (inactive)
-                      Text(context.l10n.dishInactive, style: TextStyle(color: CafeSurfaces.of(context).button, fontWeight: FontWeight.w800, fontSize: 12)),
-                  ],
-                ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.rowLine))),
+      child: Row(
+        children: [
+          Expanded(
+            child: Opacity(
+              opacity: inactive ? 0.6 : 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dish.nameEn.isEmpty ? dish.nameIt : dish.nameEn, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: CafeColors.ink)),
+                  const SizedBox(height: 2),
+                  Text(store.currency.format(dish.price), style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
+                ],
               ),
-              Switch(
-                value: dish.available,
-                onChanged: (value) => store.setItemAvailable(dish.id, value),
-              ),
-            ],
+            ),
           ),
-        ),
+          StatusBadge(inactive ? context.l10n.dishInactive : context.l10n.dishFilterActive, tone: inactive ? BadgeTone.neutral : BadgeTone.success),
+          const SizedBox(width: 14),
+          Switch(
+            value: dish.available,
+            onChanged: (value) => store.setItemAvailable(dish.id, value),
+          ),
+        ],
       ),
     );
   }

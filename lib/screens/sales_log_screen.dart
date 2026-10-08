@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -18,6 +17,7 @@ import '../time_format.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/tawla_ui.dart';
 
 enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
 
@@ -56,113 +56,146 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final pages = (rows.length / pageSize).ceil().clamp(1, 9999);
     final safePage = page.clamp(0, pages - 1);
     final visible = rows.skip(safePage * pageSize).take(pageSize).toList();
-    final button = CafeSurfaces.of(context).button;
+    final own = widget.ownSalesOnly;
+    final total = rows.fold<double>(0, (sum, row) => sum + row.total);
+
+    final exportCsv = OutlineAction(
+      label: context.l10n.salesExportCsv,
+      icon: Icons.file_download_outlined,
+      height: 52,
+      onPressed: () => _exportCsv(store, rows),
+    );
+    final exportPdf = NavyButton(label: context.l10n.salesExportPdf, height: 52, onPressed: () => _exportPdf(store, rows));
+    final search = PageSearchField(
+      controller: this.search,
+      hint: context.l10n.salesSearchHint,
+      onChanged: (_) => setState(() => page = 0),
+    );
+    final filters = <Widget>[
+      _date(context.l10n.salesDateFrom, from, (value) {
+        setState(() { from = value; page = 0; });
+        store.alignSalesWindow(from: from, to: to);
+      }),
+      _date(context.l10n.salesDateTo, to, (value) {
+        setState(() { to = value; page = 0; });
+        store.alignSalesWindow(from: from, to: to);
+      }),
+      if (own)
+        _menu<String?>(
+          shiftId,
+          [null, ...store.shifts.where((shift) => shift.cashierId == store.currentCashier?.id).map((shift) => shift.id)],
+          (id) => id == null ? context.l10n.salesAllShifts : _shiftLabel(store, id),
+          (value) => setState(() { shiftId = value; page = 0; }),
+        ),
+      if (!own)
+        _menu<String?>(
+          cashierName,
+          // Names come from the receipts themselves, so removed cashiers stay filterable and never appear twice.
+          [null, ...(store.payments.map((p) => saleLedgerRow(store, p).cashierName).where((n) => n.isNotEmpty).toSet().toList()..sort())],
+          (name) => name ?? context.l10n.salesAllCashiers,
+          (value) => setState(() { cashierName = value; page = 0; }),
+        ),
+      if (!own)
+        _menu<String?>(
+          tableNumber,
+          [null, ...(store.payments.map((p) => saleLedgerRow(store, p).tableNumber).where((n) => n.isNotEmpty).toSet().toList()..sort())],
+          (number) => number ?? context.l10n.salesAllTables,
+          (value) => setState(() { tableNumber = value; page = 0; }),
+        ),
+      _menu<String?>(
+        methodId,
+        [null, ...store.paymentTypes.map((item) => item.id)],
+        (id) => id == null ? context.l10n.salesAllMethods : store.typeName(id),
+        (value) => setState(() { methodId = value; page = 0; }),
+      ),
+    ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.ownSalesOnly)
-            Text(context.l10n.cashierLogScope, style: const TextStyle(color: CafeColors.inkMuted)),
-          const SizedBox(height: 12),
-          _summary(context, store),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 260,
-                child: TextField(
-                  controller: search,
-                  decoration: InputDecoration(hintText: context.l10n.salesSearchHint, prefixIcon: const Icon(Icons.search)),
-                  onChanged: (_) => setState(() => page = 0),
-                ),
-              ),
-              _date(context.l10n.salesDateFrom, from, (value) {
-                setState(() { from = value; page = 0; });
-                store.alignSalesWindow(from: from, to: to);
-              }),
-              _date(context.l10n.salesDateTo, to, (value) {
-                setState(() { to = value; page = 0; });
-                store.alignSalesWindow(from: from, to: to);
-              }),
-              if (!widget.ownSalesOnly)
-                _menu<String?>(
-                  cashierName,
-                  // Names come from the receipts themselves, so removed cashiers stay filterable and never appear twice.
-                  [null, ...(store.payments.map((p) => saleLedgerRow(store, p).cashierName).where((n) => n.isNotEmpty).toSet().toList()..sort())],
-                  (name) => name ?? context.l10n.salesAllCashiers,
-                  (value) => setState(() { cashierName = value; page = 0; }),
-                ),
-              _menu<String?>(
-                tableNumber,
-                [null, ...(store.payments.map((p) => saleLedgerRow(store, p).tableNumber).where((n) => n.isNotEmpty).toSet().toList()..sort())],
-                (number) => number ?? context.l10n.salesAllTables,
-                (value) => setState(() { tableNumber = value; page = 0; }),
-              ),
-              _menu<String?>(
-                methodId,
-                [null, ...store.paymentTypes.map((item) => item.id)],
-                (id) => id == null ? context.l10n.salesAllMethods : store.typeName(id),
-                (value) => setState(() { methodId = value; page = 0; }),
-              ),
-              if (widget.ownSalesOnly)
-                _menu<String?>(
-                  shiftId,
-                  [null, ...store.shifts.where((shift) => shift.cashierId == store.currentCashier?.id).map((shift) => shift.id)],
-                  (id) => id == null ? context.l10n.salesAllShifts : _shiftLabel(store, id),
-                  (value) => setState(() { shiftId = value; page = 0; }),
-                ),
-              FilledButton(onPressed: () => _exportCsv(store, rows), child: Text(context.l10n.salesExportCsv)),
-              OutlinedButton(
-                onPressed: () => _exportPdf(store, rows),
-                style: OutlinedButton.styleFrom(foregroundColor: button, side: BorderSide(color: button)),
-                child: Text(context.l10n.salesExportPdf),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          if (own) ...[
+            Row(
+              children: [
+                Expanded(child: Text(context.l10n.cashierLogScope, style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600))),
+                exportCsv,
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(spacing: 12, runSpacing: 12, children: [SizedBox(width: 340, child: search), ...filters]),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(child: search),
+                const SizedBox(width: 12),
+                exportCsv,
+                const SizedBox(width: 12),
+                exportPdf,
+              ],
+            ),
+            const SizedBox(height: 16),
+            Wrap(spacing: 10, runSpacing: 10, children: filters),
+          ],
+          const SizedBox(height: 16),
           Expanded(
-            child: SoftCard(
-              radius: 16,
+            child: TawlaPanel(
+              padding: EdgeInsets.zero,
               child: rows.isEmpty
                   ? EmptyHint(context.l10n.salesEmpty)
-                  : WideTable(
-                      minWidth: 1100,
-                      child: Column(
-                      children: [
-                        _header(context),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: ListView.separated(
-                            itemCount: visible.length,
-                            separatorBuilder: (_, _) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final row = visible[index];
-                              return InkWell(
-                                onTap: () => _detail(context, row),
-                                child: _line(context, store, row, button),
-                              );
-                            },
-                          ),
-                        ),
-                        Row(
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: WideTable(
+                        minWidth: own ? 900 : 1120,
+                        child: Column(
                           children: [
-                            Text(context.l10n.salesPage(safePage + 1, pages)),
-                            if (store.salesHasMore)
-                              TextButton(onPressed: () => store.loadMoreSales(), child: Text(context.l10n.salesLoadMore)),
-                            const Spacer(),
-                            IconButton(onPressed: safePage == 0 ? null : () => setState(() => page = safePage - 1), icon: const Icon(Icons.chevron_left)),
-                            IconButton(onPressed: safePage >= pages - 1 ? null : () => setState(() => page = safePage + 1), icon: const Icon(Icons.chevron_right)),
+                            _header(context),
+                            const Divider(height: 1, color: TawlaTokens.hairline),
+                            Expanded(
+                              child: ListView.separated(
+                                itemCount: visible.length,
+                                separatorBuilder: (_, _) => const Divider(height: 1, color: TawlaTokens.hairline),
+                                itemBuilder: (context, index) {
+                                  final row = visible[index];
+                                  return InkWell(
+                                    onTap: () => _detail(context, row),
+                                    child: _line(context, store, row),
+                                  );
+                                },
+                              ),
+                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
             ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.salesReceiptsTotal(rows.length, store.currency.format(total)),
+                  style: TextStyle(fontSize: 14, fontWeight: own ? FontWeight.w600 : FontWeight.w700, color: own ? TawlaTokens.muted : CafeColors.ink),
+                ),
+              ),
+              Text(context.l10n.salesPage(safePage + 1, pages), style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).previousPageTooltip,
+                onPressed: safePage == 0 ? null : () => setState(() => page = safePage - 1),
+                icon: const Icon(Icons.chevron_left),
+              ),
+              IconButton(
+                tooltip: MaterialLocalizations.of(context).nextPageTooltip,
+                onPressed: safePage >= pages - 1 ? null : () => setState(() => page = safePage + 1),
+                icon: const Icon(Icons.chevron_right),
+              ),
+              if (store.salesHasMore) ...[
+                const SizedBox(width: 4),
+                OutlineAction(label: context.l10n.salesLoadMore, height: 44, onPressed: () => store.loadMoreSales()),
+              ],
+            ],
           ),
         ],
       ),
@@ -170,9 +203,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Widget _header(BuildContext context) {
-    Widget cell(String label, _Sort column, {int flex = 2}) {
+    Widget cell(String label, _Sort column, {int flex = 2, bool end = false}) {
       final active = sort == column;
-      final color = active ? CafeSurfaces.of(context).button : CafeColors.inkMuted;
       return Expanded(
         flex: flex,
         child: InkWell(
@@ -185,33 +217,52 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             }
           }),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: color)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: end ? MainAxisAlignment.end : MainAxisAlignment.start,
+              children: [
+                Flexible(child: TableHead(label, align: end ? TextAlign.end : TextAlign.start)),
+                if (active) Icon(ascending ? Icons.arrow_upward : Icons.arrow_downward, size: 12, color: TawlaTokens.muted),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return Row(
-      children: [
-        cell(context.l10n.salesReceiptNo, _Sort.id),
-        cell(context.l10n.salesColWhen, _Sort.when, flex: 3),
-        cell(context.l10n.salesColTable, _Sort.table),
-        cell(context.l10n.salesColCashier, _Sort.cashier, flex: 3),
-        cell(context.l10n.salesColItems, _Sort.items),
-        cell(context.l10n.salesColSubtotal, _Sort.subtotal),
-        cell(context.l10n.salesColDiscount, _Sort.discount),
-        cell(context.l10n.salesColTotal, _Sort.total),
-        cell(context.l10n.salesColMethod, _Sort.method),
-        cell(context.l10n.salesColStatus, _Sort.status),
-      ],
+    final own = widget.ownSalesOnly;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: [
+          cell(context.l10n.salesReceiptNo, _Sort.id),
+          cell(context.l10n.salesColWhen, _Sort.when, flex: 3),
+          cell(context.l10n.salesColTable, _Sort.table),
+          if (!own) cell(context.l10n.salesColCashier, _Sort.cashier),
+          cell(context.l10n.salesColItems, _Sort.items),
+          if (!own) cell(context.l10n.salesColSubtotal, _Sort.subtotal, end: true),
+          if (!own) cell(context.l10n.salesColDiscount, _Sort.discount, end: true),
+          if (!own) cell(context.l10n.salesColTotal, _Sort.total, end: true),
+          const SizedBox(width: 20),
+          cell(context.l10n.salesColMethod, _Sort.method),
+          cell(context.l10n.salesColStatus, _Sort.status),
+          if (own) cell(context.l10n.salesColTotal, _Sort.total, end: true),
+        ],
+      ),
     );
   }
 
-  Widget _line(BuildContext context, CafeStore store, SaleLedgerRow row, Color button) {
-    Widget cell(String value, {int flex = 2}) => Expanded(flex: flex, child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis));
+  Widget _line(BuildContext context, CafeStore store, SaleLedgerRow row) {
+    final own = widget.ownSalesOnly;
+    const body = TextStyle(fontSize: 14, color: CafeColors.ink, fontFeatures: [FontFeature.tabularFigures()]);
+    Widget cell(String value, {int flex = 2, bool end = false, TextStyle style = body}) => Expanded(
+          flex: flex,
+          child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: end ? TextAlign.end : TextAlign.start, style: style),
+        );
+    final totalStyle = body.copyWith(fontWeight: FontWeight.w800, color: CafeSurfaces.of(context).header);
+    final table = row.takeout ? context.l10n.serviceTakeout : context.l10n.adminTableNumber(row.tableNumber);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -219,101 +270,56 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(store.receiptNumber(row.payment), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(store.receiptNumber(row.payment), maxLines: 1, overflow: TextOverflow.ellipsis, style: body.copyWith(fontWeight: FontWeight.w800)),
                 Text(
                   context.l10n.cashierOrderNumber(store.orderNumber(row.payment.shiftOrderNumber)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: CafeColors.inkMuted, fontSize: 11),
+                  style: const TextStyle(color: TawlaTokens.muted, fontSize: 11),
                 ),
               ],
             ),
           ),
           cell(formatTripoliDateTime(row.payment.paidAt), flex: 3),
-          cell(row.takeout ? context.l10n.serviceTakeout : row.tableNumber),
-          cell(row.cashierName, flex: 3),
-          cell('${row.itemCount}'),
-          cell(store.currency.format(row.subtotal)),
-          cell(store.currency.format(row.discount)),
-          cell(store.currency.format(row.total)),
+          if (own)
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: StatusBadge(table, tone: row.takeout ? BadgeTone.terracotta : BadgeTone.navy),
+              ),
+            )
+          else
+            cell(table),
+          if (!own) cell(row.cashierName),
+          cell(context.l10n.cashierItemsCount('${row.itemCount}')),
+          if (!own) cell(store.currency.amount(row.subtotal), end: true),
+          if (!own)
+            cell(
+              row.discount == 0 ? '—' : '−${store.currency.amount(row.discount)}',
+              end: true,
+              style: body.copyWith(color: CafeColors.terracottaDark),
+            ),
+          if (!own) cell(store.currency.format(row.total), end: true, style: totalStyle),
+          const SizedBox(width: 20),
           cell(store.paymentLabel(row.payment)),
           Expanded(
             flex: 2,
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: button.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: button),
-                ),
-                child: Text(context.l10n.salesPaid, style: TextStyle(color: button, fontWeight: FontWeight.w800, fontSize: 12)),
-              ),
-            ),
+            child: Align(alignment: AlignmentDirectional.centerStart, child: StatusBadge(context.l10n.salesPaid, tone: BadgeTone.success, dot: true)),
           ),
+          if (own) cell(store.currency.format(row.total), end: true, style: totalStyle),
         ],
       ),
     );
   }
 
-  Widget _summary(BuildContext context, CafeStore store) {
-    final window = summaryWindow(from: from, to: to);
-    final rows = saleLedgerRows(
-      store,
-      query: search.text,
-      cashierName: cashierName,
-      ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
-      tableNumber: tableNumber,
-      methodId: methodId,
-      shiftId: shiftId,
-      from: window.from,
-      to: window.to,
-    );
-    final total = rows.fold<double>(0, (sum, row) => sum + row.total);
-    final range = _rangeLabel(window);
-    return SoftCard(
-      radius: 16,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange,
-            style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
-          ),
-          Text(store.currency.format(total), style: CafeTheme.display.copyWith(fontSize: 24)),
-          Text(range, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  String _rangeLabel(SummaryWindow window) {
-    final start = window.from == null ? '…' : DateFormat.yMd().format(window.from!);
-    final end = window.to == null ? '…' : DateFormat.yMd().format(window.to!);
-    return '$start – $end';
-  }
-
-  Widget _date(String label, DateTime? value, ValueChanged<DateTime?> onPick) {
-    return SizedBox(
-      width: 200,
-      child: OutlinedButton(
-      onPressed: () async {
-        final picked = await showDatePicker(context: context, firstDate: DateTime(2020), lastDate: DateTime.now().add(const Duration(days: 1)), initialDate: value ?? DateTime.now());
-        onPick(picked);
-      },
-        child: Text(
-          value == null ? label : '$label ${DateFormat.yMd().format(value)}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
+  Widget _date(String label, DateTime? value, ValueChanged<DateTime?> onPick) => DateBox(label: label, value: value, onPicked: onPick);
 
   Widget _menu<T>(T value, List<T> items, String Function(T) label, ValueChanged<T?> onChanged) {
-    return DropdownButton<T>(
+    return SelectBox<T>(
       value: value,
+      height: 48,
+      minWidth: 120,
       items: items.map((item) => DropdownMenuItem(value: item, child: Text(label(item)))).toList(),
       onChanged: onChanged,
     );
