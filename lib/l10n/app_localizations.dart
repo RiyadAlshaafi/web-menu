@@ -1955,7 +1955,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashierServiceCharge.
   ///
   /// In en, this message translates to:
-  /// **'Service charge ({percent})'**
+  /// **'Service charge ({percent}%)'**
   String cashierServiceCharge(String percent);
 
   /// No description provided for @cashierBillRequestedBadge.

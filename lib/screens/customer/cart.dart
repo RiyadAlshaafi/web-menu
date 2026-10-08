@@ -40,31 +40,22 @@ class CustomerCartScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    GuestEyebrow(context.l10n.guestLiveTab),
-                                    const SizedBox(height: 2),
-                                    Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
-                                  ],
-                                ),
-                              ),
+                              GuestEyebrow(context.l10n.guestLiveTab),
                               const SizedBox(width: 8),
-                              Flexible(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    context.l10n.guestSentToKitchenAt(formatTripoliTime(order.createdAt)),
-                                    textAlign: TextAlign.end,
-                                    style: const TextStyle(color: GuestTokens.muted, fontSize: 13),
-                                  ),
+                              Expanded(
+                                child: Text(
+                                  context.l10n.guestSentToKitchenAt(formatTripoliTime(order.createdAt)),
+                                  textAlign: TextAlign.end,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: GuestTokens.muted, fontSize: 13),
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 2),
+                          Text(context.l10n.guestOrderNumber(store.shiftTicket(order)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
                           const SizedBox(height: 16),
                           _status(context, order.status),
                           if (order.status.index <= OrderStatus.preparing.index) ...[

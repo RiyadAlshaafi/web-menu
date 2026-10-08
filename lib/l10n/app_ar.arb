@@ -323,7 +323,7 @@
   "cashierPrintChit": "طباعة القسيمة",
   "cashierSettled": "مسوّاة",
   "cashierActiveTables": "{active} / {total} نشطة",
-  "cashierServiceCharge": "رسم الخدمة ({percent})",
+  "cashierServiceCharge": "رسم الخدمة ({percent}%)",
   "cashierBillRequestedBadge": "طلب الفاتورة",
   "cashierDineIn": "تناول في المطعم",
   "cashierElapsedMinutes": "{minutes} د",

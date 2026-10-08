@@ -773,9 +773,13 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
             final subtotal = visible.fold<double>(0, (sum, line) => sum + line.unitPrice * (qty[line.menuItemId] ?? 0));
             return Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-              child: Material(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [BoxShadow(color: Color(0x261B3A4B), blurRadius: 24, offset: Offset(0, 8))],
+                ),
+                child: Material(
                 color: CafeColors.paper,
-                elevation: 8,
                 borderRadius: BorderRadius.circular(20),
                 clipBehavior: Clip.antiAlias,
                 child: ConstrainedBox(
@@ -961,6 +965,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                       ),
                     ],
                   ),
+                ),
                 ),
               ),
             );

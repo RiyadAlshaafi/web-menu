@@ -1019,7 +1019,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cashierServiceCharge(String percent) {
-    return 'Service charge ($percent)';
+    return 'Service charge ($percent%)';
   }
 
   @override

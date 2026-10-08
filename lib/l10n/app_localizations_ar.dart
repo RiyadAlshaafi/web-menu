@@ -1018,7 +1018,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String cashierServiceCharge(String percent) {
-    return 'رسم الخدمة ($percent)';
+    return 'رسم الخدمة ($percent%)';
   }
 
   @override

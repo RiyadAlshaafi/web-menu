@@ -413,6 +413,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     // Takeout orders have no table.
     final waiting = store.tables.where((t) => t.id == order.tableId).firstOrNull?.status == TableStatus.billRequested;
     final method = order.paymentTypeId;
+    final next = order.status.next;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -461,7 +462,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         const SizedBox(height: 14),
         const Divider(height: 1, color: CafeColors.line),
         const SizedBox(height: 14),
-        EyebrowLabel(context.l10n.cashierItemsToSettle),
+        EyebrowLabel(context.l10n.cashierOrderItemsCount('${order.itemCount}')),
         const SizedBox(height: 10),
         Expanded(
           child: ListView(
@@ -472,7 +473,17 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         const Divider(),
         _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
         _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
-        _cashKv(context.l10n.cashierTotalToCharge, store.currency.format(total)),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: Text(context.l10n.cashierTotalToCharge, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+            Text(
+              store.currency.format(total),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26, letterSpacing: -0.5, color: CafeSurfaces.of(context).header),
+            ),
+          ],
+        ),
         if (method != null && method.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6),
@@ -506,6 +517,26 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
             },
             child: Text(context.l10n.cashierSettleAnyway),
           ),
+        if (next != null) ...[
+          const SizedBox(height: 4),
+          SizedBox(
+            height: 52,
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () async {
+                final error = await store.setOrderStatus(order.id, next);
+                if (error == null || !context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: (order.status == OrderStatus.ready ? _AlertTone.ready : _AlertTone.order).colors.$1,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(_nextStatusAction(context, next), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         SizedBox(
           height: 44,

@@ -551,7 +551,7 @@
       }
     }
   },
-  "cashierServiceCharge": "Service charge ({percent})",
+  "cashierServiceCharge": "Service charge ({percent}%)",
   "@cashierServiceCharge": {
     "placeholders": {
       "percent": {

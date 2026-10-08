@@ -46,7 +46,7 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                   visualDensity: VisualDensity.compact,
                   tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
                   onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
-                  icon: Icon(dish.first.available ? Icons.block : Icons.check_circle_outline, color: CafeSurfaces.of(context).button, size: 18),
+                  icon: Icon(dish.first.available ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: TawlaTokens.muted, size: 18),
                 ),
               OutlinedButton.icon(
                 onPressed: () async {
