@@ -1,11 +1,14 @@
-# Publishes a Windows release that tills install by themselves. Push a tag like v1.2.0 after
-# raising `version:` in pubspec.yaml (see docs/RELEASING.md). The release carries the installer
-# and latest.json (version, download link, SHA-256), which every till reads every 30 minutes.
+# Publishes a Windows release that tills install by themselves. After raising `version:` in
+# pubspec.yaml on main, either push a tag like v1.2.0, or run this workflow by hand from the
+# Actions tab (it then creates the tag from pubspec.yaml). See docs/RELEASING.md.
+# The release carries the installer and latest.json (version, download link, SHA-256), which
+# every till reads every 30 minutes.
 name: Windows release
 
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,16 +19,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check the tag matches pubspec.yaml
+      - name: Read the version (and check the tag matches pubspec.yaml)
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME#v}"
           ver="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
-          if [ "$tag" != "$ver" ]; then
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$ver" ]; then
             echo "Tag $GITHUB_REF_NAME does not match pubspec.yaml version $ver. Raise the version first." >&2
             exit 1
           fi
+          if [ "$GITHUB_REF_TYPE" != "tag" ] && git ls-remote --exit-code --tags origin "refs/tags/v$ver" >/dev/null; then
+            echo "Release v$ver already exists. Raise the version in pubspec.yaml first." >&2
+            exit 1
+          fi
           echo "VERSION=$ver" >> "$GITHUB_ENV"
+          echo "TAG=v$ver" >> "$GITHUB_ENV"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -67,13 +74,16 @@ jobs:
         run: |
           $file = "build\installer\CafePOS-setup-$env:VERSION.exe"
           $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
-          $url = "https://github.com/${{ github.repository }}/releases/download/$env:GITHUB_REF_NAME/CafePOS-setup-$env:VERSION.exe"
+          $url = "https://github.com/${{ github.repository }}/releases/download/$env:TAG/CafePOS-setup-$env:VERSION.exe"
           @{ version = $env:VERSION; url = $url; sha256 = $hash; notes = "" } | ConvertTo-Json | Out-File -Encoding utf8NoBOM build\installer\latest.json
           Get-Content build\installer\latest.json
 
+      # Run by hand, this also creates the tag on the commit that was built.
       - uses: softprops/action-gh-release@v2
         with:
-          name: Cafe POS ${{ github.ref_name }}
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Cafe POS ${{ env.TAG }}
           make_latest: true
           files: |
             build/installer/CafePOS-setup-${{ env.VERSION }}.exe
