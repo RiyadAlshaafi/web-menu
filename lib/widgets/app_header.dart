@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../time_format.dart';
+import 'tawla_mark.dart';
 
 /// The top bar shared by the admin and cashier shells so both look and behave
 /// the same: menu button (only when the sidebar is a drawer), the section title
@@ -20,6 +23,14 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaces = CafeSurfaces.of(context);
+    final cafeName = context.select<CafeStore, String>((store) => store.cafeName);
+    final wide = MediaQuery.sizeOf(context).width >= 720;
+    final divider = Container(
+      width: 1,
+      height: 24,
+      margin: const EdgeInsets.symmetric(horizontal: 14),
+      color: surfaces.onHeader.withValues(alpha: 0.3),
+    );
     return Container(
       height: height,
       padding: const EdgeInsetsDirectional.only(start: 12, end: 16),
@@ -34,12 +45,32 @@ class AppHeader extends StatelessWidget {
             )
           else
             const SizedBox(width: 6),
+          if (wide) ...[
+            TawlaLockup(color: surfaces.onHeader, size: 26),
+            divider,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: Text(
+                cafeName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: surfaces.onHeader),
+              ),
+            ),
+            divider,
+          ] else ...[
+            TawlaMark(size: 24, color: surfaces.onHeader),
+            const SizedBox(width: 10),
+          ],
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: surfaces.onHeader),
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: surfaces.onHeader),
+              ),
             ),
           ),
           for (final action in actions) ...[

@@ -610,5 +610,20 @@
   "updateNoticeUpdated": "تم التحديث إلى {version}. طُوبقت كل المبيعات مع السيرفر.",
   "updateNoticeNotInstalled": "لم يُثبَّت التحديث. لم يتغيّر أي شيء.",
   "updateNoticeMismatch": "تم التحديث، لكن السيرفر وهذا الجهاز مختلفان في بعض المبيعات. تواصل مع الدعم قبل إغلاق المناوبة.",
-  "updateBackupAt": "النسخة الاحتياطية: {path}"
+  "updateBackupAt": "النسخة الاحتياطية: {path}",
+  "navLogOut": "تسجيل الخروج",
+  "syncLiveTitle": "مزامنة الصندوق المباشرة",
+  "syncOnline": "متصل",
+  "syncOffline": "غير متصل",
+  "cashierViewCart": "عرض السلة",
+  "cashierCartTitle": "سلة {table}",
+  "cashierConfirmPayment": "تأكيد الدفع",
+  "cashierCustomerPayment": "طريقة دفع الزبون",
+  "cashierChosenByCustomer": "اختارها الزبون من الطاولة",
+  "cashierChangedByCashier": "غيّرها الكاشير · الزبون اختار {name}",
+  "cashierChangeMethod": "تغيير",
+  "cashierTapOrderHint": "اضغط على طلب لترى ما طلبه الزبون.",
+  "cashierNewOrderPill": "طلب جديد",
+  "cashierAllItemsRefused": "تم رفض كل الأصناف.",
+  "guestPayLabel": "طريقة الدفع"
 }

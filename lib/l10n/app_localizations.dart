@@ -3541,6 +3541,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup: {path}'**
   String updateBackupAt(String path);
+
+  /// No description provided for @navLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get navLogOut;
+
+  /// No description provided for @syncLiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Register Sync'**
+  String get syncLiveTitle;
+
+  /// No description provided for @syncOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get syncOnline;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncOffline;
+
+  /// No description provided for @cashierViewCart.
+  ///
+  /// In en, this message translates to:
+  /// **'View cart'**
+  String get cashierViewCart;
+
+  /// No description provided for @cashierCartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{table} cart'**
+  String cashierCartTitle(String table);
+
+  /// No description provided for @cashierConfirmPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Payment'**
+  String get cashierConfirmPayment;
+
+  /// No description provided for @cashierCustomerPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer\'s payment'**
+  String get cashierCustomerPayment;
+
+  /// No description provided for @cashierChosenByCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen by the customer at the table'**
+  String get cashierChosenByCustomer;
+
+  /// No description provided for @cashierChangedByCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed by cashier · customer chose {name}'**
+  String cashierChangedByCashier(String name);
+
+  /// No description provided for @cashierChangeMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get cashierChangeMethod;
+
+  /// No description provided for @cashierTapOrderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an order to see what they ordered.'**
+  String get cashierTapOrderHint;
+
+  /// No description provided for @cashierNewOrderPill.
+  ///
+  /// In en, this message translates to:
+  /// **'New order'**
+  String get cashierNewOrderPill;
+
+  /// No description provided for @cashierAllItemsRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'All items were refused.'**
+  String get cashierAllItemsRefused;
+
+  /// No description provided for @guestPayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get guestPayLabel;
 }
 
 class _AppLocalizationsDelegate

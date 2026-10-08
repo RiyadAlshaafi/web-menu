@@ -29,7 +29,7 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                       onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
                       icon: Icon(dish.first.available ? Icons.block : Icons.check_circle_outline, color: CafeSurfaces.of(context).button, size: 18),
                     ),
-                  TextButton(
+                  OutlinedButton.icon(
                     onPressed: () async {
                       final error = await store.refuseOrderLine(order, line);
                       if (!context.mounted) return;
@@ -37,8 +37,17 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                         SnackBar(content: Text(error ?? context.l10n.cashierItemRefused)),
                       );
                     },
-                    child: Text(context.l10n.cashierRefuse),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: CafeColors.terracottaDark,
+                      side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.remove_circle_outline, size: 16),
+                    label: Text(context.l10n.cashierRefuse, style: const TextStyle(fontWeight: FontWeight.w800)),
                   ),
+                  const SizedBox(width: 8),
                   SizedBox(
                     width: 72,
                     child: Text(store.currency.format(line.total), textAlign: TextAlign.right),

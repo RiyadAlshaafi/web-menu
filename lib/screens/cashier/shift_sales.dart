@@ -24,30 +24,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.cashierSoloStationSync,
-            style: const TextStyle(
-              letterSpacing: 0.8,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: CafeColors.inkMuted,
-            ),
-          ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                context.l10n.cashierShiftSalesTitle,
-                style: CafeTheme.display.copyWith(
-                  fontSize: AppSections.titleSize(
-                    MediaQuery.sizeOf(context).width,
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -100,9 +76,8 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final stack = constraints.maxWidth < 980;
                 final ledger = WideTable(
-                  minWidth: 760,
+                  minWidth: 820,
                   child: SoftCard(
                   radius: 16,
                   child: store.payments.isEmpty &&
@@ -163,7 +138,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                     ),
                                   ),
                                   SizedBox(
-                                    width: 88,
+                                    width: 140,
                                     child: Text(
                                       context.l10n.cashierColActions,
                                       textAlign: TextAlign.right,
@@ -266,10 +241,11 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 88,
+                                        width: 140,
                                         child: Align(
                                           alignment: Alignment.centerRight,
-                                          child: TextButton.icon(
+                                          child: OutlinedButton.icon(
+                                            style: _rowActionStyle,
                                             onPressed: () {
                                               final host = context;
                                               showReceiptPrint(store, payment, host.l10n).catchError((error) {
@@ -279,12 +255,13 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                             },
                                             icon: const Icon(
                                               Icons.print_outlined,
-                                              size: 14,
+                                              size: 16,
                                             ),
                                             label: Text(
                                               context.l10n.cashierPrintChit,
                                               style: const TextStyle(
-                                                fontSize: 11,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
                                               ),
                                             ),
                                           ),
@@ -307,44 +284,51 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                         ),
                   ),
                 );
-                final till = Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TerracottaButton(
-                      label: context.l10n.cashierAddExpense,
-                      onPressed: shift == null
-                          ? null
-                          : () => _addExpense(context, store),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: shift == null
-                          ? null
-                          : () => _closeRegister(context, store, shift),
-                      child: Text(context.l10n.cashierCloseRegister),
-                    ),
-                  ],
-                );
-                if (stack) {
-                  return Column(
+                final bar = SoftCard(
+                  radius: 16,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Expanded(child: ledger),
-                      const SizedBox(height: 12),
                       SizedBox(
-                        height: (constraints.maxHeight * 0.52).clamp(280, 420),
-                        child: till,
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: shift == null ? null : () => _addExpense(context, store),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: CafeColors.terracottaDark,
+                            backgroundColor: const Color(0xFFFFF4EF),
+                            side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: Text(context.l10n.cashierAddExpense, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton.icon(
+                          onPressed: shift == null ? null : () => _closeRegister(context, store, shift),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.lock_outline, size: 18),
+                          label: Text(context.l10n.cashierCloseRegister, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                        ),
                       ),
                     ],
-                  );
-                }
-                return Row(
+                  ),
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(child: ledger),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: (constraints.maxWidth * 0.34).clamp(260, 360),
-                      child: till,
-                    ),
+                    const SizedBox(height: 12),
+                    bar,
                   ],
                 );
               },
@@ -461,15 +445,19 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                 ),
               ),
               SizedBox(
-                width: 88,
+                width: 140,
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: canEdit
-                      ? IconButton(
-                          tooltip: context.l10n.expenseEdit,
+                      ? OutlinedButton.icon(
+                          style: _rowActionStyle,
                           onPressed: () =>
                               _addExpense(context, store, editing: expense),
-                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: Text(
+                            context.l10n.expenseEdit,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                          ),
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -791,3 +779,11 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
     );
   }
 }
+
+final _rowActionStyle = OutlinedButton.styleFrom(
+  foregroundColor: CafeColors.ink,
+  minimumSize: const Size(0, 40),
+  padding: const EdgeInsets.symmetric(horizontal: 12),
+  side: const BorderSide(color: Color(0xFFE3DED5), width: 1.5),
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+);

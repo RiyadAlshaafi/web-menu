@@ -1066,5 +1066,22 @@
   "updateNoticeNotInstalled": "The update did not install. Nothing was changed.",
   "updateNoticeMismatch": "Updated, but the server and this till disagree about some sales. Contact support before closing the shift.",
   "updateBackupAt": "Backup: {path}",
-  "@updateBackupAt": {"placeholders": {"path": {"type": "String"}}}
+  "@updateBackupAt": {"placeholders": {"path": {"type": "String"}}},
+  "navLogOut": "Log out",
+  "syncLiveTitle": "Live Register Sync",
+  "syncOnline": "Online",
+  "syncOffline": "Offline",
+  "cashierViewCart": "View cart",
+  "cashierCartTitle": "{table} cart",
+  "@cashierCartTitle": {"placeholders": {"table": {"type": "String"}}},
+  "cashierConfirmPayment": "Confirm Payment",
+  "cashierCustomerPayment": "Customer's payment",
+  "cashierChosenByCustomer": "Chosen by the customer at the table",
+  "cashierChangedByCashier": "Changed by cashier · customer chose {name}",
+  "@cashierChangedByCashier": {"placeholders": {"name": {"type": "String"}}},
+  "cashierChangeMethod": "Change",
+  "cashierTapOrderHint": "Tap an order to see what they ordered.",
+  "cashierNewOrderPill": "New order",
+  "cashierAllItemsRefused": "All items were refused.",
+  "guestPayLabel": "Payment method"
 }

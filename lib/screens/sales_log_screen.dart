@@ -63,11 +63,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.ownSalesOnly ? context.l10n.navCashierLog : context.l10n.navSalesLog, style: CafeTheme.display.copyWith(fontSize: 28)),
-          if (widget.ownSalesOnly) ...[
-            const SizedBox(height: 4),
+          if (widget.ownSalesOnly)
             Text(context.l10n.cashierLogScope, style: const TextStyle(color: CafeColors.inkMuted)),
-          ],
           const SizedBox(height: 12),
           _summary(context, store),
           const SizedBox(height: 12),

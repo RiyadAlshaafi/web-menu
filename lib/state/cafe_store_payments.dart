@@ -110,6 +110,7 @@ extension CafeStorePayments on CafeStore {
     required String tableId,
     required double cashReceived,
     bool applyService = true,
+    String? paymentTypeId,
   }) async {
     final cashier = currentCashier;
     final shift = currentShift ?? openShift;
@@ -123,7 +124,7 @@ extension CafeStorePayments on CafeStore {
       tableId,
       cashReceived,
       applyService: applyService,
-      paymentTypeId: openOrderFor(tableId)?.paymentTypeId,
+      paymentTypeId: paymentTypeId ?? openOrderFor(tableId)?.paymentTypeId,
     );
     if (failure != null) {
       if (_sessionExpired(failure)) return failure;

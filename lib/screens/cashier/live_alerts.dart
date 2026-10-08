@@ -136,6 +136,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                 amount: order.subtotal,
                                 action: next == null ? null : _nextStatusAction(context, next),
                                 icon: Icons.room_service_outlined,
+                                selected: order.id == selected?.id,
                                 onTap: () => setState(() => selectedOrderId = order.id),
                                 onAction: next == null
                                     ? null
@@ -151,75 +152,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                       ],
                     ],
                 );
-                final side = Column(
-                  children: [
-                    Expanded(
-                      child: SoftCard(
-                        radius: 16,
-                        child: selected == null ? EmptyHint(context.l10n.noOrders) : _detail(context, store, selected),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SoftCard(
-                      radius: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(child: Text(context.l10n.cashierQuickTableStatus('${store.diningTables.length}'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.4))),
-                              Text(
-                                context.l10n.cashierActiveTables(
-                                  '${store.diningTables.where((table) => table.status != TableStatus.free).length}',
-                                  '${store.diningTables.length}',
-                                ),
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: CafeColors.inkMuted),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          if (store.diningTables.isEmpty)
-                            EmptyHint(context.l10n.noTables)
-                          else
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: store.diningTables.map((table) {
-                                final due = store.tabTotal(table.id);
-                                final bill = table.status == TableStatus.billRequested;
-                                final calling = store.openCalls.any((call) => call.tableId == table.id);
-                                final label = table.status == TableStatus.free
-                                    ? context.l10n.cashierFree
-                                    : calling
-                                        ? context.l10n.cashierCall
-                                        : bill
-                                            ? '${context.l10n.cashierBillRequest} ${store.currency.format(due)}'
-                                            : store.currency.format(due);
-                                return SizedBox(
-                                  width: 78,
-                                  child: SoftCard(
-                                    radius: 12,
-                                    padding: const EdgeInsets.all(8),
-                                    selected: bill || calling || table.status != TableStatus.free,
-                                    onTap: () => context.go('/pos/tables'),
-                                    child: Column(
-                                      children: [
-                                        Text(context.l10n.cashierTableShort(table.number), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
-                                        Text(
-                                          label,
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(fontSize: 10, color: table.status == TableStatus.free ? CafeColors.success : CafeColors.inkMuted),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
+                final side = SoftCard(
+                  radius: 16,
+                  child: selected == null
+                      ? EmptyHint(orders.isEmpty && bills.isEmpty ? context.l10n.noOrders : context.l10n.cashierTapOrderHint)
+                      : _detail(context, store, selected),
                 );
                 if (stack) {
                   return Column(
@@ -321,6 +258,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     DateTime? time,
     double? amount,
     String? action,
+    bool selected = false,
     required VoidCallback onTap,
     VoidCallback? onAction,
   }) {
@@ -332,6 +270,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         child: SoftCard(
           radius: 16,
           padding: const EdgeInsets.all(12),
+          selected: selected,
           onTap: onTap,
           child: Row(
             children: [
@@ -448,24 +387,13 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
             child: Text(context.l10n.cashierSettleAnyway),
           ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _cashierUnavailable(context),
-                icon: const Icon(Icons.print_outlined, size: 16),
-                label: Text(context.l10n.cashierPrintReceipt),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _cashierUnavailable(context),
-                icon: const Icon(Icons.call_split, size: 16),
-                label: Text(context.l10n.cashierSplitBill),
-              ),
-            ),
-          ],
+        SizedBox(
+          height: 44,
+          child: OutlinedButton.icon(
+            onPressed: () => _cashierUnavailable(context),
+            icon: const Icon(Icons.print_outlined, size: 16),
+            label: Text(context.l10n.cashierPrintReceipt),
+          ),
         ),
       ],
     );

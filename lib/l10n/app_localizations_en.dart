@@ -1944,4 +1944,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String updateBackupAt(String path) {
     return 'Backup: $path';
   }
+
+  @override
+  String get navLogOut => 'Log out';
+
+  @override
+  String get syncLiveTitle => 'Live Register Sync';
+
+  @override
+  String get syncOnline => 'Online';
+
+  @override
+  String get syncOffline => 'Offline';
+
+  @override
+  String get cashierViewCart => 'View cart';
+
+  @override
+  String cashierCartTitle(String table) {
+    return '$table cart';
+  }
+
+  @override
+  String get cashierConfirmPayment => 'Confirm Payment';
+
+  @override
+  String get cashierCustomerPayment => 'Customer\'s payment';
+
+  @override
+  String get cashierChosenByCustomer => 'Chosen by the customer at the table';
+
+  @override
+  String cashierChangedByCashier(String name) {
+    return 'Changed by cashier · customer chose $name';
+  }
+
+  @override
+  String get cashierChangeMethod => 'Change';
+
+  @override
+  String get cashierTapOrderHint => 'Tap an order to see what they ordered.';
+
+  @override
+  String get cashierNewOrderPill => 'New order';
+
+  @override
+  String get cashierAllItemsRefused => 'All items were refused.';
+
+  @override
+  String get guestPayLabel => 'Payment method';
 }

@@ -1934,4 +1934,53 @@ class AppLocalizationsAr extends AppLocalizations {
   String updateBackupAt(String path) {
     return 'النسخة الاحتياطية: $path';
   }
+
+  @override
+  String get navLogOut => 'تسجيل الخروج';
+
+  @override
+  String get syncLiveTitle => 'مزامنة الصندوق المباشرة';
+
+  @override
+  String get syncOnline => 'متصل';
+
+  @override
+  String get syncOffline => 'غير متصل';
+
+  @override
+  String get cashierViewCart => 'عرض السلة';
+
+  @override
+  String cashierCartTitle(String table) {
+    return 'سلة $table';
+  }
+
+  @override
+  String get cashierConfirmPayment => 'تأكيد الدفع';
+
+  @override
+  String get cashierCustomerPayment => 'طريقة دفع الزبون';
+
+  @override
+  String get cashierChosenByCustomer => 'اختارها الزبون من الطاولة';
+
+  @override
+  String cashierChangedByCashier(String name) {
+    return 'غيّرها الكاشير · الزبون اختار $name';
+  }
+
+  @override
+  String get cashierChangeMethod => 'تغيير';
+
+  @override
+  String get cashierTapOrderHint => 'اضغط على طلب لترى ما طلبه الزبون.';
+
+  @override
+  String get cashierNewOrderPill => 'طلب جديد';
+
+  @override
+  String get cashierAllItemsRefused => 'تم رفض كل الأصناف.';
+
+  @override
+  String get guestPayLabel => 'طريقة الدفع';
 }

@@ -12,6 +12,7 @@ import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/scroll_when_short.dart';
+import '../widgets/shell_parts.dart';
 import '../widgets/table_qr.dart';
 
 export 'admin_menu_layout_screen.dart';
@@ -32,7 +33,7 @@ class AdminShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final drawer = AppSections.useDrawer(width);
     final compact = AppSections.compact(width) && !drawer;
-    final railWidth = drawer ? 260.0 : (AppSections.compact(width) ? 76.0 : 220.0);
+    final railWidth = drawer ? 270.0 : (AppSections.compact(width) ? 76.0 : 244.0);
 
     final surfaces = CafeSurfaces.of(context);
     final rail = Material(
@@ -42,108 +43,37 @@ class AdminShell extends StatelessWidget {
               // In a short window the menu scrolls instead of cutting off its last entries.
               child: ScrollWhenShort(
                 minHeight: 640,
-                child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(compact ? 12 : 18, 22, compact ? 12 : 16, 18),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: CafeColors.terracotta,
-                            borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(compact ? 8 : 14, 20, compact ? 8 : 14, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!compact)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 8, 12),
+                          child: Text(
+                            context.l10n.adminConsoleLabel,
+                            style: const TextStyle(fontSize: 11, letterSpacing: 1.6, fontWeight: FontWeight.w800, color: Color(0xFF56606A)),
                           ),
-                          alignment: Alignment.center,
-                          child: Icon(section.icon, color: Colors.white, size: 22),
                         ),
-                        if (!compact) ...[
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  store.cafeName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: surfaces.onSidebar),
-                                ),
-                                Text(
-                                  context.l10n.adminConsoleLabel,
-                                  style: const TextStyle(fontSize: 10, letterSpacing: 0.8, fontWeight: FontWeight.w700, color: CafeColors.inkMuted),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                      for (final item in AppSections.admin)
+                        ShellNavItem(section: item, active: item.matches(location), compact: compact),
+                      const Spacer(),
+                      ShellProfileCard(
+                        initials: _initials(store.admin?.email),
+                        name: store.admin?.displayName == 'Admin'
+                            ? (store.admin?.email.split('@').first ?? context.l10n.adminDefaultName)
+                            : (store.admin?.displayName ?? context.l10n.adminDefaultName),
+                        subtitle: context.l10n.adminGeneralManager,
+                        compact: compact,
+                        onLogOut: () {
+                          store.signOut();
+                          context.go('/login');
+                        },
+                      ),
+                    ],
                   ),
-                  if (!compact)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 8, 16, 10),
-                      child: Text(
-                        context.l10n.adminManagementHeading,
-                        style: const TextStyle(fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: CafeColors.inkMuted),
-                      ),
-                    ),
-                  for (final item in AppSections.admin)
-                    _nav(context, item, item.matches(location), compact),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 8, 12, 16),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFCF8),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: CafeColors.line),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: CafeColors.peach,
-                            child: Text(
-                              _initials(store.admin?.email),
-                              style: const TextStyle(color: CafeColors.terracottaDark, fontWeight: FontWeight.w800, fontSize: 12),
-                            ),
-                          ),
-                          if (!compact) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    store.admin?.displayName == 'Admin'
-                                        ? (store.admin?.email.split('@').first ?? context.l10n.adminDefaultName)
-                                        : (store.admin?.displayName ?? context.l10n.adminDefaultName),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                                  ),
-                                  Text(context.l10n.adminGeneralManager, style: const TextStyle(fontSize: 10, color: CafeColors.inkMuted)),
-                                ],
-                              ),
-                            ),
-                          ],
-                          IconButton(
-                            onPressed: () {
-                              store.signOut();
-                              context.go('/login');
-                            },
-                            icon: const Icon(Icons.logout, size: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
               ),
             ),
           );
@@ -157,18 +87,9 @@ class AdminShell extends StatelessWidget {
             child: Column(
               children: [
                 AppHeader(
-                  title: '${context.l10n.adminWorkspace}  /  ${section.crumb(context)}',
+                  title: section.crumb(context),
                   showMenu: drawer,
                   actions: [
-                    if (!drawer)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F0E4),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(context.l10n.adminTerminalBadge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4F7A45))),
-                      ),
                     OutlinedButton.icon(
                       onPressed: () {
                         if (store.activeTables.isEmpty) {
@@ -211,41 +132,6 @@ class AdminShell extends StatelessWidget {
       return name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
     }
     return value.length >= 2 ? value.substring(0, 2).toUpperCase() : 'AD';
-  }
-
-  Widget _nav(BuildContext context, AppSection section, bool active, bool compact) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 0, compact ? 10 : 12, 8),
-      child: Material(
-        color: active ? CafeSurfaces.of(context).button : Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: () => context.go(section.path),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(compact ? 10 : 14, 12, compact ? 10 : 12, 12),
-            child: Row(
-              children: [
-                Icon(section.icon, color: active ? CafeSurfaces.of(context).onButton : CafeColors.inkMuted, size: 18),
-                if (!compact) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      section.label(context),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
-                        color: active ? CafeSurfaces.of(context).onButton : CafeColors.ink,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

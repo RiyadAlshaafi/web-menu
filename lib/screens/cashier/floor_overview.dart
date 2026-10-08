@@ -73,7 +73,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                         crossAxisCount: AppSections.columnsFor(constraints.maxWidth, max: 3),
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: 1.35,
+                        childAspectRatio: 1.15,
                         children: tables.map((item) {
                             final due = store.tabTotal(item.id);
                             final calling = callIds.contains(item.id);
@@ -111,6 +111,23 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                                     ),
                                   const Spacer(),
                                   MoneyText(store.currency.format(due)),
+                                  if (item.status == TableStatus.dining && store.openOrderFor(item.id) != null) ...[
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 44,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () => _showCart(context, store, item),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: CafeColors.ink,
+                                          side: const BorderSide(color: Color(0xFFE3DED5), width: 1.5),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        icon: const Icon(Icons.shopping_cart_outlined, size: 18),
+                                        label: Text(context.l10n.cashierViewCart, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             );
@@ -182,6 +199,76 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// What the table has ordered so far, without leaving the floor view.
+  void _showCart(BuildContext context, CafeStore store, CafeTable table) {
+    final order = store.openOrderFor(table.id);
+    if (order == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final lines = order.lines;
+        return AlertDialog(
+          title: Text(context.l10n.cashierCartTitle(context.l10n.cashierTableNumber(table.number))),
+          content: SizedBox(
+            width: 380,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '${context.l10n.cashierOrderNumber(store.shiftTicket(order))}  ·  ${context.l10n.cashierItemsCount('${order.itemCount}')}',
+                  style: const TextStyle(color: CafeColors.inkMuted),
+                ),
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 360),
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final line in lines)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF1EDE7)))),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 28,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
+                                child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w600))),
+                              Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                Row(
+                  children: [
+                    Text(context.l10n.cashierTotalPayable, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const Spacer(),
+                    MoneyText(store.currency.format(store.tabTotal(table.id))),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+            ),
+          ],
+        );
+      },
     );
   }
 

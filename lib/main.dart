@@ -379,7 +379,7 @@ class _CafeItalianoAppState extends State<CafeItalianoApp> {
     return ChangeNotifierProvider.value(
       value: widget.store,
       child: MaterialApp.router(
-        title: 'Café Italiano',
+        title: 'Tawla',
         debugShowCheckedModeBanner: false,
         theme: CafeTheme.light,
         locale: Locale(locale),
