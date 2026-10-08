@@ -108,7 +108,11 @@ void main() {
   group('backup before update', () {
     late Directory dir;
     setUp(() => dir = Directory.systemTemp.createTempSync('update_backup'));
-    tearDown(() => dir.deleteSync(recursive: true));
+    tearDown(() {
+      try {
+        dir.deleteSync(recursive: true);
+      } catch (_) {}
+    });
 
     test('copies the till data and a consistent outbox, keeps the newest three', () async {
       const outboxName = 'offline_outbox_abcd1234.sqlite';
@@ -128,6 +132,9 @@ void main() {
       expect(Directory(p.join(latest, backupFolderName)).existsSync(), isFalse, reason: 'backups are not copied into backups');
       final copy = SqliteOutboxStore.open(p.join(latest, outboxName));
       expect((await copy.pending()).single.id, 'sale-1', reason: 'unsent sales are in the backup');
+      // Windows locks open files: close both so the test folder can be deleted afterwards.
+      copy.close();
+      store.close();
     });
 
     test('an outbox that never opened is still copied as files', () async {

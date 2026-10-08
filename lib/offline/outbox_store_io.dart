@@ -44,6 +44,9 @@ class SqliteOutboxStore implements OutboxStore {
 
   final Database _db;
 
+  /// Closes the file. Windows keeps an open file locked, so tests close it before cleaning up.
+  void close() => _db.close();
+
   @override
   Future<void> add(OutboxItem item) async {
     _db.execute(
