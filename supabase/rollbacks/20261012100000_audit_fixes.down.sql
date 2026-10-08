@@ -1,5 +1,4 @@
 -- Undoes 20261012100000_audit_fixes.sql. Run it only if that migration must be taken back.
--- The app from the same release reads restaurants.public_menu_url, so roll the app back first.
 
 do $$
 begin
@@ -48,4 +47,5 @@ as $$
 $$;
 
 alter table public.restaurants alter column service_charge_rate set default 0.10;
-alter table public.restaurants drop column if exists public_menu_url;
+-- public_menu_url predates this migration (restaurant_branding), so it stays;
+-- the addresses filled in here are left as they are.

@@ -1,7 +1,7 @@
 -- Fixes from docs/AUDIT_PLAN.md section 1.1. Safe to apply twice.
 --
--- B-08  restaurants.public_menu_url: the address printed in table QR codes,
---       saved per cafe instead of one address built into the app.
+-- B-08  restaurants.public_menu_url (already a column) now holds the address
+--       printed in table QR codes; existing cafes get the current address.
 -- B-11  has_any_admin() without a cafe no longer answers for the whole
 --       database; an unlinked device is told "no admin" and asked to link.
 -- B-12  new cafes start without a service charge.
@@ -10,19 +10,14 @@
 -- B-15  list_pos_cashiers() without a cafe no longer lists slot 1's cashiers.
 
 -- B-08 -----------------------------------------------------------------------
--- Cafes that already exist were printing QR codes for this address (it was
--- built into the app), so they keep it. New cafes start empty. The backfill
--- runs only when the column is first added, so a second run changes nothing.
-do $$
-begin
-  if not exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'restaurants' and column_name = 'public_menu_url'
-  ) then
-    alter table public.restaurants add column public_menu_url text not null default '';
-    update public.restaurants set public_menu_url = 'https://web-menu-akakus.vercel.app';
-  end if;
-end $$;
+-- The column has existed since 20260928220000_restaurant_branding.sql but was
+-- never used: the address was built into the app instead. Cafes created
+-- before this migration were printing QR codes for that address, so they get
+-- it here; cafes created later start empty. Safe to run twice.
+update public.restaurants
+set public_menu_url = 'https://web-menu-akakus.vercel.app'
+where public_menu_url = ''
+  and created_at < timestamptz '2026-10-12 00:00:00+00';
 
 -- B-12 -----------------------------------------------------------------------
 alter table public.restaurants alter column service_charge_rate set default 0;
