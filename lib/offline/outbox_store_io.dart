@@ -80,6 +80,10 @@ class SqliteOutboxStore implements OutboxStore {
       _db.execute('update outbox set attempts = attempts + 1, last_error = ?, failed = 1 where id = ?', [error, id]);
 
   @override
+  Future<void> requeueFailed() async =>
+      _db.execute('update outbox set failed = 0, last_error = null where failed = 1');
+
+  @override
   Future<String?> readValue(String key) async {
     final rows = _db.select('select value from kv where key = ?', [key]);
     return rows.isEmpty ? null : rows.first['value'] as String;

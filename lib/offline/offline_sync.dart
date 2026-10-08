@@ -19,34 +19,39 @@ class ReservedNumber {
   final int? day;
 }
 
-/// A run of receipt numbers (and daily order numbers) the server set aside for this device.
+/// Receipt numbers for one month and/or daily order numbers for one day that the server set
+/// aside for this device. Either range may be missing: each is reserved only when running short.
 class NumberBlock {
   NumberBlock({
     required this.yearMonth,
-    required this.next,
-    required this.last,
-    required this.dayKey,
-    required this.dayNext,
-    required this.dayLast,
+    this.next,
+    this.last,
+    this.dayKey,
+    this.dayNext,
+    this.dayLast,
   });
 
   factory NumberBlock.fromJson(Map<String, dynamic> json) => NumberBlock(
     yearMonth: json['year_month'] as String,
-    next: json['next'] as int,
-    last: json['last'] as int,
-    dayKey: json['day_key'] as String,
-    dayNext: json['day_next'] as int,
-    dayLast: json['day_last'] as int,
+    next: json['next'] as int?,
+    last: json['last'] as int?,
+    dayKey: json['day_key'] as String?,
+    dayNext: json['day_next'] as int?,
+    dayLast: json['day_last'] as int?,
   );
 
   final String yearMonth;
-  int next;
-  final int last;
-  final String dayKey;
-  int dayNext;
-  final int dayLast;
+  int? next;
+  final int? last;
+  final String? dayKey;
+  int? dayNext;
+  final int? dayLast;
 
-  int get remaining => last - next + 1;
+  /// Receipt numbers left in this block.
+  int get remaining => next == null || last == null ? 0 : last! - next! + 1;
+
+  /// Order numbers left for [dayKey].
+  int get dayRemaining => dayNext == null || dayLast == null ? 0 : dayLast! - dayNext! + 1;
 
   Map<String, dynamic> toJson() => {
     'year_month': yearMonth,
@@ -76,6 +81,37 @@ bool isNetworkError(Object error) {
     'Failed to fetch',
   ];
   return signs.any(text.contains);
+}
+
+/// What to do with an upload that threw instead of answering.
+enum UploadError {
+  /// The server could not be reached: wait and retry, keeping order.
+  network,
+
+  /// The sign-in behind the upload ended: ask for a sign-in, keep the item.
+  signIn,
+
+  /// The server already has this change (a retry overlapped the first upload): it is done.
+  duplicate,
+
+  /// The server refused the data itself; a retry would get the same answer.
+  refused,
+
+  /// Anything else (server busy, unknown error): keep the item and retry later.
+  retryLater,
+}
+
+/// Sorts an upload error so a saved sale is never set aside just because something went wrong.
+UploadError classifyUploadError(Object error) {
+  if (isNetworkError(error)) return UploadError.network;
+  final text = '$error';
+  final code = RegExp(r'code: ([0-9A-Z]+)').firstMatch(text)?.group(1);
+  if (code == 'PGRST301' || code == 'PGRST303' || text.contains('JWT expired')) {
+    return UploadError.signIn;
+  }
+  if (code == '23505' && text.contains('client_id')) return UploadError.duplicate;
+  if (code != null && (code.startsWith('22') || code.startsWith('23') || code == 'P0001')) return UploadError.refused;
+  return UploadError.retryLater;
 }
 
 /// Tripoli calendar day as the server writes it (YYMMDD).
@@ -134,7 +170,7 @@ class OfflineSync {
   Future<void> _recount() async {
     final pending = await store.pending();
     pendingCount = pending.length;
-    unassignedCount = pending.where(_unassigned).length;
+    unassignedCount = pending.where((item) => _unassigned(item) && item.kind != 'shift_open').length;
     failedCount = (await store.failed()).length;
     onChange?.call();
   }
@@ -142,6 +178,20 @@ class OfflineSync {
   static bool _unassigned(OutboxItem item) {
     final params = item.payload['params'];
     return params is Map && params.containsKey('p_cashier_id') && params['p_cashier_id'] == null;
+  }
+
+  /// Removes offline shifts that never got a cashier and hold no sales or expenses, so an empty
+  /// offline session can't hold up the queue. Returns how many were removed.
+  Future<int> dropIdleUnassignedShifts() async {
+    final pending = await store.pending();
+    if (pending.any((item) => _unassigned(item) && item.kind != 'shift_open')) return 0;
+    var removed = 0;
+    for (final item in pending.where((item) => _unassigned(item) && item.kind == 'shift_open')) {
+      await store.remove(item.id);
+      removed++;
+    }
+    if (removed > 0) await _recount();
+    return removed;
   }
 
   /// Gives every unassigned item to [cashierId] so it can upload. Returns how many were assigned.
@@ -154,13 +204,13 @@ class OfflineSync {
       final local = payload['local'];
       if (local is Map) {
         final copy = Map<String, dynamic>.from(local);
-        for (final key in ['payment', 'order', 'expense']) {
+        for (final key in ['payment', 'order', 'expense', 'shift']) {
           final entry = copy[key];
           if (entry is Map) {
             copy[key] = {
               ...Map<String, dynamic>.from(entry),
               'cashierId': cashierId,
-              if (cashierName != null && key != 'order') 'cashierName': cashierName,
+              if (cashierName != null && key != 'order' && key != 'shift') 'cashierName': cashierName,
             };
           }
         }
@@ -181,15 +231,20 @@ class OfflineSync {
 
   Future<void> _saveBlocks() => store.writeValue(_blocksKey, jsonEncode([for (final b in _blocks) b.toJson()]));
 
-  /// Reserves more numbers while online so the next sales can still be numbered offline.
-  Future<void> topUp({int below = 15, int count = 50}) async {
-    final month = tripoliDayKey(_clock()).substring(0, 4);
+  /// Reserves more numbers while online so the next sales can still be numbered offline. Asks
+  /// only for what is short: [monthCount] receipt numbers when fewer than [monthBelow] are left
+  /// this month, and [dayCount] order numbers when fewer than [dayBelow] are left today. Small day
+  /// blocks keep the shared daily order numbers close together across tills.
+  Future<void> topUp({int monthBelow = 15, int monthCount = 50, int dayBelow = 3, int dayCount = 10}) async {
     final today = tripoliDayKey(_clock());
-    final usable = _blocks.where((b) => b.remaining > 0 && b.yearMonth == month).fold(0, (sum, b) => sum + b.remaining);
-    final dayLeft = _blocks.where((b) => b.dayKey == today).fold(0, (sum, b) => sum + (b.dayLast - b.dayNext + 1));
-    if (usable >= below && dayLeft >= below) return;
+    final month = today.substring(0, 4);
+    final monthLeft = _blocks.where((b) => b.yearMonth == month).fold(0, (sum, b) => sum + b.remaining);
+    final dayLeft = _blocks.where((b) => b.dayKey == today).fold(0, (sum, b) => sum + b.dayRemaining);
+    final wantMonth = monthLeft < monthBelow ? monthCount : 0;
+    final wantDay = dayLeft < dayBelow ? dayCount : 0;
+    if (wantMonth == 0 && wantDay == 0) return;
     try {
-      final raw = await rpc('reserve_receipt_numbers', {'p_count': count});
+      final raw = await rpc('reserve_receipt_numbers', {'p_month_count': wantMonth, 'p_day_count': wantDay});
       final answer = Map<String, dynamic>.from(raw as Map);
       if (answer['ok'] != true) {
         if ('${answer['error']}'.contains('session expired')) _requireSignIn();
@@ -199,14 +254,14 @@ class OfflineSync {
       _blocks.add(
         NumberBlock(
           yearMonth: answer['year_month'] as String,
-          next: answer['first'] as int,
-          last: answer['last'] as int,
-          dayKey: answer['day_key'] as String,
-          dayNext: answer['day_first'] as int,
-          dayLast: answer['day_last'] as int,
+          next: answer['first'] as int?,
+          last: answer['last'] as int?,
+          dayKey: answer['day_key'] as String?,
+          dayNext: answer['day_first'] as int?,
+          dayLast: answer['day_last'] as int?,
         ),
       );
-      _blocks.removeWhere((b) => b.remaining <= 0);
+      _dropSpent(today);
       await _saveBlocks();
       _setOnline(true);
     } catch (error) {
@@ -214,19 +269,30 @@ class OfflineSync {
     }
   }
 
+  /// Forgets blocks with nothing left to give (day numbers from an earlier day count as nothing).
+  void _dropSpent(String today) {
+    _blocks.removeWhere((b) => b.remaining <= 0 && (b.dayKey != today || b.dayRemaining <= 0));
+  }
+
   /// Takes the next reserved receipt number, saving it as used before the sale is shown.
   Future<ReservedNumber?> takeNumber() async {
-    _blocks.removeWhere((b) => b.remaining <= 0);
-    if (_blocks.isEmpty) return null;
     final today = tripoliDayKey(_clock());
     final month = today.substring(0, 4);
-    final block = _blocks.firstWhere((b) => b.yearMonth == month, orElse: () => _blocks.first);
-    final monthly = block.next++;
+    _dropSpent(today);
+    final monthly = _blocks.where((b) => b.remaining > 0).toList();
+    if (monthly.isEmpty) return null;
+    final block = monthly.firstWhere((b) => b.yearMonth == month, orElse: () => monthly.first);
+    final number = block.next!;
+    block.next = number + 1;
     int? day;
-    final dayBlock = _blocks.where((b) => b.dayKey == today && b.dayNext <= b.dayLast).firstOrNull;
-    if (dayBlock != null) day = dayBlock.dayNext++;
+    final dayBlock = _blocks.where((b) => b.dayKey == today && b.dayRemaining > 0).firstOrNull;
+    if (dayBlock != null) {
+      day = dayBlock.dayNext!;
+      dayBlock.dayNext = day + 1;
+    }
+    _dropSpent(today);
     await _saveBlocks();
-    return ReservedNumber(yearMonth: block.yearMonth, monthly: monthly, dayKey: today, day: day);
+    return ReservedNumber(yearMonth: block.yearMonth, monthly: number, dayKey: today, day: day);
   }
 
   Future<void> enqueue(OutboxItem item) async {
@@ -295,17 +361,26 @@ class OfflineSync {
           }
           await store.markFailed(item.id, error);
         } catch (error) {
-          if (isNetworkError(error)) {
-            _setOnline(false);
-            await store.noteAttempt(item.id, '$error');
-            break;
+          switch (classifyUploadError(error)) {
+            case UploadError.network:
+              _setOnline(false);
+              await store.noteAttempt(item.id, '$error');
+            case UploadError.signIn:
+              _requireSignIn();
+              await store.noteAttempt(item.id, '$error');
+            case UploadError.duplicate:
+              await store.remove(item.id);
+              uploaded++;
+              continue;
+            case UploadError.refused:
+              // The server ran the upload and refused the data; keep it aside for review.
+              await store.markFailed(item.id, '$error');
+              continue;
+            case UploadError.retryLater:
+              await store.noteAttempt(item.id, '$error');
           }
-          if (_isServerBusy(error)) {
-            await store.noteAttempt(item.id, '$error');
-            break;
-          }
-          // The server ran the upload and refused it (bad data); keep it aside for review.
-          await store.markFailed(item.id, '$error');
+          // Stop here so later items never go up before this one.
+          break;
         }
       }
     } finally {
@@ -315,20 +390,10 @@ class OfflineSync {
     return uploaded;
   }
 
-  bool _isServerBusy(Object error) {
-    final text = '$error';
-    return text.contains('503') || text.contains('502') || text.contains('504') || text.contains('PGRST000') ||
-        text.contains('PGRST001') || text.contains('PGRST002');
-  }
-
-  /// Puts a refused item back in the queue to try again (after the cause was fixed).
+  /// Puts refused items back in the queue to try again (after the cause was fixed). Each keeps
+  /// its original place, so a retried sale still uploads before a later shift close.
   Future<void> retryFailed() async {
-    for (final item in await store.failed()) {
-      await store.remove(item.id);
-      await store.add(
-        OutboxItem(id: item.id, kind: item.kind, payload: item.payload, createdAt: item.createdAt),
-      );
-    }
+    await store.requeueFailed();
     await _recount();
   }
 

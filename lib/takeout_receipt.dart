@@ -1,11 +1,10 @@
 import 'models/models.dart';
 
-/// Records one paid takeout sale. Does not reuse an open order and does not
-/// change the counter table's status. Service is not added.
+/// Records one paid takeout sale. Takeout is a label on the order and receipt, not a
+/// table. Does not reuse an open order. Service is not added.
 String? applyQuickTakeout({
   required List<CafeOrder> orders,
   required List<Payment> payments,
-  required CafeTable counter,
   required List<OrderLine> lines,
   required String? paymentTypeId,
   required String cashierId,
@@ -31,8 +30,8 @@ String? applyQuickTakeout({
   orders.add(
     CafeOrder(
       id: orderId,
-      tableId: counter.id,
-      tableNumber: counter.number,
+      tableId: '',
+      tableNumber: '',
       status: OrderStatus.paid,
       createdAt: when,
       lines: ticket,
@@ -45,8 +44,8 @@ String? applyQuickTakeout({
     Payment(
       id: paymentId,
       orderId: orderId,
-      tableId: counter.id,
-      tableNumber: counter.number,
+      tableId: '',
+      tableNumber: '',
       isTakeout: true,
       totalDue: due,
       cashReceived: due,
@@ -60,4 +59,5 @@ String? applyQuickTakeout({
   return null;
 }
 
+/// A table named "takeout" from before takeout stopped needing one; kept out of table lists.
 bool isServiceCounter(CafeTable table) => table.number.trim().toLowerCase() == 'takeout';

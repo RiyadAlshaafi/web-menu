@@ -26,14 +26,23 @@ extension CafeStoreOffline on CafeStore {
     }
   }
 
-  /// Rereads the not-yet-uploaded items so they keep showing on screen.
+  /// Rereads the not-yet-uploaded items so they keep showing on screen. Both lists are read
+  /// first and swapped in at once, so a refresh in between never sees an empty list.
   Future<void> _reloadLocalItems() async {
     final sync = offline;
     if (sync == null) return;
+    final pending = await sync.pendingItems();
+    final failed = await sync.failedItems();
     _localItems
       ..clear()
-      ..addAll(await sync.pendingItems())
-      ..addAll(await sync.failedItems());
+      ..addAll(pending)
+      ..addAll(failed.where((item) => !pending.any((p) => p.id == item.id)));
+  }
+
+  /// Shows a just-saved item; a reload that already picked it up is not doubled.
+  void _keepLocal(OutboxItem item) {
+    if (_localItems.any((existing) => existing.id == item.id)) return;
+    _localItems.add(item);
   }
 
   /// Adds unsent local sales, expenses and shift changes on top of what the server sent.
@@ -98,6 +107,7 @@ extension CafeStoreOffline on CafeStore {
     final wasOffline = !sync.online;
     await sync.heartbeat();
     if (!sync.online) return;
+    if (!offlineSession && await sync.dropIdleUnassignedShifts() > 0) await _reloadLocalItems();
     await _uploadNow();
     await sync.topUp();
     await _saveSnapshot();
@@ -137,14 +147,13 @@ extension CafeStoreOffline on CafeStore {
       },
     );
     await sync.enqueue(item);
-    _localItems.add(item);
+    _keepLocal(item);
     shifts = [shift, ...shifts];
     currentShift = shift;
     return shift;
   }
 
   Future<String?> _checkoutTakeoutLocal({
-    required CafeTable counter,
     required List<OrderLine> ticket,
     required String? paymentTypeId,
     required Cashier? cashier,
@@ -172,7 +181,6 @@ extension CafeStoreOffline on CafeStore {
     final error = applyQuickTakeout(
       orders: localOrders,
       payments: localPayments,
-      counter: counter,
       lines: ticket,
       paymentTypeId: paymentTypeId,
       cashierId: cashier?.id ?? '',
@@ -189,7 +197,6 @@ extension CafeStoreOffline on CafeStore {
       id: base.id,
       orderId: base.orderId,
       tableId: base.tableId,
-      tableNumber: counter.number,
       isTakeout: true,
       cashierName: cashier?.name ?? l10n.offlineUnassigned,
       paymentTypeNameEn: type?.nameEn,
@@ -241,7 +248,7 @@ extension CafeStoreOffline on CafeStore {
     );
     // Saved on the device before it is shown or printed, so a crash cannot lose it.
     await sync.enqueue(item);
-    _localItems.add(item);
+    _keepLocal(item);
     orders = [...orders, order];
     payments = [...payments, payment];
     notifyListeners();
@@ -295,7 +302,7 @@ extension CafeStoreOffline on CafeStore {
       },
     );
     await sync.enqueue(item);
-    _localItems.add(item);
+    _keepLocal(item);
     expenses = [expense, ...expenses];
     notifyListeners();
     unawaited(_uploadNow());
@@ -321,7 +328,7 @@ extension CafeStoreOffline on CafeStore {
       },
     );
     await sync.enqueue(item);
-    _localItems.add(item);
+    _keepLocal(item);
     shift
       ..closedAt = now
       ..actualCash = actualCash;
@@ -363,12 +370,34 @@ extension CafeStoreOffline on CafeStore {
   }
 
   /// Starts selling without internet: takeout and expenses only, no cashier until the connection returns.
-  void startOfflineSession() {
+  /// The offline shift is saved for upload first, with no cashier yet; whoever is chosen after the
+  /// connection returns gets the shift and everything sold on it.
+  Future<void> startOfflineSession() async {
     if (!canStartOffline) return;
     db.offlineMode = true;
     stopLiveSync();
     _hydrateOperational();
-    final shift = CashShift(id: Secrets.id(), cashierId: '', openedAt: DateTime.now().toUtc(), openingCash: 0);
+    final now = DateTime.now().toUtc();
+    final shift = CashShift(id: Secrets.id(), cashierId: '', openedAt: now, openingCash: 0);
+    final sync = offline;
+    if (sync != null) {
+      final item = OutboxItem(
+        id: Secrets.id(),
+        kind: 'shift_open',
+        createdAt: now,
+        payload: {
+          'params': {'p_client_id': shift.id, 'p_cashier_id': null, 'p_opened_at': now.toIso8601String()},
+          'local': {'shift': shift.toJson()},
+        },
+      );
+      try {
+        await sync.enqueue(item);
+        _keepLocal(item);
+      } catch (error, stackTrace) {
+        // Sales still upload; without this item the server falls back to the cashier's open shift.
+        reportError('save offline shift', error, stackTrace);
+      }
+    }
     shifts = [shift, ...shifts];
     currentShift = shift;
     currentCashier = null;

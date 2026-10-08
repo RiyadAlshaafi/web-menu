@@ -208,10 +208,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickTakeoutPay => 'Take payment';
 
   @override
-  String get quickTakeoutNeedTable =>
-      'Add a table named Takeout in Tables & QR, then try again.';
-
-  @override
   String get quickTakeoutBusy => 'That receipt is already being saved.';
 
   @override

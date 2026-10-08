@@ -28,10 +28,36 @@ create index if not exists carts_restaurant_idx on public.carts (restaurant_id);
 create index if not exists payment_method_changes_restaurant_idx on public.payment_method_changes (restaurant_id, created_at desc);
 
 -- 2. Rules the database now enforces itself (no duplicates, no double-open records).
-create unique index if not exists orders_one_open_per_table on public.orders (table_id) where status <> 'paid';
+-- Older data may break a rule; it must never stop this migration (and every later one).
+-- A cashier with several open shifts keeps the newest; the older ones are closed as they were.
+update public.shifts s
+set closed_at = greatest(s.opened_at, coalesce(
+  (select max(p.paid_at) from public.payments p where p.shift_id = s.id), s.opened_at))
+where s.closed_at is null and s.cashier_id is not null
+  and exists (
+    select 1 from public.shifts newer
+    where newer.cashier_id = s.cashier_id and newer.closed_at is null
+      and (newer.opened_at, newer.id) > (s.opened_at, s.id)
+  );
 create unique index if not exists shifts_one_open_per_cashier on public.shifts (cashier_id) where closed_at is null;
-create unique index if not exists payments_monthly_number_key
-  on public.payments (restaurant_id, year_month, monthly_order_number) where monthly_order_number is not null;
+-- Open orders and receipt numbers are not changed automatically: if duplicates exist the rule is
+-- skipped with a notice, so someone can look at them and apply it later.
+do $$
+begin
+  if exists (select 1 from public.orders where status <> 'paid' and table_id is not null
+             group by table_id having count(*) > 1) then
+    raise notice 'orders_one_open_per_table skipped: some tables have more than one open order';
+  else
+    create unique index if not exists orders_one_open_per_table on public.orders (table_id) where status <> 'paid';
+  end if;
+  if exists (select 1 from public.payments where monthly_order_number is not null
+             group by restaurant_id, year_month, monthly_order_number having count(*) > 1) then
+    raise notice 'payments_monthly_number_key skipped: some receipts share a monthly number';
+  else
+    create unique index if not exists payments_monthly_number_key
+      on public.payments (restaurant_id, year_month, monthly_order_number) where monthly_order_number is not null;
+  end if;
+end $$;
 
 -- 3. Value checks, added NOT VALID so old rows are never rejected, then validated.
 alter table public.restaurants
@@ -44,14 +70,28 @@ alter table public.shifts
 alter table public.cashiers
   add constraint cashiers_name_len check (length(btrim(name)) between 1 and 60) not valid,
   add constraint cashiers_initials_len check (length(initials) between 1 and 4) not valid;
+-- Each check is validated on its own: if old rows break one, it stays NOT VALID (new rows are
+-- still checked) instead of failing the migration.
 do $$
+declare
+  c record;
 begin
-  alter table public.restaurants validate constraint restaurants_rates_range;
-  alter table public.payments validate constraint payments_amounts_ok;
-  alter table public.shifts validate constraint shifts_times_ok;
-  alter table public.shifts validate constraint shifts_amounts_ok;
-  alter table public.cashiers validate constraint cashiers_name_len;
-  alter table public.cashiers validate constraint cashiers_initials_len;
+  for c in
+    select * from (values
+      ('public.restaurants', 'restaurants_rates_range'),
+      ('public.payments', 'payments_amounts_ok'),
+      ('public.shifts', 'shifts_times_ok'),
+      ('public.shifts', 'shifts_amounts_ok'),
+      ('public.cashiers', 'cashiers_name_len'),
+      ('public.cashiers', 'cashiers_initials_len')
+    ) as v(tbl, con)
+  loop
+    begin
+      execute format('alter table %s validate constraint %I', c.tbl, c.con);
+    exception when check_violation then
+      raise notice '% left NOT VALID: some existing rows break it', c.con;
+    end;
+  end loop;
 end $$;
 
 -- 4. Row-level-security speed: evaluate auth.uid() and the private helpers once per query, not per row.

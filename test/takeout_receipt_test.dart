@@ -8,19 +8,19 @@ import 'package:menu_web_v1/takeout_receipt.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  CafeTable counter() => CafeTable(id: 'counter', number: 'Takeout', qrSlug: 'takeout', status: TableStatus.free);
+  // A table named Takeout from before takeout stopped needing one: it must stay out of table lists.
+  CafeTable legacyCounter() => CafeTable(id: 'counter', number: 'Takeout', qrSlug: 'takeout', status: TableStatus.free);
   CafeTable dining() => CafeTable(id: 't1', number: '4', qrSlug: 't1', status: TableStatus.dining, guests: 2);
   OrderLine espresso() => OrderLine(menuItemId: 'esp', name: 'Espresso', qty: 1, unitPrice: 3);
 
   test('takeout stays takeout after payment and a json reload', () {
     final orders = <CafeOrder>[];
     final payments = <Payment>[];
-    final table = counter();
+    final table = legacyCounter();
     expect(
       applyQuickTakeout(
         orders: orders,
         payments: payments,
-        counter: table,
         lines: [espresso()],
         paymentTypeId: 'cash',
         cashierId: 'c1',
@@ -34,6 +34,9 @@ void main() {
     final reloaded = CafeOrder.fromJson(orders.single.toJson());
     expect(reloaded.serviceType, 'takeout');
     expect(reloaded.status, OrderStatus.paid);
+    expect(reloaded.tableId, isEmpty);
+    expect(payments.single.tableId, isEmpty);
+    expect(payments.single.isTakeout, isTrue);
 
     final store = CafeStore(AppDatabase.instance);
     store.orders = [reloaded];
@@ -49,11 +52,10 @@ void main() {
   test('two takeout tickets stay separate and a failed ticket adds no sale', () {
     final orders = <CafeOrder>[];
     final payments = <Payment>[];
-    final table = counter();
+    final table = legacyCounter();
     applyQuickTakeout(
       orders: orders,
       payments: payments,
-      counter: table,
       lines: [espresso()],
       paymentTypeId: 'cash',
       cashierId: 'c1',
@@ -64,7 +66,6 @@ void main() {
     applyQuickTakeout(
       orders: orders,
       payments: payments,
-      counter: table,
       lines: [OrderLine(menuItemId: 'tea', name: 'Tea', qty: 2, unitPrice: 2)],
       paymentTypeId: 'card',
       cashierId: 'c1',
@@ -83,7 +84,6 @@ void main() {
       applyQuickTakeout(
         orders: orders,
         payments: payments,
-        counter: table,
         lines: const [],
         paymentTypeId: null,
         cashierId: 'c1',
@@ -101,7 +101,8 @@ void main() {
     final store = CafeStore(AppDatabase.instance);
     store.cafe = {'name': '', 'serviceChargeRate': 0.10};
     if (AppDatabase.instance.client != null) return;
-    store.tables = [counter(), dining()];
+    // No takeout table at all: takeout is only a label.
+    store.tables = [dining()];
     store.currentCashier = Cashier(id: 'c1', name: 'Ada', pinHash: '', pinSalt: '', initials: 'A');
     store.currentShift = CashShift(id: 's1', cashierId: 'c1', openedAt: DateTime.utc(2026, 10, 5), openingCash: 0);
     final kept = [espresso()];
