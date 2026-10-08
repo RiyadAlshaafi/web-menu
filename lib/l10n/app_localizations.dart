@@ -3427,6 +3427,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guests can still read the menu, but cannot order, call staff or ask for the bill while no signed-in cashier device is connected. Turn this on once every till runs the updated app.'**
   String get adminRequireCashierOnlineHint;
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of the app is no longer accepted. Install the update to keep working.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {version} is ready'**
+  String updateReady(String version);
+
+  /// No description provided for @updateInstallNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Install now'**
+  String get updateInstallNow;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking data and installing…'**
+  String get updateInstalling;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading an update…'**
+  String get updateDownloading;
+
+  /// No description provided for @updateReadyAfterSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {version} is ready. It installs from the sign-in screen.'**
+  String updateReadyAfterSignOut(String version);
+
+  /// No description provided for @updateSafetyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Before installing, every sale is checked with the server and this till\'s data is backed up.'**
+  String get updateSafetyNote;
+
+  /// No description provided for @updateBlockSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out first. Updates install from the sign-in screen.'**
+  String get updateBlockSignedIn;
+
+  /// No description provided for @updateBlockOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server, so the uploads can\'t be checked. Try again when online.'**
+  String get updateBlockOffline;
+
+  /// No description provided for @updateBlockPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Some sales are still waiting to upload. Sign in so they upload, then sign out and update.'**
+  String get updateBlockPending;
+
+  /// No description provided for @updateBlockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused some uploads. Check them before updating.'**
+  String get updateBlockFailed;
+
+  /// No description provided for @updateBlockServerMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is missing receipts or expenses from this till, so the update did not install.'**
+  String get updateBlockServerMissing;
+
+  /// No description provided for @updateBlockDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'The update could not be downloaded or failed its safety check. It will try again.'**
+  String get updateBlockDownload;
+
+  /// No description provided for @updateBlockBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'This till\'s data could not be backed up, so the update did not install.'**
+  String get updateBlockBackup;
+
+  /// No description provided for @updateNoticeUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated to {version}. All sales were checked with the server.'**
+  String updateNoticeUpdated(String version);
+
+  /// No description provided for @updateNoticeNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'The update did not install. Nothing was changed.'**
+  String get updateNoticeNotInstalled;
+
+  /// No description provided for @updateNoticeMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated, but the server and this till disagree about some sales. Contact support before closing the shift.'**
+  String get updateNoticeMismatch;
+
+  /// No description provided for @updateBackupAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup: {path}'**
+  String updateBackupAt(String path);
 }
 
 class _AppLocalizationsDelegate

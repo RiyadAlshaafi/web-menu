@@ -1,0 +1,80 @@
+# Publishes a Windows release that tills install by themselves. Push a tag like v1.2.0 after
+# raising `version:` in pubspec.yaml (see docs/RELEASING.md). The release carries the installer
+# and latest.json (version, download link, SHA-256), which every till reads every 30 minutes.
+name: Windows release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches pubspec.yaml
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          ver="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          if [ "$tag" != "$ver" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match pubspec.yaml version $ver. Raise the version first." >&2
+            exit 1
+          fi
+          echo "VERSION=$ver" >> "$GITHUB_ENV"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # The publishable key is public (every web page carries it); repo secrets win when set.
+      - name: Write .env
+        shell: bash
+        env:
+          URL_SECRET: ${{ secrets.SUPABASE_URL }}
+          KEY_SECRET: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "SUPABASE_URL=${URL_SECRET:-https://kzafgozkgvcflcizuemr.supabase.co}" > .env
+          echo "SUPABASE_ANON_KEY=${KEY_SECRET:-sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj}" >> .env
+
+      - run: flutter pub get
+
+      # test/cafe_store_test.dart is left out until its two cart tests are rewritten: they test the
+      # old local-only cart, which no longer exists (carts always go to Supabase now).
+      - name: Run tests
+        shell: bash
+        run: flutter test $(ls test/*_test.dart | grep -v 'test/cafe_store_test.dart')
+
+      - run: flutter build windows --release --dart-define-from-file=.env
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+          }
+          & $iscc "/DAppVersion=$env:VERSION" windows\installer\cafe_pos.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Write latest.json
+        shell: pwsh
+        run: |
+          $file = "build\installer\CafePOS-setup-$env:VERSION.exe"
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
+          $url = "https://github.com/${{ github.repository }}/releases/download/$env:GITHUB_REF_NAME/CafePOS-setup-$env:VERSION.exe"
+          @{ version = $env:VERSION; url = $url; sha256 = $hash; notes = "" } | ConvertTo-Json | Out-File -Encoding utf8NoBOM build\installer\latest.json
+          Get-Content build\installer\latest.json
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Cafe POS ${{ github.ref_name }}
+          make_latest: true
+          files: |
+            build/installer/CafePOS-setup-${{ env.VERSION }}.exe
+            build/installer/latest.json

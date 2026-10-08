@@ -10,6 +10,7 @@ import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/update_panel.dart';
 
 class PinLoginScreen extends StatefulWidget {
   const PinLoginScreen({super.key});
@@ -71,6 +72,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
         ),
         child: Column(
           children: [
+            const UpdatePanel(),
             if (store.serverUnreachable) ...[
               _OfflineStartCard(store: store),
               const SizedBox(height: 16),

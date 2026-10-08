@@ -16,6 +16,7 @@ import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/scroll_when_short.dart';
+import '../widgets/update_panel.dart';
 
 
 part 'cashier/shell.dart';

@@ -1858,4 +1858,80 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get adminRequireCashierOnlineHint =>
       'يبقى بإمكان الزبائن تصفح القائمة، لكن لا يمكنهم الطلب أو استدعاء الموظف أو طلب الفاتورة ما دام لا يوجد جهاز كاشير مسجَّل الدخول ومتصل. فعّل هذا الخيار بعد تحديث تطبيق كل الكاشيرات.';
+
+  @override
+  String get updateRequiredTitle => 'يجب تحديث البرنامج';
+
+  @override
+  String get updateRequiredBody =>
+      'هذا الإصدار من البرنامج لم يعد مقبولاً. ثبّت التحديث لتتابع العمل.';
+
+  @override
+  String updateReady(String version) {
+    return 'التحديث $version جاهز';
+  }
+
+  @override
+  String get updateInstallNow => 'ثبّت الآن';
+
+  @override
+  String get updateInstalling => 'جارٍ فحص البيانات والتثبيت…';
+
+  @override
+  String get updateDownloading => 'جارٍ تنزيل تحديث…';
+
+  @override
+  String updateReadyAfterSignOut(String version) {
+    return 'التحديث $version جاهز، ويُثبَّت من شاشة تسجيل الدخول.';
+  }
+
+  @override
+  String get updateSafetyNote =>
+      'قبل التثبيت تُطابَق كل المبيعات مع السيرفر وتُحفظ نسخة احتياطية من بيانات هذا الجهاز.';
+
+  @override
+  String get updateBlockSignedIn =>
+      'سجّل الخروج أولاً. التحديث يُثبَّت من شاشة تسجيل الدخول.';
+
+  @override
+  String get updateBlockOffline =>
+      'لا يوجد اتصال بالسيرفر، فلا يمكن مطابقة المبيعات. حاول مرة أخرى عند الاتصال.';
+
+  @override
+  String get updateBlockPending =>
+      'توجد مبيعات لم تُرفع بعد. سجّل الدخول لتُرفع، ثم سجّل الخروج وحدّث.';
+
+  @override
+  String get updateBlockFailed =>
+      'رفض السيرفر بعض المبيعات. راجعها قبل التحديث.';
+
+  @override
+  String get updateBlockServerMissing =>
+      'تنقص السيرفرَ إيصالات أو مصاريف من هذا الجهاز، لذلك لم يُثبَّت التحديث.';
+
+  @override
+  String get updateBlockDownload =>
+      'تعذّر تنزيل التحديث أو لم يجتز فحص الأمان. ستُعاد المحاولة.';
+
+  @override
+  String get updateBlockBackup =>
+      'تعذّر حفظ نسخة احتياطية من بيانات هذا الجهاز، لذلك لم يُثبَّت التحديث.';
+
+  @override
+  String updateNoticeUpdated(String version) {
+    return 'تم التحديث إلى $version. طُوبقت كل المبيعات مع السيرفر.';
+  }
+
+  @override
+  String get updateNoticeNotInstalled =>
+      'لم يُثبَّت التحديث. لم يتغيّر أي شيء.';
+
+  @override
+  String get updateNoticeMismatch =>
+      'تم التحديث، لكن السيرفر وهذا الجهاز مختلفان في بعض المبيعات. تواصل مع الدعم قبل إغلاق المناوبة.';
+
+  @override
+  String updateBackupAt(String path) {
+    return 'النسخة الاحتياطية: $path';
+  }
 }
