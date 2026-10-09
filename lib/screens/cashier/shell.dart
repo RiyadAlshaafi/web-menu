@@ -105,7 +105,7 @@ class CashierShell extends StatelessWidget {
         showMenu: drawer,
         actions: const [HeaderClock(), LanguageButton()],
       ),
-      banners: const [OfflineStatusBanner(), UpdateReadyStrip()],
+      banners: const [OfflineStatusBanner(), UpdateReadyStrip(), NewOrderToaster()],
       // A short or narrow window scrolls the page instead of cutting its bottom off;
       // narrow windows stack the cards, which needs more height.
       body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 680, child: child),
@@ -364,3 +364,44 @@ class _ClaimOfflineDialogState extends State<_ClaimOfflineDialog> {
 
 enum _AlertFilter { all, calls, orders, bills, ready }
 
+/// Shows a toast (the store already played the sound) whenever new guest orders arrive live.
+class NewOrderToaster extends StatefulWidget {
+  const NewOrderToaster({super.key});
+
+  @override
+  State<NewOrderToaster> createState() => _NewOrderToasterState();
+}
+
+class _NewOrderToasterState extends State<NewOrderToaster> {
+  late int _shown = context.read<CafeStore>().newOrderAlerts;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.select<CafeStore, int>((store) => store.newOrderAlerts);
+    if (count != _shown) {
+      _shown = count;
+      final store = context.read<CafeStore>();
+      final where = [
+        for (final order in store.lastNewOrders)
+          order.serviceType == 'takeout' ? context.l10n.serviceTakeout : context.l10n.cashierTableNumber(order.tableNumber),
+      ].join(', ');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.notifications_active, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(child: Text(context.l10n.cashierNewOrderToast(where))),
+              ],
+            ),
+            duration: const Duration(seconds: 6),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      });
+    }
+    return const SizedBox.shrink();
+  }
+}

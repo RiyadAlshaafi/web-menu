@@ -1139,5 +1139,7 @@
   "errNoOpenBill": "This table has no open bill.",
   "errSignInAsCashier": "Sign in as a cashier first.",
   "errLineNotFound": "That dish is no longer on the order.",
-  "errCartEmpty": "The cart is empty."
+  "errCartEmpty": "The cart is empty.",
+  "cashierNewOrderToast": "New order: {where}",
+  "@cashierNewOrderToast": {"placeholders": {"where": {"type": "String"}}}
 }

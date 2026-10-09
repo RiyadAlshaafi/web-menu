@@ -7,9 +7,11 @@ import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../alert_sound.dart';
 import '../data/app_database.dart';
 import '../data/error_codes.dart';
 import '../device_location.dart';
+import '../live_updates.dart';
 import '../models/models.dart';
 import '../money.dart';
 import '../offline/offline_sync.dart';
@@ -164,8 +166,25 @@ class CafeStore extends ChangeNotifier {
     startLiveSync();
   }
 
+  /// Raised by one for every batch of new guest orders a signed-in cashier should notice; the
+  /// cashier screens show a toast for it. [lastNewOrders] is that batch.
+  int newOrderAlerts = 0;
+  List<CafeOrder> lastNewOrders = const [];
+  final NewOrderWatch _newOrderWatch = NewOrderWatch();
+  AppLifecycleListener? _lifecycle;
+
   void startLiveSync() {
     _liveSync?.cancel();
+    // What is on screen now is known; only orders arriving after this ring.
+    _newOrderWatch
+      ..reset()
+      ..newOrders(orders);
+    // A tab or window coming back may have missed pings while it slept: catch up at once.
+    _lifecycle ??= AppLifecycleListener(
+      onResume: () {
+        if (db.onLiveChange != null) unawaited(syncFromDisk());
+      },
+    );
     db.onLiveChange = () {
       unawaited(syncFromDisk());
     };
@@ -191,6 +210,7 @@ class CafeStore extends ChangeNotifier {
 
   @override
   void dispose() {
+    _lifecycle?.dispose();
     stopLiveSync();
     _cashierPulse?.cancel();
     _guestOrderingPoll?.cancel();
@@ -246,9 +266,18 @@ class CafeStore extends ChangeNotifier {
     if (next != _syncStamp) {
       _hydrateOperational();
       _syncStampCache = next;
+      _alertNewOrders();
       notifyListeners();
     }
     await ensureShiftNumbers();
+  }
+
+  void _alertNewOrders() {
+    final fresh = _newOrderWatch.newOrders(orders);
+    if (fresh.isEmpty || authKind != AuthKind.cashier) return;
+    lastNewOrders = fresh;
+    newOrderAlerts++;
+    playNewOrderSound();
   }
 
   bool _assigningNumbers = false;

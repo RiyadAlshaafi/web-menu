@@ -66,6 +66,7 @@ class AppDatabase {
   DateTime? _catalogAt;
   Timer? _liveRefresh;
   RealtimeChannel? _syncChannel;
+  RealtimeChannel? _pingChannel;
   void Function()? onLiveChange;
   DateTime? _salesFrom;
   DateTime? _salesTo;
@@ -281,15 +282,28 @@ class AppDatabase {
     _retryTimer?.cancel();
     _retryTimer = null;
     final channel = _syncChannel;
+    final ping = _pingChannel;
     _syncChannel = null;
+    _pingChannel = null;
     _listening = false;
     _listenRestaurantId = null;
+    _listenGuestSlug = null;
     _realtimeLive = false;
     _realtimeSeenDrop = false;
     if (channel != null) {
       client?.removeChannel(channel);
     }
+    if (ping != null) {
+      client?.removeChannel(ping);
+    }
   }
+
+  /// The broadcast topic this device hears change pings on (sent by the database, see
+  /// migration 20261013100000_live_update_pings). A guest hears only its own table; cashier and
+  /// admin devices hear their whole cafe. Pings carry no data: the app reloads through normal,
+  /// policy-checked requests.
+  static String liveTopic({required String restaurantId, String? guestSlug}) =>
+      guestSlug != null && guestSlug.isNotEmpty ? 'guest:$guestSlug' : 'cafe:$restaurantId';
 
   void _emitLive() {
     final hook = onLiveChange;
@@ -317,8 +331,9 @@ class AppDatabase {
     'expense_categories',
   ];
 
-  /// The cafe the open realtime channel is filtered on.
+  /// The cafe (and guest table) the open realtime channels are for.
   String? _listenRestaurantId;
+  String? _listenGuestSlug;
 
   /// Subscribes to this cafe's changes only. Without a cafe yet (a guest's
   /// first load) nothing is subscribed; [_relistenIfCafeChanged] opens the
@@ -330,6 +345,7 @@ class AppDatabase {
     try {
       _listening = true;
       _listenRestaurantId = rid;
+      _listenGuestSlug = guestSlug;
       void scheduleLive() {
         _liveRefresh?.cancel();
         _liveRefresh = Timer(const Duration(milliseconds: 300), _emitLive);
@@ -360,6 +376,8 @@ class AppDatabase {
         ),
         callback: (_) => scheduleLive(),
       );
+      // Row changes reach only signed-in admins: cashier and guest policies read request
+      // headers, which Realtime never sets. Everyone gets the database's change pings below.
       _syncChannel = channel.subscribe((status, _) {
         if (status == RealtimeSubscribeStatus.subscribed) {
           final reconnect = _realtimeSeenDrop;
@@ -373,10 +391,27 @@ class AppDatabase {
           _realtimeLive = false;
         }
       });
+      var pingDropped = false;
+      _pingChannel = client!
+          .channel(liveTopic(restaurantId: rid, guestSlug: guestSlug))
+          .onBroadcast(event: 'change', callback: (_) => scheduleLive())
+          .subscribe((status, _) {
+            if (status == RealtimeSubscribeStatus.subscribed) {
+              // Back after a drop: catch up on anything missed while disconnected.
+              if (pingDropped) _emitLive();
+              pingDropped = false;
+            } else if (status == RealtimeSubscribeStatus.closed ||
+                status == RealtimeSubscribeStatus.channelError ||
+                status == RealtimeSubscribeStatus.timedOut) {
+              pingDropped = true;
+            }
+          });
     } catch (error, stack) {
       _listening = false;
       _syncChannel = null;
+      _pingChannel = null;
       _listenRestaurantId = null;
+      _listenGuestSlug = null;
       reportError('realtime setup', error, stack);
     }
   }
@@ -386,7 +421,7 @@ class AppDatabase {
   void _relistenIfCafeChanged() {
     if (onLiveChange == null && !_listening) return;
     final rid = restaurantId ?? boundRestaurantId;
-    if (rid == _listenRestaurantId) return;
+    if (rid == _listenRestaurantId && guestSlug == _listenGuestSlug) return;
     stopRealtime();
     _listen();
   }

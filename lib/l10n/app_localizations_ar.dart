@@ -2117,4 +2117,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errCartEmpty => 'السلة فارغة.';
+
+  @override
+  String cashierNewOrderToast(String where) {
+    return 'طلب جديد: $where';
+  }
 }

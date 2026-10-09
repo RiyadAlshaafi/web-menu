@@ -3859,6 +3859,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The cart is empty.'**
   String get errCartEmpty;
+
+  /// No description provided for @cashierNewOrderToast.
+  ///
+  /// In en, this message translates to:
+  /// **'New order: {where}'**
+  String cashierNewOrderToast(String where);
 }
 
 class _AppLocalizationsDelegate

@@ -666,5 +666,6 @@
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",
   "errSignInAsCashier": "سجّل الدخول كأمين صندوق أولًا.",
   "errLineNotFound": "هذا الطبق لم يعد في الطلب.",
-  "errCartEmpty": "السلة فارغة."
+  "errCartEmpty": "السلة فارغة.",
+  "cashierNewOrderToast": "طلب جديد: {where}"
 }

@@ -2129,4 +2129,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errCartEmpty => 'The cart is empty.';
+
+  @override
+  String cashierNewOrderToast(String where) {
+    return 'New order: $where';
+  }
 }

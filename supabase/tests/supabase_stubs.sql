@@ -35,3 +35,11 @@ grant usage on schema public to anon, authenticated;
 alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on sequences to anon, authenticated;
 alter default privileges in schema public grant all on functions to anon, authenticated;
+
+-- Realtime broadcast from the database: the stand-in records what would be sent.
+create schema realtime;
+create table realtime.sent_for_tests (topic text, event text, payload jsonb, private boolean);
+create function realtime.send(payload jsonb, event text, topic text, private boolean)
+returns void language sql as $$
+  insert into realtime.sent_for_tests (topic, event, payload, private) values (topic, event, payload, private)
+$$;
