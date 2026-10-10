@@ -185,11 +185,13 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                 tooltip: MaterialLocalizations.of(context).previousPageTooltip,
                 onPressed: safePage == 0 ? null : () => setState(() => page = safePage - 1),
                 icon: const Icon(Icons.chevron_left),
+                style: IconButton.styleFrom(foregroundColor: CafeSurfaces.of(context).buttonInk),
               ),
               IconButton(
                 tooltip: MaterialLocalizations.of(context).nextPageTooltip,
                 onPressed: safePage >= pages - 1 ? null : () => setState(() => page = safePage + 1),
                 icon: const Icon(Icons.chevron_right),
+                style: IconButton.styleFrom(foregroundColor: CafeSurfaces.of(context).buttonInk),
               ),
               if (store.salesHasMore) ...[
                 const SizedBox(width: 4),

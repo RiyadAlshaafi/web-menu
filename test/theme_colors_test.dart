@@ -29,4 +29,23 @@ void main() {
       ),
     );
   });
+
+  for (final entry in {'dark navy': const Color(0xFF0B1F33), 'bright yellow': const Color(0xFFFFE600), 'mid green': const Color(0xFF3FA34D)}.entries) {
+    test('every button style follows the ${entry.key} button colour and stays readable', () {
+      final surfaces = CafeSurfaces.defaults.copyWith(button: entry.value);
+      final theme = CafeTheme.forSurfaces(surfaces);
+      final filled = theme.filledButtonTheme.style!;
+      final outlined = theme.outlinedButtonTheme.style!;
+      final text = theme.textButtonTheme.style!;
+      expect(filled.backgroundColor!.resolve({}), entry.value);
+      expect(filled.foregroundColor!.resolve({}), surfaces.onButton);
+      expect(outlined.foregroundColor!.resolve({}), surfaces.buttonInk);
+      expect(outlined.side!.resolve({})!.color, surfaces.buttonInk);
+      expect(text.foregroundColor!.resolve({}), surfaces.buttonInk);
+      expect(theme.chipTheme.selectedColor, entry.value);
+      expect(CafeColors.contrastRatio(entry.value, surfaces.onButton), greaterThanOrEqualTo(4.5));
+      expect(CafeColors.contrastRatio(surfaces.buttonInk, CafeColors.paper), greaterThanOrEqualTo(4.5));
+      expect(CafeColors.contrastRatio(surfaces.buttonInk, surfaces.background), greaterThanOrEqualTo(4.5));
+    });
+  }
 }

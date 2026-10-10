@@ -190,7 +190,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                                 }));
                               },
                         child: busy
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: CafeSurfaces.of(context).onButton))
                             : Text(
                                 [
                                   context.l10n.cashierConfirmPayment,
@@ -289,8 +289,6 @@ class _CustomerPaymentBox extends StatelessWidget {
                 onPressed: onChange,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 44),
-                  foregroundColor: CafeColors.ink,
-                  side: const BorderSide(color: Color(0xFFE3DED5), width: 1.5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(context.l10n.cashierChangeMethod, style: const TextStyle(fontWeight: FontWeight.w700)),

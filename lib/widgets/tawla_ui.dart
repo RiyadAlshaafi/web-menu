@@ -11,7 +11,6 @@ class TawlaTokens {
   static const border = Color(0xFFE3DED5);
   static const hairline = Color(0xFFF1EDE7);
   static const rowLine = Color(0xFFF7F3ED);
-  static const dangerBorder = Color(0xFFF3C2B3);
 }
 
 /// A white panel with rounded corners, the main surface of every console page.
@@ -123,7 +122,7 @@ class SelectBox<T> extends StatelessWidget {
   }
 }
 
-/// Mutually exclusive options in a white tray; the chosen one is filled with the header navy.
+/// Mutually exclusive options in a white tray; the chosen one is filled with the cafe's button colour.
 class SegmentedPills<T> extends StatelessWidget {
   const SegmentedPills({super.key, required this.options, required this.selected, required this.onSelected, this.height = 44});
 
@@ -148,7 +147,7 @@ class SegmentedPills<T> extends StatelessWidget {
                 button: true,
                 selected: value == selected,
                 child: Material(
-                  color: value == selected ? surfaces.header : Colors.transparent,
+                  color: value == selected ? surfaces.button : Colors.transparent,
                   borderRadius: BorderRadius.circular(9),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(9),
@@ -160,7 +159,7 @@ class SegmentedPills<T> extends StatelessWidget {
                         widthFactor: 1,
                         child: Text(
                           label,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: value == selected ? surfaces.onHeader : CafeColors.ink),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: value == selected ? surfaces.onButton : CafeColors.ink),
                         ),
                       ),
                     ),
@@ -174,7 +173,7 @@ class SegmentedPills<T> extends StatelessWidget {
   }
 }
 
-/// A rounded filter pill (category chips). Chosen pills are navy, the rest white with a hairline.
+/// A rounded filter pill (category chips). Chosen pills use the cafe's button colour, the rest are white with a hairline.
 class FilterPill extends StatelessWidget {
   const FilterPill({super.key, required this.label, required this.selected, required this.onTap, this.height = 44});
 
@@ -190,8 +189,8 @@ class FilterPill extends StatelessWidget {
       button: true,
       selected: selected,
       child: Material(
-        color: selected ? surfaces.header : Colors.white,
-        shape: StadiumBorder(side: BorderSide(color: selected ? surfaces.header : TawlaTokens.border)),
+        color: selected ? surfaces.button : Colors.white,
+        shape: StadiumBorder(side: BorderSide(color: selected ? surfaces.button : TawlaTokens.border)),
         child: InkWell(
           customBorder: const StadiumBorder(),
           onTap: onTap,
@@ -200,7 +199,7 @@ class FilterPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18),
             child: Center(
               widthFactor: 1,
-              child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? surfaces.onHeader : CafeColors.ink)),
+              child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? surfaces.onButton : CafeColors.ink)),
             ),
           ),
         ),
@@ -209,7 +208,7 @@ class FilterPill extends StatelessWidget {
   }
 }
 
-/// White outlined button for secondary actions; [danger] tints the label terracotta.
+/// Outlined button for secondary actions in the brand colour; [danger] makes it red.
 class OutlineAction extends StatelessWidget {
   const OutlineAction({super.key, required this.label, required this.onPressed, this.icon, this.danger = false, this.height = 40, this.expanded = false});
 
@@ -222,22 +221,18 @@ class OutlineAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = danger ? CafeColors.terracottaDark : CafeColors.ink;
     final button = OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: fg,
         minimumSize: Size(height, height),
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        side: BorderSide(color: danger ? TawlaTokens.dangerBorder : TawlaTokens.border, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+      ).merge(danger ? CafeButtons.destructiveOutlined : null),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 18, color: fg), if (label.isNotEmpty) const SizedBox(width: 8)],
-          if (label.isNotEmpty) Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg))),
+          if (icon != null) ...[Icon(icon, size: 18), if (label.isNotEmpty) const SizedBox(width: 8)],
+          if (label.isNotEmpty) Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
         ],
       ),
     );
@@ -257,13 +252,14 @@ class IconAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tone = danger ? CafeColors.alert : CafeSurfaces.of(context).buttonInk;
     return Tooltip(
       message: tooltip,
       child: Material(
         color: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: danger ? TawlaTokens.dangerBorder : TawlaTokens.border, width: 1.2),
+          side: BorderSide(color: tone, width: 1.2),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
@@ -271,7 +267,7 @@ class IconAction extends StatelessWidget {
           child: SizedBox(
             width: size,
             height: size,
-            child: Icon(icon, size: 18, semanticLabel: tooltip, color: danger ? CafeColors.terracottaDark : CafeColors.ink),
+            child: Icon(icon, size: 18, semanticLabel: tooltip, color: tone),
           ),
         ),
       ),
@@ -279,7 +275,7 @@ class IconAction extends StatelessWidget {
   }
 }
 
-/// Filled navy button for confirming secondary forms (Save colours, Print stand card).
+/// Filled button in the cafe's button colour for confirming secondary forms (Save colours, Print stand card).
 class NavyButton extends StatelessWidget {
   const NavyButton({super.key, required this.label, required this.onPressed, this.icon, this.height = 44, this.expanded = false});
 
@@ -291,15 +287,12 @@ class NavyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaces = CafeSurfaces.of(context);
     return SizedBox(
       height: height,
       width: expanded ? double.infinity : null,
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: surfaces.header,
-          foregroundColor: surfaces.onHeader,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),

@@ -244,17 +244,21 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
     );
   }
 
-  /// The dark bar that opens "Verify Your Order".
+  /// The bar, in the cafe's button colour, that opens "Verify Your Order".
   Widget _viewOrderBar(CafeStore store, String tableId, int count, double total) {
     final sending = store.isSendingOrder(tableId);
     final enabled = store.canPlaceOrder && !sending;
+    final surfaces = CafeSurfaces.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final fill = store.canPlaceOrder ? surfaces.button : scheme.onSurface.withValues(alpha: 0.12);
+    final onFill = store.canPlaceOrder ? surfaces.onButton : scheme.onSurface.withValues(alpha: 0.38);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 12, offset: Offset(0, 4))],
       ),
       child: Material(
-        color: CafeColors.ink,
+        color: fill,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -282,24 +286,24 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                         key: ValueKey('cart-$count-$total'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                        style: TextStyle(color: onFill, fontWeight: FontWeight.w700, fontSize: 14),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   if (sending)
-                    const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: onFill))
                   else ...[
                     Text(
                       context.l10n.guestViewOrder,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: enabled ? 1 : 0.6),
+                        color: onFill,
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: enabled ? 1 : 0.6), size: 22),
+                    Icon(Icons.chevron_right, color: onFill, size: 22),
                   ],
                 ],
               ),
@@ -325,7 +329,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   }
 
   Widget _catChip(String label, bool selected, VoidCallback onTap) {
-    final navy = CafeSurfaces.of(context).header;
+    final surfaces = CafeSurfaces.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 8),
       child: Semantics(
@@ -338,13 +342,13 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: selected ? navy : Colors.white,
+              color: selected ? surfaces.button : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: selected ? navy : GuestTokens.border, width: 1.5),
+              border: Border.all(color: selected ? surfaces.button : GuestTokens.border, width: 1.5),
             ),
             child: Text(
               label,
-              style: TextStyle(color: selected ? CafeSurfaces.of(context).onHeader : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 14),
+              style: TextStyle(color: selected ? surfaces.onButton : CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
         ),
@@ -543,7 +547,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                 const SizedBox(height: 6),
                 TextButton(
                   style: TextButton.styleFrom(
-                    foregroundColor: CafeSurfaces.of(context).button,
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -565,7 +568,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
   Widget _add(CafeStore store, String tableId, MenuItem item) {
     final open = store.canOrderItem(item);
     final blocked = open && !store.canPlaceOrder;
-    final surfaces = CafeSurfaces.of(context);
     final button = SizedBox(
       width: 44,
       height: 44,
@@ -573,7 +575,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
         tooltip: item.displayName(store.guestLocale),
         onPressed: open && !blocked ? () => store.addToCart(tableId, item) : null,
         padding: EdgeInsets.zero,
-        style: IconButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: surfaces.onButton, disabledBackgroundColor: CafeColors.line, disabledForegroundColor: GuestTokens.muted),
         icon: const Icon(Icons.add, size: 22),
       ),
     );
@@ -683,11 +684,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     height: 44,
                                     child: IconButton.outlined(
                                       onPressed: () => setModal(() => qty = qty > 1 ? qty - 1 : 1),
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: CafeColors.ink,
-                                        side: const BorderSide(color: GuestTokens.border, width: 1.5),
-                                      ),
+                                      style: IconButton.styleFrom(side: BorderSide(color: surfaces.buttonInk, width: 1.5)),
                                       icon: const Icon(Icons.remove, size: 20),
                                     ),
                                   ),
@@ -704,7 +701,6 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> {
                                     height: 44,
                                     child: IconButton.filled(
                                       onPressed: () => setModal(() => qty += 1),
-                                      style: IconButton.styleFrom(backgroundColor: surfaces.header, foregroundColor: surfaces.onHeader),
                                       icon: const Icon(Icons.add, size: 20),
                                     ),
                                   ),
@@ -939,7 +935,7 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                                         }
                                       },
                                 style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                                icon: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.restaurant, size: 18),
+                                icon: sending ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: CafeSurfaces.of(context).onButton)) : const Icon(Icons.restaurant, size: 18),
                                 label: Text(
                                   sending ? context.l10n.guestSendingOrder : context.l10n.guestConfirmSendKitchen,
                                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
@@ -948,7 +944,6 @@ Future<bool> confirmAndSendOrder(BuildContext context, CafeStore store, String t
                             ),
                             TextButton.icon(
                               style: TextButton.styleFrom(
-                                foregroundColor: CafeSurfaces.of(context).button,
                                 minimumSize: const Size.fromHeight(44),
                               ),
                               onPressed: sending

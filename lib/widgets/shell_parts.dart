@@ -166,14 +166,14 @@ class ShellProfileCard extends StatelessWidget {
       message: context.l10n.navLogOut,
       child: Material(
         color: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFE3DED5))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: CafeSurfaces.of(context).buttonInk)),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: onLogOut,
           child: SizedBox(
             width: 44,
             height: 44,
-            child: Icon(Icons.logout, size: 20, color: CafeColors.terracottaDark, semanticLabel: context.l10n.navLogOut),
+            child: Icon(Icons.logout, size: 20, color: CafeSurfaces.of(context).buttonInk, semanticLabel: context.l10n.navLogOut),
           ),
         ),
       ),

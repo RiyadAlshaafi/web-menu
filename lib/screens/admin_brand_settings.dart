@@ -62,7 +62,6 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
                   pendingLogo = null;
                   removeLogo = true;
                 }),
-                style: TextButton.styleFrom(foregroundColor: CafeColors.terracottaDark),
                 child: Text(context.l10n.catalogRemoveLogo, style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
             ],

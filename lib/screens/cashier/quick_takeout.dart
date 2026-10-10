@@ -279,7 +279,6 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
       height: 40,
       child: IconButton.filled(
         onPressed: onPressed,
-        style: IconButton.styleFrom(backgroundColor: CafeColors.creamDark, foregroundColor: CafeColors.ink),
         icon: Icon(icon, size: 18),
       ),
     );

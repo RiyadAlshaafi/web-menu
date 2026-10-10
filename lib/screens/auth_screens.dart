@@ -736,7 +736,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   text: cooldown > 0
                                       ? context.l10n.authResendCodeIn('0:${cooldown.toString().padLeft(2, '0')}')
                                       : context.l10n.authResendCode,
-                                  style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w700),
+                                  style: TextStyle(color: CafeSurfaces.of(context).buttonInk, fontWeight: FontWeight.w700),
                                 ),
                               ],
                             ),

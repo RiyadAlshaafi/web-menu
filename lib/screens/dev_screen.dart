@@ -155,7 +155,7 @@ class _DevScreenState extends State<DevScreen> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB42318)),
+              style: CafeButtons.destructiveFilled,
               onPressed: typed.text == 'DELETE' && (!requireCheckbox || checked)
                   ? () => Navigator.pop(context, true)
                   : null,
@@ -445,7 +445,6 @@ class _DevScreenState extends State<DevScreen> {
                 runSpacing: 8,
                 children: [
                   FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: CafeColors.terracotta),
                     onPressed: store.deviceSlot == selectedSlot ? null : _linkDevice,
                     child: const Text('Link this device to this slot'),
                   ),
@@ -480,9 +479,7 @@ class _DevScreenState extends State<DevScreen> {
             Text(body),
             const SizedBox(height: 12),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: danger ? const Color(0xFFB42318) : CafeColors.terracotta,
-              ),
+              style: danger ? CafeButtons.destructiveFilled : null,
               onPressed: onPressed,
               child: Text(label),
             ),

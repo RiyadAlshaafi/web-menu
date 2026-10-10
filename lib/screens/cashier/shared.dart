@@ -46,7 +46,8 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                   visualDensity: VisualDensity.compact,
                   tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
                   onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
-                  icon: Icon(dish.first.available ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: TawlaTokens.muted, size: 18),
+                  icon: Icon(dish.first.available ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+                  style: IconButton.styleFrom(foregroundColor: CafeSurfaces.of(context).buttonInk),
                 ),
               OutlinedButton.icon(
                 onPressed: () async {
@@ -55,12 +56,10 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.cashierItemRefused)));
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: CafeColors.terracottaDark,
-                  side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+                ).merge(CafeButtons.destructiveOutlined),
                 icon: const Icon(Icons.block, size: 15),
                 label: Text(context.l10n.cashierRefuse, style: const TextStyle(fontWeight: FontWeight.w800)),
               ),

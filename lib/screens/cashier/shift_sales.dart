@@ -140,9 +140,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                         child: OutlinedButton.icon(
                           onPressed: shift == null ? null : () => _addExpense(context, store),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: CafeColors.terracottaDark,
-                            backgroundColor: const Color(0xFFFFF4EF),
-                            side: const BorderSide(color: Color(0xFFF3C2B3), width: 1.5),
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -155,7 +152,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                         child: FilledButton.icon(
                           onPressed: shift == null ? null : () => _closeRegister(context, store, shift),
                           style: FilledButton.styleFrom(
-                            backgroundColor: CafeSurfaces.of(context).button,
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -607,9 +603,7 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
 }
 
 final _rowActionStyle = OutlinedButton.styleFrom(
-  foregroundColor: CafeColors.ink,
   minimumSize: const Size(0, 40),
   padding: const EdgeInsets.symmetric(horizontal: 12),
-  side: const BorderSide(color: Color(0xFFE3DED5), width: 1.5),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
 );

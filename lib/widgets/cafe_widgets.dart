@@ -167,12 +167,7 @@ class TerracottaButton extends StatelessWidget {
       height: height,
       child: FilledButton(
         onPressed: busy ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: CafeSurfaces.of(context).button,
-          foregroundColor: CafeSurfaces.of(context).onButton,
-          disabledBackgroundColor: CafeColors.terracottaSoft,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+        style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
         child: child,
       ),
     );
@@ -244,8 +239,8 @@ class _SoftCardState extends State<SoftCard> {
         child: InkWell(
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(widget.radius),
-          splashColor: CafeColors.terracotta.withValues(alpha: 0.12),
-          highlightColor: CafeColors.terracotta.withValues(alpha: 0.06),
+          splashColor: CafeSurfaces.of(context).button.withValues(alpha: 0.12),
+          highlightColor: CafeSurfaces.of(context).button.withValues(alpha: 0.06),
           child: body,
         ),
       ),
@@ -590,11 +585,9 @@ class GhostChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon ?? Icons.shield_outlined, size: 16, color: CafeColors.ink),
-      label: Text(label, style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w600)),
+      icon: Icon(icon ?? Icons.shield_outlined, size: 16),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
       style: OutlinedButton.styleFrom(
-        backgroundColor: CafeColors.paper,
-        side: const BorderSide(color: CafeColors.line),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),

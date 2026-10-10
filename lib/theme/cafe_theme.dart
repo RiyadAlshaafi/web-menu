@@ -22,7 +22,29 @@ class CafeColors {
   static const defaultBackground = Color(0xFFE7EEF2);
   static const defaultButton = Color(0xFFBA5333);
 
-  static Color contrastOn(Color color) => color.computeLuminance() > 0.55 ? ink : const Color(0xFFFFFFFF);
+  static double contrastRatio(Color a, Color b) {
+    final first = a.computeLuminance();
+    final second = b.computeLuminance();
+    final lighter = first > second ? first : second;
+    final darker = first > second ? second : first;
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  /// Dark ink or white, whichever reads better on [color]. Picking by the higher
+  /// ratio (not a fixed luminance cut-off) keeps mid-tone owner colours at 4.5:1 or better.
+  static Color contrastOn(Color color) => contrastRatio(color, ink) >= contrastRatio(color, paper) ? ink : paper;
+
+  /// [color] darkened just enough to be used as text or a border on every one of [surfaces].
+  static Color readableOn(Color color, List<Color> surfaces, {double minRatio = 4.5}) {
+    bool reads(Color candidate) => surfaces.every((surface) => contrastRatio(candidate, surface) >= minRatio);
+    if (reads(color)) return color;
+    final hsl = HSLColor.fromColor(color);
+    for (var lightness = hsl.lightness - 0.02; lightness > 0; lightness -= 0.02) {
+      final candidate = hsl.withLightness(lightness).toColor();
+      if (reads(candidate)) return candidate;
+    }
+    return ink;
+  }
 
   static Color parseHex(String? value, Color fallback) {
     final raw = (value ?? '').trim().replaceFirst('#', '');
@@ -55,6 +77,10 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
   Color get onSidebar => CafeColors.contrastOn(sidebar);
   Color get onBackground => CafeColors.contrastOn(background);
   Color get onButton => CafeColors.contrastOn(button);
+
+  /// The button colour as text, an icon or an outline on the white and page surfaces.
+  /// Equals [button] unless that is too light to read there (a bright yellow, say).
+  Color get buttonInk => CafeColors.readableOn(button, [CafeColors.paper, background]);
 
   static const defaults = CafeSurfaces(
     header: CafeColors.defaultHeader,
@@ -123,6 +149,16 @@ class CafePageTransitionsBuilder extends PageTransitionsBuilder {
   }
 }
 
+/// Button looks that must not follow the cafe's button colour.
+class CafeButtons {
+  /// Delete, void, refuse and cancel-order actions stay red so they never read as "go".
+  static final destructiveFilled = FilledButton.styleFrom(backgroundColor: CafeColors.alert, foregroundColor: Colors.white);
+  static final destructiveOutlined = OutlinedButton.styleFrom(
+    foregroundColor: CafeColors.alert,
+    side: const BorderSide(color: CafeColors.alert, width: 1.5),
+  );
+}
+
 class CafeTheme {
   /// Arabic glyphs come from the font bundled with the app. Without this the
   /// web app downloaded an Arabic font from Google on first use, so Arabic text
@@ -137,6 +173,7 @@ class CafeTheme {
       displayColor: CafeColors.ink,
     );
     final onButton = surfaces.onButton;
+    final ink = surfaces.buttonInk;
     final scheme = ColorScheme.fromSeed(seedColor: surfaces.button, surface: CafeColors.paper).copyWith(
       primary: surfaces.button,
       onPrimary: onButton,
@@ -163,6 +200,15 @@ class CafeTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(backgroundColor: surfaces.button, foregroundColor: onButton, shape: buttonShape),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(foregroundColor: ink, shape: buttonShape).copyWith(
+          side: WidgetStateBorderSide.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) return BorderSide(color: scheme.onSurface.withValues(alpha: 0.12), width: 1.5);
+            return BorderSide(color: ink, width: 1.5);
+          }),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: ink)),
       floatingActionButtonTheme: FloatingActionButtonThemeData(backgroundColor: surfaces.button, foregroundColor: onButton),
       // On reads green and off reads grey, whatever the cafe's button colour.
       switchTheme: SwitchThemeData(
@@ -184,15 +230,15 @@ class CafeTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
-        selectedColor: surfaces.header,
+        selectedColor: surfaces.button,
         disabledColor: CafeColors.line,
         labelStyle: TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700),
-        secondaryLabelStyle: TextStyle(color: surfaces.onHeader, fontWeight: FontWeight.w700),
-        checkmarkColor: surfaces.onHeader,
+        secondaryLabelStyle: TextStyle(color: onButton, fontWeight: FontWeight.w700),
+        checkmarkColor: onButton,
         showCheckmark: false,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         side: WidgetStateBorderSide.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.header, width: 1);
+          if (states.contains(WidgetState.selected)) return BorderSide(color: surfaces.button, width: 1);
           return const BorderSide(color: Color(0xFFE3DED5));
         }),
         shape: const StadiumBorder(),

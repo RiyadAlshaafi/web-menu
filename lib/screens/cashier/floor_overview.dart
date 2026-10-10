@@ -107,9 +107,9 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
     final navy = CafeSurfaces.of(context).header;
     Widget action;
     if (billDue) {
-      action = _cardButton(context.l10n.cashierSettleBill, const Color(0xFF95600F), () => showCashSettleDialog(context, store, item.id));
+      action = _cardButton(context.l10n.cashierSettleBill, () => showCashSettleDialog(context, store, item.id));
     } else if (calling) {
-      action = _cardButton(context.l10n.cashierAttended, CafeColors.terracotta, () {
+      action = _cardButton(context.l10n.cashierAttended, () {
         for (final call in store.openCalls.where((call) => call.tableId == item.id).toList()) {
           store.resolveCall(call.id);
         }
@@ -121,8 +121,6 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
         child: OutlinedButton.icon(
           onPressed: () => _showCart(context, store, item),
           style: OutlinedButton.styleFrom(
-            foregroundColor: CafeColors.ink,
-            side: const BorderSide(color: TawlaTokens.border, width: 1.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           icon: const Icon(Icons.shopping_cart_outlined, size: 18),
@@ -205,17 +203,13 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
     );
   }
 
-  Widget _cardButton(String label, Color color, VoidCallback onPressed) {
+  Widget _cardButton(String label, VoidCallback onPressed) {
     return SizedBox(
       width: double.infinity,
       height: 44,
       child: FilledButton(
         onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+        style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
     );

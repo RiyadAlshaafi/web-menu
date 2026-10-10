@@ -63,8 +63,6 @@ Future<bool> showCafeConfirmDialog(
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
                       style: TextButton.styleFrom(
-                        foregroundColor: CafeColors.ink,
-                        backgroundColor: CafeColors.creamDark,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -74,10 +72,9 @@ Future<bool> showCafeConfirmDialog(
                     FilledButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: FilledButton.styleFrom(
-                        backgroundColor: CafeColors.alert,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                      ).merge(CafeButtons.destructiveFilled),
                       child: Text(confirmLabel),
                     ),
                   ],

@@ -95,7 +95,7 @@ class CustomerCartScreen extends StatelessWidget {
                                     store,
                                     IconButton(
                                       onPressed: store.canPlaceOrder ? () => store.setCartQty(table.id, line.menuItemId, line.qty - 1) : null,
-                                      icon: Icon(Icons.remove, size: 18, color: store.canPlaceOrder ? CafeColors.ink : GuestTokens.muted),
+                                      icon: Icon(Icons.remove, size: 18, color: store.canPlaceOrder ? CafeSurfaces.of(context).buttonInk : GuestTokens.muted),
                                     ),
                                   ),
                                   Text('${line.qty}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
@@ -104,7 +104,7 @@ class CustomerCartScreen extends StatelessWidget {
                                     store,
                                     IconButton(
                                       onPressed: store.canPlaceOrder ? () => store.setCartQty(table.id, line.menuItemId, line.qty + 1) : null,
-                                      icon: Icon(Icons.add, size: 18, color: store.canPlaceOrder ? CafeColors.ink : GuestTokens.muted),
+                                      icon: Icon(Icons.add, size: 18, color: store.canPlaceOrder ? CafeSurfaces.of(context).buttonInk : GuestTokens.muted),
                                     ),
                                   ),
                                   const SizedBox(width: 4),

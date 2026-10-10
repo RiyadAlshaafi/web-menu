@@ -148,15 +148,16 @@ class _CategoryRow extends StatelessWidget {
     final store = context.read<CafeStore>();
     final count = store.dishesIn(category.id).length;
     final button = CafeSurfaces.of(context).button;
+    final buttonInk = CafeSurfaces.of(context).buttonInk;
     Widget arrow(IconData icon, String tooltip, VoidCallback? onPressed) => Tooltip(
           message: tooltip,
           child: Material(
             color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: onPressed == null ? TawlaTokens.hairline : TawlaTokens.border)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: onPressed == null ? TawlaTokens.hairline : buttonInk)),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: onPressed,
-              child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 18, color: onPressed == null ? const Color(0xFFD0CAC0) : CafeColors.ink)),
+              child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 18, color: onPressed == null ? TawlaTokens.border : buttonInk)),
             ),
           ),
         );
@@ -276,7 +277,7 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
                             isDense: true,
                             suffixIcon: IconButton(
                               tooltip: context.l10n.layoutRenameCategory,
-                              icon: const Icon(Icons.check, color: CafeColors.success),
+                              icon: Icon(Icons.check, color: CafeSurfaces.of(context).buttonInk),
                               onPressed: () => _rename(store),
                             ),
                           ),
@@ -291,7 +292,7 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
                             tooltip: context.l10n.layoutRenameCategory,
                             visualDensity: VisualDensity.compact,
                             onPressed: () => setState(() => renaming = true),
-                            icon: const Icon(Icons.edit_outlined, size: 16, color: TawlaTokens.muted),
+                            icon: Icon(Icons.edit_outlined, size: 16, color: CafeSurfaces.of(context).buttonInk),
                           ),
                         ],
                       ),
@@ -379,7 +380,7 @@ class _DishCard extends StatelessWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: onPressed,
-              child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 18, color: onPressed == null ? TawlaTokens.muted : CafeColors.ink)),
+              child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 18, color: onPressed == null ? TawlaTokens.muted : surfaces.buttonInk)),
             ),
           ),
         );
@@ -477,7 +478,7 @@ class _DishCard extends StatelessWidget {
 
   Widget _segment(BuildContext context, String label, bool selected, VoidCallback onTap) {
     final surfaces = CafeSurfaces.of(context);
-    final fg = selected ? (label == context.l10n.layoutHero ? surfaces.button : CafeColors.ink) : TawlaTokens.muted;
+    final fg = selected ? surfaces.buttonInk : TawlaTokens.muted;
     return Semantics(
       button: true,
       selected: selected,
@@ -669,8 +670,6 @@ Future<void> showAddDishDialog(
                         OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: CafeColors.ink,
-                            side: const BorderSide(color: CafeColors.line),
                             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),

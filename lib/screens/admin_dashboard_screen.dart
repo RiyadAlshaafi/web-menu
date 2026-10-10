@@ -284,7 +284,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Expanded(child: PanelTitle(title)),
                 TextButton(
                   onPressed: onViewAll,
-                  style: TextButton.styleFrom(foregroundColor: CafeSurfaces.of(context).header),
                   child: Text(
                     context.l10n.dashboardViewAll,
                     style: const TextStyle(fontWeight: FontWeight.w700, decoration: TextDecoration.underline),

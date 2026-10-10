@@ -190,13 +190,7 @@ class GuestPrimaryButton extends StatelessWidget {
       height: height,
       child: FilledButton(
         onPressed: busy ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: surfaces.button,
-          foregroundColor: surfaces.onButton,
-          disabledBackgroundColor: CafeColors.terracottaSoft,
-          disabledForegroundColor: surfaces.onButton,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
+        style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
         child: busy
             ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: surfaces.onButton))
             : Row(
@@ -211,7 +205,7 @@ class GuestPrimaryButton extends StatelessWidget {
   }
 }
 
-/// White button with a soft border, the secondary action next to [GuestPrimaryButton].
+/// Outlined button in the brand colour, the secondary action next to [GuestPrimaryButton].
 class GuestOutlineButton extends StatelessWidget {
   const GuestOutlineButton({super.key, required this.label, required this.onPressed, this.height = 52});
 
@@ -226,12 +220,7 @@ class GuestOutlineButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton(
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: CafeColors.ink,
-          side: const BorderSide(color: GuestTokens.border, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+        style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
         child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
       ),
     );
