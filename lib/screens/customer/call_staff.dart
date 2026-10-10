@@ -1,5 +1,20 @@
 part of '../customer_screens.dart';
 
+/// Calls staff to the table and says the request was sent only once it is
+/// saved; a failed save shows an error instead.
+Future<void> callStaffAndConfirm(BuildContext context, CafeStore store, String tableId) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
+  try {
+    await store.callStaff(tableId);
+  } catch (error, stack) {
+    reportError('call staff', error, stack);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.errGeneric)));
+    return;
+  }
+  messenger.showSnackBar(SnackBar(content: Text(l10n.guestRequestSent)));
+}
+
 class CustomerShell {
   static Widget nav(BuildContext context, String tableId, String current) {
     final store = context.watch<CafeStore>();
@@ -63,10 +78,7 @@ class CustomerShell {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderingPaused)));
                 return;
               }
-              store.callStaff(table.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.l10n.guestRequestSent)),
-              );
+              callStaffAndConfirm(context, store, table.id);
             },
           ),
         ],
