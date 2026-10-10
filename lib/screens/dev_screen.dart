@@ -346,7 +346,16 @@ class _DevScreenState extends State<DevScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('Developer', style: CafeTheme.display.copyWith(fontSize: 32)),
+          Row(
+            children: [
+              Expanded(child: Text('Developer', style: CafeTheme.display.copyWith(fontSize: 32))),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/admin/login'),
+                icon: const Icon(Icons.logout, size: 18),
+                label: const Text('Leave dev screen'),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           const Text('These tools are not linked from the rest of the app.'),
           if (notice != null) ...[

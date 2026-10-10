@@ -384,6 +384,15 @@ class _Glow extends StatelessWidget {
   }
 }
 
+/// Reads the clipboard straight into [controller]. Windows clipboard history (Win+V) does not
+/// always reach a web text field, so the password field also offers this explicit button.
+Future<void> _pasteInto(TextEditingController controller) async {
+  final data = await Clipboard.getData(Clipboard.kTextPlain);
+  final text = data?.text;
+  if (text == null || text.isEmpty) return;
+  controller.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+}
+
 class AdminAuthScreen extends StatefulWidget {
   const AdminAuthScreen({super.key, this.setup = false});
 
@@ -412,13 +421,42 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
     super.dispose();
   }
 
+  Future<void> _submit() async {
+    if (signingIn) return;
+    final store = context.read<CafeStore>();
+    if (widget.setup) {
+      final result = await store.createAdmin(
+        email: email.text,
+        password: password.text,
+        confirm: confirm.text,
+        setupCode: setupCode.text,
+      );
+      if (!mounted) return;
+      if (result != null) {
+        setState(() => error = result);
+      } else {
+        context.go('/admin/dashboard');
+      }
+      return;
+    }
+    setState(() => signingIn = true);
+    final result = await store.signInAdmin(email.text, password.text, remember: remember);
+    if (!mounted) return;
+    if (result == null) {
+      context.go('/admin/dashboard');
+    } else {
+      setState(() => signingIn = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final setup = widget.setup;
 
     return CafeAuthFrame(
-      child: Column(
+      child: AutofillGroup(
+        child: Column(
         children: [
           Row(
             children: [
@@ -456,6 +494,9 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                 TextField(
                   controller: email,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: const InputDecoration(
                     hintText: 'admin@cafeitaliano.com',
                     prefixIcon: Icon(Icons.mail_outline, size: 18),
@@ -478,12 +519,25 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                 TextField(
                   controller: password,
                   obscureText: obscure,
+                  textInputAction: setup ? TextInputAction.next : TextInputAction.done,
+                  autofillHints: [setup ? AutofillHints.newPassword : AutofillHints.password],
+                  onSubmitted: (_) => setup ? FocusScope.of(context).nextFocus() : _submit(),
                   decoration: InputDecoration(
                     hintText: setup ? context.l10n.authCreateStrongPassword : '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline, size: 18),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => obscure = !obscure),
-                      icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(context).pasteButtonLabel,
+                          onPressed: () => _pasteInto(password),
+                          icon: const Icon(Icons.content_paste, size: 18),
+                        ),
+                        IconButton(
+                          onPressed: () => setState(() => obscure = !obscure),
+                          icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -497,6 +551,9 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   TextField(
                     controller: confirm,
                     obscureText: true,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.newPassword],
+                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     decoration: InputDecoration(
                       hintText: context.l10n.authRepeatPassword,
                       prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
@@ -511,6 +568,8 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   TextField(
                     controller: setupCode,
                     textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
                       hintText: context.l10n.authSetupCodeHint,
                       prefixIcon: const Icon(Icons.key_outlined, size: 18),
@@ -545,33 +604,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                 TerracottaButton(
                   label: setup ? context.l10n.authCreateAccessCta : context.l10n.authSignInCta,
                   busy: signingIn,
-                  onPressed: signingIn
-                      ? null
-                      : () async {
-                    if (!setup) setState(() => signingIn = true);
-                    if (setup) {
-                      final result = await store.createAdmin(
-                        email: email.text,
-                        password: password.text,
-                        confirm: confirm.text,
-                        setupCode: setupCode.text,
-                      );
-                      if (!context.mounted) return;
-                      if (result != null) {
-                        setState(() => error = result);
-                      } else {
-                        context.go('/admin/dashboard');
-                      }
-                    } else {
-                      final result = await store.signInAdmin(email.text, password.text, remember: remember);
-                      if (!context.mounted) return;
-                      if (result == null) {
-                        context.go('/admin/dashboard');
-                      } else {
-                        setState(() => signingIn = false);
-                      }
-                    }
-                  },
+                  onPressed: signingIn ? null : _submit,
                 ),
                 if (setup) ...[
                   const SizedBox(height: 10),
@@ -587,6 +620,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -797,6 +831,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _submit() async {
+    final result = await context.read<CafeStore>().completePasswordReset(
+          password: password.text,
+          confirm: confirm.text,
+        );
+    if (!mounted) return;
+    if (result != null) {
+      setState(() => error = result);
+    } else {
+      context.go('/admin/login');
+    }
+  }
+
   bool get hasLen => password.text.length >= 8;
   bool get hasNum => RegExp(r'[0-9]').hasMatch(password.text);
   bool get hasCap => RegExp(r'[A-Z]').hasMatch(password.text);
@@ -844,12 +891,28 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         TextField(
                           controller: password,
                           obscureText: obscure,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.newPassword],
                           onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.lock_outline, size: 18),
-                            suffixIcon: IconButton(
-                              onPressed: () => setState(() => obscure = !obscure),
-                              icon: const Icon(Icons.visibility_outlined, size: 18),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: MaterialLocalizations.of(context).pasteButtonLabel,
+                                  onPressed: () async {
+                                    await _pasteInto(password);
+                                    if (mounted) setState(() {});
+                                  },
+                                  icon: const Icon(Icons.content_paste, size: 18),
+                                ),
+                                IconButton(
+                                  onPressed: () => setState(() => obscure = !obscure),
+                                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -874,7 +937,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         TextField(
                           controller: confirm,
                           obscureText: true,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.newPassword],
                           onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) => _submit(),
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.verified_user_outlined, size: 18),
                             suffixIcon: Icon(Icons.visibility_outlined, size: 18),
@@ -918,18 +984,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         const SizedBox(height: 18),
                         TerracottaButton(
                           label: context.l10n.authUpdatePasswordCta,
-                          onPressed: () async {
-                            final result = await context.read<CafeStore>().completePasswordReset(
-                                  password: password.text,
-                                  confirm: confirm.text,
-                                );
-                            if (!context.mounted) return;
-                            if (result != null) {
-                              setState(() => error = result);
-                            } else {
-                              context.go('/admin/login');
-                            }
-                          },
+                          onPressed: _submit,
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),
