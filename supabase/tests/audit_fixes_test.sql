@@ -52,8 +52,11 @@ begin
   execute 'set local role anon';
   r := public.assign_shift_order_numbers(array[o1]);
   execute 'reset role';
-  -- o1 already has today's number, so it is answered without a session check.
-  assert (r->>'ok')::boolean, 'an already numbered order stays fine: ' || r::text;
+  -- Without a valid cashier session nothing is answered, not even an order that already has a number.
+  assert not (r->>'ok')::boolean and r->>'error' = 'sign in as a cashier first',
+    'a caller without a session is rejected: ' || r::text;
+  assert (select shift_order_number from public.orders where id = o1) is not null,
+    'the rejected call must not clear the existing number';
 end;
 $test$;
 

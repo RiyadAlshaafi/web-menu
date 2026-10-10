@@ -2,9 +2,11 @@
 
 do $$
 begin
-  if exists (select 1 from pg_extension where extname = 'pg_cron')
-     and exists (select 1 from cron.job where jobname = 'purge-expired-cashier-sessions') then
-    perform cron.unschedule('purge-expired-cashier-sessions');
+  -- Nested so cron.job is only parsed where pg_cron is installed.
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    if exists (select 1 from cron.job where jobname = 'purge-expired-cashier-sessions') then
+      perform cron.unschedule('purge-expired-cashier-sessions');
+    end if;
   end if;
 end $$;
 

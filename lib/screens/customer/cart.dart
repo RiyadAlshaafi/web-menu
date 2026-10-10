@@ -156,8 +156,7 @@ class CustomerCartScreen extends StatelessWidget {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestOrderingPaused)));
                               return;
                             }
-                            store.callStaff(table.id);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.guestRequestSent)));
+                            callStaffAndConfirm(context, store, table.id);
                           },
                         ),
                       ),
