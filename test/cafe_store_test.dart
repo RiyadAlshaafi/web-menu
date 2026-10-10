@@ -33,13 +33,15 @@ void main() {
     expect(store.cartFor(table.id).lines.single.qty, 2);
     expect(store.cartFor(table.id).total, 20);
 
-    await store.sendCartToKitchen(table.id);
-    expect(store.cartFor(table.id).lines, isEmpty);
-    final order = store.openOrderFor(table.id)!;
-    expect(order.lines, hasLength(1));
-    expect(order.lines.single.qty, 2);
-    expect(order.lines.single.total, 20);
-    expect(store.tabSubtotal(table.id), 20);
+    // Carts are sent through Supabase (send_table_cart, checked in
+    // supabase/tests); without it the send fails and the cart is kept.
+    await expectLater(store.sendCartToKitchen(table.id), throwsA(isA<StateError>()));
+    expect(store.cartFor(table.id).lines.single.qty, 2);
+    expect(store.cartFor(table.id).total, 20);
+    expect(store.openOrderFor(table.id), isNull);
+    expect(store.tabSubtotal(table.id), 0);
+    // New cafes start without a service charge, so set one to check it.
+    store.cafe = {'serviceChargeRate': 0.10};
     expect(store.chargeTotal(20, applyService: false), 20);
     expect(store.chargeTotal(20, applyService: true), closeTo(22, 0.001));
   });
@@ -86,16 +88,15 @@ void main() {
     expect(store.tryBeginOrderConfirm(table.id), isFalse);
     store.endOrderConfirm(table.id);
 
-    final first = store.sendCartToKitchen(table.id);
-    final second = store.sendCartToKitchen(table.id);
+    // The second send returns at once instead of sending the cart again.
+    final first = expectLater(store.sendCartToKitchen(table.id), throwsA(isA<StateError>()));
+    expect(store.isSendingOrder(table.id), isTrue);
+    expect(await store.sendCartToKitchen(table.id), isNull);
     expect(store.tryBeginOrderConfirm(table.id), isFalse);
     await first;
-    await second;
-    final order = store.openOrderFor(table.id)!;
-    expect(order.lines, hasLength(1));
-    expect(order.lines.single.qty, 1);
-    expect(order.lines.single.total, 10);
-    expect(store.cartFor(table.id).lines, isEmpty);
+    expect(store.isSendingOrder(table.id), isFalse);
+    expect(store.cartFor(table.id).lines.single.qty, 1);
+    expect(store.cartFor(table.id).total, 10);
   });
 
   test('two tables can request the bill without dropping either notice', () async {
