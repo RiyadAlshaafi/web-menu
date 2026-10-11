@@ -2,7 +2,7 @@
 // downloading the app again. Only files from this site are kept; menu data, carts and orders
 // always go to Supabase (another origin), so they are never served from here.
 //
-// tool/vercel_build.sh replaces the two stamps below on every build: a new build gets a new app
+// tool/build_web.sh replaces the two stamps below on every build: a new build gets a new app
 // cache (the old one is deleted), and the engine cache lives until Flutter itself is upgraded.
 const BUILD = '__BUILD_ID__';
 const ENGINE = '__ENGINE_ID__';

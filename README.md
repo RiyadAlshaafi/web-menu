@@ -42,7 +42,7 @@ PGHOST=localhost PGUSER=postgres tool/test_db.sh
 
 | Target | How |
 | --- | --- |
-| Web | Vercel runs `tool/vercel_build.sh` on every push to `main` (needs `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Vercel project). |
+| Web | The *Web deploy* GitHub Action runs `tool/build_web.sh` and deploys to Cloudflare on every push to `main` (needs the secrets listed in `.github/workflows/web-deploy.yml`). |
 | Windows | `tool/build_windows.ps1`, or the *Windows release* GitHub Action, which publishes a signed installer the tills update from. See [docs/RELEASING.md](docs/RELEASING.md). |
 
 ## Layout
