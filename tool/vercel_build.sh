@@ -33,3 +33,13 @@ flutter build web --release --wasm \
 BUILD_ID="${VERCEL_GIT_COMMIT_SHA:-$(date +%s)}"
 ENGINE_ID="$(grep -o '"engineRevision":"[^"]*"' build/web/flutter_bootstrap.js | cut -d'"' -f4 || true)"
 sed -i "s/__BUILD_ID__/${BUILD_ID}/; s/__ENGINE_ID__/${ENGINE_ID:-$BUILD_ID}/" build/web/sw.js
+
+# Guest QR links forward to the guest web app (guest-web/) once GUEST_WEB_URL is set on this
+# Vercel project, e.g. https://tawla-guest.vercel.app. Unset or empty: no forwarding.
+GUEST_WEB_URL="${GUEST_WEB_URL:-}"
+GUEST_WEB_URL="${GUEST_WEB_URL%/}"
+if [ -n "$GUEST_WEB_URL" ] && ! printf '%s' "$GUEST_WEB_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[A-Za-z0-9._~/-]*)?$'; then
+  echo "GUEST_WEB_URL must be a plain https:// address, got: $GUEST_WEB_URL" >&2
+  exit 1
+fi
+sed -i "s#__GUEST_WEB_URL__#${GUEST_WEB_URL}#" build/web/index.html
