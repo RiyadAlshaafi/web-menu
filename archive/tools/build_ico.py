@@ -1,4 +1,4 @@
-"""Packs build/icons/*.png (from tool/render_icons.dart) into the Windows .ico and copies the web, iOS and Android icons."""
+"""Packs build/icons/*.png (from archive/tools/render_icons.dart) into the Windows .ico and copies the web, iOS and Android icons."""
 import shutil
 import struct
 import zlib
@@ -54,7 +54,7 @@ def strip_alpha(png: bytes) -> bytes:
     header = struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0)
     return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', header) + chunk(b'IDAT', zlib.compress(out, 9)) + chunk(b'IEND', b'')
 
-root = Path(__file__).resolve().parent.parent
+root = Path(__file__).resolve().parents[2]  # repo root (this file is in archive/tools/)
 src = root / 'build' / 'icons'
 
 sizes = [16, 24, 32, 48, 64, 128, 256]
@@ -78,7 +78,7 @@ shutil.copy(src / 'maskable_512.png', web / 'icons' / 'Icon-maskable-512.png')
 shutil.copy(src / 'icon_48.png', web / 'favicon.png')
 
 # iOS: every file named in the app icon set, by its pixel size.
-ios_dir = root / 'ios' / 'Runner' / 'Assets.xcassets' / 'AppIcon.appiconset'
+ios_dir = root / 'archive' / 'platforms' / 'ios' / 'Runner' / 'Assets.xcassets' / 'AppIcon.appiconset'
 ios_px = {
     '20x20@1x': 20, '20x20@2x': 40, '20x20@3x': 60,
     '29x29@1x': 29, '29x29@2x': 58, '29x29@3x': 87,
@@ -91,7 +91,7 @@ for name, px in ios_px.items():
     (ios_dir / f'Icon-App-{name}.png').write_bytes(strip_alpha((src / f'ios_{px}.png').read_bytes()))
 
 # Android: legacy launcher icons plus the adaptive icon (cream background, mark in the foreground).
-res = root / 'android' / 'app' / 'src' / 'main' / 'res'
+res = root / 'archive' / 'platforms' / 'android' / 'app' / 'src' / 'main' / 'res'
 legacy = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
 foreground = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
 for density, px in legacy.items():

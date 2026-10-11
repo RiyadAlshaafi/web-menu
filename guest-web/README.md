@@ -3,7 +3,7 @@
 The guest side of Tawla (QR menu, ordering, live tab, bill) as a Next.js app. Admin and cashier
 stay in the Flutter app; both use the same Supabase project.
 
-- Plan and decisions: `../docs/guest-migration/02_PLAN.md`
+- Plan and decisions: `../docs/archive/guest-migration/02_PLAN.md`
 - The browser only talks to `/api/guest/*`. Those handlers call Supabase with the public anon key,
   one security definer function each (`supabase/migrations/20261014100000_guest_web_rpcs.sql`).
 - Live updates: read-only Realtime broadcast pings, loaded after first paint.

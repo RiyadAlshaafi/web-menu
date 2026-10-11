@@ -13,7 +13,7 @@ export type Endpoint =
   | "refusal";
 
 // Requests per minute. Guests on cafe Wi-Fi share one IP, so per-IP limits are generous and the
-// tight limits are per table (docs/guest-migration/02_PLAN.md, "Rate limits").
+// tight limits are per table (docs/archive/guest-migration/02_PLAN.md, "Rate limits").
 export const LIMITS: Record<Endpoint, { ip: number; slug: number }> = {
   menu: { ip: 120, slug: 60 },
   status: { ip: 120, slug: 40 },

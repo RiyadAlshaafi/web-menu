@@ -1,7 +1,7 @@
 // Renders the Tawla app icons from the in-app TawlaMark painter.
 //
-//   flutter test tool/render_icons.dart
-//   python tool/build_ico.py
+//   flutter test archive/tools/render_icons.dart
+//   python archive/tools/build_ico.py
 //
 // PNGs land in build/icons; build_ico.py packs the Windows .ico and copies the web, iOS and Android icons.
 import 'dart:io';
