@@ -18,6 +18,7 @@ Riyad accepted every default from the inventory's open questions:
 | Q7 | Bill rules stay exactly as today; nothing new is enforced on the server. |
 | Q8 | One open "call staff" per table; repeat taps re-use it. |
 | Q9 | Work on a feature branch with PRs, never directly on `main`. |
+| Deploy | "Push the guest only to web": only the guest web app is deployed (Vercel). No Windows or other native release for this work; cashier and admin screens are not changed. |
 
 ---
 
@@ -231,7 +232,14 @@ through the API.
 | --- | --- |
 | Inline script before `flutter_bootstrap.js`: if `location.hash` matches `#/t/<slug>[/cart|/bill]` and a guest URL is set, `location.replace(<guest url>/t/<slug>...)` before Flutter downloads | `web/index.html` |
 | Stamp the guest URL into that script from a `GUEST_WEB_URL` Vercel variable; empty = no redirect (so this can ship first, dark) | `tool/vercel_build.sh` |
-| Fallback for path-style links: the `/t/:tableId` routes redirect to the guest URL when `GUEST_WEB_URL` is defined | `lib/main.dart:233-253` |
+
+No Dart code changes: both changes are web-only files, so the Windows till build is
+identical. Merging them to `main` still starts the existing *Windows build* workflow
+(`.github/workflows/windows-build.yml` runs on every push to `main`) and refreshes the
+"windows-latest-build" zip from unchanged Dart code; no versioned Windows release is made
+(that needs a `v*` tag). If you'd rather it didn't run at all, the workflow can get a
+`paths-ignore` for `web/**`, `guest-web/**`, `docs/**` and `tool/vercel_build.sh`, but only if
+you ask.
 
 QR codes printed from the admin keep using `public_menu_url` + `/#/t/<slug>`
 (`cafe_store_settings.dart:18-31`); once `public_menu_url` points at the guest app, its `/`
@@ -300,7 +308,7 @@ when the guest app is live.
 **Phase 3e: switch-over (each step on Riyad's word)**
 8. Apply migration A live (after a backup run).
 9. Create the Vercel project and Upstash store; deploy guest-web; smoke test with a test table.
-10. Merge the Flutter redirect with `GUEST_WEB_URL` empty, then set it, and switch the cafes'
+10. Merge the web-only Flutter redirect with `GUEST_WEB_URL` empty, then set it, and switch the cafes'
     `public_menu_url`.
 11. After a soak with no Flutter guest traffic, apply migration B.
 
@@ -320,7 +328,7 @@ the same black/white text rule the Flutter app uses).
 
 | Risk | Mitigation |
 | --- | --- |
-| Old QR fragment links: a Flutter service worker (`web/sw.js`) can serve a cached `index.html` without the redirect for a while | The worker fetches `/` network-first with a 3 s timeout; the GoRouter fallback in `main.dart` catches the rest |
+| Old QR fragment links: a Flutter service worker (`web/sw.js`) can serve a cached `index.html` without the redirect for a while | The worker fetches `/` network-first with a 3 s timeout (`web/sw.js:54-71`), so on a slow network an old copy can open the Flutter guest page once; it still works until migration B, which waits for the soak |
 | Per-phone cart (Q2): two phones at a table can each send a round | That is already how rounds work; the cashier sees both rounds on one order |
 | GPS can be spoofed | Same as today; the check stops casual remote orders only |
 | Shared cafe Wi-Fi IP hits per-IP limits | Generous per-IP limits, tight per-table limits |
