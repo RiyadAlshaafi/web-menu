@@ -7,11 +7,9 @@ import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
 import 'report_error.dart';
-import 'models/models.dart';
 import 'screens/admin_screens.dart' deferred as admin_ui;
 import 'screens/auth_screens.dart' deferred as auth_ui;
 import 'screens/cashier_screens.dart' deferred as cashier_ui;
-import 'screens/customer_screens.dart';
 import 'screens/dev_screen.dart';
 import 'screens/sales_log_screen.dart' deferred as sales_ui;
 import 'screens/dish_availability_screen.dart' deferred as dishes_ui;
@@ -154,23 +152,13 @@ class _TawlaAppState extends State<TawlaApp> {
       refreshListenable: routerRefresh,
       redirect: (_, state) {
         final path = state.uri.path;
-        final guest = path.startsWith('/t/');
+        // Guest table links belong to the guest web app (guest-web/); the staff app has no guest pages.
+        if (path.startsWith('/t/')) return '/';
         final auth = path == '/login' ||
             path.startsWith('/admin/login') ||
             path.startsWith('/admin/setup') ||
             path.startsWith('/admin/forgot') ||
             path.startsWith('/admin/password');
-        if (guest) {
-          final slug = state.pathParameters['tableId'] ??
-              (path.startsWith('/t/') && path.length > 3 ? path.split('/')[2] : null);
-          if (slug != null && slug.isNotEmpty && (path.endsWith('/cart') || path.endsWith('/bill'))) {
-            final table = widget.store.tableBySlug(slug);
-            if (table != null && widget.store.openOrderFor(table.id) == null) {
-              return '/t/$slug';
-            }
-          }
-          return null;
-        }
         if (path == '/dev') {
           final key = state.extra;
           if (key is! String || key.isEmpty) return '/login';
@@ -229,27 +217,6 @@ class _TawlaAppState extends State<TawlaApp> {
         GoRoute(
           path: '/admin/password',
           builder: (_, _) => DeferredView(load: _loadAuth, builder: () => auth_ui.ChangePasswordScreen()),
-        ),
-        GoRoute(
-          path: '/t/:tableId',
-          builder: (_, state) => GuestSession(
-            slug: state.pathParameters['tableId']!,
-            child: CustomerMenuScreen(tableSlug: state.pathParameters['tableId']!),
-          ),
-        ),
-        GoRoute(
-          path: '/t/:tableId/cart',
-          builder: (_, state) => GuestSession(
-            slug: state.pathParameters['tableId']!,
-            child: CustomerCartScreen(tableSlug: state.pathParameters['tableId']!),
-          ),
-        ),
-        GoRoute(
-          path: '/t/:tableId/bill',
-          builder: (_, state) => GuestSession(
-            slug: state.pathParameters['tableId']!,
-            child: CustomerBillScreen(tableSlug: state.pathParameters['tableId']!),
-          ),
         ),
         ShellRoute(
           builder: (context, state, child) => DeferredView(
@@ -416,118 +383,6 @@ class _TawlaAppState extends State<TawlaApp> {
         routerConfig: router,
       ),
     );
-  }
-}
-
-class GuestSession extends StatefulWidget {
-  const GuestSession({super.key, required this.slug, required this.child});
-
-  final String slug;
-  final Widget child;
-
-  @override
-  State<GuestSession> createState() => _GuestSessionState();
-}
-
-class _GuestSessionState extends State<GuestSession> {
-  CafeStore? _store;
-  bool _sawOpenOrder = false;
-  bool _loading = true;
-  bool _missing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start loading at once rather than after the first frame: a phone that
-    // locks or switches apps while the page opens draws no frames, which left
-    // guests on "Loading your table" until they came back.
-    Future.microtask(_load);
-  }
-
-  Future<void> _load() async {
-    if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _missing = false;
-    });
-    await context.read<CafeStore>().ensureGuest(widget.slug);
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      _missing = context.read<CafeStore>().tableBySlug(widget.slug) == null;
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final store = context.read<CafeStore>();
-    if (_store == store) return;
-    _store?.removeListener(_onStore);
-    _store = store;
-    store.addListener(_onStore);
-  }
-
-  @override
-  void didUpdateWidget(covariant GuestSession oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.slug != widget.slug) {
-      _sawOpenOrder = false;
-      _load();
-    }
-  }
-
-  @override
-  void dispose() {
-    _store?.removeListener(_onStore);
-    super.dispose();
-  }
-
-  void _onStore() {
-    final store = _store;
-    if (store == null || !mounted || _loading) return;
-    final table = store.tableBySlug(widget.slug);
-    if (table == null) return;
-    if (store.openOrderFor(table.id) != null) {
-      _sawOpenOrder = true;
-      return;
-    }
-    if (!_sawOpenOrder || table.status != TableStatus.free) return;
-    if (store.cartFor(table.id).lines.isNotEmpty) return;
-    _sawOpenOrder = false;
-    final path = GoRouterState.of(context).uri.path;
-    final menu = '/t/${widget.slug}';
-    if (path == menu) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.go(menu);
-    });
-  }
-
-  Widget _localized(CafeStore store, Widget child) {
-    final code = store.guestLocale;
-    return Localizations.override(
-      context: context,
-      locale: Locale(code),
-      child: Directionality(
-        textDirection: code == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-        child: child,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final store = context.watch<CafeStore>();
-    if (_loading) return _localized(store, const GuestLoadingScreen());
-    final table = store.tableBySlug(widget.slug);
-    if (_missing || table == null) return _localized(store, GuestQrError(onRetry: _load));
-    if (store.guestLocaleOverride == null) {
-      return _localized(
-        store,
-        GuestLanguageScreen(tableNumber: table.number, onChoose: (code) => store.setGuestLocale(code)),
-      );
-    }
-    return _localized(store, widget.child);
   }
 }
 

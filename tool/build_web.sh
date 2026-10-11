@@ -34,10 +34,14 @@ BUILD_ID="${GITHUB_SHA:-${VERCEL_GIT_COMMIT_SHA:-$(date +%s)}}"
 ENGINE_ID="$(grep -o '"engineRevision":"[^"]*"' build/web/flutter_bootstrap.js | cut -d'"' -f4 || true)"
 sed -i "s/__BUILD_ID__/${BUILD_ID}/; s/__ENGINE_ID__/${ENGINE_ID:-$BUILD_ID}/" build/web/sw.js
 
-# Guest QR links forward to the guest web app (guest-web/) once GUEST_WEB_URL is set in the
-# build environment, e.g. https://tawla-guest.vercel.app. Unset or empty: no forwarding.
+# The staff app has no guest pages: guest QR links forward to the guest web app (guest-web/), so
+# GUEST_WEB_URL (e.g. https://order.tawla.ly) must be set in the build environment.
 GUEST_WEB_URL="${GUEST_WEB_URL:-}"
 GUEST_WEB_URL="${GUEST_WEB_URL%/}"
+if [ -z "$GUEST_WEB_URL" ]; then
+  echo "Missing GUEST_WEB_URL. Guest QR links would open nothing without it." >&2
+  exit 1
+fi
 if [ -n "$GUEST_WEB_URL" ] && ! printf '%s' "$GUEST_WEB_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[A-Za-z0-9._~/-]*)?$'; then
   echo "GUEST_WEB_URL must be a plain https:// address, got: $GUEST_WEB_URL" >&2
   exit 1

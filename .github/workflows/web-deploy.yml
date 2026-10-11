@@ -1,12 +1,13 @@
 # Builds the Flutter web app and deploys it to Cloudflare (Workers static assets, see
 # wrangler.jsonc). Needs these repository secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
 # SUPABASE_URL, SUPABASE_ANON_KEY.
-# Optional repository variable GUEST_WEB_URL forwards guest QR links to guest-web/.
+# Required repository variable GUEST_WEB_URL: where guest QR links forward to (the tawla-guest Worker).
 name: Web deploy
 
 on:
   push:
     branches: [main]
+    paths-ignore: ['guest-web/**', '.github/workflows/guest-deploy.yml']
   workflow_dispatch:
 
 permissions:

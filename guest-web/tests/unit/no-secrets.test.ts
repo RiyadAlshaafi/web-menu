@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 
 // The guest app must never hold a privileged Supabase key (brief: anon key only, RLS enforcing).
 const root = join(__dirname, "..", "..");
-const skip = new Set(["node_modules", ".git", "coverage", "playwright-report", "test-results"]);
+// .open-next and .wrangler are generated bundles of dependency code, not the guest app's own source.
+const skip = new Set(["node_modules", ".git", "coverage", "playwright-report", "test-results", ".open-next", ".wrangler"]);
 const forbidden = [["service", "role"].join("_"), ["SUPABASE", "SERVICE", "ROLE"].join("_"), "sb_secret_"];
 
 function files(dir: string, skipBuild = true): string[] {
