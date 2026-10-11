@@ -13,6 +13,8 @@ cd "$(dirname "$0")/.."
 DB="${TEST_DB:-cafe_test}"
 PART2=supabase/migrations/20261008110000_lock_down_direct_writes.sql
 PART1=supabase/migrations/20261008100000_security_and_money_fixes.sql
+# Removes guest direct table access; the "previous app build" below predates it.
+GUEST_LOCK=supabase/migrations/20261014110000_guest_lock_down.sql
 
 quiet() { PGOPTIONS='-c client_min_messages=error' psql -X -q -o /dev/null -v ON_ERROR_STOP=1 "$@"; }
 loud() { psql -X -q -v ON_ERROR_STOP=1 "$@"; }
@@ -31,7 +33,7 @@ build() {
 }
 
 echo "== Part 1 only: the previous app build must keep working"
-build "$PART2"
+build "$PART2" "$GUEST_LOCK"
 loud -d "$DB" -f supabase/tests/old_app_compat_test.sql
 
 echo "== Parts 1 and 2: the new rules"
@@ -42,6 +44,7 @@ loud -d "$DB" -f supabase/tests/app_updates_test.sql
 loud -d "$DB" -f supabase/tests/live_pings_test.sql
 loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 loud -d "$DB" -f supabase/tests/guest_web_test.sql
+loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do
@@ -52,6 +55,7 @@ done
 loud -d "$DB" -f supabase/tests/app_updates_test.sql
 loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 loud -d "$DB" -f supabase/tests/guest_web_test.sql
+loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"
