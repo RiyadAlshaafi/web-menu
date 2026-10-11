@@ -2,6 +2,8 @@
   // Static site only: the Flutter web build is served as-is, no Worker script.
   "name": "tawla-web",
   "compatibility_date": "2026-10-10",
+  // Serve the site on tawla.ly; Cloudflare creates the DNS record and certificate on deploy.
+  "routes": [{ "pattern": "tawla.ly", "custom_domain": true }],
   "assets": {
     "directory": "./build/web",
     // Deep links (e.g. /c/<slug>) get index.html; missing files still return 404.
