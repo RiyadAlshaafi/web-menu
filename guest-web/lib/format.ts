@@ -3,13 +3,13 @@ import type { Category, MenuItem, PaymentType } from "./types";
 
 const digits = new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
-// `#,##0.000 LYD`, or `د.ل` in Arabic, as the Flutter app shows money (lib/money.dart).
+// `#,##0.000 LYD`, or `د.ل` in Arabic, as the Flutter app shows money (lib/core/money.dart).
 export function money(value: number, lang: Lang): string {
   const amount = digits.format(value);
   return lang === "ar" ? `${amount} د.ل` : `${amount} LYD`;
 }
 
-// Tripoli is UTC+2 all year (lib/money.dart toTripoli). HH:mm.
+// Tripoli is UTC+2 all year (lib/core/money.dart toTripoli). HH:mm.
 export function tripoliTime(iso: string): string {
   const instant = new Date(iso);
   if (Number.isNaN(instant.getTime())) return "";
@@ -17,7 +17,7 @@ export function tripoliTime(iso: string): string {
   return `${String(local.getUTCHours()).padStart(2, "0")}:${String(local.getUTCMinutes()).padStart(2, "0")}`;
 }
 
-// `#012`: the spoken daily number, at least three digits (lib/money.dart formatOrderNumber).
+// `#012`: the spoken daily number, at least three digits (lib/core/money.dart formatOrderNumber).
 export function orderNumber(sequence: number | null): string {
   if (sequence === null) return "—";
   const text = String(sequence);

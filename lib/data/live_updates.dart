@@ -1,4 +1,4 @@
-import 'models/models.dart';
+import '../models/models.dart';
 
 /// Tells which orders are new since the last look, so the cashier is alerted once per guest order.
 /// The first look only learns what is already on screen, so opening the app never rings.

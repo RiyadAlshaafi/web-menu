@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'report_error.dart';
+import '../core/report_error.dart';
 
 class DevicePoint {
   const DevicePoint({required this.latitude, required this.longitude, required this.accuracyM});

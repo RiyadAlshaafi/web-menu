@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:menu_web_v1/dev_logs.dart';
+import 'package:menu_web_v1/core/dev_logs.dart';
 
 void main() {
   test('a receipts export groups lines into one receipt', () {

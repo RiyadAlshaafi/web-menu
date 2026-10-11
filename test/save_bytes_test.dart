@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:menu_web_v1/save_bytes_io.dart';
+import 'package:menu_web_v1/platform/save_bytes_io.dart';
 
 void main() {
   test('desktop save writes the chosen file', () async {

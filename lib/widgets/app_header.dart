@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
-import '../time_format.dart';
+import '../core/time_format.dart';
 import 'tawla_mark.dart';
 
 /// The top bar shared by the admin and cashier shells so both look and behave

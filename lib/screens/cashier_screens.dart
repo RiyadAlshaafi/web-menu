@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n_ext.dart';
-import '../receipt_print.dart';
-import '../time_format.dart';
+import '../printing/receipt_print.dart';
+import '../core/time_format.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';

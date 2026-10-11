@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
-import 'package:menu_web_v1/receipt_print.dart';
+import 'package:menu_web_v1/printing/receipt_print.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 import 'package:flutter/material.dart';
 

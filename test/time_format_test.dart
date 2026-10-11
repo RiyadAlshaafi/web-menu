@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:menu_web_v1/time_format.dart';
+import 'package:menu_web_v1/core/time_format.dart';
 
 void main() {
   test('stored UTC timestamps display as Tripoli time', () {

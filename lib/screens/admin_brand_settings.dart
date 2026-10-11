@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
-import '../device_location.dart';
-import '../report_error.dart';
+import '../platform/device_location.dart';
+import '../core/report_error.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';

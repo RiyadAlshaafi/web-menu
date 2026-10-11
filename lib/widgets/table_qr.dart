@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
-import 'package:menu_web_v1/pdf_text.dart';
-import 'package:menu_web_v1/save_bytes.dart';
+import 'package:menu_web_v1/printing/pdf_text.dart';
+import 'package:menu_web_v1/platform/save_bytes.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';

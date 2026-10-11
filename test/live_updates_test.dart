@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
-import 'package:menu_web_v1/live_updates.dart';
+import 'package:menu_web_v1/data/live_updates.dart';
 import 'package:menu_web_v1/models/models.dart';
 
 CafeOrder order(String id, OrderStatus status) => CafeOrder(

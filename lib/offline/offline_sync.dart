@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../data/error_codes.dart';
-import '../money.dart';
+import '../core/money.dart';
 import 'outbox_store.dart';
 
 /// Calls one server function and returns its JSON answer.

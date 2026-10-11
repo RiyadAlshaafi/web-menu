@@ -8,8 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
 import '../offline/offline_sync.dart' show isNetworkError;
-import '../time_format.dart';
-import '../report_error.dart';
+import '../core/time_format.dart';
+import '../core/report_error.dart';
 import 'error_codes.dart';
 import 'image_shrink.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';

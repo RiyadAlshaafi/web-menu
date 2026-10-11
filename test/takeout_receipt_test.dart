@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/data/error_codes.dart';
-import 'package:menu_web_v1/ledger.dart';
+import 'package:menu_web_v1/core/ledger.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
-import 'package:menu_web_v1/takeout_receipt.dart';
+import 'package:menu_web_v1/printing/takeout_receipt.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

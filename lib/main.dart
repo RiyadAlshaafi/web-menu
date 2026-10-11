@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
-import 'report_error.dart';
+import 'core/report_error.dart';
 import 'screens/admin_screens.dart' deferred as admin_ui;
 import 'screens/auth_screens.dart' deferred as auth_ui;
 import 'screens/cashier_screens.dart' deferred as cashier_ui;

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:menu_web_v1/money.dart';
+import 'package:menu_web_v1/core/money.dart';
 
 void main() {
   test('sale numbers pad to 3 digits and grow past 999 without clipping', () {

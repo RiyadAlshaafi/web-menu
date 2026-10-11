@@ -6,7 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../report_error.dart';
+import '../core/report_error.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 

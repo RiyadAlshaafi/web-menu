@@ -8,7 +8,7 @@ import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
-import '../report_error.dart';
+import '../core/report_error.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';

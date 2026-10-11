@@ -1,5 +1,5 @@
-import 'data/error_codes.dart';
-import 'models/models.dart';
+import '../data/error_codes.dart';
+import '../models/models.dart';
 
 /// Records one paid takeout sale. Takeout is a label on the order and receipt, not a
 /// table. Does not reuse an open order. Service is not added.
