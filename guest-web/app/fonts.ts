@@ -18,7 +18,9 @@ export const naskh = localFont({
     { path: "./fonts/NotoNaskhArabic-Bold.woff2", weight: "700" },
   ],
   variable: "--font-naskh",
-  display: "swap",
-  // Only Arabic pages use it; the browser fetches it when Arabic text appears.
+  // Only Arabic text uses it, so it is not preloaded. "optional": a slow first download shows
+  // the phone's own Arabic font instead of re-laying out the page later. The language screen
+  // already fetched it by the time the menu opens.
+  display: "optional",
   preload: false,
 });

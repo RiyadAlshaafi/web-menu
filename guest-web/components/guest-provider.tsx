@@ -208,8 +208,10 @@ export function GuestProvider({
             point.current = null;
             setLocation("tooFar");
           } else if (result.ok && !result.data.enabled) {
+            // Staff switched the check off since the last status: pick that up now.
             point.current = null;
             setLocation("off");
+            void refreshStatus();
           } else {
             point.current = null;
             setLocation("unavailable");
@@ -225,7 +227,7 @@ export function GuestProvider({
       locationBusy.current = run;
       return run;
     },
-    [locationEnabled, slug],
+    [locationEnabled, refreshStatus, slug],
   );
 
   // The check only applies while the cafe has it switched on.
