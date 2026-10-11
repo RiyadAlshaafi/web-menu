@@ -32,7 +32,8 @@
       var m = location.hash.match(/^#\/t\/([A-Za-z0-9-]{1,64})(\/(cart|bill))?\/?(\?.*)?$/);
       if (!m) return;
       var page = m[3] === 'bill' ? '/bill' : m[3] === 'cart' ? '/tab' : '';
-      location.replace(target.replace(/\/+$/, '') + '/t/' + m[1] + page);
+      var lang = /[?&]lang=(en|ar)(&|$)/.exec(m[4] || '');
+      location.replace(target.replace(/\/+$/, '') + '/t/' + m[1] + page + (lang ? '?lang=' + lang[1] : ''));
     })();
   </script>
   <script src="flutter_bootstrap.js" async></script>

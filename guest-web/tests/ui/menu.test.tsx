@@ -181,5 +181,45 @@ describe("location check", () => {
     fireEvent.click(addButton(/^Add Mint Tea/));
     expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [TEA]: 1 });
   });
+
+  it("re-checks an expired position at send: sends without one if staff switched the check off, explains a refusal", async () => {
+    geo((ok) => ok({ coords: { latitude: 1, longitude: 1, accuracy: 5 } } as GeolocationPosition));
+    let verdict: unknown = ok({ enabled: true, radiusM: 50, status: "allowed" });
+    const calls = mockApi((url) =>
+      url.includes("/location")
+        ? verdict
+        : url.includes("/status")
+          ? ok(located)
+          : url.includes("/order")
+            ? ok({ orderId: "o1", round: 1 })
+            : ok(tabWith("received")),
+    );
+    vi.useFakeTimers({ toFake: ["Date"] });
+    localStorage.setItem(`tawla-cart:${SLUG}`, JSON.stringify({ [TEA]: 1 }));
+    const send = async () => {
+      await screen.findByRole("button", { name: /1 items • Cart/ });
+      vi.setSystemTime(Date.now() + 11 * 60_000); // the checked position has expired
+      fireEvent.click(screen.getByRole("button", { name: /1 items • Cart/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Confirm & Send/ }));
+    };
+    await renderGuest(<MenuScreen />, { status: located });
+    await waitFor(() => expect(screen.queryByText(/Checking your location/)).toBeNull());
+
+    verdict = ok({ enabled: false, radiusM: 0, status: null });
+    await send();
+    await waitFor(() => expect(router.push).toHaveBeenCalled());
+    const order = calls.find((c) => c.url.endsWith("/order"))!;
+    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: TEA, qty: 1 }] });
+
+    cleanup();
+    localStorage.setItem(`tawla-cart:${SLUG}`, JSON.stringify({ [TEA]: 1 }));
+    verdict = ok({ enabled: true, radiusM: 50, status: "allowed" });
+    await renderGuest(<MenuScreen />, { status: located });
+    await waitFor(() => expect(screen.queryByText(/Checking your location/)).toBeNull());
+    verdict = ok({ enabled: true, radiusM: 50, status: "too_far" });
+    await send();
+    await waitFor(() => expect(screen.getAllByText(/too far from the cafe/).length).toBe(2)); // banner and toast
+    expect(calls.filter((c) => c.url.endsWith("/order"))).toHaveLength(1);
+  });
 });
 

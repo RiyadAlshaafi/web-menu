@@ -90,6 +90,8 @@ export function GuestProvider({
   const hadOrder = useStoredRaw("session", hadOrderKey) === "1" || Boolean(tab?.order);
   const point = useRef<Point | null>(null);
   const locationBusy = useRef<Promise<void> | null>(null);
+  // Outcome of the last check, read by sendOrder right after it awaits one.
+  const lastCheck = useRef<LocationState>("off");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const text = useCallback((key: TextKey, vars?: Record<string, string | number>) => t(lang, key, vars), [lang]);
@@ -197,29 +199,33 @@ export function GuestProvider({
       if (locationBusy.current) return locationBusy.current;
       const run = (async () => {
         setLocation("checking");
+        const settle = (state: LocationState) => {
+          lastCheck.current = state;
+          setLocation(state);
+        };
         try {
           const position = await readPosition();
           const { latitude: lat, longitude: lng, accuracy } = position.coords;
           const result = await api.location(slug, lat, lng, Math.min(accuracy, 10_000));
           if (result.ok && result.data.status === "allowed") {
             point.current = { lat, lng, accuracy: Math.min(accuracy, 10_000), until: Date.now() + POINT_TTL_MS };
-            setLocation("allowed");
+            settle("allowed");
           } else if (result.ok && result.data.status === "too_far") {
             point.current = null;
-            setLocation("tooFar");
+            settle("tooFar");
           } else if (result.ok && !result.data.enabled) {
             // Staff switched the check off since the last status: pick that up now.
             point.current = null;
-            setLocation("off");
-            void refreshStatus();
+            settle("off");
+            await refreshStatus();
           } else {
             point.current = null;
-            setLocation("unavailable");
+            settle("unavailable");
           }
         } catch (error) {
           point.current = null;
           const code = (error as { code?: number })?.code;
-          setLocation(code === 1 ? "denied" : "unavailable");
+          settle(code === 1 ? "denied" : "unavailable");
         } finally {
           locationBusy.current = null;
         }
@@ -271,8 +277,11 @@ export function GuestProvider({
       if (send.length === 0) return false;
       if (locationEnabled) {
         await checkLocation(!(point.current && point.current.until > Date.now()));
-        if (!point.current) {
+        // "off" here means staff just switched the check off: send without a position.
+        if (!point.current && lastCheck.current !== "off") {
           // The banner already says why; repeat it where the guest is looking.
+          const why: Record<string, TextKey> = { tooFar: "guestLocationTooFar", denied: "guestLocationDenied" };
+          showToast(t(lang, why[lastCheck.current] ?? "guestLocationUnavailable"));
           return false;
         }
       }
@@ -286,7 +295,7 @@ export function GuestProvider({
       await refreshTab();
       return true;
     },
-    [checkLocation, fail, locationEnabled, refreshTab, slug, updateCart],
+    [checkLocation, fail, lang, locationEnabled, refreshTab, showToast, slug, updateCart],
   );
 
   const callStaff = useCallback(async () => {

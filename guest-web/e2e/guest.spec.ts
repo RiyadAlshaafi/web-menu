@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContextOptions, type Page, type TestInfo } from "@playwright/test";
 import { db, resetDemo, SHIM } from "./db";
+
+// Extra browser contexts (a second phone, a set location) keep the project's device profile.
+function phone(testInfo: TestInfo): BrowserContextOptions {
+  const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, locale, baseURL } = testInfo.project.use;
+  return { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, locale, baseURL };
+}
 
 const TABLE = "demotable0001";
 
@@ -102,9 +108,9 @@ test("an item refused by the cashier is confirmed by the guest", async ({ page }
   expect(db(`select awaiting_customer_confirmation from orders where table_id = (select id from dining_tables where qr_slug = '${TABLE}') and status <> 'paid'`)).toBe("f");
 });
 
-test("each phone keeps its own cart", async ({ browser }) => {
-  const one = await browser.newContext();
-  const two = await browser.newContext();
+test("each phone keeps its own cart", async ({ browser }, testInfo) => {
+  const one = await browser.newContext(phone(testInfo));
+  const two = await browser.newContext(phone(testInfo));
   const a = await one.newPage();
   const b = await two.newPage();
   await openMenu(a, "en", "demotable0002");
@@ -133,15 +139,15 @@ test("ordering pauses while the cashier is offline; browsing still works", async
   expect(db(`select count(*) from staff_calls c join dining_tables t on t.id = c.table_id where t.qr_slug = 'offlinetable1'`)).toBe("0");
 });
 
-test("outside the cafe's radius the guest can browse but not order", async ({ browser }) => {
-  const far = await browser.newContext({ geolocation: { latitude: 32.9, longitude: 13.3, accuracy: 10 }, permissions: ["geolocation"] });
+test("outside the cafe's radius the guest can browse but not order", async ({ browser }, testInfo) => {
+  const far = await browser.newContext({ ...phone(testInfo), geolocation: { latitude: 32.9, longitude: 13.3, accuracy: 10 }, permissions: ["geolocation"] });
   const page = await far.newPage();
   await openMenu(page, "en", "squaretable01");
   await expect(page.getByText(/You're too far from the cafe to order/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
   await far.close();
 
-  const near = await browser.newContext({ geolocation: { latitude: 32.8955, longitude: 13.181, accuracy: 15 }, permissions: ["geolocation"] });
+  const near = await browser.newContext({ ...phone(testInfo), geolocation: { latitude: 32.8955, longitude: 13.181, accuracy: 15 }, permissions: ["geolocation"] });
   const ok = await near.newPage();
   await openMenu(ok, "en", "squaretable01");
   await ok.getByRole("button", { name: "Add Latte" }).click();
@@ -151,8 +157,8 @@ test("outside the cafe's radius the guest can browse but not order", async ({ br
   await near.close();
 });
 
-test("location refused: the guest is told how to allow it", async ({ browser }) => {
-  const context = await browser.newContext({ permissions: [] });
+test("location refused: the guest is told how to allow it", async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ ...phone(testInfo), permissions: [] });
   const page = await context.newPage();
   await openMenu(page, "en", "squaretable01");
   await expect(page.getByText(/Location is needed to place an order/)).toBeVisible();
@@ -186,7 +192,7 @@ test("tap targets are at least 44 px and there are no accessibility violations",
     await page.waitForLoadState("networkidle");
     const small = await page.$$eval("button, a, select", (nodes) =>
       nodes
-        .filter((n) => (n as HTMLElement).offsetParent !== null)
+        .filter((n) => n.getClientRects().length > 0 && getComputedStyle(n).visibility !== "hidden")
         .map((n) => ({ text: (n.getAttribute("aria-label") ?? n.textContent ?? "").trim().slice(0, 30), r: n.getBoundingClientRect() }))
         .filter(({ r }) => r.width < 44 || r.height < 44)
         .map(({ text, r }) => `${text} ${Math.round(r.width)}x${Math.round(r.height)}`),
@@ -200,8 +206,9 @@ test("tap targets are at least 44 px and there are no accessibility violations",
 test("as a guest, Supabase gives no direct table access (RLS)", async ({ request }) => {
   for (const table of ["orders", "order_lines", "restaurants", "menu_items", "dining_tables", "staff_calls", "payments", "shifts", "shift_expenses", "cashiers", "cashier_sessions", "profiles", "carts", "cart_lines", "payment_types"]) {
     const res = await request.get(`${SHIM}/rest/v1/${table}?select=*`, { headers: { apikey: "sb_publishable_local_only", "x-qr-slug": TABLE } });
-    const body = res.ok() ? await res.json() : [];
-    expect(Array.isArray(body) ? body.length : 0, table).toBe(0);
+    // Either no grant at all (401/403), or rows hidden by RLS (200 and an empty list).
+    expect([200, 401, 403], `${table} status`).toContain(res.status());
+    if (res.status() === 200) expect(await res.json(), table).toEqual([]);
   }
   const insert = await request.post(`${SHIM}/rest/v1/staff_calls`, {
     headers: { apikey: "sb_publishable_local_only", "x-qr-slug": TABLE, "content-type": "application/json" },
