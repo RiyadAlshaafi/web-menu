@@ -69,7 +69,6 @@ class CafeStore extends ChangeNotifier {
 
   String otpEmail = '';
   DateTime? otpSentAt;
-  DateTime? otpResendAt;
   bool otpVerified = false;
   int otpSecondsLeft = 0;
   Timer? _liveSync;
@@ -603,13 +602,9 @@ class CafeStore extends ChangeNotifier {
       return l10n.errNetwork;
     }
     otpSentAt = DateTime.now();
-    otpResendAt = DateTime.now().add(const Duration(seconds: 44));
     notifyListeners();
     return null;
   }
-
-  bool get canResendOtp =>
-      otpResendAt == null || DateTime.now().isAfter(otpResendAt!);
 
   Future<String?> verifyOtp(String code) async {
     if (db.client == null) return l10n.errBadCode;

@@ -75,7 +75,6 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
 
   Color get onHeader => CafeColors.contrastOn(header);
   Color get onSidebar => CafeColors.contrastOn(sidebar);
-  Color get onBackground => CafeColors.contrastOn(background);
   Color get onButton => CafeColors.contrastOn(button);
 
   /// The button colour as text, an icon or an outline on the white and page surfaces.

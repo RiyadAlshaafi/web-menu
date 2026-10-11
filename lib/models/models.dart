@@ -657,7 +657,6 @@ class ShiftExpense {
   String get shortId =>
       (displayNumber == null || displayNumber!.isEmpty) ? id : displayNumber!;
 
-  bool get isCafeExpense => paidToCafe;
 }
 
 class StaffCall {

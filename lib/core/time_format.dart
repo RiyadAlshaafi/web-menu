@@ -10,8 +10,6 @@ String formatTripoliDate(DateTime instant) => DateFormat('y-MM-dd').format(toTri
 
 String formatTripoliClock(DateTime instant) => DateFormat('HH:mm:ss').format(toTripoli(instant));
 
-String formatTripoliJm(DateTime instant) => DateFormat.jm().format(toTripoli(instant));
-
 /// [from] and [to] are calendar days the user picked. [to] includes that whole Tripoli day.
 bool inTripoliDateRange(DateTime instant, {DateTime? from, DateTime? to}) {
   final paid = toTripoli(instant);

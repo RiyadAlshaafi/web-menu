@@ -157,10 +157,6 @@ extension CafeStorePayments on CafeStore {
     return shift.drawerCash(cashTaken: cashTaken, cashPaidOut: cashPaidOut);
   }
 
-  List<ExpenseCategory> get enabledExpenseCategories =>
-      expenseCategories.where((category) => category.enabled).toList()
-        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
   String expenseCategoryLabel(ShiftExpense expense) {
     final en = expense.categoryNameEn;
     final ar = expense.categoryNameAr;

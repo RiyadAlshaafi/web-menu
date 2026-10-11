@@ -118,12 +118,6 @@ class AppSections {
     return cashier.firstWhere((section) => section.matches(location), orElse: () => cashier.first);
   }
 
-  static int columnsFor(double width, {int max = 3}) {
-    if (width < 720) return 1;
-    if (width < 1100) return 2;
-    return max;
-  }
-
   static bool compact(double width) => width < 960;
 
   /// Sidebar becomes a drawer so the page can use the full width.

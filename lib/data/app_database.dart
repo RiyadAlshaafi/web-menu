@@ -1055,7 +1055,6 @@ class AppDatabase {
   }
 
   Future<void> writeRememberAdmin(bool value) async => _rememberAdmin = value;
-  Future<void> writeAdmin(AdminAccount? admin) async => _admin = admin;
 
   Future<void> writeAutoPrintReceipt(bool value) async {
     _cafe = {..._cafe, 'autoPrintReceipt': value};
@@ -1989,7 +1988,6 @@ class AppDatabase {
     }
   }
 
-  Future<void> writePayments(List<Payment> items) async => _payments = items;
   Future<void> writeShifts(List<CashShift> items) async {
     _shifts = items;
     if (client == null || restaurantId == null) return;
@@ -2128,11 +2126,6 @@ String _errorCode(Object error) =>
 class Secrets {
   static final _random = Random.secure();
 
-  static String salt([int length = 16]) {
-    final bytes = List<int>.generate(length, (_) => _random.nextInt(256));
-    return base64UrlEncode(bytes);
-  }
-
   static String publicId([int length = 12]) {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
     return List.generate(
@@ -2140,9 +2133,6 @@ class Secrets {
       (_) => alphabet[_random.nextInt(alphabet.length)],
     ).join();
   }
-
-  static String otpCode() =>
-      List.generate(6, (_) => _random.nextInt(10)).join();
 
   static String id([String prefix = 'id']) {
     final bytes = List<int>.generate(16, (_) => _random.nextInt(256));

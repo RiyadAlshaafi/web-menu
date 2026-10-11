@@ -315,22 +315,15 @@ class ScrollFriendlyTap extends StatefulWidget {
   final VoidCallback? onTap;
   final Widget child;
 
-  static void claimPointer(BuildContext context) {
-    context.findAncestorStateOfType<_ScrollFriendlyTapState>()?.claim();
-  }
-
   @override
   State<ScrollFriendlyTap> createState() => _ScrollFriendlyTapState();
 }
 
 class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
   var _moved = false;
-  var _claimed = false;
   var _travel = 0.0;
   var _pressed = false;
   Timer? _pressDelay;
-
-  void claim() => _claimed = true;
 
   void _release() {
     _pressDelay?.cancel();
@@ -369,13 +362,9 @@ class _ScrollFriendlyTapState extends State<ScrollFriendlyTap> {
       },
       onPointerUp: (_) {
         _release();
-        if (!_moved && !_claimed) widget.onTap?.call();
-        _claimed = false;
+        if (!_moved) widget.onTap?.call();
       },
-      onPointerCancel: (_) {
-        _release();
-        _claimed = false;
-      },
+      onPointerCancel: (_) => _release(),
       // Press state shows on finger-down; with reduced motion the card stays still.
       child: AnimatedScale(
         scale: _pressed && !MediaQuery.disableAnimationsOf(context) ? 0.98 : 1,

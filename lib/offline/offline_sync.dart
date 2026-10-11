@@ -163,8 +163,6 @@ class OfflineSync {
   List<NumberBlock> _blocks = [];
   Future<void>? _flushRun;
 
-  int get numbersLeft => _blocks.fold(0, (sum, block) => sum + block.remaining);
-
   Future<void> init() async {
     final saved = await store.readValue(_blocksKey);
     if (saved != null) {
