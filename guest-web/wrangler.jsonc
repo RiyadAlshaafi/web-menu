@@ -2,8 +2,13 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tawla-guest",
   "main": ".open-next/worker.js",
-  // Guest table links on the main site. A route beats the tawla-web custom domain on these paths.
-  "routes": [{ "pattern": "tawla.ly/t/*", "zone_name": "tawla.ly" }],
+  // The guest app's paths on the main site. A route beats the tawla-web custom domain, so the
+  // Flutter staff app keeps everything else. /_next and /api/guest are the page's scripts and API.
+  "routes": [
+    { "pattern": "tawla.ly/t/*", "zone_name": "tawla.ly" },
+    { "pattern": "tawla.ly/_next/*", "zone_name": "tawla.ly" },
+    { "pattern": "tawla.ly/api/guest/*", "zone_name": "tawla.ly" }
+  ],
   "compatibility_date": "2026-10-10",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
