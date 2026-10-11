@@ -27,5 +27,5 @@ export function supabaseEnv(): SupabaseEnv {
   const key = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error("Supabase is not configured");
   assertPublicKey(key);
-  return { url: url.replace(/\/+$/, ""), key };
+  return { url: url.replace(/\/+$/, "").replace(/\/rest\/v1$/, ""), key };
 }
