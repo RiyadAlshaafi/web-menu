@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tawla-guest",
   "main": ".open-next/worker.js",
+  // Guest table links on the main site. A route beats the tawla-web custom domain on these paths.
+  "routes": [{ "pattern": "tawla.ly/t/*", "zone_name": "tawla.ly" }],
   "compatibility_date": "2026-10-10",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
