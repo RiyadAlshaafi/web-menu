@@ -22,6 +22,20 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- Guest QR links (#/t/<slug>[/cart|/bill]) go to the guest web app when tool/vercel_build.sh
+       stamps GUEST_WEB_URL here; left as the placeholder or empty, nothing happens. Runs before
+       Flutter downloads, so guests don't load the staff app first. -->
+  <script>
+    (function () {
+      var target = '__GUEST_WEB_URL__';
+      if (!/^https:\/\/[^\s'"<>]+$/.test(target)) return;
+      var m = location.hash.match(/^#\/t\/([A-Za-z0-9-]{1,64})(\/(cart|bill))?\/?(\?.*)?$/);
+      if (!m) return;
+      var page = m[3] === 'bill' ? '/bill' : m[3] === 'cart' ? '/tab' : '';
+      var lang = /[?&]lang=(en|ar)(&|$)/.exec(m[4] || '');
+      location.replace(target.replace(/\/+$/, '') + '/t/' + m[1] + page + (lang ? '?lang=' + lang[1] : ''));
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
