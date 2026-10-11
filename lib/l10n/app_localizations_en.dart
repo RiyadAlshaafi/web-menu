@@ -16,18 +16,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noOrders => 'No active orders.';
 
   @override
-  String get noCalls => 'No assistance calls.';
-
-  @override
-  String get noBills => 'No pending bill requests.';
-
-  @override
-  String get noMenu => 'No menu items available.';
-
-  @override
-  String get noSales => 'No sales recorded yet.';
-
-  @override
   String get noCashiers => 'No cashiers have been created yet.';
 
   @override
@@ -117,16 +105,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesAllMethods => 'All methods';
 
   @override
-  String get salesAllStatuses => 'All statuses';
-
-  @override
   String get salesExportCsv => 'Export CSV';
 
   @override
   String get salesExportPdf => 'Export PDF';
-
-  @override
-  String get salesColId => 'Receipt No.';
 
   @override
   String get salesReceiptNo => 'Receipt No.';
@@ -158,9 +140,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesColDiscount => 'Discount';
 
   @override
-  String get salesColTax => 'Tax';
-
-  @override
   String get salesColTotal => 'Total';
 
   @override
@@ -174,9 +153,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesEmpty => 'No sales match these filters.';
-
-  @override
-  String get salesOwnOnly => 'Showing your sales only.';
 
   @override
   String salesPage(int page, int pages) {
@@ -262,13 +238,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errNoOpenBill => 'This table has no open bill.';
-
-  @override
-  String get guestOrderFirst => 'Place an order first.';
-
-  @override
-  String get guestBillAfterServed =>
-      'You can request the bill after the waiter marks your order served.';
 
   @override
   String get errNoOpenShift => 'No open shift.';
@@ -423,31 +392,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConsoleLabel => 'ADMIN CONSOLE';
 
   @override
-  String get adminManagementHeading => 'MANAGEMENT';
-
-  @override
   String get adminDefaultName => 'Admin';
 
   @override
   String get adminGeneralManager => 'General Manager';
 
   @override
-  String get adminWorkspace => 'Workspace';
-
-  @override
   String get adminCustomerView => 'Customer View';
-
-  @override
-  String get adminFloorOrderingHeading => 'FLOOR & ORDERING';
-
-  @override
-  String get adminTablesQrHub => 'Tables & QR Hub';
-
-  @override
-  String get adminStations => 'Stations';
-
-  @override
-  String get adminSessions => 'Sessions';
 
   @override
   String get adminSearchTableHint => 'Search table or zone...';
@@ -516,12 +467,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutReorderHint => 'Use arrows to reorder';
 
   @override
-  String get layoutClose => 'Close';
-
-  @override
-  String get layoutNewCategory => 'New Category';
-
-  @override
   String get layoutCategoryNameHint =>
       'Enter Category Name (e.g. Bevande & Wines, Desserts)';
 
@@ -540,11 +485,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String layoutItemCount(String count) {
-    return '$count items';
-  }
-
-  @override
   String get layoutCurrentlyInspecting => 'Currently Inspecting';
 
   @override
@@ -553,11 +493,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String layoutDishesInCategory(String category, String count) {
     return 'DISHES IN $category ($count ACTIVE)';
-  }
-
-  @override
-  String layoutDropDishHint(String category) {
-    return 'Drop dish here to reorder or reassign to $category';
   }
 
   @override
@@ -596,12 +531,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get layoutAddDishSubtitle =>
       'Enter dish details to add to digital menu catalog.';
-
-  @override
-  String get layoutDishNameLabel => 'DISH NAME (ITALIAN / ENGLISH) *';
-
-  @override
-  String get layoutDishNameHint => 'e.g., Pappardelle ai Funghi Porcini';
 
   @override
   String get layoutDishNameAr => 'ARABIC NAME *';
@@ -761,10 +690,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogLangRegional => 'Regional';
 
   @override
-  String get catalogApplyLanguageToQr =>
-      'Apply language to customer QR menus automatically';
-
-  @override
   String get catalogSaveLanguage => 'Save Language';
 
   @override
@@ -801,22 +726,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierLanguage => 'Language';
 
   @override
-  String get cashierSoloShiftLive => 'Solo Shift Live';
-
-  @override
-  String get cashierAllInOne => 'ALL-IN-ONE';
-
-  @override
   String get cashierRole => 'Cashier';
 
   @override
   String get cashierSoloCashier => 'Solo Cashier';
-
-  @override
-  String get cashierStationFrontCounter => 'Station 1: Front Counter';
-
-  @override
-  String get cashierAudioOn => 'Audio On';
 
   @override
   String get cashierAssistanceCalls => 'Assistance Calls';
@@ -901,17 +814,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierAcceptOrder => 'Accept Order';
 
   @override
-  String cashierQuickTableStatus(String count) {
-    return 'Quick Table Status ($count)';
-  }
-
-  @override
   String cashierTableShort(String number) {
     return 'T-$number';
   }
-
-  @override
-  String get cashierFree => 'Free';
 
   @override
   String cashierTableNumber(String number) {
@@ -922,14 +827,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String cashierOrderNumber(String id) {
     return 'Order $id';
   }
-
-  @override
-  String cashierActiveBillOutRequest(String number) {
-    return 'Active Bill Out Request  •  Table $number';
-  }
-
-  @override
-  String get cashierItemsToSettle => 'Items to Settle';
 
   @override
   String orderRound(int round) {
@@ -950,31 +847,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cashierCashPayment => 'Cash Payment';
-
-  @override
-  String get cashierTotalDue => 'Total Due';
-
-  @override
-  String get cashierCashReceived => 'Cash Received';
-
-  @override
-  String get cashierChangeDue => 'Change Due';
-
-  @override
-  String get cashierConfirmCash => 'Confirm Cash';
-
-  @override
-  String get cashierOrderItems => 'Order items';
-
-  @override
   String get cashierAmount => 'Amount';
 
   @override
   String get cashierSubtotal => 'Subtotal';
-
-  @override
-  String get cashierIncludesSurcharge => 'Includes service charge';
 
   @override
   String get cashierApplyServiceCharge => 'Apply service charge';
@@ -990,9 +866,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashierPrintReceipt => 'Print Receipt';
-
-  @override
-  String get cashierSplitBill => 'Split Bill';
 
   @override
   String get cashierPrintChit => 'Print Chit';
@@ -1040,14 +913,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierItemRefused => 'Item removed — marked as unavailable';
 
   @override
-  String guestItemRemoved(String name) {
-    return 'Item removed: $name — currently unavailable.';
-  }
-
-  @override
-  String get guestConfirmRequestBill => 'Confirm and request bill';
-
-  @override
   String get cashierWaitingCustomerConfirm =>
       'Waiting for the table to confirm the updated order.';
 
@@ -1057,9 +922,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cashierSettleAnywayMessage =>
       'The customer has not confirmed the updated order. Settle anyway?';
-
-  @override
-  String get cashierNotAvailable => 'Not available';
 
   @override
   String get cashierMarkUnavailable => 'Mark unavailable';
@@ -1076,20 +938,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cashierAvgTicket(String amount) {
     return 'Avg ticket $amount';
-  }
-
-  @override
-  String get cashierCall => 'Call';
-
-  @override
-  String get cashierFloorManagement => 'FLOOR MANAGEMENT';
-
-  @override
-  String get cashierFloorOverviewTitle => 'Floor Overview & Tables';
-
-  @override
-  String cashierTablesCount(String count) {
-    return '$count TABLES';
   }
 
   @override
@@ -1128,21 +976,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierAvailable => 'Available';
 
   @override
-  String get cashierDiningActive => 'Dining active';
-
-  @override
-  String get cashierBillPending => 'Bill pending';
-
-  @override
-  String get cashierSoloStationSync => 'SOLO STATION  •  Live Register Sync';
-
-  @override
-  String get cashierShiftSalesTitle => 'Shift Sales & Register Logs';
-
-  @override
-  String get cashierExportSummary => 'Export Summary (PDF/CSV)';
-
-  @override
   String get cashierTotalShiftGrossSales => 'Total Shift Gross Sales';
 
   @override
@@ -1161,31 +994,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierColAmount => 'Amount';
 
   @override
-  String get cashierTillBalance => 'Till Balance & Drawer #01';
-
-  @override
-  String get cashierActive => 'ACTIVE';
-
-  @override
-  String get cashierOpeningFloat => 'Opening Float';
-
-  @override
-  String get cashierOpeningFloatRow => 'Opening Float:';
-
-  @override
-  String get cashierCashCollected => 'Cash Collected:';
-
-  @override
-  String get cashierCardDigitalPayments => 'Card / Digital Payments:';
-
-  @override
-  String get cashierExpectedInDrawer => 'Expected in Drawer:';
-
-  @override
-  String get cashierToleranceNote =>
-      'Counting discrepancy tolerance is ±2.000 LYD. Please ensure all dining table chits are settled before closing register.';
-
-  @override
   String get cashierActualCashCounted => 'Actual Cash Counted';
 
   @override
@@ -1195,142 +1003,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String cashierDifference(String amount) {
     return 'Difference: $amount';
   }
-
-  @override
-  String get cashierMidShiftChit => 'Mid-Shift Cash Count Chit';
-
-  @override
-  String get guestNavMenu => 'Menu';
-
-  @override
-  String get guestTableBill => 'Table Bill';
-
-  @override
-  String get guestRequestSent => 'Request sent';
-
-  @override
-  String get guestCallStaff => 'Call Staff';
-
-  @override
-  String guestTableNumber(String number) {
-    return 'Table $number';
-  }
-
-  @override
-  String get guestDineInOrder => 'Dine-in Order';
-
-  @override
-  String get guestMenuTitle => 'Mezzogiorno Menu';
-
-  @override
-  String get guestChefsSpecials => 'Chef\'s Specials';
-
-  @override
-  String get guestCategoryAll => 'All';
-
-  @override
-  String get guestSpotlight => 'Spotlight';
-
-  @override
-  String guestItemCount(String count) {
-    return '$count items';
-  }
-
-  @override
-  String guestCartItemCount(String count) {
-    return '$count items • Cart';
-  }
-
-  @override
-  String get guestViewOrder => 'View Order';
-
-  @override
-  String get guestOrderButton => 'Order';
-
-  @override
-  String get guestConfirmOrderTitle => 'Verify Your Order';
-
-  @override
-  String guestItemsInOrder(String count) {
-    return 'Items in order ($count)';
-  }
-
-  @override
-  String get guestConfirmSendKitchen => 'Confirm & Send to Kitchen';
-
-  @override
-  String get guestModifyOrder => 'Modify Order & Back to Menu';
-
-  @override
-  String guestBilledToTable(String table) {
-    return 'Billed to table $table';
-  }
-
-  @override
-  String get guestCloseReview => 'Close review';
-
-  @override
-  String get guestSendingOrder => 'Sending…';
-
-  @override
-  String guestTableDineIn(String number) {
-    return 'Table $number • Dine-in';
-  }
-
-  @override
-  String get guestChefsPick => 'CHEF\'S PICK';
-
-  @override
-  String get guestQuantity => 'QUANTITY';
-
-  @override
-  String get guestPortionServing => 'Portion serving';
-
-  @override
-  String guestAddToOrder(String amount) {
-    return 'Add to Order • $amount';
-  }
-
-  @override
-  String get guestLiveTab => 'Live Tab';
-
-  @override
-  String guestOrderNumber(String id) {
-    return 'Order $id';
-  }
-
-  @override
-  String guestSentToKitchenAt(String time) {
-    return 'Sent to the hearth at $time';
-  }
-
-  @override
-  String get guestKitchenPreparing =>
-      'Kitchen is preparing your order\nEstimated delivery in 10–15 mins';
-
-  @override
-  String get guestNewAdditions => 'New Additions';
-
-  @override
-  String get guestTicketSummary => 'Ticket Summary';
-
-  @override
-  String get guestKitchenTicketTotal => 'Kitchen Ticket Total';
-
-  @override
-  String get guestCallServer => 'Call Server';
-
-  @override
-  String get guestRequestBill => 'Request Bill';
-
-  @override
-  String guestPlaceOrder(String amount) {
-    return 'Place Order • $amount';
-  }
-
-  @override
-  String get guestOrdersSentInstantly =>
-      'Orders are sent instantly to the kitchen';
 
   @override
   String get guestStatusReceived => 'Received';
@@ -1345,43 +1017,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guestStatusServed => 'Served';
 
   @override
-  String get guestFinalTab => 'Final Tab';
-
-  @override
-  String get guestOrderSummary => 'Order Summary';
-
-  @override
-  String guestRefNumber(String id) {
-    return 'Ref #$id';
-  }
-
-  @override
   String get guestPaid => 'PAID';
 
   @override
-  String get guestPaymentSuccessful => 'Payment Successful';
-
-  @override
-  String guestThankYou(String cafe) {
-    return 'Thank you for dining with $cafe!';
-  }
-
-  @override
-  String get guestSubtotal => 'Subtotal';
-
-  @override
-  String guestServiceCharge(String percent) {
-    return 'Service Charge ($percent%)';
-  }
-
-  @override
-  String get guestVatIncluded => 'Hospitality & VAT (Included)';
-
-  @override
   String get guestTotalDue => 'Total Due';
-
-  @override
-  String get guestWannaCheckIn => 'Wanna Check In';
 
   @override
   String get navCashierLog => 'Cashier Log & Shift';
@@ -1409,13 +1048,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payTypeAdd => 'Add type';
 
   @override
-  String get payTypeInUse =>
-      'This type is already used on a sale. Disable it instead of deleting it.';
-
-  @override
-  String get payChoose => 'How will you pay?';
-
-  @override
   String get cashierWaitingServed => 'Waiting for order to be served';
 
   @override
@@ -1428,37 +1060,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guestLoadingTable => 'Loading your table...';
-
-  @override
   String get staffOpening => 'Opening...';
 
   @override
-  String get guestQrInvalid => 'This QR code doesn\'t match a table.';
-
-  @override
-  String get guestQrInvalidHint => 'Ask the cafe for a new code.';
-
-  @override
   String get guestRetry => 'Try again';
-
-  @override
-  String get guestChooseService => 'How are you ordering?';
-
-  @override
-  String get guestChooseLanguage => 'Choose your language';
-
-  @override
-  String get guestDineIn => 'Dine-in';
-
-  @override
-  String get guestDineInHint => 'We\'ll serve this table.';
-
-  @override
-  String get guestTakeout => 'Takeout';
-
-  @override
-  String get guestTakeoutHint => 'You\'ll pick it up. This table stays free.';
 
   @override
   String get serviceTakeout => 'Takeout';
@@ -1476,27 +1081,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payTypeSave => 'Save';
 
   @override
-  String get clearCashierLog => 'Clear cashier log';
-
-  @override
-  String get clearCashierLogConfirm =>
-      'This removes your sales from the cashier log and restarts today\'s ticket numbers so you can test again.';
-
-  @override
-  String get clearShiftSales => 'Clear shift sales & logs';
-
-  @override
-  String get clearShiftSalesConfirm =>
-      'This clears the register log, resets shift totals, and restarts today\'s ticket numbers so you can test again.';
-
-  @override
-  String get clearLogsDone => 'Cleared.';
-
-  @override
   String get salesLoadMore => 'Load more';
-
-  @override
-  String get cafeLocationTitle => 'Cafe location';
 
   @override
   String get cafeLocationRequire =>
@@ -1554,38 +1139,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sale was saved, but the receipt could not be printed.';
 
   @override
-  String get guestLocationTooFar =>
-      'You\'re too far from the cafe to order. You can still browse the menu.';
-
-  @override
-  String get guestLocationDenied =>
-      'Location is needed to place an order. You can still browse the menu.';
-
-  @override
-  String get guestLocationAllow => 'Allow location';
-
-  @override
-  String get guestLocationIosHint =>
-      'On iPhone, turn location back on in the browser\'s site settings.';
-
-  @override
-  String get guestLocationUnavailable =>
-      'We couldn\'t read your location. You can still browse the menu.';
-
-  @override
   String get guestLocationRetry => 'Retry';
 
   @override
-  String get guestLocationChecking => 'Checking your location…';
-
-  @override
   String get cashierAddExpense => 'Add Expense / Cash Out';
-
-  @override
-  String get cashierExpenseFor => 'Paid To / Expense For';
-
-  @override
-  String get cashierExpenseCafe => 'Café';
 
   @override
   String get cashierExpenseAmount => 'Amount';
@@ -1745,15 +1302,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogDeleteCashierConfirm => 'Remove';
 
   @override
-  String guestItemsUnavailable(String items) {
-    return 'Sorry, these dishes are no longer available: $items. Remove them from your order and try again.';
-  }
-
-  @override
-  String get guestQtyTooLarge =>
-      'You can order up to 99 of one dish at a time.';
-
-  @override
   String get guestOrderingPaused =>
       'Ordering is paused right now because the cashier is offline. You can still browse the menu.';
 
@@ -1766,9 +1314,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String offlineUploading(int count) {
     return 'Uploading $count…';
   }
-
-  @override
-  String get offlineNoConnection => 'Offline — sales are saved on this device';
 
   @override
   String offlineNeedsReview(int count) {
@@ -1976,15 +1521,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierTapOrderHint => 'Tap an order to see what they ordered.';
 
   @override
-  String get cashierNewOrderPill => 'New order';
-
-  @override
-  String get cashierAllItemsRefused => 'All items were refused.';
-
-  @override
-  String get guestPayLabel => 'Payment method';
-
-  @override
   String dishActiveCount(int active, int total) {
     return '$active of $total active';
   }
@@ -2070,12 +1606,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonEdit => 'Edit';
-
-  @override
-  String get guestOpenMenu => 'Open the menu';
-
-  @override
-  String get guestPoweredBy => 'Powered by';
 
   @override
   String get payTypeLabel => 'Payment type';

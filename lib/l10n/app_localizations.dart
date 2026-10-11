@@ -110,30 +110,6 @@ abstract class AppLocalizations {
   /// **'No active orders.'**
   String get noOrders;
 
-  /// No description provided for @noCalls.
-  ///
-  /// In en, this message translates to:
-  /// **'No assistance calls.'**
-  String get noCalls;
-
-  /// No description provided for @noBills.
-  ///
-  /// In en, this message translates to:
-  /// **'No pending bill requests.'**
-  String get noBills;
-
-  /// No description provided for @noMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'No menu items available.'**
-  String get noMenu;
-
-  /// No description provided for @noSales.
-  ///
-  /// In en, this message translates to:
-  /// **'No sales recorded yet.'**
-  String get noSales;
-
   /// No description provided for @noCashiers.
   ///
   /// In en, this message translates to:
@@ -308,12 +284,6 @@ abstract class AppLocalizations {
   /// **'All methods'**
   String get salesAllMethods;
 
-  /// No description provided for @salesAllStatuses.
-  ///
-  /// In en, this message translates to:
-  /// **'All statuses'**
-  String get salesAllStatuses;
-
   /// No description provided for @salesExportCsv.
   ///
   /// In en, this message translates to:
@@ -325,12 +295,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export PDF'**
   String get salesExportPdf;
-
-  /// No description provided for @salesColId.
-  ///
-  /// In en, this message translates to:
-  /// **'Receipt No.'**
-  String get salesColId;
 
   /// No description provided for @salesReceiptNo.
   ///
@@ -386,12 +350,6 @@ abstract class AppLocalizations {
   /// **'Discount'**
   String get salesColDiscount;
 
-  /// No description provided for @salesColTax.
-  ///
-  /// In en, this message translates to:
-  /// **'Tax'**
-  String get salesColTax;
-
   /// No description provided for @salesColTotal.
   ///
   /// In en, this message translates to:
@@ -421,12 +379,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sales match these filters.'**
   String get salesEmpty;
-
-  /// No description provided for @salesOwnOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Showing your sales only.'**
-  String get salesOwnOnly;
 
   /// No description provided for @salesPage.
   ///
@@ -583,18 +535,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This table has no open bill.'**
   String get errNoOpenBill;
-
-  /// No description provided for @guestOrderFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Place an order first.'**
-  String get guestOrderFirst;
-
-  /// No description provided for @guestBillAfterServed.
-  ///
-  /// In en, this message translates to:
-  /// **'You can request the bill after the waiter marks your order served.'**
-  String get guestBillAfterServed;
 
   /// No description provided for @errNoOpenShift.
   ///
@@ -878,12 +818,6 @@ abstract class AppLocalizations {
   /// **'ADMIN CONSOLE'**
   String get adminConsoleLabel;
 
-  /// No description provided for @adminManagementHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'MANAGEMENT'**
-  String get adminManagementHeading;
-
   /// No description provided for @adminDefaultName.
   ///
   /// In en, this message translates to:
@@ -896,41 +830,11 @@ abstract class AppLocalizations {
   /// **'General Manager'**
   String get adminGeneralManager;
 
-  /// No description provided for @adminWorkspace.
-  ///
-  /// In en, this message translates to:
-  /// **'Workspace'**
-  String get adminWorkspace;
-
   /// No description provided for @adminCustomerView.
   ///
   /// In en, this message translates to:
   /// **'Customer View'**
   String get adminCustomerView;
-
-  /// No description provided for @adminFloorOrderingHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'FLOOR & ORDERING'**
-  String get adminFloorOrderingHeading;
-
-  /// No description provided for @adminTablesQrHub.
-  ///
-  /// In en, this message translates to:
-  /// **'Tables & QR Hub'**
-  String get adminTablesQrHub;
-
-  /// No description provided for @adminStations.
-  ///
-  /// In en, this message translates to:
-  /// **'Stations'**
-  String get adminStations;
-
-  /// No description provided for @adminSessions.
-  ///
-  /// In en, this message translates to:
-  /// **'Sessions'**
-  String get adminSessions;
 
   /// No description provided for @adminSearchTableHint.
   ///
@@ -1058,18 +962,6 @@ abstract class AppLocalizations {
   /// **'Use arrows to reorder'**
   String get layoutReorderHint;
 
-  /// No description provided for @layoutClose.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get layoutClose;
-
-  /// No description provided for @layoutNewCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'New Category'**
-  String get layoutNewCategory;
-
   /// No description provided for @layoutCategoryNameHint.
   ///
   /// In en, this message translates to:
@@ -1100,12 +992,6 @@ abstract class AppLocalizations {
   /// **'{count} Dishes'**
   String layoutDishCount(String count);
 
-  /// No description provided for @layoutItemCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items'**
-  String layoutItemCount(String count);
-
   /// No description provided for @layoutCurrentlyInspecting.
   ///
   /// In en, this message translates to:
@@ -1123,12 +1009,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DISHES IN {category} ({count} ACTIVE)'**
   String layoutDishesInCategory(String category, String count);
-
-  /// No description provided for @layoutDropDishHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Drop dish here to reorder or reassign to {category}'**
-  String layoutDropDishHint(String category);
 
   /// No description provided for @layoutDeleteCategoryTitle.
   ///
@@ -1195,18 +1075,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter dish details to add to digital menu catalog.'**
   String get layoutAddDishSubtitle;
-
-  /// No description provided for @layoutDishNameLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'DISH NAME (ITALIAN / ENGLISH) *'**
-  String get layoutDishNameLabel;
-
-  /// No description provided for @layoutDishNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g., Pappardelle ai Funghi Porcini'**
-  String get layoutDishNameHint;
 
   /// No description provided for @layoutDishNameAr.
   ///
@@ -1502,12 +1370,6 @@ abstract class AppLocalizations {
   /// **'Regional'**
   String get catalogLangRegional;
 
-  /// No description provided for @catalogApplyLanguageToQr.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply language to customer QR menus automatically'**
-  String get catalogApplyLanguageToQr;
-
   /// No description provided for @catalogSaveLanguage.
   ///
   /// In en, this message translates to:
@@ -1580,18 +1442,6 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get cashierLanguage;
 
-  /// No description provided for @cashierSoloShiftLive.
-  ///
-  /// In en, this message translates to:
-  /// **'Solo Shift Live'**
-  String get cashierSoloShiftLive;
-
-  /// No description provided for @cashierAllInOne.
-  ///
-  /// In en, this message translates to:
-  /// **'ALL-IN-ONE'**
-  String get cashierAllInOne;
-
   /// No description provided for @cashierRole.
   ///
   /// In en, this message translates to:
@@ -1603,18 +1453,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Solo Cashier'**
   String get cashierSoloCashier;
-
-  /// No description provided for @cashierStationFrontCounter.
-  ///
-  /// In en, this message translates to:
-  /// **'Station 1: Front Counter'**
-  String get cashierStationFrontCounter;
-
-  /// No description provided for @cashierAudioOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio On'**
-  String get cashierAudioOn;
 
   /// No description provided for @cashierAssistanceCalls.
   ///
@@ -1748,23 +1586,11 @@ abstract class AppLocalizations {
   /// **'Accept Order'**
   String get cashierAcceptOrder;
 
-  /// No description provided for @cashierQuickTableStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Table Status ({count})'**
-  String cashierQuickTableStatus(String count);
-
   /// No description provided for @cashierTableShort.
   ///
   /// In en, this message translates to:
   /// **'T-{number}'**
   String cashierTableShort(String number);
-
-  /// No description provided for @cashierFree.
-  ///
-  /// In en, this message translates to:
-  /// **'Free'**
-  String get cashierFree;
 
   /// No description provided for @cashierTableNumber.
   ///
@@ -1777,18 +1603,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order {id}'**
   String cashierOrderNumber(String id);
-
-  /// No description provided for @cashierActiveBillOutRequest.
-  ///
-  /// In en, this message translates to:
-  /// **'Active Bill Out Request  •  Table {number}'**
-  String cashierActiveBillOutRequest(String number);
-
-  /// No description provided for @cashierItemsToSettle.
-  ///
-  /// In en, this message translates to:
-  /// **'Items to Settle'**
-  String get cashierItemsToSettle;
 
   /// No description provided for @orderRound.
   ///
@@ -1814,42 +1628,6 @@ abstract class AppLocalizations {
   /// **'Settle & Close Bill ({amount})'**
   String cashierSettleCloseBill(String amount);
 
-  /// No description provided for @cashierCashPayment.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash Payment'**
-  String get cashierCashPayment;
-
-  /// No description provided for @cashierTotalDue.
-  ///
-  /// In en, this message translates to:
-  /// **'Total Due'**
-  String get cashierTotalDue;
-
-  /// No description provided for @cashierCashReceived.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash Received'**
-  String get cashierCashReceived;
-
-  /// No description provided for @cashierChangeDue.
-  ///
-  /// In en, this message translates to:
-  /// **'Change Due'**
-  String get cashierChangeDue;
-
-  /// No description provided for @cashierConfirmCash.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Cash'**
-  String get cashierConfirmCash;
-
-  /// No description provided for @cashierOrderItems.
-  ///
-  /// In en, this message translates to:
-  /// **'Order items'**
-  String get cashierOrderItems;
-
   /// No description provided for @cashierAmount.
   ///
   /// In en, this message translates to:
@@ -1861,12 +1639,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subtotal'**
   String get cashierSubtotal;
-
-  /// No description provided for @cashierIncludesSurcharge.
-  ///
-  /// In en, this message translates to:
-  /// **'Includes service charge'**
-  String get cashierIncludesSurcharge;
 
   /// No description provided for @cashierApplyServiceCharge.
   ///
@@ -1897,12 +1669,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Print Receipt'**
   String get cashierPrintReceipt;
-
-  /// No description provided for @cashierSplitBill.
-  ///
-  /// In en, this message translates to:
-  /// **'Split Bill'**
-  String get cashierSplitBill;
 
   /// No description provided for @cashierPrintChit.
   ///
@@ -1976,18 +1742,6 @@ abstract class AppLocalizations {
   /// **'Item removed — marked as unavailable'**
   String get cashierItemRefused;
 
-  /// No description provided for @guestItemRemoved.
-  ///
-  /// In en, this message translates to:
-  /// **'Item removed: {name} — currently unavailable.'**
-  String guestItemRemoved(String name);
-
-  /// No description provided for @guestConfirmRequestBill.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm and request bill'**
-  String get guestConfirmRequestBill;
-
   /// No description provided for @cashierWaitingCustomerConfirm.
   ///
   /// In en, this message translates to:
@@ -2005,12 +1759,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The customer has not confirmed the updated order. Settle anyway?'**
   String get cashierSettleAnywayMessage;
-
-  /// No description provided for @cashierNotAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Not available'**
-  String get cashierNotAvailable;
 
   /// No description provided for @cashierMarkUnavailable.
   ///
@@ -2041,30 +1789,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg ticket {amount}'**
   String cashierAvgTicket(String amount);
-
-  /// No description provided for @cashierCall.
-  ///
-  /// In en, this message translates to:
-  /// **'Call'**
-  String get cashierCall;
-
-  /// No description provided for @cashierFloorManagement.
-  ///
-  /// In en, this message translates to:
-  /// **'FLOOR MANAGEMENT'**
-  String get cashierFloorManagement;
-
-  /// No description provided for @cashierFloorOverviewTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Floor Overview & Tables'**
-  String get cashierFloorOverviewTitle;
-
-  /// No description provided for @cashierTablesCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} TABLES'**
-  String cashierTablesCount(String count);
 
   /// No description provided for @cashierFloorAll.
   ///
@@ -2120,36 +1844,6 @@ abstract class AppLocalizations {
   /// **'Available'**
   String get cashierAvailable;
 
-  /// No description provided for @cashierDiningActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Dining active'**
-  String get cashierDiningActive;
-
-  /// No description provided for @cashierBillPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Bill pending'**
-  String get cashierBillPending;
-
-  /// No description provided for @cashierSoloStationSync.
-  ///
-  /// In en, this message translates to:
-  /// **'SOLO STATION  •  Live Register Sync'**
-  String get cashierSoloStationSync;
-
-  /// No description provided for @cashierShiftSalesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Shift Sales & Register Logs'**
-  String get cashierShiftSalesTitle;
-
-  /// No description provided for @cashierExportSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Export Summary (PDF/CSV)'**
-  String get cashierExportSummary;
-
   /// No description provided for @cashierTotalShiftGrossSales.
   ///
   /// In en, this message translates to:
@@ -2186,54 +1880,6 @@ abstract class AppLocalizations {
   /// **'Amount'**
   String get cashierColAmount;
 
-  /// No description provided for @cashierTillBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'Till Balance & Drawer #01'**
-  String get cashierTillBalance;
-
-  /// No description provided for @cashierActive.
-  ///
-  /// In en, this message translates to:
-  /// **'ACTIVE'**
-  String get cashierActive;
-
-  /// No description provided for @cashierOpeningFloat.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening Float'**
-  String get cashierOpeningFloat;
-
-  /// No description provided for @cashierOpeningFloatRow.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening Float:'**
-  String get cashierOpeningFloatRow;
-
-  /// No description provided for @cashierCashCollected.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash Collected:'**
-  String get cashierCashCollected;
-
-  /// No description provided for @cashierCardDigitalPayments.
-  ///
-  /// In en, this message translates to:
-  /// **'Card / Digital Payments:'**
-  String get cashierCardDigitalPayments;
-
-  /// No description provided for @cashierExpectedInDrawer.
-  ///
-  /// In en, this message translates to:
-  /// **'Expected in Drawer:'**
-  String get cashierExpectedInDrawer;
-
-  /// No description provided for @cashierToleranceNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Counting discrepancy tolerance is ±2.000 LYD. Please ensure all dining table chits are settled before closing register.'**
-  String get cashierToleranceNote;
-
   /// No description provided for @cashierActualCashCounted.
   ///
   /// In en, this message translates to:
@@ -2251,234 +1897,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Difference: {amount}'**
   String cashierDifference(String amount);
-
-  /// No description provided for @cashierMidShiftChit.
-  ///
-  /// In en, this message translates to:
-  /// **'Mid-Shift Cash Count Chit'**
-  String get cashierMidShiftChit;
-
-  /// No description provided for @guestNavMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Menu'**
-  String get guestNavMenu;
-
-  /// No description provided for @guestTableBill.
-  ///
-  /// In en, this message translates to:
-  /// **'Table Bill'**
-  String get guestTableBill;
-
-  /// No description provided for @guestRequestSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Request sent'**
-  String get guestRequestSent;
-
-  /// No description provided for @guestCallStaff.
-  ///
-  /// In en, this message translates to:
-  /// **'Call Staff'**
-  String get guestCallStaff;
-
-  /// No description provided for @guestTableNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Table {number}'**
-  String guestTableNumber(String number);
-
-  /// No description provided for @guestDineInOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Dine-in Order'**
-  String get guestDineInOrder;
-
-  /// No description provided for @guestMenuTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Mezzogiorno Menu'**
-  String get guestMenuTitle;
-
-  /// No description provided for @guestChefsSpecials.
-  ///
-  /// In en, this message translates to:
-  /// **'Chef\'s Specials'**
-  String get guestChefsSpecials;
-
-  /// No description provided for @guestCategoryAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get guestCategoryAll;
-
-  /// No description provided for @guestSpotlight.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotlight'**
-  String get guestSpotlight;
-
-  /// No description provided for @guestItemCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items'**
-  String guestItemCount(String count);
-
-  /// No description provided for @guestCartItemCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items • Cart'**
-  String guestCartItemCount(String count);
-
-  /// No description provided for @guestViewOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'View Order'**
-  String get guestViewOrder;
-
-  /// No description provided for @guestOrderButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Order'**
-  String get guestOrderButton;
-
-  /// No description provided for @guestConfirmOrderTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify Your Order'**
-  String get guestConfirmOrderTitle;
-
-  /// No description provided for @guestItemsInOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Items in order ({count})'**
-  String guestItemsInOrder(String count);
-
-  /// No description provided for @guestConfirmSendKitchen.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm & Send to Kitchen'**
-  String get guestConfirmSendKitchen;
-
-  /// No description provided for @guestModifyOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Modify Order & Back to Menu'**
-  String get guestModifyOrder;
-
-  /// No description provided for @guestBilledToTable.
-  ///
-  /// In en, this message translates to:
-  /// **'Billed to table {table}'**
-  String guestBilledToTable(String table);
-
-  /// No description provided for @guestCloseReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Close review'**
-  String get guestCloseReview;
-
-  /// No description provided for @guestSendingOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending…'**
-  String get guestSendingOrder;
-
-  /// No description provided for @guestTableDineIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Table {number} • Dine-in'**
-  String guestTableDineIn(String number);
-
-  /// No description provided for @guestChefsPick.
-  ///
-  /// In en, this message translates to:
-  /// **'CHEF\'S PICK'**
-  String get guestChefsPick;
-
-  /// No description provided for @guestQuantity.
-  ///
-  /// In en, this message translates to:
-  /// **'QUANTITY'**
-  String get guestQuantity;
-
-  /// No description provided for @guestPortionServing.
-  ///
-  /// In en, this message translates to:
-  /// **'Portion serving'**
-  String get guestPortionServing;
-
-  /// No description provided for @guestAddToOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to Order • {amount}'**
-  String guestAddToOrder(String amount);
-
-  /// No description provided for @guestLiveTab.
-  ///
-  /// In en, this message translates to:
-  /// **'Live Tab'**
-  String get guestLiveTab;
-
-  /// No description provided for @guestOrderNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Order {id}'**
-  String guestOrderNumber(String id);
-
-  /// No description provided for @guestSentToKitchenAt.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent to the hearth at {time}'**
-  String guestSentToKitchenAt(String time);
-
-  /// No description provided for @guestKitchenPreparing.
-  ///
-  /// In en, this message translates to:
-  /// **'Kitchen is preparing your order\nEstimated delivery in 10–15 mins'**
-  String get guestKitchenPreparing;
-
-  /// No description provided for @guestNewAdditions.
-  ///
-  /// In en, this message translates to:
-  /// **'New Additions'**
-  String get guestNewAdditions;
-
-  /// No description provided for @guestTicketSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Ticket Summary'**
-  String get guestTicketSummary;
-
-  /// No description provided for @guestKitchenTicketTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Kitchen Ticket Total'**
-  String get guestKitchenTicketTotal;
-
-  /// No description provided for @guestCallServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Call Server'**
-  String get guestCallServer;
-
-  /// No description provided for @guestRequestBill.
-  ///
-  /// In en, this message translates to:
-  /// **'Request Bill'**
-  String get guestRequestBill;
-
-  /// No description provided for @guestPlaceOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Place Order • {amount}'**
-  String guestPlaceOrder(String amount);
-
-  /// No description provided for @guestOrdersSentInstantly.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders are sent instantly to the kitchen'**
-  String get guestOrdersSentInstantly;
 
   /// No description provided for @guestStatusReceived.
   ///
@@ -2504,71 +1922,17 @@ abstract class AppLocalizations {
   /// **'Served'**
   String get guestStatusServed;
 
-  /// No description provided for @guestFinalTab.
-  ///
-  /// In en, this message translates to:
-  /// **'Final Tab'**
-  String get guestFinalTab;
-
-  /// No description provided for @guestOrderSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Order Summary'**
-  String get guestOrderSummary;
-
-  /// No description provided for @guestRefNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Ref #{id}'**
-  String guestRefNumber(String id);
-
   /// No description provided for @guestPaid.
   ///
   /// In en, this message translates to:
   /// **'PAID'**
   String get guestPaid;
 
-  /// No description provided for @guestPaymentSuccessful.
-  ///
-  /// In en, this message translates to:
-  /// **'Payment Successful'**
-  String get guestPaymentSuccessful;
-
-  /// No description provided for @guestThankYou.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you for dining with {cafe}!'**
-  String guestThankYou(String cafe);
-
-  /// No description provided for @guestSubtotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Subtotal'**
-  String get guestSubtotal;
-
-  /// No description provided for @guestServiceCharge.
-  ///
-  /// In en, this message translates to:
-  /// **'Service Charge ({percent}%)'**
-  String guestServiceCharge(String percent);
-
-  /// No description provided for @guestVatIncluded.
-  ///
-  /// In en, this message translates to:
-  /// **'Hospitality & VAT (Included)'**
-  String get guestVatIncluded;
-
   /// No description provided for @guestTotalDue.
   ///
   /// In en, this message translates to:
   /// **'Total Due'**
   String get guestTotalDue;
-
-  /// No description provided for @guestWannaCheckIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Wanna Check In'**
-  String get guestWannaCheckIn;
 
   /// No description provided for @navCashierLog.
   ///
@@ -2618,18 +1982,6 @@ abstract class AppLocalizations {
   /// **'Add type'**
   String get payTypeAdd;
 
-  /// No description provided for @payTypeInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'This type is already used on a sale. Disable it instead of deleting it.'**
-  String get payTypeInUse;
-
-  /// No description provided for @payChoose.
-  ///
-  /// In en, this message translates to:
-  /// **'How will you pay?'**
-  String get payChoose;
-
   /// No description provided for @cashierWaitingServed.
   ///
   /// In en, this message translates to:
@@ -2648,71 +2000,17 @@ abstract class AppLocalizations {
   /// **'Payment method changed from {oldName} to {newName} by {name} at {time}'**
   String payChanged(String oldName, String newName, String name, String time);
 
-  /// No description provided for @guestLoadingTable.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading your table...'**
-  String get guestLoadingTable;
-
   /// No description provided for @staffOpening.
   ///
   /// In en, this message translates to:
   /// **'Opening...'**
   String get staffOpening;
 
-  /// No description provided for @guestQrInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'This QR code doesn\'t match a table.'**
-  String get guestQrInvalid;
-
-  /// No description provided for @guestQrInvalidHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Ask the cafe for a new code.'**
-  String get guestQrInvalidHint;
-
   /// No description provided for @guestRetry.
   ///
   /// In en, this message translates to:
   /// **'Try again'**
   String get guestRetry;
-
-  /// No description provided for @guestChooseService.
-  ///
-  /// In en, this message translates to:
-  /// **'How are you ordering?'**
-  String get guestChooseService;
-
-  /// No description provided for @guestChooseLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your language'**
-  String get guestChooseLanguage;
-
-  /// No description provided for @guestDineIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Dine-in'**
-  String get guestDineIn;
-
-  /// No description provided for @guestDineInHint.
-  ///
-  /// In en, this message translates to:
-  /// **'We\'ll serve this table.'**
-  String get guestDineInHint;
-
-  /// No description provided for @guestTakeout.
-  ///
-  /// In en, this message translates to:
-  /// **'Takeout'**
-  String get guestTakeout;
-
-  /// No description provided for @guestTakeoutHint.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ll pick it up. This table stays free.'**
-  String get guestTakeoutHint;
 
   /// No description provided for @serviceTakeout.
   ///
@@ -2738,47 +2036,11 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get payTypeSave;
 
-  /// No description provided for @clearCashierLog.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear cashier log'**
-  String get clearCashierLog;
-
-  /// No description provided for @clearCashierLogConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'This removes your sales from the cashier log and restarts today\'s ticket numbers so you can test again.'**
-  String get clearCashierLogConfirm;
-
-  /// No description provided for @clearShiftSales.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear shift sales & logs'**
-  String get clearShiftSales;
-
-  /// No description provided for @clearShiftSalesConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'This clears the register log, resets shift totals, and restarts today\'s ticket numbers so you can test again.'**
-  String get clearShiftSalesConfirm;
-
-  /// No description provided for @clearLogsDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Cleared.'**
-  String get clearLogsDone;
-
   /// No description provided for @salesLoadMore.
   ///
   /// In en, this message translates to:
   /// **'Load more'**
   String get salesLoadMore;
-
-  /// No description provided for @cafeLocationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Cafe location'**
-  String get cafeLocationTitle;
 
   /// No description provided for @cafeLocationRequire.
   ///
@@ -2876,65 +2138,17 @@ abstract class AppLocalizations {
   /// **'The sale was saved, but the receipt could not be printed.'**
   String get receiptPrintFailed;
 
-  /// No description provided for @guestLocationTooFar.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re too far from the cafe to order. You can still browse the menu.'**
-  String get guestLocationTooFar;
-
-  /// No description provided for @guestLocationDenied.
-  ///
-  /// In en, this message translates to:
-  /// **'Location is needed to place an order. You can still browse the menu.'**
-  String get guestLocationDenied;
-
-  /// No description provided for @guestLocationAllow.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow location'**
-  String get guestLocationAllow;
-
-  /// No description provided for @guestLocationIosHint.
-  ///
-  /// In en, this message translates to:
-  /// **'On iPhone, turn location back on in the browser\'s site settings.'**
-  String get guestLocationIosHint;
-
-  /// No description provided for @guestLocationUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'We couldn\'t read your location. You can still browse the menu.'**
-  String get guestLocationUnavailable;
-
   /// No description provided for @guestLocationRetry.
   ///
   /// In en, this message translates to:
   /// **'Retry'**
   String get guestLocationRetry;
 
-  /// No description provided for @guestLocationChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking your location…'**
-  String get guestLocationChecking;
-
   /// No description provided for @cashierAddExpense.
   ///
   /// In en, this message translates to:
   /// **'Add Expense / Cash Out'**
   String get cashierAddExpense;
-
-  /// No description provided for @cashierExpenseFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Paid To / Expense For'**
-  String get cashierExpenseFor;
-
-  /// No description provided for @cashierExpenseCafe.
-  ///
-  /// In en, this message translates to:
-  /// **'Café'**
-  String get cashierExpenseCafe;
 
   /// No description provided for @cashierExpenseAmount.
   ///
@@ -3224,18 +2438,6 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get catalogDeleteCashierConfirm;
 
-  /// No description provided for @guestItemsUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Sorry, these dishes are no longer available: {items}. Remove them from your order and try again.'**
-  String guestItemsUnavailable(String items);
-
-  /// No description provided for @guestQtyTooLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'You can order up to 99 of one dish at a time.'**
-  String get guestQtyTooLarge;
-
   /// No description provided for @guestOrderingPaused.
   ///
   /// In en, this message translates to:
@@ -3253,12 +2455,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploading {count}…'**
   String offlineUploading(int count);
-
-  /// No description provided for @offlineNoConnection.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline — sales are saved on this device'**
-  String get offlineNoConnection;
 
   /// No description provided for @offlineNeedsReview.
   ///
@@ -3584,24 +2780,6 @@ abstract class AppLocalizations {
   /// **'Tap an order to see what they ordered.'**
   String get cashierTapOrderHint;
 
-  /// No description provided for @cashierNewOrderPill.
-  ///
-  /// In en, this message translates to:
-  /// **'New order'**
-  String get cashierNewOrderPill;
-
-  /// No description provided for @cashierAllItemsRefused.
-  ///
-  /// In en, this message translates to:
-  /// **'All items were refused.'**
-  String get cashierAllItemsRefused;
-
-  /// No description provided for @guestPayLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Payment method'**
-  String get guestPayLabel;
-
   /// No description provided for @dishActiveCount.
   ///
   /// In en, this message translates to:
@@ -3751,18 +2929,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get commonEdit;
-
-  /// No description provided for @guestOpenMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Open the menu'**
-  String get guestOpenMenu;
-
-  /// No description provided for @guestPoweredBy.
-  ///
-  /// In en, this message translates to:
-  /// **'Powered by'**
-  String get guestPoweredBy;
 
   /// No description provided for @payTypeLabel.
   ///

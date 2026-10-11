@@ -16,18 +16,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noOrders => 'لا توجد طلبات نشطة.';
 
   @override
-  String get noCalls => 'لا توجد طلبات مساعدة.';
-
-  @override
-  String get noBills => 'لا توجد طلبات فاتورة.';
-
-  @override
-  String get noMenu => 'لا توجد عناصر في القائمة.';
-
-  @override
-  String get noSales => 'لا توجد مبيعات بعد.';
-
-  @override
   String get noCashiers => 'لم يتم إنشاء صناديق بعد.';
 
   @override
@@ -117,16 +105,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesAllMethods => 'كل طرق الدفع';
 
   @override
-  String get salesAllStatuses => 'كل الحالات';
-
-  @override
   String get salesExportCsv => 'تصدير CSV';
 
   @override
   String get salesExportPdf => 'تصدير PDF';
-
-  @override
-  String get salesColId => 'رقم الإيصال';
 
   @override
   String get salesReceiptNo => 'رقم الإيصال';
@@ -158,9 +140,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesColDiscount => 'الخصم';
 
   @override
-  String get salesColTax => 'الضريبة';
-
-  @override
   String get salesColTotal => 'الإجمالي';
 
   @override
@@ -174,9 +153,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesEmpty => 'لا توجد مبيعات مطابقة.';
-
-  @override
-  String get salesOwnOnly => 'تُعرض مبيعاتك فقط.';
 
   @override
   String salesPage(int page, int pages) {
@@ -262,13 +238,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errNoOpenBill => 'لا توجد فاتورة مفتوحة لهذه الطاولة.';
-
-  @override
-  String get guestOrderFirst => 'اطلب أولاً.';
-
-  @override
-  String get guestBillAfterServed =>
-      'يمكنك طلب الفاتورة بعد أن يعلّم النادل الطلب كمقدَّم.';
 
   @override
   String get errNoOpenShift => 'لا توجد وردية مفتوحة.';
@@ -422,31 +391,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminConsoleLabel => 'لوحة الإدارة';
 
   @override
-  String get adminManagementHeading => 'الإدارة';
-
-  @override
   String get adminDefaultName => 'المدير';
 
   @override
   String get adminGeneralManager => 'المدير العام';
 
   @override
-  String get adminWorkspace => 'مساحة العمل';
-
-  @override
   String get adminCustomerView => 'واجهة العميل';
-
-  @override
-  String get adminFloorOrderingHeading => 'الصالة والطلبات';
-
-  @override
-  String get adminTablesQrHub => 'مركز الطاولات ورموز QR';
-
-  @override
-  String get adminStations => 'المحطات';
-
-  @override
-  String get adminSessions => 'الجلسات';
 
   @override
   String get adminSearchTableHint => 'ابحث عن طاولة أو منطقة...';
@@ -515,12 +466,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get layoutReorderHint => 'استخدم الأسهم لإعادة الترتيب';
 
   @override
-  String get layoutClose => 'إغلاق';
-
-  @override
-  String get layoutNewCategory => 'فئة جديدة';
-
-  @override
   String get layoutCategoryNameHint =>
       'أدخل اسم الفئة (مثل: المشروبات والنبيذ، الحلويات)';
 
@@ -539,11 +484,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String layoutItemCount(String count) {
-    return '$count عناصر';
-  }
-
-  @override
   String get layoutCurrentlyInspecting => 'قيد المعاينة حاليًا';
 
   @override
@@ -552,11 +492,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String layoutDishesInCategory(String category, String count) {
     return 'الأطباق في $category ($count نشطة)';
-  }
-
-  @override
-  String layoutDropDishHint(String category) {
-    return 'أفلت الطبق هنا لإعادة ترتيبه أو نقله إلى $category';
   }
 
   @override
@@ -595,12 +530,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get layoutAddDishSubtitle =>
       'أدخل تفاصيل الطبق لإضافته إلى كتالوج القائمة الرقمية.';
-
-  @override
-  String get layoutDishNameLabel => 'اسم الطبق (بالإيطالية / الإنجليزية) *';
-
-  @override
-  String get layoutDishNameHint => 'مثال: Pappardelle ai Funghi Porcini';
 
   @override
   String get layoutDishNameAr => 'الاسم بالعربية *';
@@ -760,10 +689,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogLangRegional => 'إقليمية';
 
   @override
-  String get catalogApplyLanguageToQr =>
-      'تطبيق اللغة تلقائيًا على قوائم QR للعملاء';
-
-  @override
   String get catalogSaveLanguage => 'حفظ اللغة';
 
   @override
@@ -800,22 +725,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierLanguage => 'اللغة';
 
   @override
-  String get cashierSoloShiftLive => 'وردية فردية مباشرة';
-
-  @override
-  String get cashierAllInOne => 'الكل في واحد';
-
-  @override
   String get cashierRole => 'أمين الصندوق';
 
   @override
   String get cashierSoloCashier => 'أمين صندوق منفرد';
-
-  @override
-  String get cashierStationFrontCounter => 'المحطة 1: الكاونتر الأمامي';
-
-  @override
-  String get cashierAudioOn => 'الصوت مفعّل';
 
   @override
   String get cashierAssistanceCalls => 'طلبات المساعدة';
@@ -900,17 +813,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierAcceptOrder => 'قبول الطلب';
 
   @override
-  String cashierQuickTableStatus(String count) {
-    return 'حالة الطاولات السريعة ($count)';
-  }
-
-  @override
   String cashierTableShort(String number) {
     return 'T-$number';
   }
-
-  @override
-  String get cashierFree => 'متاحة';
 
   @override
   String cashierTableNumber(String number) {
@@ -921,14 +826,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String cashierOrderNumber(String id) {
     return 'الطلب $id';
   }
-
-  @override
-  String cashierActiveBillOutRequest(String number) {
-    return 'طلب فاتورة نشط  •  طاولة $number';
-  }
-
-  @override
-  String get cashierItemsToSettle => 'الأصناف المطلوب تسويتها';
 
   @override
   String orderRound(int round) {
@@ -949,31 +846,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get cashierCashPayment => 'دفع نقدي';
-
-  @override
-  String get cashierTotalDue => 'الإجمالي المستحق';
-
-  @override
-  String get cashierCashReceived => 'المبلغ النقدي المستلم';
-
-  @override
-  String get cashierChangeDue => 'الباقي المستحق';
-
-  @override
-  String get cashierConfirmCash => 'تأكيد الدفع النقدي';
-
-  @override
-  String get cashierOrderItems => 'أصناف الطلب';
-
-  @override
   String get cashierAmount => 'المبلغ';
 
   @override
   String get cashierSubtotal => 'المجموع الفرعي';
-
-  @override
-  String get cashierIncludesSurcharge => 'يشمل رسم الخدمة';
 
   @override
   String get cashierApplyServiceCharge => 'تطبيق رسم الخدمة';
@@ -989,9 +865,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashierPrintReceipt => 'طباعة الإيصال';
-
-  @override
-  String get cashierSplitBill => 'تقسيم الفاتورة';
 
   @override
   String get cashierPrintChit => 'طباعة القسيمة';
@@ -1038,14 +911,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierItemRefused => 'تمت إزالة الصنف وتمييزه كغير متاح';
 
   @override
-  String guestItemRemoved(String name) {
-    return 'تمت إزالة الصنف: $name — غير متاح حالياً.';
-  }
-
-  @override
-  String get guestConfirmRequestBill => 'تأكيد وطلب الفاتورة';
-
-  @override
   String get cashierWaitingCustomerConfirm =>
       'بانتظار تأكيد الطاولة للطلب المحدّث.';
 
@@ -1055,9 +920,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get cashierSettleAnywayMessage =>
       'لم يؤكد الزبون الطلب المحدّث. هل تريد التسوية على أي حال؟';
-
-  @override
-  String get cashierNotAvailable => 'غير متاح';
 
   @override
   String get cashierMarkUnavailable => 'تمييز كغير متاح';
@@ -1074,20 +936,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String cashierAvgTicket(String amount) {
     return 'متوسط التذكرة $amount';
-  }
-
-  @override
-  String get cashierCall => 'نداء';
-
-  @override
-  String get cashierFloorManagement => 'إدارة الصالة';
-
-  @override
-  String get cashierFloorOverviewTitle => 'نظرة عامة على الصالة والطاولات';
-
-  @override
-  String cashierTablesCount(String count) {
-    return '$count طاولات';
   }
 
   @override
@@ -1126,21 +974,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierAvailable => 'متاحة';
 
   @override
-  String get cashierDiningActive => 'جلسة طعام نشطة';
-
-  @override
-  String get cashierBillPending => 'الفاتورة معلّقة';
-
-  @override
-  String get cashierSoloStationSync => 'محطة فردية  •  مزامنة مباشرة للصندوق';
-
-  @override
-  String get cashierShiftSalesTitle => 'مبيعات الوردية وسجلات الصندوق';
-
-  @override
-  String get cashierExportSummary => 'تصدير الملخص (PDF/CSV)';
-
-  @override
   String get cashierTotalShiftGrossSales => 'إجمالي مبيعات الوردية';
 
   @override
@@ -1159,31 +992,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierColAmount => 'المبلغ';
 
   @override
-  String get cashierTillBalance => 'رصيد الصندوق والدرج رقم 01';
-
-  @override
-  String get cashierActive => 'نشط';
-
-  @override
-  String get cashierOpeningFloat => 'الرصيد الافتتاحي';
-
-  @override
-  String get cashierOpeningFloatRow => 'الرصيد الافتتاحي:';
-
-  @override
-  String get cashierCashCollected => 'النقد المحصّل:';
-
-  @override
-  String get cashierCardDigitalPayments => 'مدفوعات البطاقة / الرقمية:';
-
-  @override
-  String get cashierExpectedInDrawer => 'المتوقع في الدرج:';
-
-  @override
-  String get cashierToleranceNote =>
-      'هامش التفاوت المسموح به في العدّ هو ±2.000 د.ل. يرجى التأكد من تسوية جميع فواتير الطاولات قبل إغلاق الصندوق.';
-
-  @override
   String get cashierActualCashCounted => 'النقد الفعلي المعدود';
 
   @override
@@ -1193,141 +1001,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String cashierDifference(String amount) {
     return 'الفرق: $amount';
   }
-
-  @override
-  String get cashierMidShiftChit => 'إيصال عدّ النقد في منتصف الوردية';
-
-  @override
-  String get guestNavMenu => 'القائمة';
-
-  @override
-  String get guestTableBill => 'فاتورة الطاولة';
-
-  @override
-  String get guestRequestSent => 'تم إرسال طلبك';
-
-  @override
-  String get guestCallStaff => 'نداء الموظف';
-
-  @override
-  String guestTableNumber(String number) {
-    return 'طاولة $number';
-  }
-
-  @override
-  String get guestDineInOrder => 'طلب داخل المطعم';
-
-  @override
-  String get guestMenuTitle => 'قائمة الغداء';
-
-  @override
-  String get guestChefsSpecials => 'أطباق الشيف المميزة';
-
-  @override
-  String get guestCategoryAll => 'الكل';
-
-  @override
-  String get guestSpotlight => 'الأبرز';
-
-  @override
-  String guestItemCount(String count) {
-    return '$count أصناف';
-  }
-
-  @override
-  String guestCartItemCount(String count) {
-    return '$count أصناف • السلة';
-  }
-
-  @override
-  String get guestViewOrder => 'عرض الطلب';
-
-  @override
-  String get guestOrderButton => 'اطلب';
-
-  @override
-  String get guestConfirmOrderTitle => 'راجع طلبك';
-
-  @override
-  String guestItemsInOrder(String count) {
-    return 'أصناف الطلب ($count)';
-  }
-
-  @override
-  String get guestConfirmSendKitchen => 'تأكيد وإرسال للمطبخ';
-
-  @override
-  String get guestModifyOrder => 'تعديل الطلب والعودة للقائمة';
-
-  @override
-  String guestBilledToTable(String table) {
-    return 'يُحسب على طاولة $table';
-  }
-
-  @override
-  String get guestCloseReview => 'إغلاق المراجعة';
-
-  @override
-  String get guestSendingOrder => 'جارٍ الإرسال…';
-
-  @override
-  String guestTableDineIn(String number) {
-    return 'طاولة $number • داخل المطعم';
-  }
-
-  @override
-  String get guestChefsPick => 'اختيار الشيف';
-
-  @override
-  String get guestQuantity => 'الكمية';
-
-  @override
-  String get guestPortionServing => 'حصة واحدة';
-
-  @override
-  String guestAddToOrder(String amount) {
-    return 'أضف إلى الطلب • $amount';
-  }
-
-  @override
-  String get guestLiveTab => 'الحساب المفتوح';
-
-  @override
-  String guestOrderNumber(String id) {
-    return 'طلب $id';
-  }
-
-  @override
-  String guestSentToKitchenAt(String time) {
-    return 'أُرسل إلى المطبخ الساعة $time';
-  }
-
-  @override
-  String get guestKitchenPreparing =>
-      'المطبخ يحضّر طلبك الآن\nالوقت المتوقع للتقديم ١٠–١٥ دقيقة';
-
-  @override
-  String get guestNewAdditions => 'إضافات جديدة';
-
-  @override
-  String get guestTicketSummary => 'ملخص الطلب';
-
-  @override
-  String get guestKitchenTicketTotal => 'إجمالي طلب المطبخ';
-
-  @override
-  String get guestCallServer => 'نداء النادل';
-
-  @override
-  String get guestRequestBill => 'طلب الفاتورة';
-
-  @override
-  String guestPlaceOrder(String amount) {
-    return 'تأكيد الطلب • $amount';
-  }
-
-  @override
-  String get guestOrdersSentInstantly => 'تُرسل الطلبات إلى المطبخ فورًا';
 
   @override
   String get guestStatusReceived => 'تم الاستلام';
@@ -1342,43 +1015,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guestStatusServed => 'تم التقديم';
 
   @override
-  String get guestFinalTab => 'الحساب النهائي';
-
-  @override
-  String get guestOrderSummary => 'ملخص الطلب';
-
-  @override
-  String guestRefNumber(String id) {
-    return 'مرجع رقم $id';
-  }
-
-  @override
   String get guestPaid => 'مدفوع';
 
   @override
-  String get guestPaymentSuccessful => 'تم الدفع بنجاح';
-
-  @override
-  String guestThankYou(String cafe) {
-    return 'شكرًا لتناولكم الطعام في $cafe!';
-  }
-
-  @override
-  String get guestSubtotal => 'المجموع الفرعي';
-
-  @override
-  String guestServiceCharge(String percent) {
-    return 'رسوم الخدمة ($percent%)';
-  }
-
-  @override
-  String get guestVatIncluded => 'الضيافة وضريبة القيمة المضافة (مشمولة)';
-
-  @override
   String get guestTotalDue => 'الإجمالي المستحق';
-
-  @override
-  String get guestWannaCheckIn => 'أرغب في طلب الحساب';
 
   @override
   String get navCashierLog => 'سجل الكاشير والوردية';
@@ -1406,13 +1046,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payTypeAdd => 'إضافة طريقة';
 
   @override
-  String get payTypeInUse =>
-      'هذه الطريقة مستخدمة في عملية بيع. أوقفها بدل حذفها.';
-
-  @override
-  String get payChoose => 'كيف ستدفع؟';
-
-  @override
   String get cashierWaitingServed => 'بانتظار تعليم الطلب كمقدَّم';
 
   @override
@@ -1425,37 +1058,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get guestLoadingTable => 'جاري تحميل طاولتك...';
-
-  @override
   String get staffOpening => 'جاري الفتح...';
 
   @override
-  String get guestQrInvalid => 'رمز QR هذا لا يطابق طاولة.';
-
-  @override
-  String get guestQrInvalidHint => 'اطلب من المقهى رمزاً جديداً.';
-
-  @override
   String get guestRetry => 'حاول مرة أخرى';
-
-  @override
-  String get guestChooseService => 'كيف تريد الطلب؟';
-
-  @override
-  String get guestChooseLanguage => 'اختر لغتك';
-
-  @override
-  String get guestDineIn => 'تناول في المكان';
-
-  @override
-  String get guestDineInHint => 'نوصل الطلب إلى هذه الطاولة.';
-
-  @override
-  String get guestTakeout => 'سفري';
-
-  @override
-  String get guestTakeoutHint => 'تستلم الطلب بنفسك. الطاولة تبقى فارغة.';
 
   @override
   String get serviceTakeout => 'سفري';
@@ -1473,27 +1079,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payTypeSave => 'حفظ';
 
   @override
-  String get clearCashierLog => 'مسح سجل الكاشير';
-
-  @override
-  String get clearCashierLogConfirm =>
-      'هذا يحذف مبيعاتك من سجل الكاشير ويعيد أرقام تذاكر اليوم حتى تختبر من جديد.';
-
-  @override
-  String get clearShiftSales => 'مسح مبيعات وسجلات الوردية';
-
-  @override
-  String get clearShiftSalesConfirm =>
-      'هذا يمسح سجل الصندوق ويعيد مجاميع الوردية وأرقام تذاكر اليوم حتى تختبر من جديد.';
-
-  @override
-  String get clearLogsDone => 'تم المسح.';
-
-  @override
   String get salesLoadMore => 'تحميل المزيد';
-
-  @override
-  String get cafeLocationTitle => 'موقع المقهى';
 
   @override
   String get cafeLocationRequire =>
@@ -1548,38 +1134,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get receiptPrintFailed => 'تم حفظ البيع، لكن تعذرت طباعة الإيصال.';
 
   @override
-  String get guestLocationTooFar =>
-      'أنت بعيد عن المقهى ولا يمكن إرسال الطلب. يمكنك تصفح القائمة.';
-
-  @override
-  String get guestLocationDenied =>
-      'الموقع مطلوب لإرسال الطلب. يمكنك تصفح القائمة.';
-
-  @override
-  String get guestLocationAllow => 'السماح بالموقع';
-
-  @override
-  String get guestLocationIosHint =>
-      'على الآيفون، أعد تفعيل الموقع من إعدادات الموقع في المتصفح.';
-
-  @override
-  String get guestLocationUnavailable =>
-      'تعذر قراءة موقعك. يمكنك تصفح القائمة.';
-
-  @override
   String get guestLocationRetry => 'إعادة المحاولة';
 
   @override
-  String get guestLocationChecking => 'جارٍ التحقق من موقعك…';
-
-  @override
   String get cashierAddExpense => 'إضافة مصروف / صرف نقدي';
-
-  @override
-  String get cashierExpenseFor => 'دُفع إلى';
-
-  @override
-  String get cashierExpenseCafe => 'المقهى';
 
   @override
   String get cashierExpenseAmount => 'المبلغ';
@@ -1736,15 +1294,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogDeleteCashierConfirm => 'إزالة';
 
   @override
-  String guestItemsUnavailable(String items) {
-    return 'عذراً، هذه الأطباق لم تعد متوفرة: $items. احذفها من طلبك وحاول مرة أخرى.';
-  }
-
-  @override
-  String get guestQtyTooLarge =>
-      'يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة.';
-
-  @override
   String get guestOrderingPaused =>
       'الطلب متوقف حالياً لأن الكاشير غير متصل. يمكنك تصفح القائمة.';
 
@@ -1757,9 +1306,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String offlineUploading(int count) {
     return 'جارٍ رفع $count…';
   }
-
-  @override
-  String get offlineNoConnection => 'غير متصل — المبيعات تُحفظ على هذا الجهاز';
 
   @override
   String offlineNeedsReview(int count) {
@@ -1966,15 +1512,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierTapOrderHint => 'اضغط على طلب لترى ما طلبه الزبون.';
 
   @override
-  String get cashierNewOrderPill => 'طلب جديد';
-
-  @override
-  String get cashierAllItemsRefused => 'تم رفض كل الأصناف.';
-
-  @override
-  String get guestPayLabel => 'طريقة الدفع';
-
-  @override
   String dishActiveCount(int active, int total) {
     return '$active من $total نشط';
   }
@@ -2059,12 +1596,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commonEdit => 'تعديل';
-
-  @override
-  String get guestOpenMenu => 'افتح القائمة';
-
-  @override
-  String get guestPoweredBy => 'مدعوم من';
 
   @override
   String get payTypeLabel => 'نوع الدفع';

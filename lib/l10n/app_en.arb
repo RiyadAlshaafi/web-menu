@@ -2,10 +2,6 @@
   "@@locale": "en",
   "noTables": "No tables have been created yet.",
   "noOrders": "No active orders.",
-  "noCalls": "No assistance calls.",
-  "noBills": "No pending bill requests.",
-  "noMenu": "No menu items available.",
-  "noSales": "No sales recorded yet.",
   "noCashiers": "No cashiers have been created yet.",
   "noTransactions": "No transactions yet.",
   "insufficientCash": "Insufficient cash.",
@@ -42,10 +38,8 @@
   "salesAllCashiers": "All cashiers",
   "salesAllTables": "All tables",
   "salesAllMethods": "All methods",
-  "salesAllStatuses": "All statuses",
   "salesExportCsv": "Export CSV",
   "salesExportPdf": "Export PDF",
-  "salesColId": "Receipt No.",
   "salesReceiptNo": "Receipt No.",
   "salesOrderNo": "Order #",
   "salesReceiptLine": "Receipt No. {number}",
@@ -62,13 +56,11 @@
   "salesColItems": "Items",
   "salesColSubtotal": "Subtotal",
   "salesColDiscount": "Discount",
-  "salesColTax": "Tax",
   "salesColTotal": "Total",
   "salesColMethod": "Method",
   "salesColStatus": "Status",
   "salesPaid": "Paid",
   "salesEmpty": "No sales match these filters.",
-  "salesOwnOnly": "Showing your sales only.",
   "salesPage": "Page {page} of {pages}",
   "@salesPage": {
     "placeholders": {
@@ -122,8 +114,6 @@
   },
   "errCashierSignInFirst": "Sign in as a cashier first.",
   "errNoOpenBill": "No open bill for this table.",
-  "guestOrderFirst": "Place an order first.",
-  "guestBillAfterServed": "You can request the bill after the waiter marks your order served.",
   "errNoOpenShift": "No open shift.",
   "authGuestCashier": "Guest Cashier",
   "authPosTerminalSubtitle": "Point of Sale\nTerminal",
@@ -189,15 +179,9 @@
     }
   },
   "adminConsoleLabel": "ADMIN CONSOLE",
-  "adminManagementHeading": "MANAGEMENT",
   "adminDefaultName": "Admin",
   "adminGeneralManager": "General Manager",
-  "adminWorkspace": "Workspace",
   "adminCustomerView": "Customer View",
-  "adminFloorOrderingHeading": "FLOOR & ORDERING",
-  "adminTablesQrHub": "Tables & QR Hub",
-  "adminStations": "Stations",
-  "adminSessions": "Sessions",
   "adminSearchTableHint": "Search table or zone...",
   "adminAddTableButton": "+ Add Table",
   "adminRegenerateQr": "Regenerate QR",
@@ -226,22 +210,12 @@
   "layoutSaveMenu": "Save Menu Layout",
   "layoutSequencingHeading": "CATEGORY SEQUENCING & DISHES TREE",
   "layoutReorderHint": "Use arrows to reorder",
-  "layoutClose": "Close",
-  "layoutNewCategory": "New Category",
   "layoutCategoryNameHint": "Enter Category Name (e.g. Bevande & Wines, Desserts)",
   "layoutCreateCategory": "Create Category",
   "layoutSpotlight": "SPOTLIGHT",
   "layoutOneDish": "1 Dish",
   "layoutDishCount": "{count} Dishes",
   "@layoutDishCount": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  "layoutItemCount": "{count} items",
-  "@layoutItemCount": {
     "placeholders": {
       "count": {
         "type": "String"
@@ -257,14 +231,6 @@
         "type": "String"
       },
       "count": {
-        "type": "String"
-      }
-    }
-  },
-  "layoutDropDishHint": "Drop dish here to reorder or reassign to {category}",
-  "@layoutDropDishHint": {
-    "placeholders": {
-      "category": {
         "type": "String"
       }
     }
@@ -287,8 +253,6 @@
   },
   "layoutAddNewDish": "Add New Dish",
   "layoutAddDishSubtitle": "Enter dish details to add to digital menu catalog.",
-  "layoutDishNameLabel": "DISH NAME (ITALIAN / ENGLISH) *",
-  "layoutDishNameHint": "e.g., Pappardelle ai Funghi Porcini",
   "layoutDishNameAr": "ARABIC NAME *",
   "layoutDishNameArHint": "اسم الطبق بالعربية",
   "layoutDishNameEn": "ENGLISH NAME *",
@@ -359,7 +323,6 @@
   "catalogEnglishUs": "English (US)",
   "catalogLangDefault": "Default",
   "catalogLangRegional": "Regional",
-  "catalogApplyLanguageToQr": "Apply language to customer QR menus automatically",
   "catalogSaveLanguage": "Save Language",
   "catalogChangePassword": "Change Password",
   "catalogCurrentPassword": "Current Password",
@@ -372,12 +335,8 @@
   "catalogCashierPinLabel": "4-digit secret passcode",
   "catalogSaveCashier": "Save Cashier",
   "cashierLanguage": "Language",
-  "cashierSoloShiftLive": "Solo Shift Live",
-  "cashierAllInOne": "ALL-IN-ONE",
   "cashierRole": "Cashier",
   "cashierSoloCashier": "Solo Cashier",
-  "cashierStationFrontCounter": "Station 1: Front Counter",
-  "cashierAudioOn": "Audio On",
   "cashierAssistanceCalls": "Assistance Calls",
   "cashierCallsCount": "{count} Calls",
   "@cashierCallsCount": {
@@ -456,14 +415,6 @@
   "cashierAttended": "Attended",
   "cashierNewOrder": "New Order",
   "cashierAcceptOrder": "Accept Order",
-  "cashierQuickTableStatus": "Quick Table Status ({count})",
-  "@cashierQuickTableStatus": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
   "cashierTableShort": "T-{number}",
   "@cashierTableShort": {
     "placeholders": {
@@ -472,7 +423,6 @@
       }
     }
   },
-  "cashierFree": "Free",
   "cashierTableNumber": "Table {number}",
   "@cashierTableNumber": {
     "placeholders": {
@@ -489,15 +439,6 @@
       }
     }
   },
-  "cashierActiveBillOutRequest": "Active Bill Out Request  •  Table {number}",
-  "@cashierActiveBillOutRequest": {
-    "placeholders": {
-      "number": {
-        "type": "String"
-      }
-    }
-  },
-  "cashierItemsToSettle": "Items to Settle",
   "orderRound": "Round {round}",
   "@orderRound": {
     "placeholders": {
@@ -523,21 +464,13 @@
       }
     }
   },
-  "cashierCashPayment": "Cash Payment",
-  "cashierTotalDue": "Total Due",
-  "cashierCashReceived": "Cash Received",
-  "cashierChangeDue": "Change Due",
-  "cashierConfirmCash": "Confirm Cash",
-  "cashierOrderItems": "Order items",
   "cashierAmount": "Amount",
   "cashierSubtotal": "Subtotal",
-  "cashierIncludesSurcharge": "Includes service charge",
   "cashierApplyServiceCharge": "Apply service charge",
   "cashierReadyToServe": "Ready to Serve",
   "cashierMarkServed": "Mark served",
   "cashierWaitingForBill": "Waiting for Bill",
   "cashierPrintReceipt": "Print Receipt",
-  "cashierSplitBill": "Split Bill",
   "cashierPrintChit": "Print Chit",
   "cashierSettled": "Settled",
   "cashierActiveTables": "{active} / {total} Active",
@@ -581,19 +514,9 @@
   "cashierActionUnavailable": "This action is not available on this register.",
   "cashierRefuse": "Refuse",
   "cashierItemRefused": "Item removed — marked as unavailable",
-  "guestItemRemoved": "Item removed: {name} — currently unavailable.",
-  "@guestItemRemoved": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "guestConfirmRequestBill": "Confirm and request bill",
   "cashierWaitingCustomerConfirm": "Waiting for the table to confirm the updated order.",
   "cashierSettleAnyway": "Settle anyway",
   "cashierSettleAnywayMessage": "The customer has not confirmed the updated order. Settle anyway?",
-  "cashierNotAvailable": "Not available",
   "cashierMarkUnavailable": "Mark unavailable",
   "cashierMarkAvailable": "Mark available",
   "cashierColStatus": "Status",
@@ -602,17 +525,6 @@
   "@cashierAvgTicket": {
     "placeholders": {
       "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "cashierCall": "Call",
-  "cashierFloorManagement": "FLOOR MANAGEMENT",
-  "cashierFloorOverviewTitle": "Floor Overview & Tables",
-  "cashierTablesCount": "{count} TABLES",
-  "@cashierTablesCount": {
-    "placeholders": {
-      "count": {
         "type": "String"
       }
     }
@@ -654,25 +566,12 @@
   "cashierStatusStaffCall": "Staff Call",
   "cashierStatusDining": "Dining",
   "cashierAvailable": "Available",
-  "cashierDiningActive": "Dining active",
-  "cashierBillPending": "Bill pending",
-  "cashierSoloStationSync": "SOLO STATION  •  Live Register Sync",
-  "cashierShiftSalesTitle": "Shift Sales & Register Logs",
-  "cashierExportSummary": "Export Summary (PDF/CSV)",
   "cashierTotalShiftGrossSales": "Total Shift Gross Sales",
   "cashierSettledOrders": "Settled Orders",
   "cashierActivePendingBalance": "Active Pending Balance",
   "cashierColOrderTable": "Receipt & Table",
   "cashierColTime": "Time",
   "cashierColAmount": "Amount",
-  "cashierTillBalance": "Till Balance & Drawer #01",
-  "cashierActive": "ACTIVE",
-  "cashierOpeningFloat": "Opening Float",
-  "cashierOpeningFloatRow": "Opening Float:",
-  "cashierCashCollected": "Cash Collected:",
-  "cashierCardDigitalPayments": "Card / Digital Payments:",
-  "cashierExpectedInDrawer": "Expected in Drawer:",
-  "cashierToleranceNote": "Counting discrepancy tolerance is ±2.000 LYD. Please ensure all dining table chits are settled before closing register.",
   "cashierActualCashCounted": "Actual Cash Counted",
   "cashierCloseRegister": "Close Register / End Shift",
   "cashierDifference": "Difference: {amount}",
@@ -683,148 +582,12 @@
       }
     }
   },
-  "cashierMidShiftChit": "Mid-Shift Cash Count Chit",
-  "guestNavMenu": "Menu",
-  "guestTableBill": "Table Bill",
-  "guestRequestSent": "Request sent",
-  "guestCallStaff": "Call Staff",
-  "guestTableNumber": "Table {number}",
-  "@guestTableNumber": {
-    "placeholders": {
-      "number": {
-        "type": "String"
-      }
-    }
-  },
-  "guestDineInOrder": "Dine-in Order",
-  "guestMenuTitle": "Mezzogiorno Menu",
-  "guestChefsSpecials": "Chef's Specials",
-  "guestCategoryAll": "All",
-  "guestSpotlight": "Spotlight",
-  "guestItemCount": "{count} items",
-  "@guestItemCount": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  "guestCartItemCount": "{count} items • Cart",
-  "@guestCartItemCount": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  "guestViewOrder": "View Order",
-  "guestOrderButton": "Order",
-  "guestConfirmOrderTitle": "Verify Your Order",
-  "guestItemsInOrder": "Items in order ({count})",
-  "@guestItemsInOrder": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  "guestConfirmSendKitchen": "Confirm & Send to Kitchen",
-  "guestModifyOrder": "Modify Order & Back to Menu",
-  "guestBilledToTable": "Billed to table {table}",
-  "@guestBilledToTable": {
-    "placeholders": {
-      "table": {
-        "type": "String"
-      }
-    }
-  },
-  "guestCloseReview": "Close review",
-  "guestSendingOrder": "Sending…",
-  "guestTableDineIn": "Table {number} • Dine-in",
-  "@guestTableDineIn": {
-    "placeholders": {
-      "number": {
-        "type": "String"
-      }
-    }
-  },
-  "guestChefsPick": "CHEF'S PICK",
-  "guestQuantity": "QUANTITY",
-  "guestPortionServing": "Portion serving",
-  "guestAddToOrder": "Add to Order • {amount}",
-  "@guestAddToOrder": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "guestLiveTab": "Live Tab",
-  "guestOrderNumber": "Order {id}",
-  "@guestOrderNumber": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
-  "guestSentToKitchenAt": "Sent to the hearth at {time}",
-  "@guestSentToKitchenAt": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "guestKitchenPreparing": "Kitchen is preparing your order\nEstimated delivery in 10–15 mins",
-  "guestNewAdditions": "New Additions",
-  "guestTicketSummary": "Ticket Summary",
-  "guestKitchenTicketTotal": "Kitchen Ticket Total",
-  "guestCallServer": "Call Server",
-  "guestRequestBill": "Request Bill",
-  "guestPlaceOrder": "Place Order • {amount}",
-  "@guestPlaceOrder": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "guestOrdersSentInstantly": "Orders are sent instantly to the kitchen",
   "guestStatusReceived": "Received",
   "guestStatusPreparing": "Preparing",
   "guestStatusReady": "Ready",
   "guestStatusServed": "Served",
-  "guestFinalTab": "Final Tab",
-  "guestOrderSummary": "Order Summary",
-  "guestRefNumber": "Ref #{id}",
-  "@guestRefNumber": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
   "guestPaid": "PAID",
-  "guestPaymentSuccessful": "Payment Successful",
-  "guestThankYou": "Thank you for dining with {cafe}!",
-  "@guestThankYou": {
-    "placeholders": {
-      "cafe": {"type": "String"}
-    }
-  },
-  "guestSubtotal": "Subtotal",
-  "guestServiceCharge": "Service Charge ({percent}%)",
-  "@guestServiceCharge": {
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
-  },
-  "guestVatIncluded": "Hospitality & VAT (Included)",
   "guestTotalDue": "Total Due",
-  "guestWannaCheckIn": "Wanna Check In",
   "navCashierLog": "Cashier Log & Shift",
   "cashierLogScope": "Your transactions. Filter them by shift.",
   "salesAllShifts": "All shifts",
@@ -833,8 +596,6 @@
   "payTypeNameEn": "English name",
   "payTypeNameAr": "Arabic name",
   "payTypeAdd": "Add type",
-  "payTypeInUse": "This type is already used on a sale. Disable it instead of deleting it.",
-  "payChoose": "How will you pay?",
   "cashierWaitingServed": "Waiting for order to be served",
   "cashierSettleAnywayNotServed": "The customer has not confirmed the updated order, and it has not been marked served. Mark it served before settling.",
   "payChanged": "Payment method changed from {oldName} to {newName} by {name} at {time}",
@@ -854,17 +615,8 @@
       }
     }
   },
-  "guestLoadingTable": "Loading your table...",
   "staffOpening": "Opening...",
-  "guestQrInvalid": "This QR code doesn't match a table.",
-  "guestQrInvalidHint": "Ask the cafe for a new code.",
   "guestRetry": "Try again",
-  "guestChooseService": "How are you ordering?",
-  "guestChooseLanguage": "Choose your language",
-  "guestDineIn": "Dine-in",
-  "guestDineInHint": "We'll serve this table.",
-  "guestTakeout": "Takeout",
-  "guestTakeoutHint": "You'll pick it up. This table stays free.",
   "serviceTakeout": "Takeout",
   "payDeleteTitle": "Delete {name}?",
   "@payDeleteTitle": {
@@ -876,13 +628,7 @@
   },
   "payDeleteMessage": "Past sales using this method will keep showing it.",
   "payTypeSave": "Save",
-  "clearCashierLog": "Clear cashier log",
-  "clearCashierLogConfirm": "This removes your sales from the cashier log and restarts today's ticket numbers so you can test again.",
-  "clearShiftSales": "Clear shift sales & logs",
-  "clearShiftSalesConfirm": "This clears the register log, resets shift totals, and restarts today's ticket numbers so you can test again.",
-  "clearLogsDone": "Cleared.",
   "salesLoadMore": "Load more",
-  "cafeLocationTitle": "Cafe location",
   "cafeLocationRequire": "Require guests to be near the cafe to order",
   "cafeLocationUseCurrent": "Use my current location",
   "cafeLocationLatitude": "Latitude",
@@ -899,16 +645,8 @@
   "adminAutoPrintReceiptHint": "Opens the print dialog when a dine-in or takeout sale is settled.",
   "receiptThankYou": "Thank you",
   "receiptPrintFailed": "The sale was saved, but the receipt could not be printed.",
-  "guestLocationTooFar": "You're too far from the cafe to order. You can still browse the menu.",
-  "guestLocationDenied": "Location is needed to place an order. You can still browse the menu.",
-  "guestLocationAllow": "Allow location",
-  "guestLocationIosHint": "On iPhone, turn location back on in the browser's site settings.",
-  "guestLocationUnavailable": "We couldn't read your location. You can still browse the menu.",
   "guestLocationRetry": "Retry",
-  "guestLocationChecking": "Checking your location…",
   "cashierAddExpense": "Add Expense / Cash Out",
-  "cashierExpenseFor": "Paid To / Expense For",
-  "cashierExpenseCafe": "Café",
   "cashierExpenseAmount": "Amount",
   "cashierExpenseDescription": "Description",
   "cashierExpenseAdd": "Add",
@@ -964,15 +702,6 @@
     }
   },
   "catalogDeleteCashierConfirm": "Remove",
-  "guestItemsUnavailable": "Sorry, these dishes are no longer available: {items}. Remove them from your order and try again.",
-  "@guestItemsUnavailable": {
-    "placeholders": {
-      "items": {
-        "type": "String"
-      }
-    }
-  },
-  "guestQtyTooLarge": "You can order up to 99 of one dish at a time.",
   "guestOrderingPaused": "Ordering is paused right now because the cashier is offline. You can still browse the menu.",
   "offlineWaiting": "Offline — {count} waiting to upload",
   "@offlineWaiting": {
@@ -990,7 +719,6 @@
       }
     }
   },
-  "offlineNoConnection": "Offline — sales are saved on this device",
   "offlineNeedsReview": "{count} saved item(s) could not be uploaded",
   "@offlineNeedsReview": {
     "placeholders": {
@@ -1086,9 +814,6 @@
   "@cashierChangedByCashier": {"placeholders": {"name": {"type": "String"}}},
   "cashierChangeMethod": "Change",
   "cashierTapOrderHint": "Tap an order to see what they ordered.",
-  "cashierNewOrderPill": "New order",
-  "cashierAllItemsRefused": "All items were refused.",
-  "guestPayLabel": "Payment method",
   "dishActiveCount": "{active} of {total} active",
   "@dishActiveCount": {"placeholders": {"active": {"type": "int"}, "total": {"type": "int"}}},
   "salesReceiptsTotal": "{count} receipts · {total}",
@@ -1119,8 +844,6 @@
   "catalogLogoPlaceholder": "LOGO",
   "catalogPreviewButton": "Button",
   "commonEdit": "Edit",
-  "guestOpenMenu": "Open the menu",
-  "guestPoweredBy": "Powered by",
   "payTypeLabel": "Payment type",
   "cashierCashOut": "Cash out",
   "brandTagline": "Cafe POS & QR ordering",
