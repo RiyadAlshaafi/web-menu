@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Tawla guest look (lib/screens/customer/guest_parts.dart): cream page, white cards, the cafe's
+   header and button colours from --brand-* (set per cafe on the guest layout). */
+@theme {
+  --color-page: #fdf9f2;
+  --color-ink: #1c1c18;
+  --color-muted: #56606a;
+  --color-ink-muted: #56423c;
+  --color-border: #e3ded5;
+  --color-hairline: #f1ede7;
+  --color-line: #e8e6de;
+  --color-soft-accent: #fff4ef;
+  --color-step-idle: #d8d2c6;
+  --color-peach: #f6ded1;
+  --color-key: #f7f3ed;
+  --color-cream-dark: #f1ede7;
+  --color-terracotta: #ba5333;
+  --color-terracotta-dark: #9a3c1d;
+  --color-success: #4f7a45;
+  --color-brand-header: var(--brand-header, #1b3a4b);
+  --color-on-header: var(--brand-on-header, #ffffff);
+  --color-brand: var(--brand-button, #ba5333);
+  --color-on-brand: var(--brand-on-button, #ffffff);
+  --color-brand-ink: var(--brand-button-ink, #ba5333);
+  --font-sans: var(--font-jakarta), var(--font-naskh), system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+[lang="ar"] body,
+body:lang(ar) {
+  font-family: var(--font-naskh), var(--font-jakarta), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand-ink);
+  outline-offset: 2px;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-in {
+    animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .fade-in {
+    animation: fade-in 200ms ease-out;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
