@@ -6,20 +6,6 @@ extension CafeStorePayments on CafeStore {
     return open.isEmpty ? null : open.first;
   }
 
-  String saleNumber(Payment payment, {required bool perShift}) {
-    if (perShift) {
-      return cashierSaleNumber(
-        yearMonth: payment.yearMonth,
-        shiftOrderNumber: payment.shiftOrderNumber,
-      );
-    }
-    return adminSaleNumber(
-      yearMonth: payment.yearMonth,
-      monthlyOrderNumber: payment.monthlyOrderNumber,
-      monthlyDisplayNumber: payment.monthlyDisplayNumber,
-    );
-  }
-
   Payment? paymentForOrder(String? orderId) {
     if (orderId == null) return null;
     final matches = payments.where((payment) => payment.orderId == orderId).toList()

@@ -496,31 +496,6 @@ extension CafeStoreOffline on CafeStore {
     return null;
   }
 
-  /// Keeps [guestOrderingOpen] current for the guest page: checks now and every 15 seconds.
-  void _watchGuestOrdering(String slug) {
-    if (_guestOrderingSlug == slug && _guestOrderingPoll != null) return;
-    _guestOrderingSlug = slug;
-    _guestOrderingPoll?.cancel();
-    unawaited(refreshGuestOrdering());
-    _guestOrderingPoll = Timer.periodic(const Duration(seconds: 15), (_) => unawaited(refreshGuestOrdering()));
-  }
-
-  /// Asks the server whether a cashier is online to take this table's orders.
-  Future<void> refreshGuestOrdering() async {
-    final slug = _guestOrderingSlug;
-    if (slug == null || db.client == null) return;
-    try {
-      final open = await db.callRpc('guest_ordering_open', {'p_qr_slug': slug}) == true;
-      if (open != guestOrderingOpen) {
-        guestOrderingOpen = open;
-        notifyListeners();
-      }
-    } catch (error, stackTrace) {
-      // Can't reach the server: leave the current state; sending will report the problem.
-      reportError('guest ordering check', error, stackTrace);
-    }
-  }
-
   /// The server refused a guest action because no cashier is online.
   void guestOrderingClosed() {
     if (!guestOrderingOpen) return;

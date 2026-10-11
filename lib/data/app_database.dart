@@ -74,7 +74,6 @@ class AppDatabase {
   bool salesHasMore = false;
   String? restaurantId;
   String? cashierToken;
-  String? guestSlug;
   bool anyAdmin = false;
 
   /// Web builds for one existing cafe set this (`--dart-define=DEFAULT_SLOT=1`)
@@ -255,7 +254,6 @@ class AppDatabase {
   void _clear() {
     restaurantId = null;
     cashierToken = null;
-    guestSlug = null;
     anyAdmin = false;
     adminFromOtherCafe = false;
     _cafe = {'name': '', 'serviceChargeRate': 0.0, 'taxRate': 0, 'autoPrintReceipt': true};
@@ -287,7 +285,6 @@ class AppDatabase {
     _pingChannel = null;
     _listening = false;
     _listenRestaurantId = null;
-    _listenGuestSlug = null;
     _realtimeLive = false;
     _realtimeSeenDrop = false;
     if (channel != null) {
@@ -331,12 +328,10 @@ class AppDatabase {
     'expense_categories',
   ];
 
-  /// The cafe (and guest table) the open realtime channels are for.
+  /// The cafe the open realtime channels are for.
   String? _listenRestaurantId;
-  String? _listenGuestSlug;
 
-  /// Subscribes to this cafe's changes only. Without a cafe yet (a guest's
-  /// first load) nothing is subscribed; [_relistenIfCafeChanged] opens the
+  /// Subscribes to this cafe's changes only. Without a cafe yet nothing is subscribed; [_relistenIfCafeChanged] opens the
   /// channel once the cafe is known.
   void _listen() {
     if (_listening || client == null) return;
@@ -345,7 +340,6 @@ class AppDatabase {
     try {
       _listening = true;
       _listenRestaurantId = rid;
-      _listenGuestSlug = guestSlug;
       void scheduleLive() {
         _liveRefresh?.cancel();
         _liveRefresh = Timer(const Duration(milliseconds: 300), _emitLive);
@@ -393,7 +387,7 @@ class AppDatabase {
       });
       var pingDropped = false;
       _pingChannel = client!
-          .channel(liveTopic(restaurantId: rid, guestSlug: guestSlug))
+          .channel(liveTopic(restaurantId: rid))
           .onBroadcast(event: 'change', callback: (_) => scheduleLive())
           .subscribe((status, _) {
             if (status == RealtimeSubscribeStatus.subscribed) {
@@ -411,17 +405,15 @@ class AppDatabase {
       _syncChannel = null;
       _pingChannel = null;
       _listenRestaurantId = null;
-      _listenGuestSlug = null;
-      reportError('realtime setup', error, stack);
+        reportError('realtime setup', error, stack);
     }
   }
 
-  /// Reopens the channel when the device's cafe changed (sign-in, relink,
-  /// a guest's first load), so it never listens to the wrong cafe.
+  /// Reopens the channel when the device's cafe changed (sign-in, relink), so it never listens to the wrong cafe.
   void _relistenIfCafeChanged() {
     if (onLiveChange == null && !_listening) return;
     final rid = restaurantId ?? boundRestaurantId;
-    if (rid == _listenRestaurantId && guestSlug == _listenGuestSlug) return;
+    if (rid == _listenRestaurantId) return;
     stopRealtime();
     _listen();
   }
@@ -434,15 +426,8 @@ class AppDatabase {
       ..remove('x-cashier-token')
       ..remove('x-dev-slot');
     if (devSlot != null) headers['x-dev-slot'] = '$devSlot';
-    if (guestSlug != null) headers['x-qr-slug'] = guestSlug!;
     if (cashierToken != null) headers['x-cashier-token'] = cashierToken!;
     current.headers = headers;
-  }
-
-  Future<void> setGuestSlug(String? slug) async {
-    guestSlug = slug == null || slug.isEmpty ? null : slug;
-    _applyHeaders();
-    await refreshFromDisk();
   }
 
   Future<void>? _refreshInFlight;
@@ -642,16 +627,12 @@ class AppDatabase {
       _admin = null;
       _rememberAdmin = false;
     }
-    final guest =
-        guestSlug != null &&
-        cashierToken == null &&
-        client!.auth.currentUser == null;
     restaurantId ??= boundRestaurantId;
     if (restaurantId == null && boundSlot == null && tableList.isNotEmpty) {
       // Only an unlinked device falls back to whatever table is visible.
       restaurantId = tableList.first['restaurant_id'] as String?;
     }
-    if (restaurantId == null && guestSlug == null) {
+    if (restaurantId == null) {
       _tables = [];
       _categories = [];
       _menuItems = [];
@@ -682,25 +663,8 @@ class AppDatabase {
           ),
         )
         .toList();
-    final guestTableId = guest
-        ? _tables
-              .where((table) => table.qrSlug == guestSlug)
-              .map((table) => table.id)
-              .firstOrNull
-        : null;
-    final staffed = !guest && (client!.auth.currentUser != null || cashierToken != null);
+    final staffed = client!.auth.currentUser != null || cashierToken != null;
     final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
-    Future<List<dynamic>> loadCarts() async {
-      if (!guest) {
-        // Only carts that hold something; empty carts outnumber them and
-        // change nothing on staff screens.
-        return await client!.from('carts').select('*, cart_lines!inner(*)') as List;
-      }
-      final query = client!.from('carts').select('*, cart_lines(*)');
-      if (guestTableId == null) return const [];
-      return await query.eq('table_id', guestTableId) as List;
-    }
-
     final batch = await Future.wait<dynamic>([
       _loadRestaurant(),
       liveOnly ? Future<dynamic>.value(null) : client!.from('menu_categories').select(),
@@ -709,13 +673,12 @@ class AppDatabase {
               'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied',
             )
           : client!.from('menu_items').select(),
-      loadCarts(),
-      guest ? Future<dynamic>.value(null) : _selectCalls(),
-      // Guests need the list too: they pick how they will pay on their bill.
+      // Only carts that hold something; empty carts outnumber them and
+      // change nothing on staff screens.
+      client!.from('carts').select('*, cart_lines!inner(*)'),
+      _selectCalls(),
       _selectOrEmpty(client!.from('payment_types').select().order('sort_order', ascending: true), 'payment types'),
-      guest
-          ? Future<dynamic>.value(null)
-          : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
+      _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
       staffed
           ? client!
                 .from('shift_expenses')
@@ -723,12 +686,10 @@ class AppDatabase {
                 .gte('created_at', historyFrom.toUtc().toIso8601String())
                 .order('created_at')
           : Future<dynamic>.value(null),
-      guest
-          ? (guestTableId == null ? Future<dynamic>.value(<CafeOrder>[]) : _loadOpenOrdersForTable(guestTableId))
-          : _loadOrders(historyFrom, const {}),
+      _loadOrders(historyFrom, const {}),
       staffed ? _selectShifts(historyFrom) : Future<dynamic>.value(null),
       // An unlinked device has no cafe to list cashiers for.
-      (!liveOnly && !guest && restaurantId != null)
+      (!liveOnly && restaurantId != null)
           ? client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId})
           : Future<dynamic>.value(null),
       staffed ? _selectPayments(historyFrom, _salesTo, _salesLimit) : Future<dynamic>.value(null),
@@ -798,91 +759,81 @@ class AppDatabase {
               .toList(),
         ),
     };
-    if (guest) {
-      _paymentTypes = _mapPaymentTypes(batch[5] as List?);
-      _calls = [];
-      _orders = (batch[8] as List).cast<CafeOrder>();
+    final callRows = batch[4] as List;
+    _calls = callRows.map((row) {
+      final table = _tables.where((item) => item.id == row['table_id']);
+      return StaffCall(
+        id: row['id'] as String,
+        tableId: row['table_id'] as String,
+        tableNumber: table.isEmpty ? '' : table.first.number,
+        createdAt: DateTime.parse(row['created_at'] as String),
+        kind: row['kind'] as String? ?? 'assistance',
+        resolved: row['resolved'] as bool? ?? false,
+      );
+    }).toList();
+    _paymentTypes = _mapPaymentTypes(batch[5] as List?);
+    final expenseCategoryRows = batch[6] as List?;
+    _expenseCategories = expenseCategoryRows == null
+        ? []
+        : expenseCategoryRows
+              .map(
+                (row) => ExpenseCategory(
+                  id: row['id'] as String,
+                  nameEn: row['name_en'] as String? ?? '',
+                  nameAr: row['name_ar'] as String? ?? '',
+                  enabled: row['enabled'] as bool? ?? true,
+                  sortOrder: row['sort_order'] as int? ?? 0,
+                ),
+              )
+              .toList();
+    _orders = (batch[8] as List).cast<CafeOrder>();
+    if (staffed) {
+      final expenseRows = batch[7] as List;
+      _expenses = expenseRows
+          .map((row) => _mapExpense(Map<String, dynamic>.from(row as Map)))
+          .toList();
+      final paymentRows = batch[11] as List;
+      if (epoch != _epoch) return false;
+      salesHasMore = paymentRows.length >= _salesLimit;
+      final paymentIds = [for (final row in paymentRows) row['id'] as String];
+      final changes = await _changesFor(paymentIds);
+      _payments = [
+        for (final row in paymentRows)
+          _mapPayment(Map<String, dynamic>.from(row as Map), changes),
+      ];
+      final missingOrders = _payments
+          .map((payment) => payment.orderId)
+          .where((id) => _orders.every((order) => order.id != id))
+          .toSet();
+      if (missingOrders.isNotEmpty) {
+        final extra = await _ordersById(missingOrders);
+        _orders = [..._orders, ...extra];
+      }
+      final shiftRows = batch[9] as List;
+      _shifts = shiftRows
+          .map(
+            (row) => CashShift(
+              id: row['id'] as String,
+              cashierId: row['cashier_id'] as String? ?? '',
+              openedAt: DateTime.parse(row['opened_at'] as String),
+              closedAt: row['closed_at'] == null
+                  ? null
+                  : DateTime.parse(row['closed_at'] as String),
+              openingCash: (row['opening_cash'] as num?)?.toDouble() ?? 0,
+              cashSales: (row['cash_sales'] as num?)?.toDouble() ?? 0,
+              cashRefunds: (row['cash_refunds'] as num?)?.toDouble() ?? 0,
+              cashAdjustments:
+                  (row['cash_adjustments'] as num?)?.toDouble() ?? 0,
+              actualCash: (row['actual_cash'] as num?)?.toDouble(),
+              transactionCount: row['transaction_count'] as int? ?? 0,
+            ),
+          )
+          .toList();
+    } else {
       _payments = [];
       _shifts = [];
       _expenses = [];
       salesHasMore = false;
-    } else {
-      final callRows = batch[4] as List;
-      _calls = callRows.map((row) {
-        final table = _tables.where((item) => item.id == row['table_id']);
-        return StaffCall(
-          id: row['id'] as String,
-          tableId: row['table_id'] as String,
-          tableNumber: table.isEmpty ? '' : table.first.number,
-          createdAt: DateTime.parse(row['created_at'] as String),
-          kind: row['kind'] as String? ?? 'assistance',
-          resolved: row['resolved'] as bool? ?? false,
-        );
-      }).toList();
-      _paymentTypes = _mapPaymentTypes(batch[5] as List?);
-      final expenseCategoryRows = batch[6] as List?;
-      _expenseCategories = expenseCategoryRows == null
-          ? []
-          : expenseCategoryRows
-                .map(
-                  (row) => ExpenseCategory(
-                    id: row['id'] as String,
-                    nameEn: row['name_en'] as String? ?? '',
-                    nameAr: row['name_ar'] as String? ?? '',
-                    enabled: row['enabled'] as bool? ?? true,
-                    sortOrder: row['sort_order'] as int? ?? 0,
-                  ),
-                )
-                .toList();
-      _orders = (batch[8] as List).cast<CafeOrder>();
-      if (staffed) {
-        final expenseRows = batch[7] as List;
-        _expenses = expenseRows
-            .map((row) => _mapExpense(Map<String, dynamic>.from(row as Map)))
-            .toList();
-        final paymentRows = batch[11] as List;
-        if (epoch != _epoch) return false;
-        salesHasMore = paymentRows.length >= _salesLimit;
-        final paymentIds = [for (final row in paymentRows) row['id'] as String];
-        final changes = await _changesFor(paymentIds);
-        _payments = [
-          for (final row in paymentRows)
-            _mapPayment(Map<String, dynamic>.from(row as Map), changes),
-        ];
-        final missingOrders = _payments
-            .map((payment) => payment.orderId)
-            .where((id) => _orders.every((order) => order.id != id))
-            .toSet();
-        if (missingOrders.isNotEmpty) {
-          final extra = await _ordersById(missingOrders);
-          _orders = [..._orders, ...extra];
-        }
-        final shiftRows = batch[9] as List;
-        _shifts = shiftRows
-            .map(
-              (row) => CashShift(
-                id: row['id'] as String,
-                cashierId: row['cashier_id'] as String? ?? '',
-                openedAt: DateTime.parse(row['opened_at'] as String),
-                closedAt: row['closed_at'] == null
-                    ? null
-                    : DateTime.parse(row['closed_at'] as String),
-                openingCash: (row['opening_cash'] as num?)?.toDouble() ?? 0,
-                cashSales: (row['cash_sales'] as num?)?.toDouble() ?? 0,
-                cashRefunds: (row['cash_refunds'] as num?)?.toDouble() ?? 0,
-                cashAdjustments:
-                    (row['cash_adjustments'] as num?)?.toDouble() ?? 0,
-                actualCash: (row['actual_cash'] as num?)?.toDouble(),
-                transactionCount: row['transaction_count'] as int? ?? 0,
-              ),
-            )
-            .toList();
-      } else {
-        _payments = [];
-        _shifts = [];
-        _expenses = [];
-        salesHasMore = false;
-      }
     }
     _rememberWritten();
     _relistenIfCafeChanged();
@@ -1026,18 +977,6 @@ class AppDatabase {
       monthlyDisplayNumber: row['monthly_display_number'] as String?,
       changes: history,
     );
-  }
-
-  Future<List<CafeOrder>> _loadOpenOrdersForTable(String tableId) async {
-    final rows = await client!
-        .from('orders')
-        .select('*, order_lines(*)')
-        .eq('table_id', tableId)
-        .neq('status', 'paid');
-    return [
-      for (final row in rows as List)
-        _mapOrder(Map<String, dynamic>.from(row as Map)),
-    ];
   }
 
   Future<List<CafeOrder>> _loadOrders(
@@ -1711,7 +1650,7 @@ class AppDatabase {
     _applyHeaders();
     final cart = _carts[tableId];
     final params = <String, dynamic>{
-      'p_qr_slug': qrSlug ?? guestSlug,
+      'p_qr_slug': qrSlug,
       'p_lines': [
         for (final line in cart?.lines ?? const <OrderLine>[])
           if (line.menuItemId.isNotEmpty && line.qty > 0)
@@ -2121,16 +2060,6 @@ class AppDatabase {
       match.first.refusalNotice = notice.isEmpty
           ? itemName
           : '$notice $itemName';
-    }
-  }
-
-  Future<void> confirmOrderRefusal(String orderId) async {
-    if (client == null) return;
-    await client!.rpc('confirm_order_refusal', params: {'p_order_id': orderId});
-    final match = _orders.where((order) => order.id == orderId);
-    if (match.isNotEmpty) {
-      match.first.awaitingCustomerConfirmation = false;
-      match.first.refusalNotice = '';
     }
   }
 

@@ -1,19 +1,8 @@
 part of 'cafe_store.dart';
 
 extension CafeStoreOrders on CafeStore {
-  CafeTable? tableBySlug(String slug) {
-    final matches = tables.where((table) => !table.archived && (table.qrSlug == slug || table.id == slug));
-    return matches.isEmpty ? null : matches.first;
-  }
 
   CafeTable tableById(String id) => tables.firstWhere((table) => table.id == id);
-
-  /// A line's dish name in the guest's language. Lines keep the name they were
-  /// added with (the cafe's language), so look the dish up again.
-  String guestLineName(OrderLine line) {
-    final match = menuItems.where((item) => item.id == line.menuItemId);
-    return match.isEmpty ? line.name : match.first.displayName(guestLocale);
-  }
 
   /// Tables that are still in use (not archived).
   List<CafeTable> get activeTables => tables.where((table) => !table.archived).toList();
@@ -48,22 +37,7 @@ extension CafeStoreOrders on CafeStore {
     }).toList();
   }
 
-  String? serviceChoiceFor(String slug) => _serviceBySlug[slug];
-
-  void chooseService(String slug, String type) {
-    _serviceBySlug[slug] = type == 'takeout' ? 'takeout' : 'dine_in';
-    notifyListeners();
-  }
-
-  String serviceForTable(String tableId) {
-    final order = openOrderFor(tableId);
-    if (order != null) return order.serviceType;
-    final table = tables.where((item) => item.id == tableId);
-    if (table.isEmpty) return 'dine_in';
-    return _serviceBySlug[table.first.qrSlug] ?? _serviceBySlug[table.first.id] ?? 'dine_in';
-  }
-
-  bool orderIsTakeout(CafeOrder order) => order.serviceType == 'takeout';
+  String serviceForTable(String tableId) => openOrderFor(tableId)?.serviceType ?? 'dine_in';
 
   bool paymentIsTakeout(Payment payment) {
     final match = orders.where((order) => order.id == payment.orderId);
@@ -83,9 +57,6 @@ extension CafeStoreOrders on CafeStore {
   double tabTotal(String tableId, {bool applyService = true}) {
     return chargeTotal(tabSubtotal(tableId), applyService: applyService);
   }
-
-  int tabItemCount(String tableId) =>
-      (openOrderFor(tableId)?.itemCount ?? 0) + cartFor(tableId).itemCount;
 
   /// Most of one dish a single send may carry; the server refuses more.
   static const maxDishQty = 99;

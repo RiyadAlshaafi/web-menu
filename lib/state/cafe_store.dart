@@ -42,12 +42,8 @@ class CafeStore extends ChangeNotifier {
   final AppDatabase db;
   CafeMoney get currency => CafeMoney(locale);
 
-  /// Prices on guest screens follow the language the guest picked.
-  CafeMoney get guestCurrency => CafeMoney(guestLocale);
-
   late Map<String, dynamic> cafe;
   String locale = 'en';
-  String? guestLocaleOverride;
   AdminAccount? admin;
   List<Cashier> cashiers = [];
   List<CafeTable> tables = [];
@@ -111,8 +107,6 @@ class CafeStore extends ChangeNotifier {
 
   /// False while no cashier device is online; guests can then only browse the menu.
   bool guestOrderingOpen = true;
-  Timer? _guestOrderingPoll;
-  String? _guestOrderingSlug;
 
   /// Self-update of the Windows app (cafe_store_update.dart).
   UpdatePlatform updatePlatform = UpdatePlatform.create();
@@ -213,7 +207,6 @@ class CafeStore extends ChangeNotifier {
     _lifecycle?.dispose();
     stopLiveSync();
     _cashierPulse?.cancel();
-    _guestOrderingPoll?.cancel();
     _reconnectProbe?.cancel();
     _updateTimer?.cancel();
     super.dispose();
@@ -239,7 +232,6 @@ class CafeStore extends ChangeNotifier {
   );
 
   int _pendingWrites = 0;
-  final Map<String, String> _serviceBySlug = {};
   final Set<String> _sendingTables = {};
   final Set<String> _confirmingOrders = {};
 
@@ -489,19 +481,7 @@ class CafeStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  String get guestLocale => guestLocaleOverride ?? locale;
-
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
-
-  AppLocalizations get guestL10n => lookupAppLocalizations(Locale(guestLocale));
-
-  /// The guest's language is asked on every scan (each fresh page load) and kept
-  /// only for that visit, so nothing is saved on the phone.
-  Future<void> setGuestLocale(String value) async {
-    if (value != 'en' && value != 'ar') return;
-    guestLocaleOverride = value;
-    notifyListeners();
-  }
 
   /// Whether this install is linked to one of the cafe slots.
   bool get deviceLinked => db.boundSlot != null;
@@ -779,17 +759,6 @@ class CafeStore extends ChangeNotifier {
     );
     shifts.insert(0, currentShift!);
     await db.writeShifts(shifts);
-  }
-
-  Future<void> ensureGuest(String slug) async {
-    _watchGuestOrdering(slug);
-    if (db.guestSlug == slug && tables.any((table) => !table.archived && table.qrSlug == slug)) {
-      return;
-    }
-    await db.setGuestSlug(slug);
-    _hydrateOperational();
-    startLiveSync();
-    notifyListeners();
   }
 
   Future<void> _dropForeignAdmin() async {
