@@ -35,7 +35,7 @@ export interface Limiter {
 }
 
 // Sliding window kept in this process. Used when Upstash isn't configured (local dev, tests);
-// on Vercel every instance would have its own window, which is why production needs Upstash.
+// on Cloudflare every instance would have its own window, which is why production needs Upstash.
 export class MemoryLimiter implements Limiter {
   private hits = new Map<string, number[]>();
 

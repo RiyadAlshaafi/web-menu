@@ -52,6 +52,10 @@ describe("client ip", () => {
     expect(clientIp(new Request("http://x", { headers: { "x-forwarded-for": " 1.2.3.4 , 5.6.7.8" } }))).toBe("1.2.3.4");
     expect(clientIp(new Request("http://x", { headers: { "x-real-ip": "9.9.9.9" } }))).toBe("9.9.9.9");
     expect(clientIp(new Request("http://x"))).toBe("unknown");
+    // Cloudflare's own header wins over a forged x-forwarded-for.
+    expect(
+      clientIp(new Request("http://x", { headers: { "cf-connecting-ip": "7.7.7.7", "x-forwarded-for": "6.6.6.6" } })),
+    ).toBe("7.7.7.7");
   });
 });
 

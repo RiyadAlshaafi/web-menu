@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { cache } from "react";
+import { ipFromHeaders } from "./client-ip";
 import { guest } from "./guest";
 import { limiter, LIMITS } from "./ratelimit";
 import { slug as slugSchema } from "./schemas";
@@ -14,8 +15,7 @@ export const loadTable = cache(async (rawSlug: string): Promise<TableLoad> => {
   const parsed = slugSchema.safeParse(rawSlug);
   if (!parsed.success) return { kind: "not_found" };
   const slug = parsed.data;
-  const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  const ip = ipFromHeaders(await headers());
   try {
     const rl = limiter();
     if (!(await rl.limit(`page:ip:${ip}`, LIMITS.menu.ip)).success) return { kind: "rate_limited" };

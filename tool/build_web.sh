@@ -30,7 +30,7 @@ flutter build web --release --wasm \
 
 # Stamp the menu cache (web/sw.js): a new build replaces the kept app files; the engine files are
 # kept until Flutter itself changes.
-BUILD_ID="${GITHUB_SHA:-${VERCEL_GIT_COMMIT_SHA:-$(date +%s)}}"
+BUILD_ID="${GITHUB_SHA:-$(date +%s)}"
 ENGINE_ID="$(grep -o '"engineRevision":"[^"]*"' build/web/flutter_bootstrap.js | cut -d'"' -f4 || true)"
 sed -i "s/__BUILD_ID__/${BUILD_ID}/; s/__ENGINE_ID__/${ENGINE_ID:-$BUILD_ID}/" build/web/sw.js
 
