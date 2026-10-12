@@ -23,9 +23,18 @@ if ! command -v flutter >/dev/null 2>&1; then
 fi
 flutter config --enable-web
 flutter pub get
+# Table QR codes point at the guest site, never at whatever address the admin happens to be using
+# (the staff site lives on staff.tawla.ly, which serves no guest pages).
+PUBLIC_MENU_URL="${PUBLIC_MENU_URL:-https://tawla.ly}"
+PUBLIC_MENU_URL="${PUBLIC_MENU_URL%/}"
+if ! printf '%s' "$PUBLIC_MENU_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]+)?$'; then
+  echo "PUBLIC_MENU_URL must be a plain https:// address with no path, got: $PUBLIC_MENU_URL" >&2
+  exit 1
+fi
 flutter build web --release --wasm \
   --dart-define=SUPABASE_URL="$SUPABASE_URL" \
   --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+  --dart-define=PUBLIC_MENU_URL="$PUBLIC_MENU_URL" \
   --dart-define=DEFAULT_SLOT="${DEFAULT_SLOT:-1}"
 
 # Stamp the menu cache (web/sw.js): a new build replaces the kept app files; the engine files are
