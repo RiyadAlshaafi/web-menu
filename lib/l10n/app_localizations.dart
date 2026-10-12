@@ -542,6 +542,12 @@ abstract class AppLocalizations {
   /// **'No open shift.'**
   String get errNoOpenShift;
 
+  /// No description provided for @errUnpaidOrdersOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Some tables still have unpaid orders. Settle them before closing the shift.'**
+  String get errUnpaidOrdersOpen;
+
   /// No description provided for @authGuestCashier.
   ///
   /// In en, this message translates to:

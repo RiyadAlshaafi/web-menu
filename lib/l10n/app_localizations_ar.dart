@@ -243,6 +243,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errNoOpenShift => 'لا توجد وردية مفتوحة.';
 
   @override
+  String get errUnpaidOrdersOpen =>
+      'لا تزال هناك طاولات بطلبات غير مدفوعة. قم بتسويتها قبل إغلاق الوردية.';
+
+  @override
   String get authGuestCashier => 'كاشير ضيف';
 
   @override

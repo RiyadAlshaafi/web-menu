@@ -277,6 +277,10 @@ extension CafeStorePayments on CafeStore {
     return failure;
   }
 
+  /// Whether any order this device knows of still owes money (an order with no dishes owes none).
+  bool get _hasUnpaidOrders =>
+      orders.any((order) => order.status != OrderStatus.paid && order.lines.isNotEmpty);
+
   /// Closes the signed-in cashier's shift. The server sets only the counted
   /// cash and the closing time; it keeps its own sales totals.
   Future<String?> closeShift({required double actualCash}) async {
@@ -285,6 +289,9 @@ extension CafeStorePayments on CafeStore {
     final shift = currentShift ?? openShift;
     if (shift == null) return l10n.errNoOpenShift;
     final cashier = currentCashier;
+    // Online, the server refuses too; this also covers a close queued behind uploads. Fully
+    // offline the close goes ahead, because dine-in bills can't be settled without a connection.
+    if (!isOffline && _hasUnpaidOrders) return l10n.errUnpaidOrdersOpen;
     // Offline, or sales still waiting to upload: close on the device so the close uploads after them.
     if (offlineEnabled && cashier != null && (isOffline || offline!.pendingCount > 0)) {
       return _guarded('close shift on device', () => _closeShiftLocal(shift, cashier, actualCash));
@@ -301,6 +308,7 @@ extension CafeStorePayments on CafeStore {
           return _guarded('close shift on device', () => _closeShiftLocal(shift, cashier, actualCash));
         }
         if (_sessionExpired(failure)) return failure;
+        if (failure == 'unpaid orders still open') return l10n.errUnpaidOrdersOpen;
         return failure == 'no open shift' ? l10n.errNoOpenShift : failure;
       }
       await db.refreshFromDisk(liveOnly: true);

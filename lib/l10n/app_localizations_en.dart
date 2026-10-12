@@ -243,6 +243,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errNoOpenShift => 'No open shift.';
 
   @override
+  String get errUnpaidOrdersOpen =>
+      'Some tables still have unpaid orders. Settle them before closing the shift.';
+
+  @override
   String get authGuestCashier => 'Guest Cashier';
 
   @override

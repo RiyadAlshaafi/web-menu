@@ -81,6 +81,7 @@
   "errCashierSignInFirst": "سجّل الدخول كأمين صندوق أولاً.",
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",
   "errNoOpenShift": "لا توجد وردية مفتوحة.",
+  "errUnpaidOrdersOpen": "لا تزال هناك طاولات بطلبات غير مدفوعة. قم بتسويتها قبل إغلاق الوردية.",
   "authGuestCashier": "كاشير ضيف",
   "authPosTerminalSubtitle": "نقطة البيع\nالطرفية",
   "authSwitchToAdminSignIn": "التبديل إلى دخول المسؤول",

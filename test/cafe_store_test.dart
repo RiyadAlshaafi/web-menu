@@ -171,6 +171,46 @@ void main() {
     expect(store.tabTotal(table.id, applyService: false), 20);
   });
 
+  group('closing a shift with unpaid tables', () {
+    CafeOrder order(String id, OrderStatus status, List<OrderLine> lines) => CafeOrder(
+      id: id,
+      tableId: 't1',
+      tableNumber: '1',
+      status: status,
+      createdAt: DateTime.utc(2026, 10, 12),
+      lines: lines,
+    );
+    final tea = OrderLine(menuItemId: 'tea', name: 'tea', qty: 1, unitPrice: 5);
+
+    setUp(() {
+      store.currentCashier = Cashier(id: 'c1', name: 'Z', initials: 'Z');
+      store.currentShift = CashShift(id: 's1', cashierId: 'c1', openedAt: DateTime.utc(2026, 10, 12), openingCash: 0);
+      store.shifts = [store.currentShift!];
+    });
+
+    test('is refused in English and Arabic while a table owes money', () async {
+      store.orders = [order('o1', OrderStatus.served, [tea])];
+      expect(await store.closeShift(actualCash: 10), 'Some tables still have unpaid orders. Settle them before closing the shift.');
+      store.locale = 'ar';
+      expect(await store.closeShift(actualCash: 10), 'لا تزال هناك طاولات بطلبات غير مدفوعة. قم بتسويتها قبل إغلاق الوردية.');
+      expect(store.shifts.single.isOpen, isTrue);
+    });
+
+    test('goes ahead once paid, and an emptied order does not block it', () async {
+      store.orders = [order('o1', OrderStatus.paid, [tea]), order('o2', OrderStatus.received, [])];
+      expect(await store.closeShift(actualCash: 10), isNull);
+      expect(store.shifts.single.isOpen, isFalse);
+    });
+
+    test('still closes on the device when offline, since bills cannot be settled offline', () async {
+      store.orders = [order('o1', OrderStatus.served, [tea])];
+      store.offline!.online = false;
+      expect(await store.closeShift(actualCash: 10), isNull);
+      expect(store.shifts.single.isOpen, isFalse);
+      expect((await store.offline!.pendingItems()).map((item) => item.kind), contains('shift_close'));
+    });
+  });
+
   test('one dish stops at the most a single send may carry', () {
     final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
     store.tables = [table];
