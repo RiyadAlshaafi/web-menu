@@ -62,3 +62,12 @@ flutter:
         - asset: assets/fonts/NotoNaskhArabic-Bold.ttf
           weight: 700
 
+
+# Linux is only the CI test runner: load the system libsqlite3 there (checks.yml installs it)
+# instead of downloading the prebuilt one, whose GitHub download keeps arriving corrupt on runners.
+# Windows, Android and the web keep the default bundled SQLite.
+hooks:
+  user_defines:
+    sqlite3:
+      source:
+        linux: system

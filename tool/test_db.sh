@@ -15,6 +15,7 @@ PART2=supabase/migrations/20261008110000_lock_down_direct_writes.sql
 PART1=supabase/migrations/20261008100000_security_and_money_fixes.sql
 # Removes guest direct table access; the "previous app build" below predates it.
 GUEST_LOCK=supabase/migrations/20261014110000_guest_lock_down.sql
+CLOSE_SHIFT=supabase/migrations/20261015100000_close_shift_needs_paid_orders.sql
 
 quiet() { PGOPTIONS='-c client_min_messages=error' psql -X -q -o /dev/null -v ON_ERROR_STOP=1 "$@"; }
 loud() { psql -X -q -v ON_ERROR_STOP=1 "$@"; }
@@ -30,6 +31,8 @@ build() {
   quiet -d "$DB" -f supabase/tests/seed.sql
   # Part 1 again: it must be safe to apply twice.
   quiet -d "$DB" -f "$PART1"
+  # Re-applying part 1 also restores its older close_shift; put the current one back.
+  quiet -d "$DB" -f "$CLOSE_SHIFT"
 }
 
 echo "== Part 1 only: the previous app build must keep working"
