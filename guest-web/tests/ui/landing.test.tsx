@@ -95,10 +95,12 @@ describe("LandingPage", () => {
     expect(steps[0]).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("keeps the repeated feature pills out of the accessibility tree", () => {
+  it("repeats the feature pills to fill any width but reads them aloud once", () => {
     render(<LandingPage lang="en" />);
-    expect(screen.getAllByText("Works offline")).toHaveLength(2);
-    expect(screen.getAllByText("Works offline").filter((el) => el.closest("[aria-hidden='true']"))).toHaveLength(1);
+    const pills = screen.getAllByText("Works offline", { ignore: "[aria-hidden='true'] *" });
+    expect(pills).toHaveLength(1);
+    expect(document.querySelectorAll(".lp-pill-row")).toHaveLength(6);
+    expect(document.querySelectorAll(".lp-pill-row[aria-hidden='true']")).toHaveLength(5);
   });
 });
 

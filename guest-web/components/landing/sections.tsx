@@ -39,21 +39,24 @@ export function Audience({ title, items }: { title: string; items: LandingCopy["
 
 const PILL_TONES: readonly Tone[] = ["teal", "coral", "amber", "teal", "coral"];
 
+// The track slides left by half its width and starts over, so each half must be wider than the
+// widest screen (1120px) or an empty gap shows at the end. One row of pills is about 530px, so
+// three rows per half is enough; only the first row is read aloud.
+const PILL_ROWS = 6;
+
 export function Pills({ pills }: { pills: readonly string[] }) {
-  const row = (hidden: boolean) => (
-    <ul className="lp-pill-row" aria-hidden={hidden || undefined}>
-      {pills.map((pill, i) => (
-        <li key={pill} className="lp-pill" data-tone={PILL_TONES[i % PILL_TONES.length]}>
-          {pill}
-        </li>
-      ))}
-    </ul>
-  );
   return (
     <div className="lp-pills">
       <div className="lp-pill-track">
-        {row(false)}
-        {row(true)}
+        {Array.from({ length: PILL_ROWS }, (_, copy) => (
+          <ul key={copy} className="lp-pill-row" aria-hidden={copy > 0 || undefined}>
+            {pills.map((pill, i) => (
+              <li key={pill} className="lp-pill" data-tone={PILL_TONES[i % PILL_TONES.length]}>
+                {pill}
+              </li>
+            ))}
+          </ul>
+        ))}
       </div>
     </div>
   );

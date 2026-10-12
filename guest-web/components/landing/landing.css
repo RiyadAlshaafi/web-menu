@@ -276,7 +276,7 @@
   .lp-steam { animation: lp-steam 2.4s ease-in-out infinite; }
   .lp-table[data-step="0"] .lp-scanline { animation: lp-sweep 1.1s ease-in-out 0.6s infinite alternate; }
   .lp-step[data-on="true"] .lp-step-bar { animation: lp-fill 3.2s linear forwards; }
-  .lp-pill-track { animation: lp-marquee 26s linear infinite; }
+  .lp-pill-track { animation: lp-marquee 45s linear infinite; }
   .lp-pills:hover .lp-pill-track { animation-play-state: paused; }
 }
 @media (prefers-reduced-motion: reduce) {
