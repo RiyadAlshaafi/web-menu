@@ -3,13 +3,12 @@
   "name": "tawla-guest",
   "main": ".open-next/worker.js",
   // The guest app's paths on the main site. A route beats the tawla-web custom domain, so the
-  // Flutter staff app keeps everything else. / and /ar are the public sales page (the "?*"
-  // patterns catch links like /?utm_source=...); /_next and /api/guest are the pages' scripts and API.
+  // Flutter staff app keeps everything else. / and /ar are the public sales page (Cloudflare routes
+  // cannot match query strings, so /?utm_source=... only reaches it after docs/STAFF_DOMAIN_CUTOVER.md);
+  // /_next and /api/guest are the pages' scripts and API.
   "routes": [
     { "pattern": "tawla.ly/", "zone_name": "tawla.ly" },
-    { "pattern": "tawla.ly/?*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/ar", "zone_name": "tawla.ly" },
-    { "pattern": "tawla.ly/ar?*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/t/*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/_next/*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/api/guest/*", "zone_name": "tawla.ly" }
