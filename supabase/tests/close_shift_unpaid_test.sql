@@ -13,6 +13,7 @@ declare
   cat uuid;
   ia uuid;
   tid uuid;
+  tid2 uuid;
   cid uuid;
   sid uuid;
   owing uuid;
@@ -23,15 +24,16 @@ begin
   insert into public.menu_categories (restaurant_id, name_en, name_ar) values (rid, 'C', 'C') returning id into cat;
   insert into public.menu_items (restaurant_id, category_id, name_en, price) values (rid, cat, 'Tea', 5) returning id into ia;
   insert into public.dining_tables (restaurant_id, number, qr_slug) values (rid, 'S1', 'shift-slug-1') returning id into tid;
+  insert into public.dining_tables (restaurant_id, number, qr_slug) values (rid, 'S2', 'shift-slug-2') returning id into tid2;
   insert into public.cashiers (restaurant_id, name, initials, pin_hash) values (rid, 'Z', 'Z', 'x') returning id into cid;
   insert into public.cashier_sessions (cashier_id, restaurant_id, token_hash, expires_at)
   values (cid, rid, encode(extensions.digest('shift-token', 'sha256'), 'hex'), now() + interval '1 hour');
 
   -- A served table that has not paid, an order whose dishes were all removed, and another
-  -- cafe's unpaid order.
+  -- cafe's unpaid order. A table holds one open order at a time, so the emptied one sits at S2.
   insert into public.orders (restaurant_id, table_id, status) values (rid, tid, 'served') returning id into owing;
   insert into public.order_lines (order_id, menu_item_id, name, qty, unit_price) values (owing, ia, 'Tea', 2, 5);
-  insert into public.orders (restaurant_id, table_id, status) values (rid, tid, 'received');
+  insert into public.orders (restaurant_id, table_id, status) values (rid, tid2, 'received');
   insert into public.orders (restaurant_id, table_id, status, service_type) values (other, null, 'served', 'takeout');
 
   perform set_config('request.headers', json_build_object('x-cashier-token', 'shift-token')::text, true);
