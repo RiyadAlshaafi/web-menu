@@ -53,8 +53,10 @@ begin
   assert n = 1, 'the refused close must leave the shift open and untouched';
 
   -- ------------------------------------------------ once it is paid the shift closes
-  update public.orders set status = 'paid' where id = owing;
+  -- Paid the way the till pays: a direct status change needs a payment row.
   execute 'set local role anon';
+  r := public.settle_cash(tid, 100, true, null);
+  assert (r->>'ok')::boolean, 'settle failed: ' || r::text;
   r := public.close_shift(40);
   assert (r->>'ok')::boolean and (r->>'shift_id')::uuid = sid, 'close after payment failed: ' || r::text;
   execute 'reset role';
