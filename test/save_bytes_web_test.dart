@@ -1,8 +1,6 @@
 @TestOn('chrome')
 library;
 
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/platform/save_bytes_web.dart';

@@ -18,7 +18,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+    permissions:
+      contents: read
+    with:
+      flutter: false
+      guest-web: true
+      database: true
+
   deploy:
+    needs: checks
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,9 +52,6 @@ jobs:
           url="${RAW_SUPABASE_URL%/}"
           url="${url%/rest/v1}"
           echo "SUPABASE_URL_CLEAN=${url%/}" >> "$GITHUB_ENV"
-
-      - name: Test
-        run: npm test
 
       - name: Build and deploy
         env:

@@ -1,6 +1,8 @@
 import 'dart:io';
 
 Future<Map<String, String>> loadLocalEnv() async {
+  // Tests never pick up a developer's .env: they must not reach a real Supabase project.
+  if (Platform.environment.containsKey('FLUTTER_TEST')) return const {};
   final merged = <String, String>{};
   // Later files win. _envFiles lists the highest priority first (the file next to the program,
   // then the working folder, then its parents), so read them in reverse.

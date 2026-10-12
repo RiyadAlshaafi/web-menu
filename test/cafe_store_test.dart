@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/data/error_codes.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 
@@ -9,6 +13,27 @@ void main() {
   const skipLive = bool.fromEnvironment('SUPABASE_URL') == false && String.fromEnvironment('SUPABASE_URL') == '';
 
   late CafeStore store;
+  late Directory appData;
+
+  // Plugins have no platform side under `flutter test`: give the outbox and the update check a
+  // temp folder and a fixed app version.
+  setUpAll(() {
+    appData = Directory.systemTemp.createTempSync('cafe_store_test');
+    final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (call) async => appData.path,
+    );
+    messenger.setMockMethodCallHandler(
+      const MethodChannel('dev.fluttercommunity.plus/package_info'),
+      (call) async => {'appName': 'Cafe POS', 'packageName': 'cafe_pos', 'version': '1.0.0', 'buildNumber': '1'},
+    );
+  });
+  tearDownAll(() {
+    try {
+      appData.deleteSync(recursive: true);
+    } catch (_) {}
+  });
 
   setUp(() async {
     await AppDatabase.instance.resetEmpty();
@@ -35,7 +60,7 @@ void main() {
 
     // Carts are sent through Supabase (send_table_cart, checked in
     // supabase/tests); without it the send fails and the cart is kept.
-    await expectLater(store.sendCartToKitchen(table.id), throwsA(isA<StateError>()));
+    await expectLater(store.sendCartToKitchen(table.id), throwsA(_notConfigured));
     expect(store.cartFor(table.id).lines.single.qty, 2);
     expect(store.cartFor(table.id).total, 20);
     expect(store.openOrderFor(table.id), isNull);
@@ -89,7 +114,7 @@ void main() {
     store.endOrderConfirm(table.id);
 
     // The second send returns at once instead of sending the cart again.
-    final first = expectLater(store.sendCartToKitchen(table.id), throwsA(isA<StateError>()));
+    final first = expectLater(store.sendCartToKitchen(table.id), throwsA(_notConfigured));
     expect(store.isSendingOrder(table.id), isTrue);
     expect(await store.sendCartToKitchen(table.id), isNull);
     expect(store.tryBeginOrderConfirm(table.id), isFalse);
@@ -285,3 +310,7 @@ void main() {
     expect(store.liveMenu, isEmpty);
   });
 }
+
+/// The send went to Supabase's send_table_cart and was refused because no project is set up,
+/// not handled by a local-only cart.
+final _notConfigured = isA<StateError>().having((e) => e.message, 'message', ErrorCodes.notConfigured);
