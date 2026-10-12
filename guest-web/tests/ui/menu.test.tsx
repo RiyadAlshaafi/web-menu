@@ -20,6 +20,18 @@ afterEach(() => {
 const addButton = (name: RegExp) => screen.getByRole("button", { name });
 
 describe("MenuScreen", () => {
+  it("titles the menu with the cafe's own name in English and Arabic", async () => {
+    mockApi(() => ok(tabEmpty));
+    await renderGuest(<MenuScreen />);
+    expect(screen.getByRole("heading", { name: "Akakus Café Menu" })).toBeInTheDocument();
+    expect(screen.queryByText(/Mezzogiorno/)).toBeNull();
+    cleanup();
+
+    await renderGuest(<MenuScreen />, { lang: "ar" });
+    expect(screen.getByRole("heading", { name: "قائمة Akakus Café" })).toBeInTheDocument();
+    expect(screen.queryByText("قائمة الغداء")).toBeNull();
+  });
+
   it("lists dishes, filters by chip and shows the spotlight", async () => {
     mockApi(() => ok(tabEmpty));
     await renderGuest(<MenuScreen />);

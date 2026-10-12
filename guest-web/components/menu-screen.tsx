@@ -56,8 +56,8 @@ export function MenuScreen() {
       <LocationBanner />
       <RefusalNotice />
       <main className="flex-1">
-        <h2 className="px-4 pt-[18px] text-[21px] font-extrabold tracking-tight min-[360px]:text-2xl">{text("guestMenuTitle")}</h2>
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2.5" role="group" aria-label={text("guestMenuTitle")}>
+        <h2 className="px-4 pt-[18px] text-[21px] font-extrabold tracking-tight min-[360px]:text-2xl">{text("guestMenuTitle", { name: menu.cafe.name })}</h2>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2.5" role="group" aria-label={text("guestMenuTitle", { name: menu.cafe.name })}>
           {menu.categories.length > 0 && chip(text("guestCategoryAll"), filter.kind === "all", { kind: "all" })}
           {chip(text("guestChefsSpecials"), filter.kind === "chef", { kind: "chef" })}
           {menu.categories.map((category) =>
