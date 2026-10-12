@@ -225,8 +225,10 @@
 .lp-aud-card b { font-weight: 800; }
 .lp-aud-card p { margin: 3px 0 0; color: var(--tone-sub); font-size: 13px; line-height: 1.45; }
 
-.lp-pills { margin: 14px -16px; overflow: hidden; }
-.lp-pill-track { display: flex; width: max-content; direction: ltr; }
+/* Left to right even on the Arabic page: the strip starts at the left edge and slides left, so it
+   never runs out. (In a right-to-left box it would start at the right edge and expose a gap.) */
+.lp-pills { margin: 14px -16px; overflow: hidden; direction: ltr; }
+.lp-pill-track { display: flex; width: max-content; }
 .lp-pill-row { display: flex; gap: 8px; margin: 0; padding: 4px 8px 4px 0; list-style: none; }
 .lp-pill { padding: 8px 14px; border-radius: 999px; background: var(--tone-bg); color: var(--tone-ink); font-size: 13px; font-weight: 700; white-space: nowrap; }
 
