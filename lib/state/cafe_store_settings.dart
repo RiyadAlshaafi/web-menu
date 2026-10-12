@@ -27,7 +27,8 @@ extension CafeStoreSettings on CafeStore {
     base = base.trim().replaceFirst(RegExp(r'/+$'), '');
     if (base.endsWith('/rest/v1')) base = base.substring(0, base.length - 7).replaceFirst(RegExp(r'/+$'), '');
     if (!base.startsWith('http')) return '';
-    return '$base/#/t/$slug';
+    // A plain path: the guest web app (guest-web/) serves /t/<slug>, and a hash never reaches it.
+    return '$base/t/$slug';
   }
 
   Future<void> saveCompany({

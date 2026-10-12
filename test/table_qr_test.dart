@@ -6,7 +6,7 @@ import 'package:menu_web_v1/widgets/table_qr.dart';
 void main() {
   testWidgets('saved QR is opaque white with a blank border around the code', (tester) async {
     await tester.runAsync(() async {
-      final bytes = await tableQrPng('https://example.test/#/t/abc123');
+      final bytes = await tableQrPng('https://example.test/t/abc123');
       expect(bytes, isNotNull);
       // PNG signature.
       expect(bytes!.sublist(0, 4), [0x89, 0x50, 0x4e, 0x47]);

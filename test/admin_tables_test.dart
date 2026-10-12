@@ -35,6 +35,11 @@ void main() {
     expect(find.text('/t/slug-one'), findsOneWidget);
   });
 
+  test('table links are plain paths the guest app serves, not hash routes', () {
+    expect(_store().guestLink('slug-one'), 'https://menu.example/t/slug-one');
+    expect(_store(menuUrl: 'https://menu.example/').guestLink('slug-one'), 'https://menu.example/t/slug-one');
+  });
+
   testWidgets('without a menu address there is no QR code to print', (tester) async {
     await pumpAdminScreen(tester, const AdminTablesScreen(), _store(menuUrl: ''));
 
