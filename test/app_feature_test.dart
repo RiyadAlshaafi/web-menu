@@ -80,6 +80,19 @@ void main() {
     expect(set.allows(AppFeature.qrOrdering), isFalse);
   });
 
+  test('reads the cafe slot picked in an online setup', () {
+    expect(FeatureSet.fromJson('{"mode": "online", "features": [], "slot": 3}').slot, 3);
+    expect(FeatureSet.fromJson('{"mode": "online", "features": []}').slot, isNull);
+    expect(FeatureSet.all.slot, isNull);
+  });
+
+  test('ignores a slot that is out of range, not a number, or on an offline install', () {
+    expect(FeatureSet.fromJson('{"features": [], "slot": 0}').slot, isNull);
+    expect(FeatureSet.fromJson('{"features": [], "slot": 9}').slot, isNull);
+    expect(FeatureSet.fromJson('{"features": [], "slot": "3"}').slot, isNull);
+    expect(FeatureSet.fromJson('{"mode": "offline", "features": [], "slot": 3}').slot, isNull);
+  });
+
   test('an unknown mode is read as online', () {
     expect(FeatureSet.fromJson('{"mode": "x", "features": []}').mode, InstallMode.online);
   });

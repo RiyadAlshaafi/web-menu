@@ -62,18 +62,22 @@ enum AppFeature {
 
 /// The features one install may show. Immutable.
 class FeatureSet {
-  const FeatureSet._(this.mode, this._enabled);
+  const FeatureSet._(this.mode, this._enabled, [this.slot]);
+
+  /// Highest cafe slot number (slots are 1-8).
+  static const maxSlot = 8;
 
   /// Online with every feature on. Used on the web and when no installer file exists.
   static final FeatureSet all = FeatureSet._(InstallMode.online, Set.unmodifiable(AppFeature.values));
 
-  /// Listed keys are on; unknown keys are ignored.
-  factory FeatureSet.fromKeys(Iterable<String> keys, {InstallMode mode = InstallMode.online}) {
+  /// Listed keys are on; unknown keys are ignored. [slot] counts only online and only 1-8.
+  factory FeatureSet.fromKeys(Iterable<String> keys, {InstallMode mode = InstallMode.online, int? slot}) {
     final enabled = keys.map(AppFeature.fromKey).whereType<AppFeature>().toSet();
-    return FeatureSet._(mode, Set.unmodifiable(enabled));
+    final validSlot = mode == InstallMode.online && slot != null && slot >= 1 && slot <= maxSlot ? slot : null;
+    return FeatureSet._(mode, Set.unmodifiable(enabled), validSlot);
   }
 
-  /// Reads the installer's `features.json` (`{"mode": "online", "features": [...]}`).
+  /// Reads the installer's `features.json` (`{"mode": "online", "features": [...], "slot": 3}`).
   /// A missing or broken file means every feature is on, so a bad write never
   /// takes features away from a cafe.
   factory FeatureSet.fromJson(String? json) {
@@ -82,7 +86,12 @@ class FeatureSet {
       final decoded = jsonDecode(json);
       if (decoded is! Map || decoded['features'] is! List) return all;
       final mode = InstallMode.fromKey(decoded['mode'] as String?);
-      return FeatureSet.fromKeys((decoded['features'] as List).whereType<String>(), mode: mode);
+      final slot = decoded['slot'];
+      return FeatureSet.fromKeys(
+        (decoded['features'] as List).whereType<String>(),
+        mode: mode,
+        slot: slot is int ? slot : null,
+      );
     } on FormatException {
       return all;
     }
@@ -90,6 +99,9 @@ class FeatureSet {
 
   final InstallMode mode;
   final Set<AppFeature> _enabled;
+
+  /// The cafe slot picked in an online setup; the till links to it at every start. Null when none.
+  final int? slot;
 
   /// On only when the feature and everything it needs are on, and the mode offers it.
   bool allows(AppFeature feature) {
@@ -104,5 +116,6 @@ class FeatureSet {
   FeatureSet intersect(FeatureSet other) => FeatureSet._(
         mode == InstallMode.offline || other.mode == InstallMode.offline ? InstallMode.offline : InstallMode.online,
         Set.unmodifiable(_enabled.intersection(other._enabled)),
+        slot ?? other.slot,
       );
 }

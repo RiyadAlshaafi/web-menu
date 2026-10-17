@@ -159,7 +159,8 @@ class AppDatabase {
     _loadLocal();
   }
 
-  Future<void> init({bool memory = false}) async {
+  /// [slot] is the cafe slot picked in setup; it wins over a link saved earlier on this device.
+  Future<void> init({bool memory = false, int? slot}) async {
     if (memory) {
       _clear();
       return;
@@ -189,7 +190,7 @@ class AppDatabase {
         );
         _ready = true;
       }
-      await _loadBoundSlot();
+      await _loadBoundSlot(installerSlot: slot);
       _listen();
       await refreshFromDisk();
     } catch (error, stack) {
@@ -197,12 +198,18 @@ class AppDatabase {
     }
   }
 
-  Future<void> _loadBoundSlot() async {
+  Future<void> _loadBoundSlot({int? installerSlot}) async {
     int? slot;
     try {
-      slot = (await SharedPreferences.getInstance()).getInt(_slotPrefKey);
+      final prefs = await SharedPreferences.getInstance();
+      slot = prefs.getInt(_slotPrefKey);
+      if (installerSlot != null && installerSlot != slot) {
+        slot = installerSlot;
+        await prefs.setInt(_slotPrefKey, installerSlot);
+      }
     } catch (error, stack) {
       reportError('read device slot', error, stack);
+      slot ??= installerSlot;
     }
     slot ??= _defaultSlot > 0 ? _defaultSlot : null;
     if (slot == null) return;

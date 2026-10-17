@@ -145,7 +145,7 @@ class CafeStore extends ChangeNotifier {
     } else if (features.mode == InstallMode.offline && !kIsWeb) {
       await db.initLocal(await openLocalStateStore());
     } else {
-      await db.init();
+      await db.init(slot: features.slot);
       await _initOffline();
       await _checkConnectionAtStart();
       // Don't open on an empty app: give the first data load up to 15 seconds.

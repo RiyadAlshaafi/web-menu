@@ -57,15 +57,18 @@ Filename: "{app}\menu_web_v1.exe"; Flags: nowait
 Type: files; Name: "{app}\features.json"
 
 [Code]
-// Pages: password (checked online) -> Online/Offline -> feature checkboxes. The answers are written to
-// {app}\features.json, which lib/features/app_feature.dart reads. Keys must match AppFeature.key.
-// Silent updates show no pages and leave features.json as it is.
+// Pages: password (checked online) -> Online/Offline -> cafe slot (online only) -> feature checkboxes.
+// The answers are written to {app}\features.json, which lib/features/app_feature.dart reads. Keys must
+// match AppFeature.key. Silent updates show no pages and leave features.json as it is.
 const
   FeatureCount = 9;
+  SlotCount = 8;
 
 var
   PasswordPage: TInputQueryWizardPage;
   ModePage: TInputOptionWizardPage;
+  SlotPage: TInputOptionWizardPage;
+  SlotNamesLoaded: Boolean;
   FeaturePage: TWizardPage;
   FeatureList: TNewCheckListBox;
   FeatureKeys: array of String;
@@ -130,6 +133,58 @@ begin
     Problem := 'Wrong password. After 5 wrong tries the check is locked for 15 minutes.';
 end;
 
+// Value of the text field Name in a compact JSON answer ('' when missing).
+function JsonTextField(Json, Name: String): String;
+var
+  At: Integer;
+begin
+  Result := '';
+  At := Pos('"' + Name + '":"', Json);
+  if At = 0 then Exit;
+  Json := Copy(Json, At + Length(Name) + 4, Length(Json));
+  At := Pos('"', Json);
+  if At > 0 then Result := Copy(Json, 1, At - 1);
+end;
+
+// "Slot 3 - Cafe name (in use)" from public.restaurant_for_slot; just "Slot 3" when the server can't say.
+function SlotLabel(Slot: Integer): String;
+var
+  Http: Variant;
+  Answer, Name: String;
+begin
+  Result := 'Slot ' + IntToStr(Slot);
+  try
+    Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    Http.Open('POST', ServerOrigin('{#SupabaseUrl}') + '/rest/v1/rpc/restaurant_for_slot', False);
+    Http.SetTimeouts(5000, 5000, 8000, 8000);
+    Http.SetRequestHeader('apikey', '{#SupabaseKey}');
+    Http.SetRequestHeader('Content-Type', 'application/json');
+    Http.Send('{"p_slot": ' + IntToStr(Slot) + '}');
+    if Http.Status <> 200 then Exit;
+    Answer := Http.ResponseText;
+  except
+    Exit;
+  end;
+  Name := Trim(JsonTextField(Answer, 'name'));
+  if Pos('"active":true', Answer) > 0 then
+  begin
+    if Name = '' then Name := 'unnamed cafe';
+    Result := Result + ' - ' + Name + ' (in use)';
+  end
+  else
+    Result := Result + ' - empty';
+end;
+
+procedure LoadSlotNames;
+var
+  I: Integer;
+begin
+  if SlotNamesLoaded then Exit;
+  for I := 0 to SlotCount - 1 do
+    SlotPage.CheckListBox.ItemCaption[I] := SlotLabel(I + 1);
+  SlotNamesLoaded := True;
+end;
+
 function FeaturesFile: String;
 begin
   Result := AddBackslash(WizardDirValue) + 'features.json';
@@ -192,6 +247,19 @@ begin
   Result := ModePage.SelectedValueIndex = 1;
 end;
 
+// The slot saved by an earlier setup ("slot": 3), or 0.
+function SavedSlot: Integer;
+var
+  Saved: String;
+  At: Integer;
+begin
+  Result := 0;
+  Saved := SavedFeatures;
+  At := Pos('"slot": ', Saved);
+  if At > 0 then Result := StrToIntDef(Copy(Saved, At + 8, 1), 0);
+  if (Result < 1) or (Result > SlotCount) then Result := 0;
+end;
+
 // Ticked when there is no saved choice yet, otherwise as saved.
 function StartsTicked(Key, Saved: String): Boolean;
 begin
@@ -252,10 +320,15 @@ begin
       if List <> '' then List := List + ', ';
       List := List + '"' + FeatureKeys[I] + '"';
     end;
-  Result := '{"mode": "' + Mode + '", "features": [' + List + ']}';
+  Result := '{"mode": "' + Mode + '", "features": [' + List + ']';
+  if not OfflineChosen and (SlotPage.SelectedValueIndex >= 0) then
+    Result := Result + ', "slot": ' + IntToStr(SlotPage.SelectedValueIndex + 1);
+  Result := Result + '}';
 end;
 
 procedure InitializeWizard;
+var
+  I: Integer;
 begin
   SetArrayLength(FeatureKeys, FeatureCount);
   FeatureKeys[0] := 'tables';
@@ -281,7 +354,16 @@ begin
   if Pos('"offline"', SavedFeatures) > 0 then ModePage.SelectedValueIndex := 1
   else ModePage.SelectedValueIndex := 0;
 
-  FeaturePage := CreateCustomPage(ModePage.ID, 'Features',
+  SlotPage := CreateInputOptionPage(ModePage.ID, 'Cafe slot',
+    'Which cafe is this till for?',
+    'Pick the cafe slot this till belongs to. Its sales and menu come from that cafe.',
+    True, False);
+  for I := 1 to SlotCount do
+    SlotPage.Add('Slot ' + IntToStr(I));
+  // No default: a wrong slot would show another cafe's data.
+  if SavedSlot > 0 then SlotPage.SelectedValueIndex := SavedSlot - 1;
+
+  FeaturePage := CreateCustomPage(SlotPage.ID, 'Features',
     'Tick the features this cafe gets. Login, menu, quick takeout, payment, receipts, shifts and settings are always included.');
   FeatureList := TNewCheckListBox.Create(FeaturePage);
   FeatureList.Parent := FeaturePage.Surface;
@@ -289,8 +371,14 @@ begin
   FeatureList.Height := FeaturePage.SurfaceHeight;
 end;
 
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = SlotPage.ID) and OfflineChosen;
+end;
+
 procedure CurPageChanged(CurPageID: Integer);
 begin
+  if CurPageID = SlotPage.ID then LoadSlotNames;
   if CurPageID = FeaturePage.ID then FillFeatureList;
 end;
 
@@ -299,6 +387,12 @@ var
   Problem: String;
 begin
   Result := True;
+  if (CurPageID = SlotPage.ID) and (SlotPage.SelectedValueIndex < 0) then
+  begin
+    MsgBox('Pick the cafe slot for this till.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
   if CurPageID <> PasswordPage.ID then Exit;
   if Trim(PasswordPage.Values[0]) = '' then
   begin
