@@ -2,18 +2,24 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/money.dart';
 import '../models/models.dart';
+import '../printing/takeout_receipt.dart';
 import '../offline/offline_sync.dart' show isNetworkError;
 import '../core/time_format.dart';
 import '../core/report_error.dart';
 import 'error_codes.dart';
 import 'image_shrink.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
+import 'local_state_store.dart';
 import 'sales_history.dart';
+
+part 'app_database_local.dart';
 
 double? _asDouble(Object? value) {
   if (value is num) return value.toDouble();
@@ -74,6 +80,13 @@ class AppDatabase {
   bool salesHasMore = false;
   String? restaurantId;
   String? cashierToken;
+
+  /// Set in offline mode: everything is saved in a local database on this PC (see app_database_local.dart).
+  LocalStateStore? _localStore;
+  bool get isLocal => _localStore != null;
+
+  /// The cashier signed in on this PC in offline mode (online the server knows it from the session).
+  String? localCashierId;
   bool anyAdmin = false;
 
   /// Web builds for one existing cafe set this (`--dart-define=DEFAULT_SLOT=1`)
@@ -138,6 +151,13 @@ class AppDatabase {
   List<CashShift> get shifts => List<CashShift>.from(_shifts);
   List<ShiftExpense> get expenses => List<ShiftExpense>.from(_expenses);
   List<StaffCall> get calls => List<StaffCall>.from(_calls);
+
+  /// Offline mode: opens [store] (this PC's local database) instead of the server.
+  Future<void> initLocal(LocalStateStore store) async {
+    _clear();
+    _localStore = store;
+    _loadLocal();
+  }
 
   Future<void> init({bool memory = false}) async {
     if (memory) {
@@ -1056,20 +1076,27 @@ class AppDatabase {
 
   Future<void> writeRememberAdmin(bool value) async => _rememberAdmin = value;
 
+  void _saveLocalSettingsIfLocal() {
+    if (isLocal) _saveLocalCatalog();
+  }
+
   Future<void> writeAutoPrintReceipt(bool value) async {
     _cafe = {..._cafe, 'autoPrintReceipt': value};
+    _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({'auto_print_receipt': value}).eq('id', restaurantId!);
   }
 
   Future<void> writeRequireCashierOnline(bool value) async {
     _cafe = {..._cafe, 'requireCashierOnline': value};
+    _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({'require_cashier_online': value}).eq('id', restaurantId!);
   }
 
   Future<void> writeLocale(String locale) async {
     _locale = locale;
+    _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!
         .from('restaurants')
@@ -1079,6 +1106,7 @@ class AppDatabase {
 
   Future<void> writeCafe(Map<String, dynamic> cafe) async {
     _cafe = Map<String, dynamic>.from(cafe);
+    _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!
         .from('restaurants')
@@ -1102,6 +1130,7 @@ class AppDatabase {
     required String pin,
     required String initials,
   }) async {
+    if (isLocal) return _localCreateCashier(name, pin, initials);
     if (client == null) return null;
     final id = await client!.rpc(
       'create_cashier',
@@ -1115,6 +1144,7 @@ class AppDatabase {
     String cashierId,
     String pin,
   ) async {
+    if (isLocal) return _localLoginCashier(cashierId, pin);
     if (client == null) {
       return {'ok': false, 'error': ErrorCodes.notConfigured};
     }
@@ -1267,6 +1297,7 @@ class AppDatabase {
   }
 
   Future<String?> changePaymentType(String paymentId, String typeId) async {
+    if (isLocal) return _localChangePaymentType(paymentId, typeId);
     if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     final raw = await client!.rpc(
@@ -1282,6 +1313,7 @@ class AppDatabase {
   }
 
   Future<String?> addPaymentType(String nameEn, String nameAr) async {
+    if (isLocal) return _localAddPaymentType(nameEn, nameAr);
     if (client == null || restaurantId == null) {
       return ErrorCodes.notConfigured;
     }
@@ -1307,6 +1339,7 @@ class AppDatabase {
   }
 
   Future<String?> savePaymentType(PaymentType type) async {
+    if (isLocal) return _localSavePaymentType(type);
     if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!
@@ -1327,6 +1360,7 @@ class AppDatabase {
   }
 
   Future<String?> deletePaymentType(String id) async {
+    if (isLocal) return _localDeletePaymentType(id);
     if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!.from('payment_types').delete().eq('id', id);
@@ -1339,6 +1373,7 @@ class AppDatabase {
   }
 
   Future<String?> addExpenseCategory(String nameEn, String nameAr) async {
+    if (isLocal) return _localAddExpenseCategory(nameEn, nameAr);
     if (client == null || restaurantId == null) {
       return ErrorCodes.notConfigured;
     }
@@ -1364,6 +1399,7 @@ class AppDatabase {
   }
 
   Future<String?> saveExpenseCategory(ExpenseCategory category) async {
+    if (isLocal) return _localSaveExpenseCategory(category);
     if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!
@@ -1383,6 +1419,7 @@ class AppDatabase {
   }
 
   Future<String?> deleteExpenseCategory(String id) async {
+    if (isLocal) return _localDeleteExpenseCategory(id);
     if (client == null) return ErrorCodes.notConfigured;
     try {
       await client!.from('expense_categories').delete().eq('id', id);
@@ -1397,6 +1434,7 @@ class AppDatabase {
   /// Stops a cashier from signing in. Cashiers are never hard-deleted: their
   /// payments and shifts reference them, so a delete fails at the database.
   Future<String?> deactivateCashier(String id) async {
+    if (isLocal) return _localDeactivateCashier(id);
     if (client == null || restaurantId == null || client!.auth.currentUser == null) {
       _cashiers = _cashiers.where((item) => item.id != id).toList();
       return null;
@@ -1416,6 +1454,7 @@ class AppDatabase {
   /// be stale. New rows get the database defaults.
   Future<void> writeTables(List<CafeTable> all, {required Iterable<CafeTable> changed}) async {
     _tables = all;
+    _saveLocalSettingsIfLocal();
     final rows = [
       for (final item in changed)
         {
@@ -1441,6 +1480,7 @@ class AppDatabase {
     Iterable<String> deleted = const [],
   }) async {
     _categories = all;
+    _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     final rows = [
       for (final item in changed)
@@ -1470,6 +1510,13 @@ class AppDatabase {
       for (final item in _menuItems) item.id: item.imageUrl,
     };
     _menuItems = all;
+    if (isLocal) {
+      for (final item in changed) {
+        item.imageUrl = _localImage(item.imageUrl);
+      }
+      _saveLocalCatalog();
+      return;
+    }
     if (client == null || restaurantId == null) return;
     final rows = <Map<String, dynamic>>[];
     for (final item in changed) {
@@ -1610,6 +1657,7 @@ class AppDatabase {
   }
 
   Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {
+    if (isLocal) return _localQuickTakeout(lines, paymentTypeId);
     if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     try {
@@ -1738,6 +1786,17 @@ class AppDatabase {
     required double amount,
     required String description,
   }) async {
+    if (isLocal) {
+      return _localAddExpense(
+        shiftId: shiftId,
+        cashierId: cashierId,
+        categoryId: categoryId,
+        paidToCafe: paidToCafe,
+        paidToCashierId: paidToCashierId,
+        amount: amount,
+        description: description,
+      );
+    }
     final category = _expenseCategories.where((item) => item.id == categoryId);
     final expense = ShiftExpense(
       id: Secrets.id('expense'),
@@ -1785,6 +1844,7 @@ class AppDatabase {
     required double amount,
     required String description,
   }) async {
+    if (isLocal) return _localEditExpense(id: id, categoryId: categoryId, amount: amount, description: description);
     if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     try {
@@ -1990,6 +2050,10 @@ class AppDatabase {
 
   Future<void> writeShifts(List<CashShift> items) async {
     _shifts = items;
+    if (isLocal) {
+      _localStore!.putRecords('shifts', [for (final item in items) item.toJson()]);
+      return;
+    }
     if (client == null || restaurantId == null) return;
     for (final item in items) {
       await client!.from('shifts').upsert({
@@ -2026,10 +2090,14 @@ class AppDatabase {
   }
 
   Future<String?> setItemAvailable(String itemId, bool available) async {
-    if (client == null) return ErrorCodes.notConfigured;
+    if (client == null && !isLocal) return ErrorCodes.notConfigured;
     final match = _menuItems.where((item) => item.id == itemId);
     final previous = match.isEmpty ? null : match.first.available;
     if (match.isNotEmpty) match.first.available = available;
+    if (isLocal) {
+      _saveLocalCatalog();
+      return null;
+    }
     try {
       await client!.rpc(
         'set_item_available',
@@ -2061,8 +2129,8 @@ class AppDatabase {
     }
   }
 
-  Future<String> storeLogo(String value) =>
-      _storeImage('logo', value, previous: _cafe['logoUrl'] as String?);
+  Future<String> storeLogo(String value) async =>
+      isLocal ? _localImage(value) : _storeImage('logo', value, previous: _cafe['logoUrl'] as String?);
 
   /// Uploads a picked image (a data: URL) shrunk to [maxImageSide], under a
   /// new name each time so phones and the CDN never show the old picture,

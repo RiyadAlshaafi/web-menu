@@ -42,6 +42,10 @@ void main() {
 
   test('offline mode hides online-only sections even when ticked', () {
     final offline = FeatureSet.fromKeys(['tables', 'reports', 'expenses'], mode: InstallMode.offline);
-    expect(_paths(AppSections.visible(AppSections.admin, offline)), ['/admin/menu', '/admin/wages', '/admin/settings']);
+    expect(
+      _paths(AppSections.visible(AppSections.admin, offline)),
+      ['/admin/dashboard', '/admin/menu', '/admin/sales', '/admin/wages', '/admin/settings'],
+    );
+    expect(_paths(AppSections.visible(AppSections.cashier, offline)), isNot(contains('/pos/tables')));
   });
 }

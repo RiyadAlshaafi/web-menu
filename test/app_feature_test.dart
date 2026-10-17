@@ -61,7 +61,14 @@ void main() {
 
   test('offline mode offers only features that work without internet', () {
     final offered = AppFeature.offeredIn(InstallMode.offline);
-    expect(offered, [AppFeature.expenses, AppFeature.paymentTypes]);
+    expect(offered, [
+      AppFeature.discounts,
+      AppFeature.dishToggle,
+      AppFeature.expenses,
+      AppFeature.reports,
+      AppFeature.branding,
+      AppFeature.paymentTypes,
+    ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });
 

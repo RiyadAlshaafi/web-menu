@@ -198,7 +198,7 @@ extension CafeStoreOrders on CafeStore {
         }
       }
       if (cashier == null) return l10n.errCashierSignInFirst;
-      if (db.client == null) {
+      if (db.client == null && !db.isLocal) {
         final stamp = DateTime.now().microsecondsSinceEpoch;
         final error = applyQuickTakeout(
           orders: orders,

@@ -11,6 +11,14 @@
 #ifndef SourceDir
   #define SourceDir "..\..\build\windows\x64\runner\Release"
 #endif
+; Where setup checks the password (the dev screen password, via public.check_dev_access).
+; The publishable key is public; the release workflow passes the repo's values.
+#ifndef SupabaseUrl
+  #define SupabaseUrl "https://kzafgozkgvcflcizuemr.supabase.co"
+#endif
+#ifndef SupabaseKey
+  #define SupabaseKey "sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj"
+#endif
 
 [Setup]
 AppId={{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}
@@ -49,18 +57,58 @@ Filename: "{app}\menu_web_v1.exe"; Flags: nowait
 Type: files; Name: "{app}\features.json"
 
 [Code]
-// Feature pages: Online/Offline -> feature checkboxes. The answers are written to
+// Pages: password (checked online) -> Online/Offline -> feature checkboxes. The answers are written to
 // {app}\features.json, which lib/features/app_feature.dart reads. Keys must match AppFeature.key.
 // Silent updates show no pages and leave features.json as it is.
 const
   FeatureCount = 9;
 
 var
+  PasswordPage: TInputQueryWizardPage;
   ModePage: TInputOptionWizardPage;
   FeaturePage: TWizardPage;
   FeatureList: TNewCheckListBox;
   FeatureKeys: array of String;
   RowKeys: array of String;
+
+function JsonText(Value: String): String;
+begin
+  StringChangeEx(Value, '\', '\\', True);
+  StringChangeEx(Value, '"', '\"', True);
+  Result := '"' + Value + '"';
+end;
+
+// True only when the server says the password is the dev screen password.
+// 5 wrong tries lock the check for 15 minutes (it then answers false).
+function PasswordAccepted(Password: String; var Problem: String): Boolean;
+var
+  Http: Variant;
+  Status: Integer;
+  Answer: String;
+begin
+  Result := False;
+  try
+    Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    Http.Open('POST', '{#SupabaseUrl}/rest/v1/rpc/check_dev_access', False);
+    Http.SetTimeouts(10000, 10000, 15000, 15000);
+    Http.SetRequestHeader('apikey', '{#SupabaseKey}');
+    Http.SetRequestHeader('Content-Type', 'application/json');
+    Http.Send('{"p_password": ' + JsonText(Password) + '}');
+  except
+    Problem := 'Could not reach the server. Connect this PC to the internet for the password check, then press Next again.';
+    Exit;
+  end;
+  Status := Http.Status;
+  Answer := Http.ResponseText;
+  if Status <> 200 then
+  begin
+    Problem := 'The server could not check the password (error ' + IntToStr(Status) + '). Try again.';
+    Exit;
+  end;
+  Result := Trim(Answer) = 'true';
+  if not Result then
+    Problem := 'Wrong password. After 5 wrong tries the check is locked for 15 minutes.';
+end;
 
 function FeaturesFile: String;
 begin
@@ -95,7 +143,7 @@ end;
 // Must match AppFeature.worksOffline.
 function WorksOffline(Key: String): Boolean;
 begin
-  Result := (Key = 'expenses') or (Key = 'payment_types');
+  Result := (Key <> 'tables') and (Key <> 'qr_ordering') and (Key <> 'location_check');
 end;
 
 // Must match AppFeature.requires.
@@ -200,11 +248,16 @@ begin
   FeatureKeys[7] := 'branding';
   FeatureKeys[8] := 'payment_types';
 
-  ModePage := CreateInputOptionPage(wpWelcome, 'Online or offline',
+  PasswordPage := CreateInputQueryPage(wpWelcome, 'Password',
+    'Only the seller can install Cafe POS.',
+    'Enter the setup password. This PC needs internet for this check only.');
+  PasswordPage.Add('Password:', True);
+
+  ModePage := CreateInputOptionPage(PasswordPage.ID, 'Online or offline',
     'How will this till be used?', 'Offline shows only the features that work without internet.',
     True, False);
   ModePage.Add('Online - every feature, guests can order by QR code');
-  ModePage.Add('Offline - till only (needs internet once to link the cafe and set up the menu)');
+  ModePage.Add('Offline - works with no internet at all; all data stays on this PC');
   if Pos('"offline"', SavedFeatures) > 0 then ModePage.SelectedValueIndex := 1
   else ModePage.SelectedValueIndex := 0;
 
@@ -219,6 +272,25 @@ end;
 procedure CurPageChanged(CurPageID: Integer);
 begin
   if CurPageID = FeaturePage.ID then FillFeatureList;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  Problem: String;
+begin
+  Result := True;
+  if CurPageID <> PasswordPage.ID then Exit;
+  if Trim(PasswordPage.Values[0]) = '' then
+  begin
+    MsgBox('Enter the setup password.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  if not PasswordAccepted(PasswordPage.Values[0], Problem) then
+  begin
+    MsgBox(Problem, mbError, MB_OK);
+    Result := False;
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

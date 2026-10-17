@@ -507,7 +507,8 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   children: [
                     Text(context.l10n.authPassword, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                     const Spacer(),
-                    if (!setup)
+                    // Offline mode has no email service to send a recovery code.
+                    if (!setup && !store.isLocalMode)
                       TextButton(
                         onPressed: () {
                           context.go('/admin/forgot', extra: email.text);
@@ -559,22 +560,25 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                       prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(context.l10n.authSetupCode, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: setupCode,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      hintText: context.l10n.authSetupCodeHint,
-                      prefixIcon: const Icon(Icons.key_outlined, size: 18),
+                  // Offline mode has no cafe slots, so no setup code.
+                  if (!store.isLocalMode) ...[
+                    const SizedBox(height: 14),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(context.l10n.authSetupCode, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: setupCode,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        hintText: context.l10n.authSetupCodeHint,
+                        prefixIcon: const Icon(Icons.key_outlined, size: 18),
+                      ),
+                    ),
+                  ],
                   if (!store.deviceLinked) ...[
                     const SizedBox(height: 8),
                     Text(context.l10n.authDeviceNotLinked, style: const TextStyle(color: CafeColors.alert, fontSize: 12)),

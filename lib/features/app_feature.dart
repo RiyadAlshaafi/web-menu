@@ -5,8 +5,8 @@ enum InstallMode {
   /// Every feature can be ticked: QR ordering, live screens, admin tools.
   online('online'),
 
-  /// Till only: just the features that keep working with no internet.
-  /// The cafe still needs internet once to link the device and set up the menu.
+  /// No internet at all: everything is kept in a local database on this PC. Only the
+  /// features that need guests' phones to reach a server (tables, QR ordering) are left out.
   offline('offline');
 
   const InstallMode(this.key);
@@ -25,20 +25,20 @@ enum AppFeature {
   tables('tables'),
   qrOrdering('qr_ordering'),
   locationCheck('location_check'),
-  discounts('discounts'),
-  dishToggle('dish_toggle'),
+  discounts('discounts', worksOffline: true),
+  dishToggle('dish_toggle', worksOffline: true),
   /// Expense entry, expense categories and the expenses ledger ("Wages" screen).
   expenses('expenses', worksOffline: true),
-  reports('reports'),
+  reports('reports', worksOffline: true),
   /// Custom app colours (the logo stays with the cafe name, which is core).
-  branding('branding'),
+  branding('branding', worksOffline: true),
   paymentTypes('payment_types', worksOffline: true);
 
   const AppFeature(this.key, {this.worksOffline = false});
 
   final String key;
 
-  /// Whether the till can use this with no internet (it is saved and uploaded later).
+  /// Whether this works in offline mode (local database, no internet).
   final bool worksOffline;
 
   /// The feature this one cannot work without, if any.

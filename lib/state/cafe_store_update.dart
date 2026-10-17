@@ -119,6 +119,8 @@ extension CafeStoreUpdate on CafeStore {
       failed: sync?.failedCount ?? 0,
     );
     if (local != null) return local;
+    // Offline mode keeps everything on this PC: there is no server copy to confirm.
+    if (db.isLocal) return null;
     if (db.client == null || !await db.serverReachable()) return UpdateBlock.offline;
     if (sync == null) return null;
     final matches = await _uploadsConfirmed(_sentWindowStart());
@@ -155,6 +157,11 @@ extension CafeStoreUpdate on CafeStore {
     updateBackupPath = marker['backup'] as String?;
     if (to != null && appVersion != to && appVersion == from) {
       updateNotice = UpdateNotice.notInstalled;
+      await updatePlatform.writeMarker(null);
+      return;
+    }
+    // Offline mode has no server copy to compare with; the backup made before the update stays.
+    if (db.isLocal) {
       await updatePlatform.writeMarker(null);
       return;
     }

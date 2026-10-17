@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../platform/alert_sound.dart';
 import '../data/app_database.dart';
 import '../data/error_codes.dart';
+import '../data/local_state_store.dart';
 import '../platform/device_location.dart';
 import '../data/live_updates.dart';
 import '../features/app_feature.dart';
@@ -132,13 +133,24 @@ class CafeStore extends ChangeNotifier {
       (guestLocation == GuestLocationStatus.off ||
           guestLocation == GuestLocationStatus.allowed);
 
-  Future<void> load() async {
+  /// Offline mode: this install keeps everything in a local database and never needs a server.
+  bool get isLocalMode => db.isLocal;
+
+  /// Starts the app. [localStore] forces offline mode on that database (tests); otherwise the
+  /// installer's features.json decides.
+  Future<void> load({LocalStateStore? localStore}) async {
     features = FeatureSet.fromJson(await readFeatureFile());
-    await db.init();
-    await _initOffline();
-    await _checkConnectionAtStart();
-    // Don't open on an empty app: give the first data load up to 15 seconds.
-    if (!serverUnreachable) await db.waitForFirstLoad(const Duration(seconds: 15));
+    if (localStore != null) {
+      await db.initLocal(localStore);
+    } else if (features.mode == InstallMode.offline && !kIsWeb) {
+      await db.initLocal(await openLocalStateStore());
+    } else {
+      await db.init();
+      await _initOffline();
+      await _checkConnectionAtStart();
+      // Don't open on an empty app: give the first data load up to 15 seconds.
+      if (!serverUnreachable) await db.waitForFirstLoad(const Duration(seconds: 15));
+    }
     cafe = db.cafe;
     locale = db.locale;
     admin = db.admin;
@@ -491,7 +503,7 @@ class CafeStore extends ChangeNotifier {
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
 
   /// Whether this install is linked to one of the cafe slots.
-  bool get deviceLinked => db.boundSlot != null;
+  bool get deviceLinked => db.isLocal || db.boundSlot != null;
 
   Future<String?> createAdmin({
     required String email,
@@ -500,11 +512,20 @@ class CafeStore extends ChangeNotifier {
     String setupCode = '',
   }) async {
     if (admin != null) return l10n.errAdminExists;
-    if (db.boundSlot == null) return l10n.authDeviceNotLinked;
+    if (!db.isLocal && db.boundSlot == null) return l10n.authDeviceNotLinked;
     final trimmed = email.trim().toLowerCase();
     if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
     if (password != confirm) return l10n.errPasswordsMismatch;
     if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
+    if (db.isLocal) {
+      if (db.createLocalAdmin(email: trimmed, password: password) != null) return l10n.errAdminExists;
+      _hydrateOperational();
+      _syncStampCache = null;
+      admin = db.admin;
+      authKind = AuthKind.admin;
+      notifyListeners();
+      return null;
+    }
     if (db.client == null) {
       return l10n.errNotConfigured;
     }
@@ -545,6 +566,7 @@ class CafeStore extends ChangeNotifier {
     String password, {
     bool remember = false,
   }) async {
+    if (db.isLocal) return _signInLocalAdmin(email, password, remember: remember);
     if (db.client == null) {
       return l10n.errNotConfigured;
     }
@@ -590,6 +612,21 @@ class CafeStore extends ChangeNotifier {
     adminError = null;
     await db.writeRememberAdmin(remember);
     startLiveSync();
+    notifyListeners();
+    return null;
+  }
+
+  String? _signInLocalAdmin(String email, String password, {required bool remember}) {
+    if (!db.signInLocalAdmin(email: email, password: password, remember: remember)) {
+      adminError = l10n.errBadCredentials;
+      notifyListeners();
+      return adminError;
+    }
+    _hydrateOperational();
+    _syncStampCache = null;
+    admin = db.admin;
+    authKind = AuthKind.admin;
+    adminError = null;
     notifyListeners();
     return null;
   }
@@ -784,6 +821,11 @@ class CafeStore extends ChangeNotifier {
     currentShift = null;
     pinBuffer = '';
     db.cashierToken = null;
+    if (db.isLocal) {
+      db.localCashierId = null;
+      db.signOutLocalAdmin();
+      admin = null;
+    }
     // Leaving an offline session keeps its saved work; the next cashier is asked about it.
     offlineSession = false;
     _stopCashierPulse();
@@ -837,6 +879,10 @@ class CafeStore extends ChangeNotifier {
 
   /// Changes the signed-in admin's password after checking the current one.
   Future<String?> changeAdminPassword({required String current, required String next}) async {
+    if (db.isLocal) {
+      if (!Secrets.validPassword(next)) return l10n.errWeakPassword;
+      return db.changeLocalAdminPassword(current: current, next: next) ? null : l10n.catalogCurrentPasswordWrong;
+    }
     final client = db.client;
     final email = client?.auth.currentUser?.email ?? admin?.email ?? '';
     if (client == null || email.isEmpty) return l10n.errNoAdmin;

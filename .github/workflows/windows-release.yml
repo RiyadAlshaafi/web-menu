@@ -74,7 +74,9 @@ jobs:
           if (-not (Test-Path $iscc)) {
             choco install innosetup --no-progress -y
           }
-          & $iscc "/DAppVersion=$env:VERSION" windows\installer\cafe_pos.iss
+          # Setup checks its password against the same Supabase project the app uses.
+          $envFile = Get-Content .env | ConvertFrom-StringData
+          & $iscc "/DAppVersion=$env:VERSION" "/DSupabaseUrl=$($envFile.SUPABASE_URL)" "/DSupabaseKey=$($envFile.SUPABASE_ANON_KEY)" windows\installer\cafe_pos.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Write latest.json
