@@ -85,20 +85,6 @@ class AdminShell extends StatelessWidget {
       header: AppHeader(
         title: section.crumb(context),
         showMenu: drawer,
-        actions: [
-          HeaderAction(
-            icon: Icons.smartphone_outlined,
-            label: drawer ? null : context.l10n.adminCustomerView,
-            tooltip: drawer ? context.l10n.adminCustomerView : null,
-            onPressed: () {
-              if (store.activeTables.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.noTables)));
-                return;
-              }
-              context.go('/t/${store.activeTables.first.qrSlug}');
-            },
-          ),
-        ],
       ),
       // A short or narrow window scrolls the page instead of cutting its bottom off.
       body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
