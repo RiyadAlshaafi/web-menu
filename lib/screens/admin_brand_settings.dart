@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../platform/device_location.dart';
 import '../core/report_error.dart';
+import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -402,6 +403,7 @@ class _OrderingCardState extends State<OrderingCard> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
+    final locationCheck = store.allows(AppFeature.locationCheck);
     const numbers = TextInputType.numberWithOptions(decimal: true, signed: true);
     return TawlaPanel(
       child: Column(
@@ -409,6 +411,7 @@ class _OrderingCardState extends State<OrderingCard> {
         children: [
           PanelTitle(context.l10n.settingsOrderingTitle, size: 18),
           const SizedBox(height: 4),
+          if (locationCheck)
           SwitchRow(
             title: context.l10n.cafeLocationRequire,
             hint: context.l10n.cafeLocationRequireHint,
@@ -421,12 +424,14 @@ class _OrderingCardState extends State<OrderingCard> {
             value: store.autoPrintReceipt,
             onChanged: (value) => store.setAutoPrintReceipt(value),
           ),
+          if (store.allows(AppFeature.qrOrdering))
           SwitchRow(
             title: context.l10n.adminRequireCashierOnline,
             hint: context.l10n.adminRequireCashierOnlineHint,
             value: store.requireCashierOnline,
             onChanged: (value) => store.setRequireCashierOnline(value),
           ),
+          if (locationCheck) ...[
           const SizedBox(height: 14),
           Row(
             children: [
@@ -452,6 +457,7 @@ class _OrderingCardState extends State<OrderingCard> {
               Text(context.l10n.cafeLocationGpsNote, style: const TextStyle(color: TawlaTokens.muted, fontSize: 12)),
             ],
           ),
+          ],
         ],
       ),
     );

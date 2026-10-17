@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n_ext.dart';
 import '../printing/receipt_print.dart';
 import '../core/time_format.dart';
+import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';

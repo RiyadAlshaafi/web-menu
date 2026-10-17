@@ -66,7 +66,7 @@ class CashierShell extends StatelessWidget {
                   children: [
                     SyncStatusStrip(disconnected: view.disconnected, compact: compact),
                     const SizedBox(height: 14),
-                    for (final item in AppSections.cashier)
+                    for (final item in AppSections.visible(AppSections.cashier, store.features))
                       if (!view.offline || item.path == '/pos/takeout' || item.path == '/pos/shifts')
                       ShellNavItem(
                         section: item,

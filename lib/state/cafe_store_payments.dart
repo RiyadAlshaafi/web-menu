@@ -40,8 +40,14 @@ extension CafeStorePayments on CafeStore {
     return typeName(payment.paymentTypeId);
   }
 
-  List<PaymentType> get enabledPaymentTypes =>
-      paymentTypes.where((type) => type.enabled && !type.archived).toList();
+  /// Types a cashier can pick. Without the payment-types feature only cash (or the first type) is offered.
+  List<PaymentType> get enabledPaymentTypes {
+    final usable = paymentTypes.where((type) => type.enabled && !type.archived).toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    if (usable.isEmpty || allows(AppFeature.paymentTypes)) return usable;
+    final cash = usable.where((type) => type.nameEn.toLowerCase() == 'cash');
+    return [cash.isEmpty ? usable.first : cash.first];
+  }
 
   Future<String?> _refreshAfter(Future<String?> action) async {
     final error = await action;

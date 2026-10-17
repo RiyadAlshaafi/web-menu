@@ -135,6 +135,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                     alignment: WrapAlignment.spaceBetween,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
+                      if (store.allows(AppFeature.expenses))
                       SizedBox(
                         height: 52,
                         child: OutlinedButton.icon(

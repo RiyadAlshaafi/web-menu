@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 
 class AppSection {
@@ -9,6 +10,7 @@ class AppSection {
     required this.crumbOf,
     required this.icon,
     this.match,
+    this.feature,
   });
 
   final String path;
@@ -16,6 +18,9 @@ class AppSection {
   final String Function(AppLocalizations l10n) crumbOf;
   final IconData icon;
   final bool Function(String location)? match;
+
+  /// The installer feature this section belongs to; null means always shown.
+  final AppFeature? feature;
 
   String label(BuildContext context) => labelOf(context.l10n);
   String crumb(BuildContext context) => crumbOf(context.l10n);
@@ -27,6 +32,7 @@ class AppSections {
   static final admin = <AppSection>[
     AppSection(
       path: '/admin/dashboard',
+      feature: AppFeature.reports,
       labelOf: (l) => l.navDashboard,
       crumbOf: (l) => l.navDashboard,
       icon: Icons.grid_view_outlined,
@@ -39,6 +45,7 @@ class AppSections {
     ),
     AppSection(
       path: '/admin/discounts',
+      feature: AppFeature.discounts,
       labelOf: (l) => l.navDiscounts,
       crumbOf: (l) => l.navDiscounts,
       icon: Icons.percent,
@@ -46,18 +53,21 @@ class AppSections {
     ),
     AppSection(
       path: '/admin/tables',
+      feature: AppFeature.tables,
       labelOf: (l) => l.navTablesQr,
       crumbOf: (l) => l.navTablesQr,
       icon: Icons.qr_code_scanner_outlined,
     ),
     AppSection(
       path: '/admin/sales',
+      feature: AppFeature.reports,
       labelOf: (l) => l.navSalesLog,
       crumbOf: (l) => l.navSalesLog,
       icon: Icons.receipt_outlined,
     ),
     AppSection(
       path: '/admin/wages',
+      feature: AppFeature.expenses,
       labelOf: (l) => l.navWages,
       crumbOf: (l) => l.navWages,
       icon: Icons.account_balance_wallet_outlined,
@@ -79,6 +89,7 @@ class AppSections {
     ),
     AppSection(
       path: '/pos',
+      feature: AppFeature.qrOrdering,
       labelOf: (l) => l.navLiveAlerts,
       crumbOf: (l) => l.navLiveAlerts,
       icon: Icons.notifications_none_outlined,
@@ -86,12 +97,14 @@ class AppSections {
     ),
     AppSection(
       path: '/pos/tables',
+      feature: AppFeature.tables,
       labelOf: (l) => l.navFloorOverview,
       crumbOf: (l) => l.navFloorOverview,
       icon: Icons.table_bar_outlined,
     ),
     AppSection(
       path: '/pos/dishes',
+      feature: AppFeature.dishToggle,
       labelOf: (l) => l.navDishAvailability,
       crumbOf: (l) => l.navDishAvailability,
       icon: Icons.toggle_on_outlined,
@@ -109,6 +122,31 @@ class AppSections {
       icon: Icons.bar_chart_outlined,
     ),
   ];
+
+  /// Sections this install shows, in menu order.
+  static List<AppSection> visible(List<AppSection> sections, FeatureSet features) => sections
+      .where((section) => switch (section.feature) {
+            null => true,
+            final feature => features.allows(feature),
+          })
+      .toList();
+
+  /// Where to send [path] when its feature is off, or null when the page may open.
+  static String? blockedRedirect(String path, FeatureSet features) {
+    final List<AppSection> sections;
+    if (path.startsWith('/admin/')) {
+      sections = admin;
+    } else if (path == '/pos' || path.startsWith('/pos/')) {
+      sections = cashier;
+    } else {
+      return null;
+    }
+    final matches = sections.where((section) => section.matches(path));
+    if (matches.isEmpty) return null;
+    final feature = matches.first.feature;
+    if (feature == null || features.allows(feature)) return null;
+    return visible(sections, features).first.path;
+  }
 
   static AppSection forAdmin(String location) {
     return admin.firstWhere((section) => section.matches(location), orElse: () => admin.first);

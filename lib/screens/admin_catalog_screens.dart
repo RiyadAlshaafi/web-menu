@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
@@ -368,12 +369,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    // Left and right column cards, in the order of the design board.
-    final pairs = <(Widget, Widget)>[
-      (const CompanyInfoCard(), const AppearanceCard()),
-      (_cashierPanel(store), const PaymentTypesCard()),
+    // Left and right column cards, in the order of the design board. A null card's feature is off.
+    final pairs = <(Widget, Widget?)>[
+      (const CompanyInfoCard(), store.allows(AppFeature.branding) ? const AppearanceCard() : null),
+      (_cashierPanel(store), store.allows(AppFeature.paymentTypes) ? const PaymentTypesCard() : null),
       (_languagePanel(store), const OrderingCard()),
-      (_passwordPanel(store), const ExpenseCategoriesCard()),
+      (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -381,7 +382,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              for (final (left, right) in pairs) ...[left, const SizedBox(height: 16), right, const SizedBox(height: 16)],
+              for (final (left, right) in pairs) ...[
+                left,
+                const SizedBox(height: 16),
+                if (right != null) ...[right, const SizedBox(height: 16)],
+              ],
             ],
           );
         }
@@ -393,7 +398,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             children: [
               Expanded(child: Column(children: [for (final (left, _) in pairs) ...[left, const SizedBox(height: 16)]])),
               const SizedBox(width: 16),
-              Expanded(child: Column(children: [for (final (_, right) in pairs) ...[right, const SizedBox(height: 16)]])),
+              Expanded(child: Column(children: [for (final (_, right) in pairs) if (right != null) ...[right, const SizedBox(height: 16)]])),
             ],
           ),
         );

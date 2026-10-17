@@ -12,6 +12,8 @@ import '../data/app_database.dart';
 import '../data/error_codes.dart';
 import '../platform/device_location.dart';
 import '../data/live_updates.dart';
+import '../features/app_feature.dart';
+import '../features/feature_file.dart';
 import '../models/models.dart';
 import '../core/money.dart';
 import '../offline/offline_sync.dart';
@@ -90,6 +92,11 @@ class CafeStore extends ChangeNotifier {
   Timer? _cashierPulse;
   int _lastFailedCount = 0;
 
+  /// Features this install shows, from the installer's features.json (all on when there is none).
+  FeatureSet features = FeatureSet.all;
+
+  bool allows(AppFeature feature) => features.allows(feature);
+
   /// The server could not be reached at startup (or since); the till can run from its saved copy.
   bool serverUnreachable = false;
 
@@ -126,6 +133,7 @@ class CafeStore extends ChangeNotifier {
           guestLocation == GuestLocationStatus.allowed);
 
   Future<void> load() async {
+    features = FeatureSet.fromJson(await readFeatureFile());
     await db.init();
     await _initOffline();
     await _checkConnectionAtStart();

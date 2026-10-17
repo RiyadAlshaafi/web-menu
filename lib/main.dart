@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'navigation/app_sections.dart';
 import 'core/report_error.dart';
 import 'screens/admin_screens.dart' deferred as admin_ui;
 import 'screens/auth_screens.dart' deferred as auth_ui;
@@ -175,7 +176,8 @@ class _TawlaAppState extends State<TawlaApp> {
         if (path.startsWith('/admin') && widget.store.authKind != AuthKind.admin) {
           return widget.store.hasAdmin ? '/admin/login' : '/admin/setup';
         }
-        return null;
+        // Pages of features not ticked in the installer open the first page that is.
+        return AppSections.blockedRedirect(path, widget.store.features);
       },
       routes: [
         GoRoute(

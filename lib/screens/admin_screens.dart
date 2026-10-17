@@ -57,7 +57,7 @@ class AdminShell extends StatelessWidget {
                             style: const TextStyle(fontSize: 11, letterSpacing: 1.6, fontWeight: FontWeight.w800, color: Color(0xFF56606A)),
                           ),
                         ),
-                      for (final item in AppSections.admin)
+                      for (final item in AppSections.visible(AppSections.admin, store.features))
                         ShellNavItem(section: item, active: item.matches(location), compact: compact),
                       const Spacer(),
                       ShellProfileCard(
