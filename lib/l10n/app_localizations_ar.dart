@@ -316,6 +316,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authHaveAccountSignIn => 'لديك حساب بالفعل؟ سجّل الدخول';
 
   @override
+  String get authResetTitle => 'تعيين كلمة مرور جديدة للمدير';
+
+  @override
+  String authResetBody(String email) {
+    return 'فتح برنامج الإعداد إعادة تعيين كلمة المرور لمرة واحدة للحساب $email. تبقى المبيعات والقائمة والإعدادات كما هي.';
+  }
+
+  @override
+  String get authResetNewPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get authResetCta => 'حفظ كلمة المرور الجديدة  ←';
+
+  @override
+  String get authResetUnavailable =>
+      'انتهت صلاحية إعادة التعيين هذه أو استُخدمت من قبل. شغّل برنامج الإعداد مرة أخرى للحصول على واحدة جديدة.';
+
+  @override
+  String get authResetReady => 'يمكن الآن إعادة تعيين كلمة مرور المدير.';
+
+  @override
+  String get authResetOpen => 'تعيين كلمة المرور';
+
+  @override
   String get authForgotPasswordTitle => 'نسيت كلمة المرور';
 
   @override

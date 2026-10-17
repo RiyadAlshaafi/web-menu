@@ -680,6 +680,48 @@ abstract class AppLocalizations {
   /// **'Already have an account? Sign in'**
   String get authHaveAccountSignIn;
 
+  /// No description provided for @authResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a New Admin Password'**
+  String get authResetTitle;
+
+  /// No description provided for @authResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The setup unlocked a one-time password reset for {email}. Sales, menu and settings stay as they are.'**
+  String authResetBody(String email);
+
+  /// No description provided for @authResetNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get authResetNewPassword;
+
+  /// No description provided for @authResetCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Save New Password  →'**
+  String get authResetCta;
+
+  /// No description provided for @authResetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This password reset has expired or was already used. Run the setup again to get a new one.'**
+  String get authResetUnavailable;
+
+  /// No description provided for @authResetReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The admin password can be reset now.'**
+  String get authResetReady;
+
+  /// No description provided for @authResetOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Set new password'**
+  String get authResetOpen;
+
   /// No description provided for @authForgotPasswordTitle.
   ///
   /// In en, this message translates to:

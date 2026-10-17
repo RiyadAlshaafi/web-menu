@@ -316,6 +316,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authHaveAccountSignIn => 'Already have an account? Sign in';
 
   @override
+  String get authResetTitle => 'Set a New Admin Password';
+
+  @override
+  String authResetBody(String email) {
+    return 'The setup unlocked a one-time password reset for $email. Sales, menu and settings stay as they are.';
+  }
+
+  @override
+  String get authResetNewPassword => 'New Password';
+
+  @override
+  String get authResetCta => 'Save New Password  →';
+
+  @override
+  String get authResetUnavailable =>
+      'This password reset has expired or was already used. Run the setup again to get a new one.';
+
+  @override
+  String get authResetReady => 'The admin password can be reset now.';
+
+  @override
+  String get authResetOpen => 'Set new password';
+
+  @override
   String get authForgotPasswordTitle => 'Forgot Password';
 
   @override

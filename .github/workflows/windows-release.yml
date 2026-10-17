@@ -59,9 +59,12 @@ jobs:
         env:
           URL_SECRET: ${{ secrets.SUPABASE_URL }}
           KEY_SECRET: ${{ secrets.SUPABASE_ANON_KEY }}
+          RESET_SECRET: ${{ secrets.ADMIN_RESET_KEY }}
         run: |
           echo "SUPABASE_URL=${URL_SECRET:-https://kzafgozkgvcflcizuemr.supabase.co}" > .env
           echo "SUPABASE_ANON_KEY=${KEY_SECRET:-sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj}" >> .env
+          # Optional: signs the offline admin reset ticket (app and setup); the source default is used without it.
+          if [ -n "$RESET_SECRET" ]; then echo "ADMIN_RESET_KEY=$RESET_SECRET" >> .env; fi
 
       - run: flutter pub get
 
@@ -82,7 +85,9 @@ jobs:
           }
           # Only scheme and host, like the app (a secret may hold ".../rest/v1" or a trailing slash).
           $origin = ([Uri]$envFile.SUPABASE_URL).GetLeftPart([UriPartial]::Authority)
-          & $iscc "/DAppVersion=$env:VERSION" "/DSupabaseUrl=$origin" "/DSupabaseKey=$($envFile.SUPABASE_ANON_KEY)" windows\installer\cafe_pos.iss
+          $resetKey = @()
+          if ($envFile.ADMIN_RESET_KEY) { $resetKey = @("/DResetKey=$($envFile.ADMIN_RESET_KEY)") }
+          & $iscc "/DAppVersion=$env:VERSION" "/DSupabaseUrl=$origin" "/DSupabaseKey=$($envFile.SUPABASE_ANON_KEY)" @resetKey windows\installer\cafe_pos.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Write latest.json

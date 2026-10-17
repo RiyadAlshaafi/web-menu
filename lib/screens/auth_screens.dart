@@ -81,6 +81,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
               Text(context.l10n.authDeviceNotLinked, style: const TextStyle(color: CafeColors.alert, fontSize: 13, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
             ],
+            if (store.adminResetReady) ...[
+              const _AdminResetReadyCard(),
+              const SizedBox(height: 16),
+            ],
             Row(
               children: [
                 _DevLogo(
@@ -287,6 +291,36 @@ class _OfflineStartCard extends StatelessWidget {
   }
 }
 
+/// Shown after the seller re-ran the setup with "Reset the offline admin password".
+class _AdminResetReadyCard extends StatelessWidget {
+  const _AdminResetReadyCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: SoftCard(
+          padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
+          child: Row(
+            children: [
+              const Icon(Icons.lock_reset, color: CafeColors.terracotta),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(context.l10n.authResetReady, style: const TextStyle(fontWeight: FontWeight.w700)),
+              ),
+              TextButton(
+                onPressed: () => context.go('/admin/login'),
+                child: Text(context.l10n.authResetOpen, style: const TextStyle(color: CafeColors.terracotta)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PinPad extends StatelessWidget {
   const _PinPad({required this.store});
   final CafeStore store;
@@ -440,6 +474,19 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
       return;
     }
     setState(() => signingIn = true);
+    if (store.adminResetReady) {
+      final failure = await store.resetAdminPassword(password: password.text, confirm: confirm.text);
+      if (!mounted) return;
+      if (failure == null) {
+        context.go('/admin/dashboard');
+      } else {
+        setState(() {
+          signingIn = false;
+          error = failure;
+        });
+      }
+      return;
+    }
     final result = await store.signInAdmin(email.text, password.text, remember: remember);
     if (!mounted) return;
     if (result == null) {
@@ -449,10 +496,99 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
     }
   }
 
+  /// Forgotten offline password, unlocked by the setup: a new password for the same admin.
+  Widget _resetForm(CafeStore store) {
+    const fieldLabel = TextStyle(fontWeight: FontWeight.w700, fontSize: 12);
+    return CafeAuthFrame(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const _DevLogo(child: _AuthBrand()),
+              const Spacer(),
+              GhostChip(
+                label: context.l10n.authStaffPos,
+                icon: Icons.point_of_sale,
+                onTap: () => context.go('/login'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          SoftCard(
+            padding: const EdgeInsets.fromLTRB(32, 28, 32, 32),
+            child: Column(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(color: CafeColors.peach, shape: BoxShape.circle),
+                  child: const Icon(Icons.lock_reset, color: CafeColors.terracotta),
+                ),
+                const SizedBox(height: 14),
+                Text(context.l10n.authResetTitle, style: CafeTheme.display.copyWith(fontSize: 30), textAlign: TextAlign.center),
+                const SizedBox(height: 10),
+                Text(
+                  context.l10n.authResetBody(store.adminResetEmail),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: CafeColors.inkMuted, height: 1.35),
+                ),
+                const SizedBox(height: 22),
+                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authResetNewPassword, style: fieldLabel)),
+                const SizedBox(height: 6),
+                TextField(
+                  key: const Key('reset-password'),
+                  controller: password,
+                  obscureText: obscure,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.authCreateStrongPassword,
+                    prefixIcon: const Icon(Icons.lock_outline, size: 18),
+                    suffixIcon: IconButton(
+                      onPressed: () => setState(() => obscure = !obscure),
+                      icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 18),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authConfirmPassword, style: fieldLabel)),
+                const SizedBox(height: 6),
+                TextField(
+                  key: const Key('reset-confirm'),
+                  controller: confirm,
+                  obscureText: true,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.authRepeatPassword,
+                    prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(error!, style: const TextStyle(color: CafeColors.alert, fontSize: 12)),
+                ],
+                const SizedBox(height: 16),
+                TerracottaButton(
+                  label: context.l10n.authResetCta,
+                  busy: signingIn,
+                  onPressed: signingIn ? null : _submit,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final setup = widget.setup;
+    if (!setup && store.adminResetReady) return _resetForm(store);
 
     return CafeAuthFrame(
       child: AutofillGroup(

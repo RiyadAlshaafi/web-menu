@@ -137,6 +137,36 @@ extension AppDatabaseLocal on AppDatabase {
     return true;
   }
 
+  /// The admin's email, shown when a forgotten password is reset; null when there is no admin.
+  String? get localAdminEmail => _localAdminDoc()?['email'] as String?;
+
+  /// Ids of setup reset tickets already used on this PC, so a copied ticket cannot be used twice.
+  Set<String> get usedLocalAdminResets => {
+    for (final nonce in (_store.readDoc('adminResets') as List? ?? const [])) nonce as String,
+  };
+
+  /// Forgotten password: sets [next] from a setup reset ticket ([nonce]) without the old one.
+  /// Only the admin's password changes; sales, menu and settings stay. Returns false when there
+  /// is no admin or the ticket was already used.
+  bool resetLocalAdminPassword({required String nonce, required String next}) {
+    final doc = _localAdminDoc();
+    final used = usedLocalAdminResets;
+    if (doc == null || used.contains(nonce)) return false;
+    final salt = Secrets.publicId(16);
+    _store.transaction(() {
+      _store.writeDoc('admin', {
+        ...doc,
+        'salt': salt,
+        'hash': _localHash(next, salt),
+        'remember': false,
+        'resetAt': DateTime.now().toUtc().toIso8601String(),
+      });
+      _store.writeDoc('adminResets', [...used, nonce]);
+    });
+    _rememberAdmin = false;
+    return true;
+  }
+
   void signOutLocalAdmin() {
     final doc = _localAdminDoc();
     if (doc != null) _store.writeDoc('admin', {...doc, 'remember': false});

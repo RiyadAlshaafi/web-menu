@@ -143,6 +143,20 @@
   "authCreateAccessCta": "Create Access  →",
   "authSignInCta": "Sign In  →",
   "authHaveAccountSignIn": "Already have an account? Sign in",
+  "authResetTitle": "Set a New Admin Password",
+  "authResetBody": "The setup unlocked a one-time password reset for {email}. Sales, menu and settings stay as they are.",
+  "@authResetBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authResetNewPassword": "New Password",
+  "authResetCta": "Save New Password  →",
+  "authResetUnavailable": "This password reset has expired or was already used. Run the setup again to get a new one.",
+  "authResetReady": "The admin password can be reset now.",
+  "authResetOpen": "Set new password",
   "authForgotPasswordTitle": "Forgot Password",
   "authForgotPasswordSubtitle": "Enter the safe code to change your password",
   "authSafeCodeSent": "A security safe code was sent to the registered manager device / email.",

@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../platform/alert_sound.dart';
+import '../data/admin_reset.dart';
 import '../data/app_database.dart';
 import '../data/error_codes.dart';
 import '../data/local_state_store.dart';
@@ -136,14 +137,27 @@ class CafeStore extends ChangeNotifier {
   /// Offline mode: this install keeps everything in a local database and never needs a server.
   bool get isLocalMode => db.isLocal;
 
+  /// Offline mode: the setup's ticket for resetting a forgotten admin password, until it is used.
+  AdminResetTicket? adminResetTicket;
+  AdminResetFile _adminResetFile = const AdminResetFile();
+
+  /// The seller re-ran the setup with "Reset the offline admin password": admin sign-in asks for
+  /// a new password instead of the old one.
+  bool get adminResetReady => adminResetTicket != null;
+
+  /// The offline admin's email, shown on the reset form so the cafe knows which account it is.
+  String get adminResetEmail => db.isLocal ? db.localAdminEmail ?? '' : '';
+
   /// Starts the app. [localStore] forces offline mode on that database (tests); otherwise the
-  /// installer's features.json decides.
-  Future<void> load({LocalStateStore? localStore}) async {
+  /// installer's features.json decides. [resetFile] stands in for the setup's reset ticket (tests).
+  Future<void> load({LocalStateStore? localStore, AdminResetFile? resetFile}) async {
     features = FeatureSet.fromJson(await readFeatureFile());
     if (localStore != null) {
       await db.initLocal(localStore);
+      await _checkAdminReset(resetFile ?? const AdminResetFile());
     } else if (features.mode == InstallMode.offline && !kIsWeb) {
       await db.initLocal(await openLocalStateStore());
+      await _checkAdminReset(resetFile ?? const AdminResetFile());
     } else {
       await db.init(slot: features.slot);
       await _initOffline();
@@ -614,6 +628,42 @@ class CafeStore extends ChangeNotifier {
     startLiveSync();
     notifyListeners();
     return null;
+  }
+
+  /// Keeps a valid reset ticket for the sign-in screen. A broken, expired or used ticket, or one
+  /// with no admin to reset yet, is removed.
+  Future<void> _checkAdminReset(AdminResetFile file) async {
+    _adminResetFile = file;
+    adminResetTicket = null;
+    final text = await file.read();
+    if (text == null) return;
+    final ticket = AdminResetTicket.check(text, now: DateTime.now(), used: db.usedLocalAdminResets);
+    if (ticket != null && db.anyAdmin) {
+      adminResetTicket = ticket;
+      return;
+    }
+    if (ticket == null) reportError('admin reset', StateError('the reset ticket is broken, expired or used'));
+    await file.delete();
+  }
+
+  /// Forgotten offline admin password: sets [password] using the setup's reset ticket, then
+  /// signs the admin in. Sales, menu and settings are kept. Returns a translated error, or null.
+  Future<String?> resetAdminPassword({required String password, required String confirm}) async {
+    final ticket = adminResetTicket;
+    final email = db.isLocal ? db.localAdminEmail : null;
+    if (ticket == null || email == null) return l10n.authResetUnavailable;
+    if (DateTime.now().difference(ticket.issuedAt) > adminResetLifetime) {
+      adminResetTicket = null;
+      await _adminResetFile.delete();
+      notifyListeners();
+      return l10n.authResetUnavailable;
+    }
+    if (password != confirm) return l10n.errPasswordsMismatch;
+    if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
+    if (!db.resetLocalAdminPassword(nonce: ticket.nonce, next: password)) return l10n.authResetUnavailable;
+    adminResetTicket = null;
+    await _adminResetFile.delete();
+    return _signInLocalAdmin(email, password, remember: false);
   }
 
   String? _signInLocalAdmin(String email, String password, {required bool remember}) {

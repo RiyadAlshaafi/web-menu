@@ -19,6 +19,11 @@
 #ifndef SupabaseKey
   #define SupabaseKey "sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj"
 #endif
+; Signs the offline admin reset ticket. Must match adminResetKey in lib/data/admin_reset.dart;
+; the release workflow passes ADMIN_RESET_KEY from the repo secrets when it is set.
+#ifndef ResetKey
+  #define ResetKey "tawla-offline-admin-reset-v1"
+#endif
 
 [Setup]
 AppId={{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}
@@ -55,11 +60,15 @@ Filename: "{app}\menu_web_v1.exe"; Flags: nowait
 
 [UninstallDelete]
 Type: files; Name: "{app}\features.json"
+Type: files; Name: "{app}\admin_reset.json"
 
 [Code]
-// Pages: password (checked online) -> Online/Offline -> cafe slot (online only) -> feature checkboxes.
-// The answers are written to {app}\features.json, which lib/features/app_feature.dart reads. Keys must
-// match AppFeature.key. Silent updates show no pages and leave features.json as it is.
+// Pages: password (checked online) -> Online/Offline -> cafe slot (online only) -> admin reset
+// (offline only) -> feature checkboxes. The answers are written to {app}\features.json, which
+// lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages
+// and leave features.json as it is.
+// The admin reset writes {app}\admin_reset.json, a one-time signed ticket that lib/data/admin_reset.dart
+// checks when the app starts, so a forgotten offline admin password can be replaced without internet.
 const
   FeatureCount = 9;
   SlotCount = 8;
@@ -69,6 +78,7 @@ var
   ModePage: TInputOptionWizardPage;
   SlotPage: TInputOptionWizardPage;
   SlotNamesLoaded: Boolean;
+  ResetPage: TInputOptionWizardPage;
   FeaturePage: TWizardPage;
   FeatureList: TNewCheckListBox;
   FeatureKeys: array of String;
@@ -260,6 +270,45 @@ begin
   if (Result < 1) or (Result > SlotCount) then Result := 0;
 end;
 
+function ResetFile: String;
+begin
+  Result := AddBackslash(WizardDirValue) + 'admin_reset.json';
+end;
+
+// Must match adminResetSignature in lib/data/admin_reset.dart.
+function AdminResetSignature(Nonce, Issued: String): String;
+begin
+  Result := Lowercase(GetSHA256OfString('{#ResetKey}' + '|' + Nonce + '|' + Issued));
+end;
+
+// Random id of one ticket; the app saves it once used, so a copied ticket works only once.
+function NewNonce: String;
+var
+  I: Integer;
+  Seed: String;
+begin
+  Seed := GetDateTimeString('yyyymmddhhnnsszzz', '-', ':');
+  for I := 1 to 8 do
+    Seed := Seed + '-' + IntToStr(Random(2147483647));
+  Result := Lowercase(GetSHA256OfString(Seed));
+end;
+
+// The ticket the app checks: valid for 24 hours, in this PC's local time like the app's clock.
+function ResetTicketJson: String;
+var
+  Nonce, Issued: String;
+begin
+  Nonce := NewNonce;
+  Issued := GetDateTimeString('yyyy/mm/dd hh:nn:ss', '-', ':');
+  Result := '{"nonce": "' + Nonce + '", "issued": "' + Issued + '", "sig": "' +
+    AdminResetSignature(Nonce, Issued) + '"}';
+end;
+
+function ResetChosen: Boolean;
+begin
+  Result := OfflineChosen and ResetPage.Values[0];
+end;
+
 // Ticked when there is no saved choice yet, otherwise as saved.
 function StartsTicked(Key, Saved: String): Boolean;
 begin
@@ -363,7 +412,14 @@ begin
   // No default: a wrong slot would show another cafe's data.
   if SavedSlot > 0 then SlotPage.SelectedValueIndex := SavedSlot - 1;
 
-  FeaturePage := CreateCustomPage(SlotPage.ID, 'Features',
+  ResetPage := CreateInputOptionPage(SlotPage.ID, 'Admin password',
+    'Forgot the offline admin password?',
+    'Tick this to let the cafe set a new admin password when Cafe POS opens. No internet is needed for it. ' +
+    'Sales, menu, cashiers and settings are kept. The reset can be used once, within 24 hours.',
+    False, False);
+  ResetPage.Add('Reset the offline admin password');
+
+  FeaturePage := CreateCustomPage(ResetPage.ID, 'Features',
     'Tick the features this cafe gets. Login, menu, quick takeout, payment, receipts, shifts and settings are always included.');
   FeatureList := TNewCheckListBox.Create(FeaturePage);
   FeatureList.Parent := FeaturePage.Surface;
@@ -371,9 +427,10 @@ begin
   FeatureList.Height := FeaturePage.SurfaceHeight;
 end;
 
+// The slot page is for online tills; the admin reset is for offline tills (online ones reset by email).
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  Result := (PageID = SlotPage.ID) and OfflineChosen;
+  Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
@@ -409,7 +466,15 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if (CurStep = ssPostInstall) and not WizardSilent then
-    if not SaveStringToFile(FeaturesFile, FeaturesJson, False) then
-      MsgBox('Could not save the feature choices. Every feature will be on.', mbError, MB_OK);
+  if (CurStep <> ssPostInstall) or WizardSilent then Exit;
+  if not SaveStringToFile(FeaturesFile, FeaturesJson, False) then
+    MsgBox('Could not save the feature choices. Every feature will be on.', mbError, MB_OK);
+  // A ticket left from an earlier run must not outlive a setup that did not ask for one.
+  DeleteFile(ResetFile);
+  if ResetChosen then
+    if SaveStringToFile(ResetFile, ResetTicketJson, False) then
+      MsgBox('Cafe POS will now open. Go to Admin sign-in and set the new admin password (within 24 hours).',
+        mbInformation, MB_OK)
+    else
+      MsgBox('Could not save the admin password reset. Run the setup again.', mbError, MB_OK);
 end;
