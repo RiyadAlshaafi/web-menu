@@ -3,6 +3,8 @@
 # Actions tab (it then creates the tag from pubspec.yaml). See docs/RELEASING.md.
 # The release carries the installer and latest.json (version, download link, SHA-256), which
 # every till reads every 30 minutes.
+# A version with a label (1.6.0-beta.1, tag v1.6.0-beta.1) is published as a pre-release: GitHub
+# never makes a pre-release "latest", so tills don't auto-update to it; install it by hand.
 name: Windows release
 
 on:
@@ -32,7 +34,7 @@ jobs:
       - name: Read the version (and check the tag matches pubspec.yaml)
         shell: bash
         run: |
-          ver="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+          ver="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?).*/\1/')"
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$ver" ]; then
             echo "Tag $GITHUB_REF_NAME does not match pubspec.yaml version $ver. Raise the version first." >&2
             exit 1
@@ -42,6 +44,7 @@ jobs:
             exit 1
           fi
           echo "VERSION=$ver" >> "$GITHUB_ENV"
+          case "$ver" in *-*) echo "PRERELEASE=true" >> "$GITHUB_ENV" ;; *) echo "PRERELEASE=false" >> "$GITHUB_ENV" ;; esac
           echo "TAG=v$ver" >> "$GITHUB_ENV"
 
       - uses: subosito/flutter-action@v2
@@ -89,7 +92,8 @@ jobs:
           tag_name: ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
           name: Cafe POS ${{ env.TAG }}
-          make_latest: true
+          prerelease: ${{ env.PRERELEASE == 'true' }}
+          make_latest: ${{ env.PRERELEASE == 'true' && 'false' || 'true' }}
           files: |
             build/installer/CafePOS-setup-${{ env.VERSION }}.exe
             build/installer/latest.json

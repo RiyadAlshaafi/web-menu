@@ -63,6 +63,14 @@ void main() {
       expect(isNewer('nonsense', '1.0.0'), isFalse);
       expect(isNewer('1.0.1', ''), isFalse, reason: 'an unknown current version never triggers an install');
     });
+
+    test('a beta comes before its release and after the one before', () {
+      expect(isNewer('1.6.0', '1.6.0-beta.1'), isTrue, reason: 'a beta till moves on to the final release');
+      expect(isNewer('1.6.0-beta.1', '1.6.0'), isFalse);
+      expect(isNewer('1.6.0-beta.1', '1.5.0'), isTrue);
+      expect(isNewer('1.6.0-beta.1', '1.6.0-beta.1+12'), isFalse);
+      expect(isNewer('1.6.0+12', '1.6.0-beta.1+12'), isTrue);
+    });
   });
 
   group('latest.json', () {
