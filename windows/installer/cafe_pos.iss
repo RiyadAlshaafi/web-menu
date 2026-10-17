@@ -78,6 +78,26 @@ begin
   Result := '"' + Value + '"';
 end;
 
+// The scheme and host of Url only, like the app's AppDatabase.supabaseUrl, so a configured
+// address with a path (".../rest/v1") or a trailing slash still reaches the API.
+function ServerOrigin(Url: String): String;
+var
+  Start, Slash: Integer;
+  Rest: String;
+begin
+  Url := Trim(Url);
+  Start := Pos('://', Url);
+  if Start = 0 then
+  begin
+    Result := Url;
+    Exit;
+  end;
+  Rest := Copy(Url, Start + 3, Length(Url));
+  Slash := Pos('/', Rest);
+  if Slash > 0 then Rest := Copy(Rest, 1, Slash - 1);
+  Result := Copy(Url, 1, Start + 2) + Rest;
+end;
+
 // True only when the server says the password is the dev screen password.
 // 5 wrong tries lock the check for 15 minutes (it then answers false).
 function PasswordAccepted(Password: String; var Problem: String): Boolean;
@@ -89,7 +109,7 @@ begin
   Result := False;
   try
     Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
-    Http.Open('POST', '{#SupabaseUrl}/rest/v1/rpc/check_dev_access', False);
+    Http.Open('POST', ServerOrigin('{#SupabaseUrl}') + '/rest/v1/rpc/check_dev_access', False);
     Http.SetTimeouts(10000, 10000, 15000, 15000);
     Http.SetRequestHeader('apikey', '{#SupabaseKey}');
     Http.SetRequestHeader('Content-Type', 'application/json');

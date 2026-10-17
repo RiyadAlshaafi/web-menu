@@ -75,8 +75,14 @@ jobs:
             choco install innosetup --no-progress -y
           }
           # Setup checks its password against the same Supabase project the app uses.
-          $envFile = Get-Content .env | ConvertFrom-StringData
-          & $iscc "/DAppVersion=$env:VERSION" "/DSupabaseUrl=$($envFile.SUPABASE_URL)" "/DSupabaseKey=$($envFile.SUPABASE_ANON_KEY)" windows\installer\cafe_pos.iss
+          $envFile = @{}
+          foreach ($line in Get-Content .env) {
+            $pair = $line -split '=', 2
+            if ($pair.Count -eq 2) { $envFile[$pair[0].Trim()] = $pair[1].Trim() }
+          }
+          # Only scheme and host, like the app (a secret may hold ".../rest/v1" or a trailing slash).
+          $origin = ([Uri]$envFile.SUPABASE_URL).GetLeftPart([UriPartial]::Authority)
+          & $iscc "/DAppVersion=$env:VERSION" "/DSupabaseUrl=$origin" "/DSupabaseKey=$($envFile.SUPABASE_ANON_KEY)" windows\installer\cafe_pos.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Write latest.json
