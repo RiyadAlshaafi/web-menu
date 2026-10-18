@@ -1004,6 +1004,8 @@ class AppDatabase {
       monthlyOrderNumber: (row['monthly_order_number'] as num?)?.toInt(),
       shiftDisplayNumber: row['shift_display_number'] as String?,
       monthlyDisplayNumber: row['monthly_display_number'] as String?,
+      voidedAt: DateTime.tryParse(row['voided_at'] as String? ?? ''),
+      voidReason: row['void_reason'] as String?,
       changes: history,
     );
   }
@@ -1865,6 +1867,28 @@ class AppDatabase {
       return result['error'] as String? ?? 'not_found';
     } catch (error, stackTrace) {
       reportError('shift expense', error, stackTrace);
+      return _errorCode(error);
+    }
+  }
+
+  /// Voids the signed-in cashier's own paid sale on their open shift. Null on success.
+  Future<String?> voidPayment(String paymentId, String reason) async {
+    if (isLocal) return _localVoidPayment(paymentId, reason);
+    if (client == null) return ErrorCodes.notConfigured;
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(
+        'void_payment',
+        params: {'p_payment_id': paymentId, 'p_reason': reason},
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk(liveOnly: true);
+        return null;
+      }
+      return result['error'] as String? ?? 'not_found';
+    } catch (error, stackTrace) {
+      reportError('void payment', error, stackTrace);
       return _errorCode(error);
     }
   }

@@ -409,6 +409,8 @@ extension AppDatabaseLocal on AppDatabase {
       monthlyOrderNumber: payment.monthlyOrderNumber,
       shiftDisplayNumber: payment.shiftDisplayNumber,
       monthlyDisplayNumber: payment.monthlyDisplayNumber,
+      voidedAt: payment.voidedAt,
+      voidReason: payment.voidReason,
       changes: [
         ...payment.changes,
         PaymentMethodChange(
@@ -424,6 +426,29 @@ extension AppDatabaseLocal on AppDatabase {
     );
     _payments = [for (final p in _payments) p.id == paymentId ? changed : p];
     _store.putRecords('payments', [_paymentToLocal(changed)]);
+    return null;
+  }
+
+  /// Like the server: the cashier's own sale on an open shift is marked void and leaves the
+  /// shift's sales total. The order stays paid, so its table is not reopened.
+  String? _localVoidPayment(String paymentId, String reason) {
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) return 'reason required';
+    final payment = _payments.where((p) => p.id == paymentId && p.cashierId == localCashierId).firstOrNull;
+    if (payment == null) return 'not_found';
+    if (payment.isVoided) return 'already voided';
+    final shift = _shifts.where((s) => s.id == payment.shiftId && s.isOpen).firstOrNull;
+    if (shift == null) return 'shift closed';
+    _store.transaction(() {
+      payment
+        ..voidedAt = DateTime.now().toUtc()
+        ..voidReason = trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed;
+      shift
+        ..cashSales = max(0.0, _round2(shift.cashSales - payment.totalDue))
+        ..transactionCount = max(0, shift.transactionCount - 1);
+      _store.putRecords('payments', [_paymentToLocal(payment)]);
+      _store.putRecords('shifts', [shift.toJson()]);
+    });
     return null;
   }
 

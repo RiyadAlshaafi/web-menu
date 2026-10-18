@@ -63,9 +63,11 @@ List<SaleLedgerRow> saleLedgerRows(
   String? shiftId,
   DateTime? from,
   DateTime? to,
+  bool includeVoided = false,
 }) {
   final needle = query.trim().toLowerCase();
   final list = store.payments.where((payment) {
+    if (!includeVoided && payment.isVoided) return false;
     if (ownCashierId != null && payment.cashierId != ownCashierId) return false;
     if (cashierName != null && saleLedgerRow(store, payment).cashierName != cashierName) return false;
     if (tableNumber != null && saleLedgerRow(store, payment).tableNumber != tableNumber) return false;
@@ -83,6 +85,10 @@ List<SaleLedgerRow> saleLedgerRows(
   list.sort((a, b) => b.payment.paidAt.compareTo(a.payment.paidAt));
   return list;
 }
+
+/// Money a list of sales brought in; voided sales count for nothing.
+double salesTotal(Iterable<SaleLedgerRow> rows) =>
+    rows.where((row) => !row.payment.isVoided).fold<double>(0, (sum, row) => sum + row.total);
 
 bool _expenseMatchesCategory(CafeStore store, ShiftExpense expense, String categoryId) {
   if (expense.categoryId == categoryId) return true;

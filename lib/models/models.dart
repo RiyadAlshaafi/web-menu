@@ -540,6 +540,8 @@ class Payment {
     this.cashierName = '',
     this.paymentTypeNameEn,
     this.paymentTypeNameAr,
+    this.voidedAt,
+    this.voidReason,
     List<PaymentMethodChange>? changes,
   }) : changes = changes ?? [];
 
@@ -564,7 +566,12 @@ class Payment {
   final int? monthlyOrderNumber;
   final String? shiftDisplayNumber;
   final String? monthlyDisplayNumber;
+  /// Set when the sale was voided; a voided sale stays listed but counts toward no total.
+  DateTime? voidedAt;
+  String? voidReason;
   final List<PaymentMethodChange> changes;
+
+  bool get isVoided => voidedAt != null;
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
     id: json['id'] as String,
@@ -587,6 +594,8 @@ class Payment {
     cashierName: json['cashierName'] as String? ?? '',
     paymentTypeNameEn: json['paymentTypeNameEn'] as String?,
     paymentTypeNameAr: json['paymentTypeNameAr'] as String?,
+    voidedAt: DateTime.tryParse(json['voidedAt'] as String? ?? ''),
+    voidReason: json['voidReason'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -610,6 +619,8 @@ class Payment {
     'monthlyOrderNumber': monthlyOrderNumber,
     'shiftDisplayNumber': shiftDisplayNumber,
     'monthlyDisplayNumber': monthlyDisplayNumber,
+    'voidedAt': voidedAt?.toIso8601String(),
+    'voidReason': voidReason,
     'changes': changes.map((change) => change.toJson()).toList(),
   };
 }

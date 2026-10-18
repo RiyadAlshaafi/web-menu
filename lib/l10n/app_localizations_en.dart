@@ -1768,4 +1768,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dishChoicesHoldCard => 'choose ingredients and extras';
+
+  @override
+  String get voidSale => 'Void sale';
+
+  @override
+  String get voidSaleTitle => 'Void this sale?';
+
+  @override
+  String get voidSaleMessage =>
+      'Use this when the customer left after paying. The sale stays in the log marked VOID and stops counting in sales and the drawer. Give back any cash yourself.';
+
+  @override
+  String get voidReasonLabel => 'Reason';
+
+  @override
+  String get voidReasonHint => 'e.g. Customer left, food was late';
+
+  @override
+  String get voidConfirm => 'Void sale';
+
+  @override
+  String get voidDone => 'Sale voided';
+
+  @override
+  String get voidStatus => 'Void';
+
+  @override
+  String voidReasonLine(String reason) {
+    return 'Void reason: $reason';
+  }
+
+  @override
+  String get voidNotAllowed =>
+      'Only the cashier who took this sale can void it, while their shift is open.';
+
+  @override
+  String get voidAlreadyDone => 'This sale is already voided.';
+
+  @override
+  String get voidReasonRequired => 'Write a reason for the void.';
+
+  @override
+  String get voidWaitForSync =>
+      'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.';
 }

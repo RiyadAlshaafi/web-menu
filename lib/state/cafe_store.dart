@@ -424,6 +424,7 @@ class CafeStore extends ChangeNotifier {
         ..write(payment.totalDue)
         ..write(payment.paymentTypeId)
         ..write(payment.paymentTypeNameEn)
+        ..write(payment.isVoided)
         ..write(payment.changes.length);
     }
     for (final type in paymentTypes) {

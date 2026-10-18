@@ -559,5 +559,18 @@
   "dishChoicesApply": "تطبيق",
   "dishChoicesTapLine": "اضغط على السطر لتغيير مكوناته.",
   "dishChoiceWithout": "بدون {name}",
-  "dishChoicesHoldCard": "اختيار المكونات والإضافات"
+  "dishChoicesHoldCard": "اختيار المكونات والإضافات",
+  "voidSale": "إلغاء البيع",
+  "voidSaleTitle": "إلغاء هذا البيع؟",
+  "voidSaleMessage": "استخدم هذا عندما يغادر الزبون بعد الدفع. يبقى البيع في السجل بعلامة ملغى ولا يُحسب في المبيعات أو الدرج. أعد النقود بنفسك إن وُجدت.",
+  "voidReasonLabel": "السبب",
+  "voidReasonHint": "مثلاً: غادر الزبون، تأخر الطعام",
+  "voidConfirm": "إلغاء البيع",
+  "voidDone": "تم إلغاء البيع",
+  "voidStatus": "ملغى",
+  "voidReasonLine": "سبب الإلغاء: {reason}",
+  "voidNotAllowed": "فقط الكاشير الذي سجّل هذا البيع يمكنه إلغاؤه، وورديته مفتوحة.",
+  "voidAlreadyDone": "هذا البيع ملغى بالفعل.",
+  "voidReasonRequired": "اكتب سبب الإلغاء.",
+  "voidWaitForSync": "لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم ألغه."
 }

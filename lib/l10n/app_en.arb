@@ -905,5 +905,19 @@
   "dishChoicesTapLine": "Tap a line to change its ingredients.",
   "dishChoiceWithout": "No {name}",
   "@dishChoiceWithout": {"placeholders": {"name": {"type": "String"}}},
-  "dishChoicesHoldCard": "choose ingredients and extras"
+  "dishChoicesHoldCard": "choose ingredients and extras",
+  "voidSale": "Void sale",
+  "voidSaleTitle": "Void this sale?",
+  "voidSaleMessage": "Use this when the customer left after paying. The sale stays in the log marked VOID and stops counting in sales and the drawer. Give back any cash yourself.",
+  "voidReasonLabel": "Reason",
+  "voidReasonHint": "e.g. Customer left, food was late",
+  "voidConfirm": "Void sale",
+  "voidDone": "Sale voided",
+  "voidStatus": "Void",
+  "voidReasonLine": "Void reason: {reason}",
+  "@voidReasonLine": {"placeholders": {"reason": {"type": "String"}}},
+  "voidNotAllowed": "Only the cashier who took this sale can void it, while their shift is open.",
+  "voidAlreadyDone": "This sale is already voided.",
+  "voidReasonRequired": "Write a reason for the void.",
+  "voidWaitForSync": "This sale hasn't reached the server yet. Wait until it syncs, then void it."
 }

@@ -3217,6 +3217,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'choose ingredients and extras'**
   String get dishChoicesHoldCard;
+
+  /// No description provided for @voidSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Void sale'**
+  String get voidSale;
+
+  /// No description provided for @voidSaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void this sale?'**
+  String get voidSaleTitle;
+
+  /// No description provided for @voidSaleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this when the customer left after paying. The sale stays in the log marked VOID and stops counting in sales and the drawer. Give back any cash yourself.'**
+  String get voidSaleMessage;
+
+  /// No description provided for @voidReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get voidReasonLabel;
+
+  /// No description provided for @voidReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Customer left, food was late'**
+  String get voidReasonHint;
+
+  /// No description provided for @voidConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Void sale'**
+  String get voidConfirm;
+
+  /// No description provided for @voidDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale voided'**
+  String get voidDone;
+
+  /// No description provided for @voidStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Void'**
+  String get voidStatus;
+
+  /// No description provided for @voidReasonLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Void reason: {reason}'**
+  String voidReasonLine(String reason);
+
+  /// No description provided for @voidNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the cashier who took this sale can void it, while their shift is open.'**
+  String get voidNotAllowed;
+
+  /// No description provided for @voidAlreadyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'This sale is already voided.'**
+  String get voidAlreadyDone;
+
+  /// No description provided for @voidReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reason for the void.'**
+  String get voidReasonRequired;
+
+  /// No description provided for @voidWaitForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.'**
+  String get voidWaitForSync;
 }
 
 class _AppLocalizationsDelegate

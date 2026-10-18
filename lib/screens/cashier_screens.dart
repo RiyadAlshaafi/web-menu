@@ -23,6 +23,7 @@ import '../widgets/scroll_when_short.dart';
 import '../widgets/shell_parts.dart';
 import '../widgets/tawla_ui.dart';
 import '../widgets/update_panel.dart';
+import '../widgets/void_sale_dialog.dart';
 
 
 part 'cashier/shell.dart';

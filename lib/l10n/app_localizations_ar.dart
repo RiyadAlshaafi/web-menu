@@ -1757,4 +1757,48 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dishChoicesHoldCard => 'اختيار المكونات والإضافات';
+
+  @override
+  String get voidSale => 'إلغاء البيع';
+
+  @override
+  String get voidSaleTitle => 'إلغاء هذا البيع؟';
+
+  @override
+  String get voidSaleMessage =>
+      'استخدم هذا عندما يغادر الزبون بعد الدفع. يبقى البيع في السجل بعلامة ملغى ولا يُحسب في المبيعات أو الدرج. أعد النقود بنفسك إن وُجدت.';
+
+  @override
+  String get voidReasonLabel => 'السبب';
+
+  @override
+  String get voidReasonHint => 'مثلاً: غادر الزبون، تأخر الطعام';
+
+  @override
+  String get voidConfirm => 'إلغاء البيع';
+
+  @override
+  String get voidDone => 'تم إلغاء البيع';
+
+  @override
+  String get voidStatus => 'ملغى';
+
+  @override
+  String voidReasonLine(String reason) {
+    return 'سبب الإلغاء: $reason';
+  }
+
+  @override
+  String get voidNotAllowed =>
+      'فقط الكاشير الذي سجّل هذا البيع يمكنه إلغاؤه، وورديته مفتوحة.';
+
+  @override
+  String get voidAlreadyDone => 'هذا البيع ملغى بالفعل.';
+
+  @override
+  String get voidReasonRequired => 'اكتب سبب الإلغاء.';
+
+  @override
+  String get voidWaitForSync =>
+      'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم ألغه.';
 }

@@ -153,6 +153,7 @@ extension CafeStorePayments on CafeStore {
         .where(
           (payment) =>
               payment.shiftId == shift.id &&
+              !payment.isVoided &&
               (payment.paymentTypeId == null ||
                   cashIds.contains(payment.paymentTypeId)),
         )
@@ -236,6 +237,41 @@ extension CafeStorePayments on CafeStore {
     if (failure != null) return _expenseError(failure);
     _hydrateOperational();
     _syncStampCache = null;
+    notifyListeners();
+    return null;
+  }
+
+  /// Whether the signed-in cashier may void [payment]: their own sale on their open shift.
+  bool canVoid(Payment payment) {
+    final cashier = currentCashier;
+    final open = currentShift ?? openShift;
+    return cashier != null &&
+        open != null &&
+        open.isOpen &&
+        open.id == payment.shiftId &&
+        payment.cashierId == cashier.id &&
+        !payment.isVoided;
+  }
+
+  /// Voids a paid sale (whole order) taken by the signed-in cashier on their open shift.
+  Future<String?> voidPayment(Payment payment, String reason) async {
+    if (payment.isVoided) return l10n.voidAlreadyDone;
+    if (!canVoid(payment)) return l10n.voidNotAllowed;
+    if (reason.trim().isEmpty) return l10n.voidReasonRequired;
+    if (_localItems.any((item) => item.kind == 'takeout' && item.id == payment.id)) {
+      return l10n.voidWaitForSync;
+    }
+    final failure = await db.voidPayment(payment.id, reason.trim());
+    if (failure != null) {
+      if (_sessionExpired(failure)) return failure;
+      return switch (failure) {
+        'reason required' => l10n.voidReasonRequired,
+        'already voided' => l10n.voidAlreadyDone,
+        'not_found' || 'shift closed' => l10n.voidNotAllowed,
+        _ => failure,
+      };
+    }
+    await syncFromDisk();
     notifyListeners();
     return null;
   }

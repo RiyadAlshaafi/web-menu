@@ -145,6 +145,50 @@ void main() {
     });
   });
 
+  group('voided sales', () {
+    test('a void keeps the sale listed but takes it off the shift, and the order stays paid', () async {
+      final dish = await _dish();
+      final shift = await _openShift(await _cashier('Sara', '1234'));
+      await db.quickTakeoutReceipt(_ticket(dish, 2), db.paymentTypes.first.id);
+      await db.quickTakeoutReceipt(_ticket(dish, 1), db.paymentTypes.first.id);
+      final sale = db.payments.firstWhere((p) => p.totalDue == 15);
+
+      expect(await db.voidPayment(sale.id, '  Customer left  '), isNull);
+
+      final voided = db.payments.firstWhere((p) => p.id == sale.id);
+      expect(voided.isVoided, isTrue);
+      expect(voided.voidReason, 'Customer left');
+      expect(db.payments, hasLength(2));
+      final saved = db.shifts.firstWhere((s) => s.id == shift.id);
+      expect(saved.cashSales, 7.5);
+      expect(saved.transactionCount, 1);
+      expect(db.orders.firstWhere((o) => o.id == sale.orderId).status, OrderStatus.paid);
+    });
+
+    test('a blank reason, a second void, another cashier or a closed shift are refused', () async {
+      final dish = await _dish();
+      final sara = await _cashier('Sara', '1234');
+      final omar = await _cashier('Omar', '1234');
+      final shift = await _openShift(sara);
+      await db.quickTakeoutReceipt(_ticket(dish, 1), null);
+      final sale = db.payments.single;
+
+      expect(await db.voidPayment(sale.id, '   '), 'reason required');
+      expect((await db.loginCashier(omar, '1234'))['ok'], isTrue);
+      expect(await db.voidPayment(sale.id, 'left'), 'not_found');
+      expect((await db.loginCashier(sara, '1234'))['ok'], isTrue);
+      expect(db.payments.single.isVoided, isFalse);
+      expect(await db.voidPayment(sale.id, 'left'), isNull);
+      expect(await db.voidPayment(sale.id, 'again'), 'already voided');
+
+      await db.quickTakeoutReceipt(_ticket(dish, 1), null);
+      final later = db.payments.firstWhere((p) => !p.isVoided);
+      final open = db.shifts.firstWhere((s) => s.id == shift.id)..closedAt = DateTime.now().toUtc();
+      await db.writeShifts([open, ...db.shifts.where((s) => s.id != shift.id)]);
+      expect(await db.voidPayment(later.id, 'late'), 'shift closed');
+    });
+  });
+
   group('expenses', () {
     test('are numbered E-001, E-002 and an edit voids the old one', () async {
       final sara = await _cashier('Sara', '1234');
@@ -236,6 +280,23 @@ void main() {
       expect((await db.loginCashier(sara, '1234'))['ok'], isTrue);
       await db.quickTakeoutReceipt(_ticket(dish, 1), null);
       expect(db.payments.first.monthlyOrderNumber, 2, reason: 'numbering continues after a restart');
+    });
+
+    test('a voided sale is still voided after the app restarts', () async {
+      final path = p.join(dir.path, localDatabaseFileName);
+      db.closeLocal();
+      await db.initLocal(SqliteLocalStateStore.open(path));
+      final dish = await _dish();
+      await _openShift(await _cashier('Sara', '1234'));
+      await db.quickTakeoutReceipt(_ticket(dish, 2), null);
+      expect(await db.voidPayment(db.payments.single.id, 'Customer left'), isNull);
+
+      db.closeLocal();
+      await db.initLocal(SqliteLocalStateStore.open(path));
+
+      expect(db.payments.single.isVoided, isTrue);
+      expect(db.payments.single.voidReason, 'Customer left');
+      expect(db.shifts.single.cashSales, 0);
     });
   });
 

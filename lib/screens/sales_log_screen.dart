@@ -15,10 +15,12 @@ import '../printing/pdf_text.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../core/time_format.dart';
+import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/tawla_ui.dart';
+import '../widgets/void_sale_dialog.dart';
 
 enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
 
@@ -58,7 +60,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
     final safePage = page.clamp(0, pages - 1);
     final visible = rows.skip(safePage * pageSize).take(pageSize).toList();
     final own = widget.ownSalesOnly;
-    final total = rows.fold<double>(0, (sum, row) => sum + row.total);
+    final total = salesTotal(rows);
 
     final exportCsv = OutlineAction(
       label: context.l10n.salesExportCsv,
@@ -308,13 +310,17 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
           cell(store.paymentLabel(row.payment)),
           Expanded(
             flex: 2,
-            child: Align(alignment: AlignmentDirectional.centerStart, child: StatusBadge(context.l10n.salesPaid, tone: BadgeTone.success, dot: true)),
+            child: Align(alignment: AlignmentDirectional.centerStart, child: _statusBadge(context, row.payment)),
           ),
           if (own) cell(store.currency.format(row.total), end: true, style: totalStyle),
         ],
       ),
     );
   }
+
+  Widget _statusBadge(BuildContext context, Payment payment) => payment.isVoided
+      ? StatusBadge(context.l10n.voidStatus, tone: BadgeTone.danger, dot: true)
+      : StatusBadge(context.l10n.salesPaid, tone: BadgeTone.success, dot: true);
 
   Widget _date(String label, DateTime? value, ValueChanged<DateTime?> onPick) => DateBox(label: label, value: value, onPicked: onPick);
 
@@ -339,6 +345,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       shiftId: shiftId,
       from: from,
       to: to,
+      includeVoided: true,
     );
     list.sort((a, b) {
       final result = switch (sort) {
@@ -351,7 +358,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         _Sort.discount => a.discount.compareTo(b.discount),
         _Sort.total => a.total.compareTo(b.total),
         _Sort.method => store.paymentLabel(a.payment).compareTo(store.paymentLabel(b.payment)),
-        _Sort.status => 0,
+        _Sort.status => a.payment.isVoided == b.payment.isVoided ? 0 : (a.payment.isVoided ? 1 : -1),
       };
       return ascending ? result : -result;
     });
@@ -409,7 +416,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                     Text('${context.l10n.salesColDiscount}: ${live.currency.format(row.discount)}'),
                     Text('${context.l10n.salesColTotal}: ${live.currency.format(row.total)}', style: const TextStyle(fontWeight: FontWeight.w800)),
                     Text('${context.l10n.salesColMethod}: ${live.paymentLabel(current)}'),
-                    if (choices.isNotEmpty)
+                    if (choices.isNotEmpty && !current.isVoided)
                       DropdownButton<String>(
                         value: choices.contains(current.paymentTypeId) ? current.paymentTypeId : null,
                         items: choices.map((id) => DropdownMenuItem(value: id, child: Text(live.typeName(id)))).toList(),
@@ -432,12 +439,26 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                             style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
                           ),
                         )),
-                    Text('${context.l10n.salesColStatus}: ${context.l10n.salesPaid}'),
+                    Text('${context.l10n.salesColStatus}: ${current.isVoided ? context.l10n.voidStatus : context.l10n.salesPaid}'),
+                    if (current.isVoided)
+                      Text(
+                        context.l10n.voidReasonLine(current.voidReason ?? ''),
+                        style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700),
+                      ),
                   ],
                 ),
               ),
             ),
-            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel))],
+            actions: [
+              if (live.canVoid(current))
+                OutlinedButton.icon(
+                  style: CafeButtons.destructiveOutlined,
+                  onPressed: () => showVoidSaleDialog(context, live, current),
+                  icon: const Icon(Icons.block, size: 18),
+                  label: Text(context.l10n.voidSale),
+                ),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
+            ],
           );
         },
       ),
@@ -445,7 +466,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<SaleLedgerRow> rows) async {
-    final buffer = StringBuffer('${context.l10n.salesReceiptNo},${context.l10n.salesOrderNo},date,table,cashier,items,subtotal,discount,total,method,status\n');
+    final buffer = StringBuffer('${context.l10n.salesReceiptNo},${context.l10n.salesOrderNo},date,table,cashier,items,subtotal,discount,total,method,status,void_reason\n');
     for (final row in rows) {
       buffer.writeln([
         store.receiptNumber(row.payment),
@@ -458,7 +479,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.discount,
         row.total,
         store.paymentLabel(row.payment),
-        'paid',
+        row.payment.isVoided ? 'void' : 'paid',
+        row.payment.voidReason ?? '',
       ].map(csvCell).join(','));
     }
     try {
@@ -516,7 +538,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                           store.currency.format(row.discount),
                           store.currency.format(row.total),
                           store.paymentLabel(row.payment),
-                          'Paid',
+                          row.payment.isVoided ? 'Void' : 'Paid',
                         ])
                     .toList(),
               ),

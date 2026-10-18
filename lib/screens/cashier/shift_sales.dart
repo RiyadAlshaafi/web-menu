@@ -90,7 +90,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                     return at(b).compareTo(at(a));
                   });
                 final ledger = WideTable(
-                  minWidth: 860,
+                  minWidth: 920,
                   child: Container(
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -214,7 +214,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
           SizedBox(width: 120, child: Align(alignment: AlignmentDirectional.centerStart, child: method)),
           SizedBox(width: 110, child: Align(alignment: AlignmentDirectional.centerStart, child: status)),
           SizedBox(width: 120, child: amount),
-          SizedBox(width: 150, child: Align(alignment: AlignmentDirectional.centerEnd, child: actions)),
+          SizedBox(width: 210, child: Align(alignment: AlignmentDirectional.centerEnd, child: actions)),
         ],
       ),
     );
@@ -239,23 +239,49 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       ),
       time: Text(formatTripoliTime(payment.paidAt), style: const TextStyle(fontSize: 14)),
       method: StatusBadge(store.typeName(payment.paymentTypeId), tone: BadgeTone.navy),
-      status: StatusBadge(context.l10n.cashierSettled, tone: BadgeTone.success, dot: true),
+      status: payment.isVoided
+          ? Tooltip(
+              message: context.l10n.voidReasonLine(payment.voidReason ?? ''),
+              child: StatusBadge(context.l10n.voidStatus, tone: BadgeTone.danger, dot: true),
+            )
+          : StatusBadge(context.l10n.cashierSettled, tone: BadgeTone.success, dot: true),
       amount: Text(
         store.currency.format(payment.totalDue),
         textAlign: TextAlign.end,
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 14,
+          color: payment.isVoided ? TawlaTokens.muted : null,
+          decoration: payment.isVoided ? TextDecoration.lineThrough : null,
+        ),
       ),
-      actions: OutlinedButton.icon(
-        style: _rowActionStyle,
-        onPressed: () {
-          final host = context;
-          showReceiptPrint(store, payment, host.l10n).catchError((error) {
-            if (!host.mounted) return;
-            ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
-          });
-        },
-        icon: const Icon(Icons.print_outlined, size: 16),
-        label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+      actions: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton.icon(
+            style: _rowActionStyle,
+            onPressed: () {
+              final host = context;
+              showReceiptPrint(store, payment, host.l10n).catchError((error) {
+                if (!host.mounted) return;
+                ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
+              });
+            },
+            icon: const Icon(Icons.print_outlined, size: 16),
+            label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+          ),
+          if (store.canVoid(payment)) ...[
+            const SizedBox(width: 6),
+            Tooltip(
+              message: context.l10n.voidSale,
+              child: OutlinedButton(
+                style: _rowActionStyle.merge(CafeButtons.destructiveOutlined),
+                onPressed: () => showVoidSaleDialog(context, store, payment),
+                child: Semantics(label: context.l10n.voidSale, child: const Icon(Icons.block, size: 18)),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

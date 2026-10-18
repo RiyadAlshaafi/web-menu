@@ -53,6 +53,11 @@ Future<Uint8List> receiptPdfBytes(CafeStore store, Payment payment, AppLocalizat
           if (logo != null) pw.Center(child: pw.Image(logo, height: 48)),
           pdfText(store.cafeName, align: pw.TextAlign.center, size: 16, bold: true),
           pw.SizedBox(height: 6),
+          if (payment.isVoided) ...[
+            pdfText(l10n.voidStatus.toUpperCase(), align: pw.TextAlign.center, size: 20, bold: true),
+            pdfText(l10n.voidReasonLine(payment.voidReason ?? ''), align: pw.TextAlign.center),
+            pw.SizedBox(height: 6),
+          ],
           pdfText('${l10n.salesReceiptNo} ${store.receiptNumber(payment)}'),
           pdfText(l10n.cashierOrderNumber(store.orderNumber(payment.shiftOrderNumber))),
           pdfText(formatTripoliDateTime(payment.paidAt)),
