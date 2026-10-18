@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CARD, SLUG, TEA, err, live, mockApi, ok, open, renderGuest, router, tabWith } from "./setup";
+import { CAPPU, CARD, SHOT, SLUG, SUGAR, TEA, err, live, mockApi, ok, open, renderGuest, router, storedQty, tabWith } from "./setup";
 import { TabScreen } from "@/components/tab-screen";
 import { BillScreen } from "@/components/bill-screen";
 import { MenuScreen } from "@/components/menu-screen";
@@ -68,11 +68,43 @@ describe("TabScreen", () => {
     await renderGuest(<TabScreen />, { tab: tabWith("served") });
     expect(screen.getByText("New Additions")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Increase Mint Tea" }));
-    expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [TEA]: 3 });
+    expect(storedQty()).toEqual({ [TEA]: 3 });
     fireEvent.click(screen.getByRole("button", { name: "Decrease Mint Tea" }));
     fireEvent.click(screen.getByRole("button", { name: "Decrease Mint Tea" }));
     fireEvent.click(screen.getByRole("button", { name: "Decrease Mint Tea" }));
     expect(localStorage.getItem(`tawla-cart:${SLUG}`)).toBeNull();
+  });
+
+  it("shows the choices under sent and unsent dishes, and edits a line with choices", async () => {
+    const key = `${CAPPU}|${[SHOT, SUGAR].sort().join(",")}`;
+    localStorage.setItem(`tawla-cart:${SLUG}`, JSON.stringify({ [key]: { itemId: CAPPU, on: [SHOT], qty: 1 } }));
+    const sent = tabWith("served");
+    const order = {
+      ...sent.order!,
+      lines: [
+        ...sent.order!.lines,
+        {
+          id: "l3", menuItemId: CAPPU, name: "Cappuccino", qty: 1, unitPrice: 7.5, listUnitPrice: 9.5, round: 2,
+          choices: [{ id: SUGAR, nameEn: "Sugar", nameAr: "سكر", on: false, price: 0 }, { id: SHOT, nameEn: "Extra shot", nameAr: "جرعة إضافية", on: true, price: 1.5 }],
+        },
+      ],
+    };
+    mockApi(() => ok({ ...sent, order }));
+    await renderGuest(<TabScreen />, { tab: { ...sent, order } });
+    // Once on the sent ticket, once on the unsent card and once on its ticket line.
+    expect(screen.getAllByText("– No Sugar")).toHaveLength(3);
+    expect(screen.getAllByText("+ Extra shot")).toHaveLength(3);
+    expect(screen.getAllByText("1.500 LYD")).toHaveLength(3);
+    // 10 + 3 + 7.5 sent, plus 7.5 not sent yet.
+    expect(screen.getByText("28.000 LYD")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Increase Cappuccino" }));
+    expect(storedQty()).toEqual({ [key]: 2 });
+
+    cleanup();
+    localStorage.clear();
+    await renderGuest(<BillScreen />, { tab: { ...sent, order } });
+    expect(screen.getByText("– No Sugar")).toBeInTheDocument();
+    expect(screen.getByText("+ Extra shot")).toBeInTheDocument();
   });
 
   it("shows nothing to order yet, and the bill tab is disabled", async () => {

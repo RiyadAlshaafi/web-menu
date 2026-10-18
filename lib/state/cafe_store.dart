@@ -397,7 +397,8 @@ class CafeStore extends ChangeNotifier {
           ..write(line.qty)
           ..write(line.unitPrice)
           ..write(line.listUnitPrice)
-          ..write(line.round);
+          ..write(line.round)
+          ..write(choiceKey(line.choices));
       }
     }
     for (final cart in carts.values) {
@@ -407,7 +408,8 @@ class CafeStore extends ChangeNotifier {
           ..write(line.menuItemId)
           ..write(line.qty)
           ..write(line.unitPrice)
-          ..write(line.listUnitPrice);
+          ..write(line.listUnitPrice)
+          ..write(choiceKey(line.choices));
       }
     }
     for (final call in calls) {

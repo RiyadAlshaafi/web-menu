@@ -41,6 +41,44 @@ void main() {
     await store.load();
   });
 
+  test('a dish with choices gets its own cart line and merges back when they match', () async {
+    final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+    store.tables = [table];
+    store.menuItems = [
+      MenuItem(
+        id: 'burger',
+        nameIt: 'برجر',
+        nameEn: 'Burger',
+        price: 10,
+        categoryId: 'c',
+        options: const [
+          DishOption(id: 'onion', kind: DishOption.ingredient, nameAr: 'بصل', nameEn: 'Onion', defaultOn: true),
+          DishOption(id: 'cheese', kind: DishOption.topping, nameAr: 'جبنة', nameEn: 'Cheese', price: 1.5),
+        ],
+      ),
+    ];
+    final dish = store.menuItems.single;
+    store.addToCart(table.id, dish);
+    store.addToCart(table.id, dish);
+    final plain = store.cartFor(table.id).lines.single;
+    store.setCartQty(table.id, plain.mergeKey, 1);
+    store.addToCart(table.id, dish);
+    store.setCartLineChoices(table.id, store.cartFor(table.id).lines.single.mergeKey, {'onion', 'cheese'});
+    final cheesy = store.cartFor(table.id).lines.single;
+    expect(cheesy.qty, 2);
+    expect(cheesy.unitPrice, 11.5);
+    expect(cheesy.choices.single.id, 'cheese');
+
+    // A plain add is a new line; giving it the same choices merges the two.
+    store.addToCart(table.id, dish);
+    expect(store.cartFor(table.id).lines, hasLength(2));
+    expect(store.cartFor(table.id).total, 33);
+    final second = store.cartFor(table.id).lines.firstWhere((line) => line.choices.isEmpty);
+    store.setCartLineChoices(table.id, second.mergeKey, {'onion', 'cheese'});
+    expect(store.cartFor(table.id).lines.single.qty, 3);
+    expect(store.cartFor(table.id).total, 34.5);
+  });
+
   test('one add is one line and a second add increments quantity', () async {
     final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
     store.tables = [table];
@@ -221,7 +259,7 @@ void main() {
       store.addToCart(table.id, store.menuItems.single);
     }
     expect(store.cartFor(table.id).lines.single.qty, CafeStoreOrders.maxDishQty);
-    store.setCartQty(table.id, 'wine', 500);
+    store.setCartQty(table.id, store.cartFor(table.id).lines.single.mergeKey, 500);
     expect(store.cartFor(table.id).lines.single.qty, CafeStoreOrders.maxDishQty);
   });
 

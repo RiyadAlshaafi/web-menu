@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../core/choice_labels.dart';
 import '../core/ledger.dart';
 import 'pdf_text.dart';
 import '../models/models.dart';
@@ -57,8 +58,14 @@ Future<Uint8List> receiptPdfBytes(CafeStore store, Payment payment, AppLocalizat
           pdfText(formatTripoliDateTime(payment.paidAt)),
           pdfText(row.takeout ? l10n.serviceTakeout : l10n.cashierTableShort(row.tableNumber)),
           pw.Divider(),
-          for (final line in row.lines)
+          for (final line in row.lines) ...[
             _item(line.name, '${line.qty}', store.currency.format(line.total)),
+            if (line.choices.isNotEmpty)
+              pdfText(
+                choicesText(line.choices, l10n.localeName, without: l10n.dishChoiceWithout, money: store.currency.format),
+                size: 9,
+              ),
+          ],
           pw.Divider(),
           pdfPair(l10n.cashierSubtotal, store.currency.format(row.subtotal)),
           if (row.discount > 0) pdfPair(l10n.salesColDiscount, store.currency.format(row.discount)),

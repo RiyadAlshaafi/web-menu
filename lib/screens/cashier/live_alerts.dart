@@ -150,7 +150,12 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                   context.l10n.cashierOrderNumber(store.shiftTicket(order)),
                                   if (order.latestRound > 1) context.l10n.orderRound(order.latestRound),
                                 ].join(' · '),
-                                body: order.linesInRound(order.latestRound).map((line) => '${line.qty}× ${line.name}').join(', '),
+                                body: order
+                                    .linesInRound(order.latestRound)
+                                    .map((line) => line.choices.isEmpty
+                                        ? '${line.qty}× ${line.name}'
+                                        : '${line.qty}× ${line.name} (${choicesText(line.choices, store.locale, without: context.l10n.dishChoiceWithout)})')
+                                    .join(', '),
                                 time: order.createdAt,
                                 amount: order.subtotal,
                                 action: next == null ? null : _nextStatusAction(context, next),

@@ -1,3 +1,7 @@
+import 'dish_choices.dart';
+
+export 'dish_choices.dart';
+
 enum OrderStatus {
   received,
   preparing,
@@ -119,6 +123,7 @@ class MenuItem {
     this.sortOrder = 0,
     this.discountPercent = 0,
     this.discountApplied = false,
+    this.options = const [],
   });
 
   final String id;
@@ -135,13 +140,33 @@ class MenuItem {
   double discountPercent;
   bool discountApplied;
 
+  /// Ingredients and extra toppings, in the order the admin set them.
+  List<DishOption> options;
+
   bool get hasDiscount => discountApplied && discountPercent > 0;
   double get salePrice =>
       hasDiscount ? (price * (100 - discountPercent) / 100) : price;
 
   /// Change detection without embedding the photo bytes.
   String get syncKey =>
-      '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}';
+      '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}|${options.map((option) => option.syncKey).join(';')}';
+
+  Set<String> get defaultOnIds => {for (final option in options) if (option.defaultOn) option.id};
+
+  /// A line of this dish with [onIds] turned on (the defaults when null). Extras
+  /// are added at full price on top of the discounted dish price.
+  OrderLine lineWith({required String locale, Set<String>? onIds, int qty = 1}) {
+    final choices = onIds == null ? const <LineChoice>[] : choicesFor(options, onIds);
+    final extra = choicesExtra(choices);
+    return OrderLine(
+      menuItemId: id,
+      name: displayName(locale),
+      qty: qty,
+      unitPrice: salePrice + extra,
+      listUnitPrice: price + extra,
+      choices: choices,
+    );
+  }
 
   String displayName(String locale) => locale == 'en' || nameIt.isEmpty
       ? (nameEn.isEmpty ? nameIt : nameEn)
@@ -161,6 +186,7 @@ class MenuItem {
     sortOrder: json['sortOrder'] as int? ?? 0,
     discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
     discountApplied: json['discountApplied'] as bool? ?? false,
+    options: parseJsonList(json['options'], DishOption.fromJson),
   );
 
   Map<String, dynamic> toJson() => {
@@ -177,6 +203,7 @@ class MenuItem {
     'sortOrder': sortOrder,
     'discountPercent': discountPercent,
     'discountApplied': discountApplied,
+    'options': options.map((option) => option.toJson()).toList(),
   };
 }
 
@@ -238,6 +265,7 @@ class OrderLine {
     this.listUnitPrice,
     this.round = 1,
     this.id,
+    this.choices = const [],
   });
 
   /// Database row id of a sent line; null for cart lines and local-only lines.
@@ -249,7 +277,25 @@ class OrderLine {
   final double? listUnitPrice;
   final int round;
 
+  /// Ingredients removed and extras added, compared with the dish defaults.
+  final List<LineChoice> choices;
+
   double get total => qty * unitPrice;
+
+  /// Lines of one dish merge only when their choices match.
+  String get mergeKey => '$menuItemId#${choiceKey(choices)}';
+
+  /// A copy with another quantity, keeping prices and choices.
+  OrderLine withQty(int value) => OrderLine(
+    menuItemId: menuItemId,
+    name: name,
+    qty: value,
+    unitPrice: unitPrice,
+    listUnitPrice: listUnitPrice,
+    round: round,
+    id: id,
+    choices: choices,
+  );
 
   /// Cash taken off this line. Uses the menu price frozen when the line was saved
   /// and the charged unit price from the same stamp as checkout.
@@ -269,6 +315,7 @@ class OrderLine {
     listUnitPrice: (json['listUnitPrice'] as num?)?.toDouble(),
     round: json['round'] as int? ?? 1,
     id: json['id'] as String?,
+    choices: parseJsonList(json['choices'], LineChoice.fromJson),
   );
 
   Map<String, dynamic> toJson() => {
@@ -279,6 +326,7 @@ class OrderLine {
     'unitPrice': unitPrice,
     if (listUnitPrice != null) 'listUnitPrice': listUnitPrice,
     'round': round,
+    if (choices.isNotEmpty) 'choices': choices.map((choice) => choice.toJson()).toList(),
   };
 }
 
@@ -363,6 +411,20 @@ class CafeOrder {
     'shiftOrderNumber': shiftOrderNumber,
     'lines': lines.map((line) => line.toJson()).toList(),
   };
+}
+
+/// Puts [updated] (the same dish with other choices) in place of [old]. When a
+/// line with the same choices is already there, the two merge.
+void replaceLineChoices(List<OrderLine> lines, OrderLine old, OrderLine updated) {
+  final index = lines.indexOf(old);
+  if (index < 0) return;
+  final twin = lines.where((line) => !identical(line, old) && line.mergeKey == updated.mergeKey);
+  if (twin.isEmpty) {
+    lines[index] = updated;
+    return;
+  }
+  twin.first.qty += updated.qty;
+  lines.removeAt(index);
 }
 
 class CartState {

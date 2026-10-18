@@ -110,7 +110,7 @@ export function Sheet({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab" || !node) return;
-      const focusable = node.querySelectorAll<HTMLElement>("button:not([disabled]), [href], select, [tabindex='0']");
+      const focusable = node.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), [href], select, [tabindex='0']");
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];

@@ -1706,4 +1706,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tableOrderBack => 'العودة إلى الصالة';
+
+  @override
+  String get dishChoicesTitle => 'المكونات والإضافات';
+
+  @override
+  String get dishChoicesHint =>
+      'يضغط الزبون على الطبق لتغييرها. زر + يضيف الطبق كما هو.';
+
+  @override
+  String get dishChoicesAdd => 'إضافة مكوّن أو إضافة';
+
+  @override
+  String get dishChoiceIngredient => 'مكوّن';
+
+  @override
+  String get dishChoiceTopping => 'إضافة';
+
+  @override
+  String get dishChoiceInByDefault => 'موجود في الطبق افتراضياً';
+
+  @override
+  String get dishChoiceNameAr => 'الاسم بالعربية';
+
+  @override
+  String get dishChoiceNameEn => 'الاسم بالإنجليزية';
+
+  @override
+  String get dishChoicePrice => 'السعر عند الإضافة (0 = مجاناً)';
+
+  @override
+  String get dishChoiceRemove => 'حذف';
+
+  @override
+  String get dishChoicesIngredients => 'المكونات';
+
+  @override
+  String get dishChoicesExtras => 'الإضافات';
+
+  @override
+  String get dishChoicesApply => 'تطبيق';
+
+  @override
+  String get dishChoicesTapLine => 'اضغط على السطر لتغيير مكوناته.';
+
+  @override
+  String dishChoiceWithout(String name) {
+    return 'بدون $name';
+  }
 }

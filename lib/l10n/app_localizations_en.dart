@@ -1717,4 +1717,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tableOrderBack => 'Back to floor';
+
+  @override
+  String get dishChoicesTitle => 'INGREDIENTS & EXTRAS';
+
+  @override
+  String get dishChoicesHint =>
+      'Guests tap the dish to change these. The + button adds it as it comes.';
+
+  @override
+  String get dishChoicesAdd => 'Add ingredient or extra';
+
+  @override
+  String get dishChoiceIngredient => 'Ingredient';
+
+  @override
+  String get dishChoiceTopping => 'Extra';
+
+  @override
+  String get dishChoiceInByDefault => 'In the dish by default';
+
+  @override
+  String get dishChoiceNameAr => 'Arabic name';
+
+  @override
+  String get dishChoiceNameEn => 'English name';
+
+  @override
+  String get dishChoicePrice => 'Price when added (0 = free)';
+
+  @override
+  String get dishChoiceRemove => 'Remove';
+
+  @override
+  String get dishChoicesIngredients => 'Ingredients';
+
+  @override
+  String get dishChoicesExtras => 'Extras';
+
+  @override
+  String get dishChoicesApply => 'Apply';
+
+  @override
+  String get dishChoicesTapLine => 'Tap a line to change its ingredients.';
+
+  @override
+  String dishChoiceWithout(String name) {
+    return 'No $name';
+  }
 }

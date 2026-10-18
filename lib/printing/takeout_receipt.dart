@@ -23,6 +23,7 @@ String? applyQuickTakeout({
           qty: line.qty,
           unitPrice: line.unitPrice,
           listUnitPrice: line.listUnitPrice,
+          choices: line.choices,
         ),
   ];
   if (ticket.isEmpty) return ErrorCodes.cartEmpty;

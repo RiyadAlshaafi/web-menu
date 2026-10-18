@@ -85,7 +85,15 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                                       child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
                                     ),
                                     const SizedBox(width: 8),
-                                    Expanded(child: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700))),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(line.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                          if (line.choices.isNotEmpty) LineChoicesNote(line: line, locale: store.locale),
+                                        ],
+                                      ),
+                                    ),
                                     Text(store.currency.format(line.total), style: const TextStyle(fontWeight: FontWeight.w800)),
                                   ],
                                 ),

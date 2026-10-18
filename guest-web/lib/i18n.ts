@@ -89,6 +89,10 @@ const en = {
   increase: "Increase",
   addDish: "Add {name}",
   inCart: "{count} in your order",
+  guestIngredients: "Ingredients",
+  guestExtras: "Extras",
+  guestChoiceWithout: "– No {name}",
+  guestChoiceWith: "+ {name}",
 } as const;
 
 export type TextKey = keyof typeof en;
@@ -177,6 +181,10 @@ const ar: Record<TextKey, string> = {
   increase: "زيادة",
   addDish: "أضف {name}",
   inCart: "{count} في طلبك",
+  guestIngredients: "المكونات",
+  guestExtras: "الإضافات",
+  guestChoiceWithout: "– بدون {name}",
+  guestChoiceWith: "+ {name}",
 };
 
 const dictionaries: Record<Lang, Record<TextKey, string>> = { en, ar };

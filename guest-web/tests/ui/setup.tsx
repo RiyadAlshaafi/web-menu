@@ -49,6 +49,11 @@ export const TEA = "a0000000-0000-4000-8000-000000000101";
 export const CAPPU = "a0000000-0000-4000-8000-000000000102";
 export const JUICE = "a0000000-0000-4000-8000-000000000103";
 export const CARD = "22222222-2222-4222-8222-222222222222";
+// Cappuccino's choices: sugar comes in it, cinnamon can be added for a price, two extras.
+export const SUGAR = "b0000000-0000-4000-8000-000000000201";
+export const CINNAMON = "b0000000-0000-4000-8000-000000000202";
+export const SHOT = "b0000000-0000-4000-8000-000000000203";
+export const CREAM = "b0000000-0000-4000-8000-000000000204";
 
 export const menu = (): Menu => ({
   cafe: {
@@ -67,9 +72,17 @@ export const menu = (): Menu => ({
     { id: "c2", nameEn: "Food", nameAr: "طعام" },
   ],
   items: [
-    { id: TEA, categoryId: "c1", nameEn: "Mint Tea", nameAr: "شاي", description: "Fresh mint.", price: 5, salePrice: 5, imageUrl: "https://x.supabase.co/storage/v1/object/public/a.jpg", available: true, featured: true },
-    { id: CAPPU, categoryId: "c1", nameEn: "Cappuccino", nameAr: "كابتشينو", description: "", price: 8, salePrice: 6, imageUrl: "", available: true, featured: false },
-    { id: JUICE, categoryId: "c2", nameEn: "Juice", nameAr: "عصير", description: "", price: 6.5, salePrice: 6.5, imageUrl: "data:image/png;base64,AAAA", available: false, featured: false },
+    { id: TEA, categoryId: "c1", nameEn: "Mint Tea", nameAr: "شاي", description: "Fresh mint.", price: 5, salePrice: 5, imageUrl: "https://x.supabase.co/storage/v1/object/public/a.jpg", available: true, featured: true, options: [] },
+    {
+      id: CAPPU, categoryId: "c1", nameEn: "Cappuccino", nameAr: "كابتشينو", description: "", price: 8, salePrice: 6, imageUrl: "", available: true, featured: false,
+      options: [
+        { id: SUGAR, kind: "ingredient", nameEn: "Sugar", nameAr: "سكر", price: 0, defaultOn: true },
+        { id: CINNAMON, kind: "ingredient", nameEn: "Cinnamon", nameAr: "قرفة", price: 0.5, defaultOn: false },
+        { id: SHOT, kind: "topping", nameEn: "Extra shot", nameAr: "جرعة إضافية", price: 1.5, defaultOn: false },
+        { id: CREAM, kind: "topping", nameEn: "Cream", nameAr: "كريمة", price: 0, defaultOn: false },
+      ],
+    },
+    { id: JUICE, categoryId: "c2", nameEn: "Juice", nameAr: "عصير", description: "", price: 6.5, salePrice: 6.5, imageUrl: "data:image/png;base64,AAAA", available: false, featured: false, options: [] },
   ],
   paymentTypes: [{ id: CARD, nameEn: "Card", nameAr: "بطاقة" }],
 });
@@ -87,8 +100,8 @@ export const tabWith = (status: string, extra: Partial<NonNullable<Tab["order"]>
     refusalNotice: "",
     paymentTypeId: null,
     lines: [
-      { id: "l1", menuItemId: TEA, name: "Mint Tea", qty: 2, unitPrice: 5, listUnitPrice: 5, round: 1 },
-      { id: "l2", menuItemId: null, name: "Old dish", qty: 1, unitPrice: 3, listUnitPrice: null, round: 2 },
+      { id: "l1", menuItemId: TEA, name: "Mint Tea", qty: 2, unitPrice: 5, listUnitPrice: 5, round: 1, choices: [] },
+      { id: "l2", menuItemId: null, name: "Old dish", qty: 1, unitPrice: 3, listUnitPrice: null, round: 2, choices: [] },
     ],
     ...extra,
   },
@@ -113,6 +126,13 @@ export function mockApi(respond: Responder) {
     }),
   );
   return calls;
+}
+
+// The stored cart as { line key: qty }.
+export function storedQty(): Record<string, number> {
+  const raw = localStorage.getItem(`tawla-cart:${SLUG}`);
+  const cart = raw ? (JSON.parse(raw) as Record<string, { qty: number }>) : {};
+  return Object.fromEntries(Object.entries(cart).map(([key, line]) => [key, line.qty]));
 }
 
 export const ok = <T,>(data: T) => ({ ok: true, data, error: null });

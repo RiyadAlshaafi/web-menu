@@ -22,24 +22,31 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
 
   double get total => lines.fold<double>(0, (sum, line) => sum + line.total);
 
+  /// A tap on a dish adds it as it comes; its choices are changed from the ticket line.
   void _add(CafeStore store, MenuItem item) {
     if (item.soldOut || !item.available) return;
-    final existing = lines.where((line) => line.menuItemId == item.id);
+    final existing = lines.where((line) => line.menuItemId == item.id && line.choices.isEmpty);
     setState(() {
       if (existing.isEmpty) {
-        lines.add(
-          OrderLine(
-            menuItemId: item.id,
-            name: item.displayName(store.locale),
-            qty: 1,
-            unitPrice: item.salePrice,
-            listUnitPrice: item.price,
-          ),
-        );
+        lines.add(item.lineWith(locale: store.locale));
       } else {
         existing.first.qty += 1;
       }
     });
+  }
+
+  Future<void> _editChoices(CafeStore store, OrderLine line) async {
+    final item = store.menuItems.where((item) => item.id == line.menuItemId).firstOrNull;
+    if (item == null || item.options.isEmpty) return;
+    final on = await showDishChoicesSheet(
+      context,
+      item: item,
+      onIds: onIdsFor(item.options, line.choices),
+      locale: store.locale,
+      money: store.currency.format,
+    );
+    if (on == null || !mounted) return;
+    setState(() => replaceLineChoices(lines, line, item.lineWith(locale: store.locale, onIds: on, qty: line.qty)));
   }
 
   Future<void> _pay(CafeStore store) async {
@@ -48,14 +55,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     final known = store.payments.map((payment) => payment.id).toSet();
     final error = await store.checkoutTakeout(
       lines: [
-        for (final line in lines)
-          OrderLine(
-            menuItemId: line.menuItemId,
-            name: line.name,
-            qty: line.qty,
-            unitPrice: line.unitPrice,
-            listUnitPrice: line.listUnitPrice,
-          ),
+        for (final line in lines) line.withQty(line.qty),
       ],
       paymentTypeId: paymentTypeId ?? (store.enabledPaymentTypes.isEmpty ? null : store.enabledPaymentTypes.first.id),
     );
@@ -192,7 +192,14 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                                       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.hairline))),
                                       child: Row(
                                         children: [
-                                          Expanded(child: Text(line.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15))),
+                                          Expanded(
+                                            child: TicketLineName(
+                                              line: line,
+                                              locale: store.locale,
+                                              editable: store.menuItems.any((item) => item.id == line.menuItemId && item.options.isNotEmpty),
+                                              onTap: () => _editChoices(store, line),
+                                            ),
+                                          ),
                                           _stepButton(Icons.remove, () => setState(() {
                                             line.qty -= 1;
                                             if (line.qty <= 0) lines.remove(line);

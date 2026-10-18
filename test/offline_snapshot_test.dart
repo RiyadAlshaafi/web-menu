@@ -27,6 +27,10 @@ void main() {
           'id': 'm1', 'nameIt': 'Margherita', 'nameEn': 'Margherita', 'description': '', 'price': 9.0,
           'categoryId': 'c1', 'imageUrl': '', 'available': true, 'soldOut': false, 'featured': false,
           'sortOrder': 1, 'discountPercent': 10.0, 'discountApplied': true,
+          'options': [
+            {'id': 'o1', 'kind': 'ingredient', 'nameAr': 'ريحان', 'nameEn': 'Basil', 'price': 0.0, 'defaultOn': true},
+            {'id': 'o2', 'kind': 'topping', 'nameAr': 'جبنة', 'nameEn': 'Extra cheese', 'price': 1.5, 'defaultOn': false},
+          ],
         },
       ],
       'paymentTypes': [

@@ -31,6 +31,26 @@ async function call<T>(name: RpcName, args: Record<string, unknown>, success: z.
 
 const text = z.string().nullable().transform((v) => v ?? "");
 const money = z.coerce.number();
+const optionalText = z.string().nullish().transform((v) => v ?? "");
+// Older databases have no options or choices: a missing list means "dish as it comes".
+const list = <T extends z.ZodType>(entry: T) => z.array(entry).nullish().transform((v) => v ?? []);
+
+const dishOption = z.object({
+  id: z.string(),
+  kind: z.enum(["ingredient", "topping"]),
+  nameAr: optionalText,
+  nameEn: optionalText,
+  price: money,
+  defaultOn: z.boolean(),
+});
+
+const lineChoice = z.object({
+  id: z.string(),
+  nameAr: optionalText,
+  nameEn: optionalText,
+  on: z.boolean(),
+  price: money,
+});
 
 const menuSchema = z
   .object({
@@ -59,6 +79,7 @@ const menuSchema = z
         image_url: text,
         available: z.boolean(),
         featured: z.boolean(),
+        options: list(dishOption),
       }),
     ),
     payment_types: z.array(z.object({ id: z.string(), name_en: text, name_ar: text })),
@@ -88,6 +109,7 @@ const menuSchema = z
         imageUrl: i.image_url,
         available: i.available,
         featured: i.featured,
+        options: i.options,
       })),
       paymentTypes: m.payment_types.map((p) => ({ id: p.id, nameEn: p.name_en, nameAr: p.name_ar })),
     }),
@@ -135,6 +157,7 @@ const tabSchema = z
             unit_price: money,
             list_unit_price: money.nullable(),
             round: z.number(),
+            choices: list(lineChoice),
           }),
         ),
       })
@@ -159,6 +182,7 @@ const tabSchema = z
           unitPrice: l.unit_price,
           listUnitPrice: l.list_unit_price,
           round: l.round,
+          choices: l.choices,
         })),
       },
     }),
@@ -177,14 +201,15 @@ export const guest = {
     ),
   order: (
     slug: string,
-    lines: { menuItemId: string; qty: number }[],
+    lines: { menuItemId: string; qty: number; on?: string[] }[],
     position: { lat?: number; lng?: number; accuracy?: number },
   ) =>
     call(
       "send_table_cart",
       {
         p_qr_slug: slug,
-        p_lines: lines.map((l) => ({ menu_item_id: l.menuItemId, qty: l.qty })),
+        // `on` is the full set of option ids that are on; left out, the dish comes as it is.
+        p_lines: lines.map((l) => ({ menu_item_id: l.menuItemId, qty: l.qty, ...(l.on ? { on: l.on } : {}) })),
         p_service_type: "dine_in",
         p_lat: position.lat ?? null,
         p_lng: position.lng ?? null,

@@ -16,6 +16,11 @@ values
   ('a0000000-0000-4000-8000-000000000103', 'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-0000000000c1', 'Orange Juice', 'عصير برتقال', '', 6.5, false, false, false, 0, false, 3),
   ('a0000000-0000-4000-8000-000000000104', 'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-0000000000c2', 'Cheesecake', 'تشيز كيك', '', 12, false, true, true, 0, false, 1),
   ('a0000000-0000-4000-8000-000000000105', 'a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-0000000000c2', 'Club Sandwich', 'كلوب ساندويتش', 'Chicken, egg, tomato.', 15, false, false, true, 0, false, 2);
+-- The sandwich comes with egg (free to remove) and takes extra cheese for 2.000.
+update public.menu_items
+set options = '[{"id": "a0000000-0000-4000-8000-000000000201", "kind": "ingredient", "nameEn": "Egg", "nameAr": "بيض", "price": 0, "defaultOn": true},
+                {"id": "a0000000-0000-4000-8000-000000000202", "kind": "topping", "nameEn": "Cheese", "nameAr": "جبنة", "price": 2, "defaultOn": false}]'::jsonb
+where id = 'a0000000-0000-4000-8000-000000000105';
 insert into public.payment_types (restaurant_id, name_en, name_ar, sort_order)
 select 'a0000000-0000-4000-8000-000000000001', 'Card', 'بطاقة', 9
 where not exists (select 1 from public.payment_types where restaurant_id = 'a0000000-0000-4000-8000-000000000001' and name_en = 'Card');

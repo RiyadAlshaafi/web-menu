@@ -16,6 +16,7 @@ PART1=supabase/migrations/20261008100000_security_and_money_fixes.sql
 # Removes guest direct table access; the "previous app build" below predates it.
 GUEST_LOCK=supabase/migrations/20261014110000_guest_lock_down.sql
 CLOSE_SHIFT=supabase/migrations/20261015100000_close_shift_needs_paid_orders.sql
+DISH_CHOICES=supabase/migrations/20261018100000_dish_choices.sql
 
 quiet() { PGOPTIONS='-c client_min_messages=error' psql -X -q -o /dev/null -v ON_ERROR_STOP=1 "$@"; }
 loud() { psql -X -q -v ON_ERROR_STOP=1 "$@"; }
@@ -33,6 +34,8 @@ build() {
   quiet -d "$DB" -f "$PART1"
   # Re-applying part 1 also restores its older close_shift; put the current one back.
   quiet -d "$DB" -f "$CLOSE_SHIFT"
+  # It also restores the older send_table_cart; put the one with dish choices back.
+  quiet -d "$DB" -f "$DISH_CHOICES"
 }
 
 echo "== Part 1 only: the previous app build must keep working"
@@ -49,6 +52,7 @@ loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 loud -d "$DB" -f supabase/tests/guest_web_test.sql
 loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 loud -d "$DB" -f supabase/tests/close_shift_unpaid_test.sql
+loud -d "$DB" -f supabase/tests/dish_choices_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do
@@ -61,6 +65,7 @@ loud -d "$DB" -f supabase/tests/audit_fixes_test.sql
 loud -d "$DB" -f supabase/tests/guest_web_test.sql
 loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 loud -d "$DB" -f supabase/tests/close_shift_unpaid_test.sql
+loud -d "$DB" -f supabase/tests/dish_choices_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

@@ -29,7 +29,7 @@ export const api = {
     post<LocationVerdict>("/api/guest/location", { slug, lat, lng, accuracy }),
   order: (
     slug: string,
-    lines: { menuItemId: string; qty: number }[],
+    lines: { menuItemId: string; qty: number; on?: string[] }[],
     point?: { lat: number; lng: number; accuracy?: number },
   ) => post<OrderSent>("/api/guest/order", { slug, lines, ...point }),
   callStaff: (slug: string) => post<Done>("/api/guest/call-staff", { slug }),

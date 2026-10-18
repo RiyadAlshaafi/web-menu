@@ -234,6 +234,7 @@ extension CafeStoreOffline on CafeStore {
                 'qty': line.qty,
                 'unit_price': line.unitPrice,
                 'list_unit_price': line.listUnitPrice ?? line.unitPrice,
+                if (line.choices.isNotEmpty) 'choices': line.choices.map((choice) => choice.toJson()).toList(),
               },
           ],
           'p_payment_type_id': paymentTypeId,

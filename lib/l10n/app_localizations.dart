@@ -3121,6 +3121,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to floor'**
   String get tableOrderBack;
+
+  /// No description provided for @dishChoicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'INGREDIENTS & EXTRAS'**
+  String get dishChoicesTitle;
+
+  /// No description provided for @dishChoicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests tap the dish to change these. The + button adds it as it comes.'**
+  String get dishChoicesHint;
+
+  /// No description provided for @dishChoicesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add ingredient or extra'**
+  String get dishChoicesAdd;
+
+  /// No description provided for @dishChoiceIngredient.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient'**
+  String get dishChoiceIngredient;
+
+  /// No description provided for @dishChoiceTopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra'**
+  String get dishChoiceTopping;
+
+  /// No description provided for @dishChoiceInByDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'In the dish by default'**
+  String get dishChoiceInByDefault;
+
+  /// No description provided for @dishChoiceNameAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic name'**
+  String get dishChoiceNameAr;
+
+  /// No description provided for @dishChoiceNameEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English name'**
+  String get dishChoiceNameEn;
+
+  /// No description provided for @dishChoicePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price when added (0 = free)'**
+  String get dishChoicePrice;
+
+  /// No description provided for @dishChoiceRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get dishChoiceRemove;
+
+  /// No description provided for @dishChoicesIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get dishChoicesIngredients;
+
+  /// No description provided for @dishChoicesExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Extras'**
+  String get dishChoicesExtras;
+
+  /// No description provided for @dishChoicesApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get dishChoicesApply;
+
+  /// No description provided for @dishChoicesTapLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a line to change its ingredients.'**
+  String get dishChoicesTapLine;
+
+  /// No description provided for @dishChoiceWithout.
+  ///
+  /// In en, this message translates to:
+  /// **'No {name}'**
+  String dishChoiceWithout(String name);
 }
 
 class _AppLocalizationsDelegate

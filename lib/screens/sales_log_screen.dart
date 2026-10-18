@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
+import '../core/choice_labels.dart';
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
 import '../printing/pdf_text.dart';
@@ -399,7 +400,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                             child: Text(
                               '${line.qty}× ${line.name}  ${live.currency.format(line.unitPrice)}'
                               '${line.discountAmount > 0 ? '  −${live.currency.format(line.discountAmount)}' : ''}'
-                              '  ${live.currency.format(line.total)}',
+                              '  ${live.currency.format(line.total)}'
+                              '${line.choices.isEmpty ? '' : '\n    ${choicesText(line.choices, live.locale, without: context.l10n.dishChoiceWithout, money: live.currency.format)}'}',
                             ),
                           )),
                     const Divider(),

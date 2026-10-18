@@ -888,5 +888,21 @@
   "tableOrderEmpty": "Tap dishes to add them to this table.",
   "tableOrderOnTab": "Already on the bill: {count} items, {total}",
   "@tableOrderOnTab": {"placeholders": {"count": {"type": "String"}, "total": {"type": "String"}}},
-  "tableOrderBack": "Back to floor"
+  "tableOrderBack": "Back to floor",
+  "dishChoicesTitle": "INGREDIENTS & EXTRAS",
+  "dishChoicesHint": "Guests tap the dish to change these. The + button adds it as it comes.",
+  "dishChoicesAdd": "Add ingredient or extra",
+  "dishChoiceIngredient": "Ingredient",
+  "dishChoiceTopping": "Extra",
+  "dishChoiceInByDefault": "In the dish by default",
+  "dishChoiceNameAr": "Arabic name",
+  "dishChoiceNameEn": "English name",
+  "dishChoicePrice": "Price when added (0 = free)",
+  "dishChoiceRemove": "Remove",
+  "dishChoicesIngredients": "Ingredients",
+  "dishChoicesExtras": "Extras",
+  "dishChoicesApply": "Apply",
+  "dishChoicesTapLine": "Tap a line to change its ingredients.",
+  "dishChoiceWithout": "No {name}",
+  "@dishChoiceWithout": {"placeholders": {"name": {"type": "String"}}}
 }

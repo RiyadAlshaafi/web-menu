@@ -126,6 +126,29 @@ test("each phone keeps its own cart", async ({ browser }, testInfo) => {
   await two.close();
 });
 
+test("a dish with its egg removed and extra cheese is priced and sent with its choices", async ({ page }) => {
+  await openMenu(page, "en", "demotable0002");
+  await page.getByRole("button", { name: /^Club Sandwich/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Club Sandwich" });
+  await expect(sheet.getByRole("checkbox", { name: "Egg" })).toBeChecked();
+  await sheet.getByRole("checkbox", { name: "Egg" }).uncheck();
+  await sheet.getByRole("checkbox", { name: /Cheese/ }).check();
+  await sheet.getByRole("button", { name: /Add to Order • 17.000 LYD/ }).click();
+
+  await page.getByRole("button", { name: /View Order/ }).click();
+  const verify = page.getByRole("dialog", { name: "Verify Your Order" });
+  await expect(verify.getByText("– No Egg")).toBeVisible();
+  await expect(verify.getByText("+ Cheese")).toBeVisible();
+  await verify.getByRole("button", { name: "Confirm & Send to Kitchen" }).click();
+
+  await expect(page).toHaveURL(/\/tab/);
+  await expect(page.getByText("– No Egg")).toBeVisible();
+  // The database priced the cheese and kept the choices on the line.
+  expect(db(`select l.name || ':' || l.qty || ':' || l.unit_price || ':' || jsonb_array_length(l.choices) from order_lines l join orders o on o.id = l.order_id join dining_tables t on t.id = o.table_id where t.qr_slug = 'demotable0002'`)).toBe(
+    "Club Sandwich:1:17.00:2",
+  );
+});
+
 test("ordering pauses while the cashier is offline; browsing still works", async ({ page }) => {
   await openMenu(page, "en", "offlinetable1");
   await expect(page.getByText(/Ordering is paused right now because the cashier is offline/)).toBeVisible();

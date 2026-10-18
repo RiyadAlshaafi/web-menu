@@ -142,7 +142,7 @@ describe("Upstash limiter", () => {
 
 describe("error text", () => {
   it("covers every guest error code in both languages", () => {
-    const items = [{ id: ITEM, categoryId: "c", nameEn: "Tea", nameAr: "شاي", description: "", price: 1, salePrice: 1, imageUrl: "", available: false, featured: false }];
+    const items = [{ id: ITEM, categoryId: "c", nameEn: "Tea", nameAr: "شاي", description: "", price: 1, salePrice: 1, imageUrl: "", available: false, featured: false, options: [] }];
     expect(errorText("ar", { code: "items_unavailable", items: ["Tea", "Cake"] }, items)).toContain("شاي، Cake");
     expect(errorText("en", { code: "items_unavailable", items: ["شاي"] }, items)).toContain("Tea");
     const codes = ["cashier_offline", "too_far", "location_required", "qty_too_large", "rate_limited", "table_not_found", "no_open_bill", "not_served", "server_error"];

@@ -140,13 +140,20 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
                           decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.hairline))),
                           child: Row(
                             children: [
-                              Expanded(child: Text(line.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15))),
-                              _stepButton(Icons.remove, sending ? null : () => store.setCartQty(table.id, line.menuItemId, line.qty - 1)),
+                              Expanded(
+                                child: TicketLineName(
+                                  line: line,
+                                  locale: store.locale,
+                                  editable: !sending && store.menuItems.any((item) => item.id == line.menuItemId && item.options.isNotEmpty),
+                                  onTap: () => _editChoices(context, store, line),
+                                ),
+                              ),
+                              _stepButton(Icons.remove, sending ? null : () => store.setCartQty(table.id, line.mergeKey, line.qty - 1)),
                               SizedBox(
                                 width: 36,
                                 child: Text('${line.qty}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                               ),
-                              _stepButton(Icons.add, sending ? null : () => store.setCartQty(table.id, line.menuItemId, line.qty + 1)),
+                              _stepButton(Icons.add, sending ? null : () => store.setCartQty(table.id, line.mergeKey, line.qty + 1)),
                               SizedBox(
                                 width: 92,
                                 child: Text(store.currency.format(line.total), textAlign: TextAlign.end, style: const TextStyle(fontSize: 14)),
@@ -208,6 +215,20 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _editChoices(BuildContext context, CafeStore store, OrderLine line) async {
+    final item = store.menuItems.where((item) => item.id == line.menuItemId).firstOrNull;
+    if (item == null) return;
+    final on = await showDishChoicesSheet(
+      context,
+      item: item,
+      onIds: onIdsFor(item.options, line.choices),
+      locale: store.locale,
+      money: store.currency.format,
+    );
+    if (on == null || !mounted) return;
+    store.setCartLineChoices(widget.tableId, line.mergeKey, on);
   }
 
   Widget _stepButton(IconData icon, VoidCallback? onPressed) {

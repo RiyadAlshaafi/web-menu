@@ -19,7 +19,11 @@ export const slugBody = z.object({ slug }).strict();
 
 export const locationBody = z.object({ slug, lat, lng, accuracy: accuracy.optional() }).strict();
 
-// Only dish id and quantity: prices, names and totals are decided by the database.
+// A dish never has more options than the database allows (valid_dish_options).
+const MAX_OPTIONS = 40;
+
+// Only dish id, quantity and the options that are on: prices, names and totals are decided by
+// the database.
 export const orderBody = z
   .object({
     slug,
@@ -29,6 +33,11 @@ export const orderBody = z
           .object({
             menuItemId: z.uuid(),
             qty: z.number().int().min(1).max(99),
+            on: z
+              .array(z.uuid())
+              .max(MAX_OPTIONS)
+              .refine((ids) => new Set(ids).size === ids.length, { message: "option ids repeat" })
+              .optional(),
           })
           .strict(),
       )

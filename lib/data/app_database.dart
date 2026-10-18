@@ -697,7 +697,7 @@ class AppDatabase {
       liveOnly ? Future<dynamic>.value(null) : client!.from('menu_categories').select(),
       liveOnly
           ? client!.from('menu_items').select(
-              'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied',
+              'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied, options',
             )
           : client!.from('menu_items').select(),
       // Only carts that hold something; empty carts outnumber them and
@@ -764,6 +764,7 @@ class AppDatabase {
             sortOrder: row['sort_order'] as int? ?? 0,
             discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
             discountApplied: row['discount_applied'] as bool? ?? false,
+            options: parseJsonList(row['options'], DishOption.fromJson),
           ),
         )
         .toList();
@@ -781,6 +782,7 @@ class AppDatabase {
                   qty: (line['qty'] as num?)?.toInt() ?? 1,
                   unitPrice: _asDouble(line['unit_price']) ?? 0,
                   listUnitPrice: _asDouble(line['list_unit_price']),
+                  choices: parseJsonList(line['choices'], LineChoice.fromJson),
                 ),
               )
               .toList(),
@@ -1076,6 +1078,7 @@ class AppDatabase {
           listUnitPrice: _asDouble(map['list_unit_price']),
           round: (map['round'] as num?)?.toInt() ?? 1,
           id: map['id'] as String?,
+          choices: parseJsonList(map['choices'], LineChoice.fromJson),
         );
       }).toList(),
     );
@@ -1550,6 +1553,7 @@ class AppDatabase {
         'sort_order': item.sortOrder,
         'discount_percent': item.discountPercent,
         'discount_applied': item.discountApplied,
+        'options': item.options.map((option) => option.toJson()).toList(),
       });
     }
     if (rows.isNotEmpty) await client!.from('menu_items').upsert(rows);
@@ -1665,6 +1669,16 @@ class AppDatabase {
     }
   }
 
+  /// One line for an order RPC: the dish, its quantity and, when it has choices,
+  /// every option that is on. The server prices the line from its own menu.
+  Map<String, dynamic> _lineParams(OrderLine line) {
+    final params = <String, dynamic>{'menu_item_id': line.menuItemId, 'qty': line.qty};
+    if (line.choices.isEmpty) return params;
+    final item = _menuItems.where((item) => item.id == line.menuItemId);
+    if (item.isNotEmpty) params['on'] = onIdsFor(item.first.options, line.choices).toList();
+    return params;
+  }
+
   Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {
     if (isLocal) return _localQuickTakeout(lines, paymentTypeId);
     if (client == null) return ErrorCodes.notConfigured;
@@ -1675,8 +1689,7 @@ class AppDatabase {
         params: {
           'p_lines': [
             for (final line in lines)
-              if (line.menuItemId.isNotEmpty && line.qty > 0)
-                {'menu_item_id': line.menuItemId, 'qty': line.qty},
+              if (line.menuItemId.isNotEmpty && line.qty > 0) _lineParams(line),
           ],
           'p_payment_type_id': paymentTypeId,
         },
@@ -1713,8 +1726,7 @@ class AppDatabase {
       'p_qr_slug': qrSlug,
       'p_lines': [
         for (final line in cart?.lines ?? const <OrderLine>[])
-          if (line.menuItemId.isNotEmpty && line.qty > 0)
-            {'menu_item_id': line.menuItemId, 'qty': line.qty},
+          if (line.menuItemId.isNotEmpty && line.qty > 0) _lineParams(line),
       ],
       'p_service_type': serviceType,
     };
@@ -1767,6 +1779,8 @@ class AppDatabase {
                     'qty': line.qty,
                     'unit_price': line.unitPrice,
                     'list_unit_price': line.listUnitPrice ?? line.unitPrice,
+                    if (line.choices.isNotEmpty)
+                      'choices': line.choices.map((choice) => choice.toJson()).toList(),
                   },
                 )
                 .toList(),

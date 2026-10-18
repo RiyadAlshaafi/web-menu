@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { MAX_QTY } from "@/lib/cart";
+import { MAX_QTY, defaultOn, dishQty, lineChoices, lineKey, linePrice, normalizeOn } from "@/lib/cart";
 import { categoryName, dishName, hasDiscount, money } from "@/lib/format";
-import type { MenuItem } from "@/lib/types";
+import type { DishOption, MenuItem } from "@/lib/types";
 import { BottomNav, Header, RefusalNotice, Sheet, Toast } from "./chrome";
 import { useGuest } from "./guest-provider";
 import { Icon } from "./icons";
-import { DishPhoto, EmptyHint, PoweredBy, PrimaryButton, Spinner } from "./parts";
+import { ChoiceNotes, DishPhoto, EmptyHint, PoweredBy, PrimaryButton, Spinner } from "./parts";
 
 type Filter = { kind: "all" } | { kind: "chef" } | { kind: "category"; id: string };
 
@@ -169,7 +169,7 @@ function Spotlight({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
 function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => void; priority: boolean }) {
   const { lang, text, cart, add, canPlaceOrder, blockedMessage, showToast } = useGuest();
   const name = dishName(item, lang);
-  const inCart = cart[item.id] ?? 0;
+  const inCart = dishQty(cart, item.id);
   return (
     <li className="mb-2.5 flex items-center rounded-2xl bg-white p-2.5">
       <button
@@ -208,7 +208,8 @@ function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => voi
             if (blockedMessage) showToast(blockedMessage);
             return;
           }
-          add(item.id);
+          // The dish as it comes; choices are made in the sheet.
+          add(item);
         }}
         className={`ms-3 grid h-11 w-11 shrink-0 place-items-center rounded-full ${
           item.available && canPlaceOrder ? "bg-brand text-on-brand" : "bg-ink/10 text-ink/40"
@@ -298,12 +299,42 @@ function Stepper({ value, onChange, min = 1, label }: { value: number; onChange:
   );
 }
 
+// Ingredients the guest can remove or add, or extras they can add. A price shows only on an
+// option that is off by default, because only turning one of those on is charged.
+function OptionGroup({ title, options, on, onToggle }: { title: string; options: DishOption[]; on: string[]; onToggle: (id: string) => void }) {
+  const { lang } = useGuest();
+  if (options.length === 0) return null;
+  return (
+    <fieldset className="mt-3.5 rounded-[14px] bg-white px-3.5 pt-3 pb-1">
+      <legend className="float-start w-full text-xs font-extrabold tracking-[0.12em] text-muted">{title}</legend>
+      {options.map((option) => (
+        <label key={option.id} className="flex min-h-[44px] items-center gap-3 border-t border-hairline first-of-type:border-0">
+          <input
+            type="checkbox"
+            checked={on.includes(option.id)}
+            onChange={() => onToggle(option.id)}
+            className="h-5 w-5 shrink-0 accent-brand"
+          />
+          <span className="min-w-0 flex-1 text-[15px] font-bold">{dishName(option, lang)}</span>
+          {!option.defaultOn && option.price > 0 && (
+            <span className="text-sm font-bold whitespace-nowrap text-muted">+{money(option.price, lang)}</span>
+          )}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
 function DishSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   const { lang, text, add, canPlaceOrder, blockedMessage, showToast, cart } = useGuest();
   const [qty, setQty] = useState(1);
+  const [on, setOn] = useState<string[]>(() => defaultOn(item));
   const name = dishName(item, lang);
   const otherName = dishName(item, lang === "ar" ? "en" : "ar");
-  const room = MAX_QTY - (cart[item.id] ?? 0);
+  const room = MAX_QTY - (cart[lineKey(item, on)]?.qty ?? 0);
+  const unitPrice = linePrice(item, on);
+  const toggle = (id: string) =>
+    setOn((current) => normalizeOn(item, current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   return (
     <Sheet label={name} onClose={onClose}>
       <div className="relative">
@@ -333,6 +364,18 @@ function DishSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
           </div>
         </div>
         {item.description && <p className="mt-2.5 leading-relaxed text-muted">{item.description}</p>}
+        <OptionGroup
+          title={text("guestIngredients")}
+          options={item.options.filter((o) => o.kind === "ingredient")}
+          on={on}
+          onToggle={toggle}
+        />
+        <OptionGroup
+          title={text("guestExtras")}
+          options={item.options.filter((o) => o.kind === "topping")}
+          on={on}
+          onToggle={toggle}
+        />
         <div className="mt-3.5 flex items-center rounded-[14px] bg-white px-3.5 py-3">
           <div className="flex-1">
             <p className="text-xs font-extrabold tracking-[0.12em] text-muted">{text("guestQuantity")}</p>
@@ -349,12 +392,12 @@ function DishSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
                 if (blockedMessage) showToast(blockedMessage);
                 return;
               }
-              add(item.id, qty);
+              add(item, on, qty);
               onClose();
             }}
             className={canPlaceOrder ? "" : "!bg-ink/10 !text-ink/40"}
           >
-            {text("guestAddToOrder", { amount: money(item.salePrice * qty, lang) })}
+            {text("guestAddToOrder", { amount: money(unitPrice * qty, lang) })}
           </PrimaryButton>
         </div>
       </div>
@@ -366,19 +409,25 @@ function DishSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
 function VerifySheet({ onClose }: { onClose: () => void }) {
   const { lines, lang, text, menu, setQty, sendOrder, href } = useGuest();
   const router = useRouter();
+  // Quantities by cart line key: the same dish with other choices is its own row.
   const [draft, setDraft] = useState<Record<string, number>>(() =>
-    Object.fromEntries(lines.map((line) => [line.item.id, line.qty])),
+    Object.fromEntries(lines.map((line) => [line.key, line.qty])),
   );
   const [sending, setSending] = useState(false);
-  const visible = lines.filter((line) => (draft[line.item.id] ?? 0) > 0);
-  const count = visible.reduce((sum, line) => sum + draft[line.item.id], 0);
-  const subtotal = visible.reduce((sum, line) => sum + line.item.salePrice * draft[line.item.id], 0);
+  const visible = lines.filter((line) => (draft[line.key] ?? 0) > 0);
+  const count = visible.reduce((sum, line) => sum + draft[line.key], 0);
+  const subtotal = visible.reduce((sum, line) => sum + linePrice(line.item, line.on) * draft[line.key], 0);
 
   const send = async () => {
     if (sending) return;
     setSending(true);
-    for (const line of lines) setQty(line.item.id, draft[line.item.id] ?? 0);
-    const send = visible.map((line) => ({ menuItemId: line.item.id, qty: draft[line.item.id] }));
+    for (const line of lines) setQty(line.key, draft[line.key] ?? 0);
+    // `on` only for dishes that have options, so a plain dish is sent exactly as before.
+    const send = visible.map((line) => ({
+      menuItemId: line.item.id,
+      qty: draft[line.key],
+      ...(line.item.options.length > 0 ? { on: line.on } : {}),
+    }));
     if (send.length === 0) {
       onClose();
       return;
@@ -417,21 +466,22 @@ function VerifySheet({ onClose }: { onClose: () => void }) {
       <div className="px-4 pb-2">
         <p className="font-bold tracking-wide text-ink-muted">{text("guestItemsInOrder", { count })}</p>
         <ul className="mt-2">
-          {visible.map(({ item }) => {
-            const qty = draft[item.id];
+          {visible.map(({ key, item, on }) => {
+            const qty = draft[key];
             const name = dishName(item, lang);
             return (
-              <li key={item.id} className="mb-2 flex items-center rounded-2xl bg-key p-3">
+              <li key={key} className="mb-2 flex items-center rounded-2xl bg-key p-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{name}</p>
-                  <p className="font-extrabold">{money(item.salePrice * qty, lang)}</p>
+                  <ChoiceNotes choices={lineChoices(item, on)} lang={lang} />
+                  <p className="font-extrabold">{money(linePrice(item, on) * qty, lang)}</p>
                 </div>
                 <div className="flex items-center rounded-full bg-white" role="group" aria-label={name}>
                   <button
                     type="button"
                     aria-label={text("decrease")}
                     disabled={sending}
-                    onClick={() => setDraft((d) => ({ ...d, [item.id]: qty - 1 }))}
+                    onClick={() => setDraft((d) => ({ ...d, [key]: qty - 1 }))}
                     className="grid h-11 w-11 place-items-center"
                   >
                     <Icon name="remove" size={16} />
@@ -441,7 +491,7 @@ function VerifySheet({ onClose }: { onClose: () => void }) {
                     type="button"
                     aria-label={text("increase")}
                     disabled={sending || qty >= MAX_QTY}
-                    onClick={() => setDraft((d) => ({ ...d, [item.id]: Math.min(MAX_QTY, qty + 1) }))}
+                    onClick={() => setDraft((d) => ({ ...d, [key]: Math.min(MAX_QTY, qty + 1) }))}
                     className="grid h-11 w-11 place-items-center disabled:opacity-40"
                   >
                     <Icon name="add" size={16} />

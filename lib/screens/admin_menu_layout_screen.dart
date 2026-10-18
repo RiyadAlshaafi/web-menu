@@ -13,6 +13,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/dish_choices_editor.dart';
 import '../widgets/tawla_ui.dart';
 
 class AdminMenuScreen extends StatefulWidget {
@@ -526,6 +527,7 @@ Future<void> showAddDishDialog(
   final nameEn = TextEditingController(text: existing?.nameEn ?? '');
   final price = TextEditingController(text: existing == null ? '' : existing.price.toStringAsFixed(2));
   var image = existing?.imageUrl ?? '';
+  var options = existing?.options ?? const <DishOption>[];
   var selectedCategory = categoryId ?? existing?.categoryId ?? store.orderedCategories.first.id;
 
   final saved = await showDialog<MenuItem>(
@@ -663,6 +665,8 @@ Future<void> showAddDishDialog(
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    DishChoicesEditor(initial: options, onChanged: (value) => options = value),
                     const SizedBox(height: 18),
                     Row(
                       children: [
@@ -700,7 +704,8 @@ Future<void> showAddDishDialog(
                               ..nameEn = english.isEmpty ? italian : english
                               ..price = double.tryParse(price.text) ?? item.price
                               ..imageUrl = image
-                              ..categoryId = selectedCategory;
+                              ..categoryId = selectedCategory
+                              ..options = options;
                             Navigator.pop(context, item);
                           },
                           icon: const Icon(Icons.add, size: 16),

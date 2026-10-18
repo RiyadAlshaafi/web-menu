@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { lineChoices, linePrice } from "@/lib/cart";
 import { dishName, lineTotal, money, orderNumber, tripoliTime } from "@/lib/format";
 import type { TabLine } from "@/lib/types";
 import { BottomNav, Header, RefusalNotice, Toast } from "./chrome";
 import { useGuest } from "./guest-provider";
 import { Icon } from "./icons";
-import { EmptyHint, Eyebrow, GuestCard, OutlineButton, PrimaryButton, TicketLine } from "./parts";
+import { ChoiceNotes, EmptyHint, Eyebrow, GuestCard, OutlineButton, PrimaryButton, TicketLine } from "./parts";
 
 const STEPS = ["received", "preparing", "ready", "served"] as const;
 
@@ -60,7 +61,7 @@ export function TabScreen() {
   const lineName = useLineName();
   const order = tab?.order ?? null;
   const canBill = order?.status === "served" && lines.length === 0;
-  const total = subtotalOf(order?.lines ?? []) + lines.reduce((s, l) => s + l.item.salePrice * l.qty, 0);
+  const total = subtotalOf(order?.lines ?? []) + lines.reduce((s, l) => s + linePrice(l.item, l.on) * l.qty, 0);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[430px] flex-col bg-page">
@@ -96,9 +97,12 @@ export function TabScreen() {
               <GuestCard className="!pb-2.5">
                 <h3 className="text-[13px] font-extrabold text-muted">{text("guestNewAdditions")}</h3>
                 <ul className="mt-1.5">
-                  {lines.map(({ item, qty }) => (
-                    <li key={item.id} className="flex items-center border-t border-hairline py-1">
-                      <span className="min-w-0 flex-1 text-[15px] font-bold">{dishName(item, lang)}</span>
+                  {lines.map(({ key, item, on, qty }) => (
+                    <li key={key} className="flex items-center border-t border-hairline py-1">
+                      <span className="min-w-0 flex-1 text-[15px] font-bold">
+                        {dishName(item, lang)}
+                        <ChoiceNotes choices={lineChoices(item, on)} lang={lang} />
+                      </span>
                       {[
                         { icon: "remove" as const, label: text("decrease"), next: qty - 1 },
                         { icon: "add" as const, label: text("increase"), next: qty + 1 },
@@ -108,14 +112,14 @@ export function TabScreen() {
                           <button
                             type="button"
                             aria-label={`${b.label} ${dishName(item, lang)}`}
-                            onClick={() => (canPlaceOrder ? setQty(item.id, b.next) : blockedMessage && showToast(blockedMessage))}
+                            onClick={() => (canPlaceOrder ? setQty(key, b.next) : blockedMessage && showToast(blockedMessage))}
                             className={`grid h-11 w-11 place-items-center ${canPlaceOrder ? "text-brand-ink" : "text-muted"}`}
                           >
                             <Icon name={b.icon} size={18} />
                           </button>
                         </span>
                       ))}
-                      <span className="ms-1 text-[15px] font-bold whitespace-nowrap">{money(lineTotal(item.salePrice, qty), lang)}</span>
+                      <span className="ms-1 text-[15px] font-bold whitespace-nowrap">{money(lineTotal(linePrice(item, on), qty), lang)}</span>
                     </li>
                   ))}
                 </ul>
@@ -124,10 +128,24 @@ export function TabScreen() {
             <GuestCard>
               <h3 className="pb-1.5 text-[13px] font-extrabold text-muted">{text("guestTicketSummary")}</h3>
               {order?.lines.map((line) => (
-                <TicketLine key={line.id} qty={line.qty} name={lineName(line)} amount={money(lineTotal(line.unitPrice, line.qty), lang)} />
+                <TicketLine
+                  key={line.id}
+                  qty={line.qty}
+                  name={lineName(line)}
+                  choices={line.choices}
+                  lang={lang}
+                  amount={money(lineTotal(line.unitPrice, line.qty), lang)}
+                />
               ))}
-              {lines.map(({ item, qty }) => (
-                <TicketLine key={`new-${item.id}`} qty={qty} name={dishName(item, lang)} amount={money(lineTotal(item.salePrice, qty), lang)} />
+              {lines.map(({ key, item, on, qty }) => (
+                <TicketLine
+                  key={`new-${key}`}
+                  qty={qty}
+                  name={dishName(item, lang)}
+                  choices={lineChoices(item, on)}
+                  lang={lang}
+                  amount={money(lineTotal(linePrice(item, on), qty), lang)}
+                />
               ))}
               <div className="flex border-t border-line pt-2.5">
                 <span className="flex-1 text-[15px] font-bold">{text("guestKitchenTicketTotal")}</span>

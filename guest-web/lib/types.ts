@@ -12,6 +12,17 @@ export type Cafe = {
 
 export type Category = { id: string; nameEn: string; nameAr: string };
 
+// One ingredient or extra topping of a dish. Only an option that is off by default and turned on
+// is charged; removing a default ingredient is free.
+export type DishOption = {
+  id: string;
+  kind: "ingredient" | "topping";
+  nameEn: string;
+  nameAr: string;
+  price: number;
+  defaultOn: boolean;
+};
+
 export type MenuItem = {
   id: string;
   categoryId: string;
@@ -23,6 +34,7 @@ export type MenuItem = {
   imageUrl: string;
   available: boolean;
   featured: boolean;
+  options: DishOption[];
 };
 
 export type PaymentType = { id: string; nameEn: string; nameAr: string };
@@ -53,7 +65,11 @@ export type TabLine = {
   unitPrice: number;
   listUnitPrice: number | null;
   round: number;
+  choices: LineChoice[];
 };
+
+// A choice on a sent line that differs from the dish defaults; price is what was charged.
+export type LineChoice = { id: string; nameEn: string; nameAr: string; on: boolean; price: number };
 
 export type OrderStatus = "received" | "preparing" | "ready" | "served" | "paid" | string;
 

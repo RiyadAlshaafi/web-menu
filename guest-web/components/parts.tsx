@@ -1,5 +1,8 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { dishName, money } from "@/lib/format";
+import { t, type Lang } from "@/lib/i18n";
+import type { LineChoice } from "@/lib/types";
 import { Icon } from "./icons";
 
 // Shared pieces of the guest pages (lib/screens/customer/guest_parts.dart).
@@ -49,13 +52,32 @@ export function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs font-extrabold tracking-[0.13em] text-brand-ink uppercase">{children}</p>;
 }
 
-export function TicketLine({ qty, name, amount }: { qty: number; name: string; amount: string }) {
+export function TicketLine({ qty, name, amount, choices = [], lang }: { qty: number; name: string; amount: string; choices?: LineChoice[]; lang: Lang }) {
   return (
     <div className="flex items-center gap-2 border-t border-hairline py-[9px] text-[15px]">
-      <span className="w-[34px] shrink-0 font-extrabold">{qty}×</span>
-      <span className="min-w-0 flex-1">{name}</span>
-      <span className="font-bold whitespace-nowrap">{amount}</span>
+      <span className="w-[34px] shrink-0 self-start font-extrabold">{qty}×</span>
+      <span className="min-w-0 flex-1">
+        {name}
+        <ChoiceNotes choices={choices} lang={lang} />
+      </span>
+      <span className="self-start font-bold whitespace-nowrap">{amount}</span>
     </div>
+  );
+}
+
+// Small lines under a dish for the choices that differ from how it comes: "– No onion",
+// "+ Cheese 0.500 LYD". Nothing for a dish as it comes. Spans, so it fits inside inline text.
+export function ChoiceNotes({ choices, lang }: { choices: LineChoice[]; lang: Lang }) {
+  if (choices.length === 0) return null;
+  return (
+    <span className="mt-0.5 block text-[13px] leading-snug font-normal text-muted">
+      {choices.map((choice) => (
+        <span key={choice.id} className="block">
+          {t(lang, choice.on ? "guestChoiceWith" : "guestChoiceWithout", { name: dishName(choice, lang) })}
+          {choice.on && choice.price > 0 && <span className="ms-1.5 whitespace-nowrap">{money(choice.price, lang)}</span>}
+        </span>
+      ))}
+    </span>
   );
 }
 

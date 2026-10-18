@@ -58,7 +58,14 @@ export function BillScreen() {
             ) : (
               <>
                 {order.lines.map((line) => (
-                  <TicketLine key={line.id} qty={line.qty} name={lineName(line)} amount={money(lineTotal(line.unitPrice, line.qty), lang)} />
+                  <TicketLine
+                    key={line.id}
+                    qty={line.qty}
+                    name={lineName(line)}
+                    choices={line.choices}
+                    lang={lang}
+                    amount={money(lineTotal(line.unitPrice, line.qty), lang)}
+                  />
                 ))}
                 <div className="mt-0.5 mb-2 border-t border-dashed border-step-idle" />
                 <Row label={text("guestSubtotal")} value={money(subtotal, lang)} />

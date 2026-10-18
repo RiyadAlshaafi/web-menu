@@ -7,7 +7,7 @@ import { MENU_TABLES, subscribeLive } from "@/lib/client/live";
 import { errorText } from "@/lib/client/messages";
 import { readRaw, useStoredRaw, writeRaw } from "@/lib/client/stored";
 import { t, type Lang, type TextKey } from "@/lib/i18n";
-import type { GuestStatus, Menu, Tab } from "@/lib/types";
+import type { GuestStatus, Menu, MenuItem, Tab } from "@/lib/types";
 
 export type LocationState = "off" | "checking" | "allowed" | "tooFar" | "denied" | "unavailable";
 
@@ -29,10 +29,12 @@ type Guest = {
   hadOrder: boolean;
   text: (key: TextKey, vars?: Record<string, string | number>) => string;
   href: (path?: string) => string;
-  add: (itemId: string, qty?: number) => void;
-  setQty: (itemId: string, qty: number) => void;
+  // `on` defaults to the dish as it comes.
+  add: (item: MenuItem, on?: string[], qty?: number) => void;
+  // By cart line key (lib/cart lineKey).
+  setQty: (key: string, qty: number) => void;
   checkLocation: (force?: boolean) => Promise<void>;
-  sendOrder: (lines: { menuItemId: string; qty: number }[]) => Promise<boolean>;
+  sendOrder: (lines: OrderLine[]) => Promise<boolean>;
   callStaff: () => Promise<void>;
   requestBill: () => Promise<boolean>;
   setPaymentType: (typeId: string) => Promise<void>;
@@ -41,6 +43,8 @@ type Guest = {
   toast: string | null;
   showToast: (message: string) => void;
 };
+
+export type OrderLine = { menuItemId: string; qty: number; on?: string[] };
 
 const GuestContext = createContext<Guest | null>(null);
 
@@ -105,12 +109,15 @@ export function GuestProvider({
 
   // ---------------------------------------------------------------- cart (this phone only)
   const storageArea = useMemo(() => ({ getItem: (key: string) => readRaw("local", key) }), []);
-  const cart = useMemo<Cart>(() => (cartRaw === null ? {} : loadCart(storageArea, slug)), [cartRaw, storageArea, slug]);
+  const cart = useMemo<Cart>(
+    () => (cartRaw === null ? {} : loadCart(storageArea, slug, menu.items)),
+    [cartRaw, storageArea, slug, menu.items],
+  );
 
   const updateCart = useCallback(
     (next: (current: Cart) => Cart) => {
       // Dishes no longer on the menu are dropped on every change.
-      const value = prune(next(loadCart(storageArea, slug)), menu.items);
+      const value = prune(next(loadCart(storageArea, slug, menu.items)), menu.items);
       writeRaw("local", cartKey(slug), Object.keys(value).length ? JSON.stringify(value) : null);
     },
     [menu.items, slug, storageArea],
@@ -273,7 +280,7 @@ export function GuestProvider({
   );
 
   const sendOrder = useCallback(
-    async (send: { menuItemId: string; qty: number }[]) => {
+    async (send: OrderLine[]) => {
       if (send.length === 0) return false;
       if (locationEnabled) {
         await checkLocation(!(point.current && point.current.until > Date.now()));
@@ -349,8 +356,8 @@ export function GuestProvider({
     hadOrder,
     text,
     href,
-    add: (itemId, qty = 1) => updateCart((c) => addToCart(c, itemId, qty)),
-    setQty: (itemId, qty) => updateCart((c) => setCartQty(c, itemId, qty)),
+    add: (item, on, qty = 1) => updateCart((c) => addToCart(c, item, on, qty)),
+    setQty: (key, qty) => updateCart((c) => setCartQty(c, key, qty)),
     checkLocation,
     sendOrder,
     callStaff,

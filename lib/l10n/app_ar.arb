@@ -543,5 +543,20 @@
   "tableOrderSent": "أُضيفت إلى {table}.",
   "tableOrderEmpty": "اضغط على الأطباق لإضافتها إلى هذه الطاولة.",
   "tableOrderOnTab": "على الفاتورة: {count} صنف، {total}",
-  "tableOrderBack": "العودة إلى الصالة"
+  "tableOrderBack": "العودة إلى الصالة",
+  "dishChoicesTitle": "المكونات والإضافات",
+  "dishChoicesHint": "يضغط الزبون على الطبق لتغييرها. زر + يضيف الطبق كما هو.",
+  "dishChoicesAdd": "إضافة مكوّن أو إضافة",
+  "dishChoiceIngredient": "مكوّن",
+  "dishChoiceTopping": "إضافة",
+  "dishChoiceInByDefault": "موجود في الطبق افتراضياً",
+  "dishChoiceNameAr": "الاسم بالعربية",
+  "dishChoiceNameEn": "الاسم بالإنجليزية",
+  "dishChoicePrice": "السعر عند الإضافة (0 = مجاناً)",
+  "dishChoiceRemove": "حذف",
+  "dishChoicesIngredients": "المكونات",
+  "dishChoicesExtras": "الإضافات",
+  "dishChoicesApply": "تطبيق",
+  "dishChoicesTapLine": "اضغط على السطر لتغيير مكوناته.",
+  "dishChoiceWithout": "بدون {name}"
 }

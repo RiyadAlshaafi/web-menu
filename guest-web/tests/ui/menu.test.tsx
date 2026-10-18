@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CAPPU, SLUG, TEA, err, mockApi, ok, open, renderGuest, router, tabWith } from "./setup";
+import { CAPPU, CREAM, SHOT, SLUG, SUGAR, TEA, err, mockApi, ok, open, renderGuest, router, storedQty, tabWith } from "./setup";
 import { MenuScreen } from "@/components/menu-screen";
 
 const tabEmpty = { table: { number: "4", status: "free" }, order: null };
@@ -59,7 +59,7 @@ describe("MenuScreen", () => {
     fireEvent.click(addButton(/^Add Mint Tea/));
     fireEvent.click(addButton(/^Add Cappuccino/));
     expect(screen.getByLabelText("2 in your order")).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [TEA]: 2, [CAPPU]: 1 });
+    expect(storedQty()).toEqual({ [TEA]: 2, [CAPPU]: 1 });
 
     fireEvent.click(screen.getByRole("button", { name: /3 items • Cart/ }));
     const sheet = screen.getByRole("dialog");
@@ -84,11 +84,63 @@ describe("MenuScreen", () => {
     fireEvent.click(within(sheet).getByRole("button", { name: "Increase" }));
     fireEvent.click(within(sheet).getByRole("button", { name: /Add to Order/ }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [CAPPU]: 2 });
+    expect(storedQty()).toEqual({ [CAPPU]: 2 });
 
     fireEvent.click(screen.getByRole("button", { name: "Mint Tea" }));
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("lets the guest change ingredients and add extras, priced live, and sends the choices", async () => {
+    const calls = mockApi((url) => (url.includes("/order") ? ok({ orderId: "o1", round: 1 }) : ok(tabEmpty)));
+    await renderGuest(<MenuScreen />);
+    fireEvent.click(screen.getAllByRole("button", { name: /^Cappuccino/ })[0]);
+    const sheet = screen.getByRole("dialog", { name: "Cappuccino" });
+    const ingredients = within(sheet).getByRole("group", { name: "Ingredients" });
+    const extras = within(sheet).getByRole("group", { name: "Extras" });
+    expect(within(ingredients).getByRole("checkbox", { name: "Sugar" })).toBeChecked();
+    expect(within(ingredients).getByRole("checkbox", { name: /Cinnamon/ })).not.toBeChecked();
+    expect(within(extras).getByRole("checkbox", { name: /Extra shot/ })).not.toBeChecked();
+    expect(within(extras).getByText("+1.500 LYD")).toBeInTheDocument();
+    expect(within(sheet).getByRole("button", { name: /Add to Order • 6.000 LYD/ })).toBeInTheDocument();
+
+    // Removing sugar is free; the shot is charged in full, not at the dish discount.
+    fireEvent.click(within(ingredients).getByRole("checkbox", { name: "Sugar" }));
+    fireEvent.click(within(extras).getByRole("checkbox", { name: /Extra shot/ }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "Increase" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: /Add to Order • 15.000 LYD/ }));
+    const key = `${CAPPU}|${[SHOT, SUGAR].sort().join(",")}`;
+    expect(storedQty()).toEqual({ [key]: 2 });
+
+    // The same dish as it comes is its own line.
+    fireEvent.click(addButton(/^Add Cappuccino/));
+    expect(storedQty()).toEqual({ [key]: 2, [CAPPU]: 1 });
+    expect(screen.getByLabelText("3 in your order")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /3 items • Cart/ }));
+    const review = screen.getByRole("dialog", { name: "Verify Your Order" });
+    expect(within(review).getByText("– No Sugar")).toBeInTheDocument();
+    expect(within(review).getByText("+ Extra shot")).toBeInTheDocument();
+    expect(within(review).getAllByText("21.000 LYD")).toHaveLength(2); // subtotal and total
+    // Rows are per line: dropping the plain one leaves the changed one.
+    fireEvent.click(within(within(review).getAllByRole("group", { name: "Cappuccino" })[1]).getByRole("button", { name: "Decrease" }));
+    fireEvent.click(within(review).getByRole("button", { name: /Confirm & Send to Kitchen/ }));
+    await waitFor(() => expect(router.push).toHaveBeenCalled());
+    const order = calls.find((c) => c.url.endsWith("/api/guest/order"))!;
+    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: CAPPU, qty: 2, on: [SHOT] }] });
+  });
+
+  it("adds a free extra without a price and shows the sheet in Arabic", async () => {
+    mockApi(() => ok(tabEmpty));
+    await renderGuest(<MenuScreen />, { lang: "ar" });
+    fireEvent.click(screen.getAllByRole("button", { name: /^كابتشينو/ })[0]);
+    const sheet = screen.getByRole("dialog", { name: "كابتشينو" });
+    expect(within(sheet).getByRole("group", { name: "المكونات" })).toBeInTheDocument();
+    const extras = within(sheet).getByRole("group", { name: "الإضافات" });
+    expect(within(extras).getByRole("checkbox", { name: "كريمة" })).toBeInTheDocument();
+    fireEvent.click(within(extras).getByRole("checkbox", { name: "كريمة" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: /6.000 د.ل/ }));
+    expect(storedQty()).toEqual({ [`${CAPPU}|${CREAM}`]: 1 });
   });
 
   it("names the sold-out dishes in the guest's language when the order is refused", async () => {
@@ -110,7 +162,7 @@ describe("MenuScreen", () => {
     await waitFor(() => expect(screen.getAllByText(/cashier/i).length).toBeGreaterThan(0));
     // Now blocked: the add button only repeats why.
     fireEvent.click(addButton(/^Add Mint Tea/));
-    expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [TEA]: 1 });
+    expect(storedQty()).toEqual({ [TEA]: 1 });
   });
 
   it("blocks adding while ordering is paused from the start", async () => {
@@ -191,7 +243,7 @@ describe("location check", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Retry" })));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Retry" })).toBeNull());
     fireEvent.click(addButton(/^Add Mint Tea/));
-    expect(JSON.parse(localStorage.getItem(`tawla-cart:${SLUG}`)!)).toEqual({ [TEA]: 1 });
+    expect(storedQty()).toEqual({ [TEA]: 1 });
   });
 
   it("re-checks an expired position at send: sends without one if staff switched the check off, explains a refusal", async () => {

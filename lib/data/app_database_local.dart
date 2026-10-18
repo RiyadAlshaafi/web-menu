@@ -492,6 +492,7 @@ extension AppDatabaseLocal on AppDatabase {
               unitPrice: line.unitPrice,
               listUnitPrice: line.listUnitPrice,
               round: round,
+              choices: line.choices,
             ),
         ]);
       table.status = TableStatus.dining;

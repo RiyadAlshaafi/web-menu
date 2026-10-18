@@ -61,36 +61,45 @@ extension CafeStoreOrders on CafeStore {
   /// Most of one dish a single send may carry; the server refuses more.
   static const maxDishQty = 99;
 
+  /// Adds [item] as it comes; its choices are changed afterwards with [setCartLineChoices].
   void addToCart(String tableId, MenuItem item) {
     if (item.soldOut || !item.available) return;
     final cart = cartFor(tableId);
-    final existing = cart.lines.where((line) => line.menuItemId == item.id);
+    final existing = cart.lines.where((line) => line.menuItemId == item.id && line.choices.isEmpty);
     if (existing.isNotEmpty && existing.first.qty >= maxDishQty) return;
     if (existing.isEmpty) {
-      cart.lines.add(
-        OrderLine(
-          menuItemId: item.id,
-          name: item.displayName(locale),
-          qty: 1,
-          unitPrice: item.salePrice,
-          listUnitPrice: item.price,
-        ),
-      );
+      cart.lines.add(item.lineWith(locale: locale));
     } else {
       existing.first.qty += 1;
     }
-    db.writeCarts(carts).whenComplete(_writeFinished);
-    _pendingWrites += 1;
-    notifyListeners();
+    _saveCarts();
   }
 
-  void setCartQty(String tableId, String menuItemId, int qty) {
+  /// Sets the quantity of the cart line whose [OrderLine.mergeKey] is [lineKey].
+  void setCartQty(String tableId, String lineKey, int qty) {
     qty = qty > maxDishQty ? maxDishQty : qty;
     final cart = cartFor(tableId);
-    cart.lines.removeWhere((line) => line.menuItemId == menuItemId && qty <= 0);
-    for (final line in cart.lines.where((line) => line.menuItemId == menuItemId)) {
+    cart.lines.removeWhere((line) => line.mergeKey == lineKey && qty <= 0);
+    for (final line in cart.lines.where((line) => line.mergeKey == lineKey)) {
       line.qty = qty;
     }
+    _saveCarts();
+  }
+
+  /// Gives the cart line [lineKey] the choices [onIds]; it merges with a line that already has them.
+  void setCartLineChoices(String tableId, String lineKey, Set<String> onIds) {
+    final cart = cartFor(tableId);
+    final line = cart.lines.where((line) => line.mergeKey == lineKey).firstOrNull;
+    final item = menuItems.where((item) => item.id == line?.menuItemId).firstOrNull;
+    if (line == null || item == null) return;
+    replaceLineChoices(cart.lines, line, item.lineWith(locale: locale, onIds: onIds, qty: line.qty));
+    for (final merged in cart.lines.where((other) => other.qty > maxDishQty)) {
+      merged.qty = maxDishQty;
+    }
+    _saveCarts();
+  }
+
+  void _saveCarts() {
     _pendingWrites += 1;
     db.writeCarts(carts).whenComplete(_writeFinished);
     notifyListeners();
@@ -177,6 +186,7 @@ extension CafeStoreOrders on CafeStore {
           qty: line.qty,
           unitPrice: line.unitPrice,
           listUnitPrice: line.listUnitPrice,
+          choices: line.choices,
         ),
     ];
     _takeoutBusy = true;

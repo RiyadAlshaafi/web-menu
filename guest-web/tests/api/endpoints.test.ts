@@ -22,6 +22,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const ITEM2 = "c0000000-0000-4000-8000-000000000002";
+const OPT = "d0000000-0000-4000-8000-000000000001";
+const OPT2 = "d0000000-0000-4000-8000-000000000002";
+
 const CASHIER_OFFLINE = { status: 400, body: { code: "P0001", message: "cashier_offline", details: null, hint: null } };
 
 const menuRow = {
@@ -52,6 +56,22 @@ const menuRow = {
       featured: false,
       sort_order: 1,
     },
+    {
+      id: ITEM2,
+      category_id: "c1",
+      name_en: "Burger",
+      name_ar: "برغر",
+      description: null,
+      price: 12,
+      sale_price: 10,
+      image_url: null,
+      available: true,
+      featured: false,
+      options: [
+        { id: OPT, kind: "ingredient", nameAr: "بصل", nameEn: "Onion", price: 0, defaultOn: true },
+        { id: OPT2, kind: "topping", nameAr: "جبنة", price: 1.5, defaultOn: false },
+      ],
+    },
   ],
   payment_types: [{ id: TYPE, name_en: "Card", name_ar: "بطاقة" }],
 };
@@ -68,10 +88,26 @@ describe("GET /api/guest/menu", () => {
       cafe: { name: "Akakus", headerColor: "#1B3A4B", backgroundColor: "", serviceChargeRate: 0.1 },
       table: { number: "4" },
       categories: [{ id: "c1", nameEn: "Drinks", nameAr: "مشروبات" }],
-      items: [{ id: ITEM, nameAr: "شاي", price: 5, salePrice: 4.5, available: true }],
+      items: [
+        { id: ITEM, nameAr: "شاي", price: 5, salePrice: 4.5, available: true, options: [] },
+        {
+          id: ITEM2,
+          description: "",
+          options: [
+            { id: OPT, kind: "ingredient", nameAr: "بصل", nameEn: "Onion", price: 0, defaultOn: true },
+            { id: OPT2, kind: "topping", nameAr: "جبنة", nameEn: "", price: 1.5, defaultOn: false },
+          ],
+        },
+      ],
       paymentTypes: [{ id: TYPE, nameEn: "Card" }],
     });
     expect(calls).toEqual([expect.objectContaining({ name: "guest_menu", args: { p_qr_slug: SLUG } })]);
+  });
+
+  it("refuses an option of an unknown kind instead of guessing", async () => {
+    const odd = { ...menuRow, items: [{ ...menuRow.items[1], options: [{ id: OPT, kind: "sauce", nameEn: "X", price: 0, defaultOn: false }] }] };
+    mockSupabase(() => ({ body: odd }));
+    expect((await menu.GET(get(`/api/guest/menu?slug=${SLUG}`))).status).toBe(500);
   });
 
   it("accepts a numeric cache stamp and nothing else", async () => {
@@ -151,11 +187,38 @@ describe("POST /api/guest/order", () => {
     });
   });
 
+  it("passes the options that are on through to the database", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, order_id: "o1", round: 1 } }));
+    const lines = [
+      { menuItemId: ITEM2, qty: 1, on: [OPT2] },
+      { menuItemId: ITEM2, qty: 2, on: [] },
+      { menuItemId: ITEM, qty: 1 },
+    ];
+    expect((await order.POST(post("/api/guest/order", { slug: SLUG, lines }))).status).toBe(200);
+    expect(calls[0].args).toMatchObject({
+      p_lines: [
+        { menu_item_id: ITEM2, qty: 1, on: [OPT2] },
+        { menu_item_id: ITEM2, qty: 2, on: [] },
+        { menu_item_id: ITEM, qty: 1 },
+      ],
+    });
+    expect((calls[0].args as { p_lines: unknown[] }).p_lines[2]).not.toHaveProperty("on");
+  });
+
+  it("refuses bad option lists before the database", async () => {
+    const calls = mockSupabase(() => ({ body: {} }));
+    for (const on of [["not-a-uuid"], [OPT, OPT], OPT, [1], Array.from({ length: 41 }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`)]) {
+      expect((await order.POST(post("/api/guest/order", { slug: SLUG, lines: [{ menuItemId: ITEM2, qty: 1, on }] }))).status).toBe(400);
+    }
+    expect(calls).toHaveLength(0);
+  });
+
   it("refuses a price, total or service type sent by the phone (price tampering)", async () => {
     const calls = mockSupabase(() => ({ body: { ok: true, order_id: "o1", round: 1 } }));
     for (const tampered of [
       { slug: SLUG, lines: [{ menuItemId: ITEM, qty: 1, unitPrice: 0.001 }] },
       { slug: SLUG, lines: [{ menuItemId: ITEM, qty: 1, price: 0 }] },
+      { slug: SLUG, lines: [{ menuItemId: ITEM, qty: 1, on: [OPT], extras: [{ id: OPT, price: 0 }] }] },
       body({ total: 0 }),
       body({ serviceType: "takeout" }),
       body({ restaurantId: "other-cafe" }),
@@ -243,7 +306,22 @@ describe("GET /api/guest/tab", () => {
           awaiting_confirmation: false,
           refusal_notice: "",
           payment_type_id: null,
-          lines: [{ id: "l1", menu_item_id: ITEM, name: "Tea", qty: 2, unit_price: 4.5, list_unit_price: 5, round: 1 }],
+          lines: [
+            { id: "l1", menu_item_id: ITEM, name: "Tea", qty: 2, unit_price: 4.5, list_unit_price: 5, round: 1 },
+            {
+              id: "l2",
+              menu_item_id: ITEM2,
+              name: "Burger",
+              qty: 1,
+              unit_price: 11.5,
+              list_unit_price: 13.5,
+              round: 1,
+              choices: [
+                { id: OPT, nameAr: "بصل", nameEn: "Onion", on: false, price: 0 },
+                { id: OPT2, nameAr: "جبنة", nameEn: null, on: true, price: "1.5" },
+              ],
+            },
+          ],
         },
       },
     }));
@@ -258,7 +336,22 @@ describe("GET /api/guest/tab", () => {
         awaitingConfirmation: false,
         refusalNotice: "",
         paymentTypeId: null,
-        lines: [{ id: "l1", menuItemId: ITEM, name: "Tea", qty: 2, unitPrice: 4.5, listUnitPrice: 5, round: 1 }],
+        lines: [
+          { id: "l1", menuItemId: ITEM, name: "Tea", qty: 2, unitPrice: 4.5, listUnitPrice: 5, round: 1, choices: [] },
+          {
+            id: "l2",
+            menuItemId: ITEM2,
+            name: "Burger",
+            qty: 1,
+            unitPrice: 11.5,
+            listUnitPrice: 13.5,
+            round: 1,
+            choices: [
+              { id: OPT, nameAr: "بصل", nameEn: "Onion", on: false, price: 0 },
+              { id: OPT2, nameAr: "جبنة", nameEn: "", on: true, price: 1.5 },
+            ],
+          },
+        ],
       },
     });
   });

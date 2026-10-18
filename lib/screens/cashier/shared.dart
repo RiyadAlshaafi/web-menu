@@ -37,6 +37,7 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700, fontSize: 14),
                     ),
+                    if (line.choices.isNotEmpty) LineChoicesNote(line: line, locale: store.locale, emphasize: true),
                     Text(store.currency.format(line.total), style: const TextStyle(color: TawlaTokens.muted, fontSize: 12)),
                   ],
                 ),
@@ -69,6 +70,69 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
       }),
     ],
   ];
+}
+
+/// A line's removed ingredients and added extras, under its name.
+class LineChoicesNote extends StatelessWidget {
+  const LineChoicesNote({super.key, required this.line, required this.locale, this.emphasize = false});
+
+  final OrderLine line;
+  final String locale;
+
+  /// Kitchen rows show the changes in the accent colour so they are not missed.
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      choicesText(line.choices, locale, without: context.l10n.dishChoiceWithout),
+      style: TextStyle(
+        color: emphasize ? CafeColors.terracotta : TawlaTokens.muted,
+        fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+        fontSize: 12,
+      ),
+    );
+  }
+}
+
+/// A ticket line's name and choices. When the dish has choices, tapping it opens them.
+class TicketLineName extends StatelessWidget {
+  const TicketLineName({super.key, required this.line, required this.locale, required this.editable, required this.onTap});
+
+  final OrderLine line;
+  final String locale;
+  final bool editable;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Flexible(child: Text(line.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15))),
+            if (editable) ...[
+              const SizedBox(width: 6),
+              Icon(Icons.tune, size: 16, color: CafeSurfaces.of(context).buttonInk),
+            ],
+          ],
+        ),
+        if (line.choices.isNotEmpty) LineChoicesNote(line: line, locale: locale),
+      ],
+    );
+    if (!editable) return content;
+    return Semantics(
+      button: true,
+      hint: context.l10n.dishChoicesTapLine,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: content),
+      ),
+    );
+  }
 }
 
 class _ArrivalFlash extends StatefulWidget {
