@@ -2,7 +2,7 @@ name: menu_web_v1
 description: "Tawla: cafe POS and QR ordering, stored in Supabase."
 publish_to: 'none'
 
-version: 1.6.0-beta.5+16
+version: 1.6.0-beta.6+17
 
 environment:
   sdk: ^3.13.3
