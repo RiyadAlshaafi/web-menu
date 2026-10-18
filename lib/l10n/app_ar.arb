@@ -558,5 +558,6 @@
   "dishChoicesExtras": "الإضافات",
   "dishChoicesApply": "تطبيق",
   "dishChoicesTapLine": "اضغط على السطر لتغيير مكوناته.",
-  "dishChoiceWithout": "بدون {name}"
+  "dishChoiceWithout": "بدون {name}",
+  "dishChoicesHoldCard": "اختيار المكونات والإضافات"
 }

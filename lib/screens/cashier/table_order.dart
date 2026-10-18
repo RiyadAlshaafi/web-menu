@@ -98,6 +98,7 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
                 count: inCart,
                 enabled: item.available && !item.soldOut && !sending,
                 onTap: () => store.addToCart(table.id, item),
+                onHold: item.options.isEmpty || sending ? null : () => _addWithChoices(context, store, item),
               );
             },
           ),
@@ -215,6 +216,19 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
         },
       ),
     );
+  }
+
+  /// Holding a dish card: pick its choices first, then it goes on the table's cart.
+  Future<void> _addWithChoices(BuildContext context, CafeStore store, MenuItem item) async {
+    final on = await showDishChoicesSheet(
+      context,
+      item: item,
+      onIds: item.defaultOnIds,
+      locale: store.locale,
+      money: store.currency.format,
+    );
+    if (on == null || !mounted) return;
+    store.addToCart(widget.tableId, item, onIds: on);
   }
 
   Future<void> _editChoices(BuildContext context, CafeStore store, OrderLine line) async {

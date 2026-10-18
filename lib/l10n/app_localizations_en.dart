@@ -1765,4 +1765,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String dishChoiceWithout(String name) {
     return 'No $name';
   }
+
+  @override
+  String get dishChoicesHoldCard => 'choose ingredients and extras';
 }

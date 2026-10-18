@@ -1754,4 +1754,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String dishChoiceWithout(String name) {
     return 'بدون $name';
   }
+
+  @override
+  String get dishChoicesHoldCard => 'اختيار المكونات والإضافات';
 }

@@ -3211,6 +3211,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No {name}'**
   String dishChoiceWithout(String name);
+
+  /// No description provided for @dishChoicesHoldCard.
+  ///
+  /// In en, this message translates to:
+  /// **'choose ingredients and extras'**
+  String get dishChoicesHoldCard;
 }
 
 class _AppLocalizationsDelegate

@@ -35,6 +35,28 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     });
   }
 
+  /// Holding a dish card: pick its choices first, then it goes on the ticket.
+  Future<void> _addWithChoices(CafeStore store, MenuItem item) async {
+    if (item.soldOut || !item.available) return;
+    final on = await showDishChoicesSheet(
+      context,
+      item: item,
+      onIds: item.defaultOnIds,
+      locale: store.locale,
+      money: store.currency.format,
+    );
+    if (on == null || !mounted) return;
+    final line = item.lineWith(locale: store.locale, onIds: on);
+    setState(() {
+      final twin = lines.where((other) => other.mergeKey == line.mergeKey);
+      if (twin.isEmpty) {
+        lines.add(line);
+      } else {
+        twin.first.qty += 1;
+      }
+    });
+  }
+
   Future<void> _editChoices(CafeStore store, OrderLine line) async {
     final item = store.menuItems.where((item) => item.id == line.menuItemId).firstOrNull;
     if (item == null || item.options.isEmpty) return;
@@ -155,6 +177,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                             count: inTicket,
                             enabled: item.available && !item.soldOut,
                             onTap: () => _add(store, item),
+                            onHold: item.options.isEmpty ? null : () => _addWithChoices(store, item),
                           );
                         },
                       ),
@@ -302,7 +325,11 @@ class _TakeoutDishButton extends StatelessWidget {
     required this.count,
     required this.enabled,
     required this.onTap,
+    this.onHold,
   });
+
+  /// How long a cashier holds a dish to open its ingredients and extras.
+  static const holdDuration = Duration(seconds: 1);
 
   final String category;
   final String name;
@@ -312,17 +339,34 @@ class _TakeoutDishButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
 
+  /// Set when the dish has ingredients or extras: holding the card opens them.
+  final VoidCallback? onHold;
+
   @override
   Widget build(BuildContext context) {
     final surfaces = CafeSurfaces.of(context);
     final picked = count > 0;
+    final hold = enabled ? onHold : null;
     return Semantics(
       button: true,
       enabled: enabled,
       label: '$name, $price',
       value: picked ? '$count' : null,
+      onLongPressHint: hold == null ? null : context.l10n.dishChoicesHoldCard,
+      onLongPress: hold,
       excludeSemantics: true,
-      child: Material(
+      child: RawGestureDetector(
+        gestures: {
+          if (hold != null)
+            LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer(duration: holdDuration),
+              (recognizer) => recognizer.onLongPress = () {
+                HapticFeedback.mediumImpact();
+                hold();
+              },
+            ),
+        },
+        child: Material(
         color: enabled ? CafeColors.paper : CafeColors.creamDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -383,9 +427,16 @@ class _TakeoutDishButton extends StatelessWidget {
                     child: Text('$count', style: TextStyle(color: surfaces.onButton, fontWeight: FontWeight.w800, fontSize: 12)),
                   ),
                 ),
+              if (onHold != null)
+                PositionedDirectional(
+                  bottom: 12,
+                  end: 12,
+                  child: Icon(Icons.tune, size: 18, color: enabled ? surfaces.buttonInk : CafeColors.inkMuted),
+                ),
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -904,5 +904,6 @@
   "dishChoicesApply": "Apply",
   "dishChoicesTapLine": "Tap a line to change its ingredients.",
   "dishChoiceWithout": "No {name}",
-  "@dishChoiceWithout": {"placeholders": {"name": {"type": "String"}}}
+  "@dishChoiceWithout": {"placeholders": {"name": {"type": "String"}}},
+  "dishChoicesHoldCard": "choose ingredients and extras"
 }

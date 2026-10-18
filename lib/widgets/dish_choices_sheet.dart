@@ -40,7 +40,7 @@ class _DishChoicesSheet extends StatefulWidget {
 class _DishChoicesSheetState extends State<_DishChoicesSheet> {
   late Set<String> on = {...widget.initial};
 
-  void _toggle(String id, bool value) => setState(() => on = value ? {...on, id} : {...on}..remove(id));
+  void _toggle(String id, bool value) => setState(() => on = value ? {...on, id} : on.where((other) => other != id).toSet());
 
   @override
   Widget build(BuildContext context) {

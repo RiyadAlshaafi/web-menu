@@ -61,14 +61,15 @@ extension CafeStoreOrders on CafeStore {
   /// Most of one dish a single send may carry; the server refuses more.
   static const maxDishQty = 99;
 
-  /// Adds [item] as it comes; its choices are changed afterwards with [setCartLineChoices].
-  void addToCart(String tableId, MenuItem item) {
+  /// Adds one [item], as it comes or with [onIds] turned on; it joins a line with the same choices.
+  void addToCart(String tableId, MenuItem item, {Set<String>? onIds}) {
     if (item.soldOut || !item.available) return;
     final cart = cartFor(tableId);
-    final existing = cart.lines.where((line) => line.menuItemId == item.id && line.choices.isEmpty);
+    final added = item.lineWith(locale: locale, onIds: onIds);
+    final existing = cart.lines.where((line) => line.mergeKey == added.mergeKey);
     if (existing.isNotEmpty && existing.first.qty >= maxDishQty) return;
     if (existing.isEmpty) {
-      cart.lines.add(item.lineWith(locale: locale));
+      cart.lines.add(added);
     } else {
       existing.first.qty += 1;
     }
