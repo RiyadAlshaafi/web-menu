@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
@@ -127,12 +128,15 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
           Row(
             children: [
               Expanded(child: PageSearchField(hint: context.l10n.adminSearchTableHint, onChanged: (value) => setState(() => query = value))),
-              const SizedBox(width: 10),
-              OutlineAction(
-                label: context.l10n.adminRegenerateAllQr,
-                height: 52,
-                onPressed: store.activeTables.isEmpty ? null : () => _confirmRegenerate(context, store),
-              ),
+              // Without QR ordering (always offline) tables have no guest QR codes to manage.
+              if (store.allows(AppFeature.qrOrdering)) ...[
+                const SizedBox(width: 10),
+                OutlineAction(
+                  label: context.l10n.adminRegenerateAllQr,
+                  height: 52,
+                  onPressed: store.activeTables.isEmpty ? null : () => _confirmRegenerate(context, store),
+                ),
+              ],
               const SizedBox(width: 10),
               TerracottaButton(
                 expanded: false,
@@ -166,6 +170,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
   Widget _tableCard(BuildContext context, CafeStore store, CafeTable item) {
     final url = store.guestLink(item.qrSlug);
     final free = item.status == TableStatus.free;
+    final qr = store.allows(AppFeature.qrOrdering);
     return TawlaPanel(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -184,6 +189,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
               _statusPill(free ? context.l10n.adminTableAvailable : context.l10n.adminTableOccupied, free),
             ],
           ),
+          if (qr) ...[
           const SizedBox(height: 12),
           Row(
             children: [
@@ -211,7 +217,9 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
               ),
             ],
           ),
+          ],
           const Spacer(),
+          if (qr) ...[
           NavyButton(
             label: context.l10n.adminPrintStandCard,
             expanded: true,
@@ -225,8 +233,11 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                   },
           ),
           const SizedBox(height: 8),
+          ],
           Row(
+            mainAxisAlignment: qr ? MainAxisAlignment.start : MainAxisAlignment.end,
             children: [
+              if (qr) ...[
               Flexible(
                 child: OutlineAction(
                   label: context.l10n.adminRegenerateQr,
@@ -249,6 +260,7 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
                       },
               ),
               const SizedBox(width: 8),
+              ],
               IconAction(
                 icon: Icons.delete_outline,
                 tooltip: context.l10n.commonDelete,

@@ -218,6 +218,7 @@ void main() {
       await _openShift(sara);
       await db.quickTakeoutReceipt(_ticket(dish, 3), db.paymentTypes.first.id);
       await db.setItemAvailable(dish.id, false);
+      await db.writeCarts({'t9': CartState(tableId: 't9', lines: _ticket(dish, 2))});
 
       db.closeLocal();
       await db.initLocal(SqliteLocalStateStore.open(path));
@@ -231,9 +232,109 @@ void main() {
       expect(db.payments.single.totalDue, 22.5);
       expect(db.shifts.single.cashSales, 22.5);
       expect(db.paymentTypes, hasLength(4), reason: 'defaults are not added twice');
+      expect(db.carts['t9']?.lines.single.qty, 2, reason: 'a half-entered table cart survives');
       expect((await db.loginCashier(sara, '1234'))['ok'], isTrue);
       await db.quickTakeoutReceipt(_ticket(dish, 1), null);
       expect(db.payments.first.monthlyOrderNumber, 2, reason: 'numbering continues after a restart');
+    });
+  });
+
+  group('tables (open tab, pay later)', () {
+    late MenuItem dish;
+    late CashShift shift;
+    final table = CafeTable(id: 't4', number: '4', qrSlug: 'slug-4');
+
+    Future<void> cart(int qty) =>
+        db.writeCarts({'t4': CartState(tableId: 't4', lines: _ticket(dish, qty))});
+
+    setUp(() async {
+      dish = await _dish();
+      table.status = TableStatus.free;
+      await db.writeTables([table], changed: [table]);
+      await db.writeCafe({...db.cafe, 'serviceChargeRate': 0.1});
+      shift = await _openShift(await _cashier('Sara', '1234'));
+    });
+
+    CafeOrder openTab() => db.orders.singleWhere((o) => o.tableId == 't4' && o.status != OrderStatus.paid);
+
+    test('dishes join the tab in rounds; settling adds service and frees the table', () async {
+      await cart(2);
+      expect(await db.sendTableCart('t4'), isNull);
+      final tab = openTab();
+      expect(tab.status, OrderStatus.served, reason: 'cashier-entered tabs can be settled at once');
+      expect(tab.shiftOrderNumber, 1);
+      expect(tab.tableNumber, '4');
+      expect(db.tables.single.status, TableStatus.dining);
+      expect(db.carts['t4'], isNull, reason: 'the sent cart is cleared');
+
+      await cart(1);
+      expect(await db.sendTableCart('t4'), isNull);
+      expect(db.orders.where((o) => o.tableId == 't4'), hasLength(1), reason: 'one tab, not two orders');
+      expect(openTab().lines.map((l) => l.round), [1, 2]);
+
+      expect(await db.settleCash('t4', 20), 'insufficient cash', reason: '22.5 + 10% = 24.75');
+      expect(await db.settleCash('t4', 30, paymentTypeId: db.paymentTypes[1].id), isNull);
+      final paid = db.payments.single;
+      expect(paid.totalDue, 24.75);
+      expect(paid.cashReceived, 30);
+      expect(paid.changeDue, 5.25);
+      expect(paid.tableNumber, '4');
+      expect(paid.isTakeout, isFalse);
+      expect(paid.paymentTypeNameEn, 'Card');
+      expect(paid.monthlyOrderNumber, 1);
+      expect(paid.shiftOrderNumber, 1);
+      expect(db.orders.single.status, OrderStatus.paid);
+      expect(db.tables.single.status, TableStatus.free);
+      expect(db.shifts.firstWhere((s) => s.id == shift.id).cashSales, 24.75);
+      expect(await db.settleCash('t4', 30), 'no open bill');
+    });
+
+    test('settling without service charges only the dishes', () async {
+      await cart(2);
+      await db.sendTableCart('t4');
+      expect(await db.settleCash('t4', 15, applyService: false), isNull);
+      expect(db.payments.single.totalDue, 15);
+      expect(db.payments.single.changeDue, 0);
+    });
+
+    test('a tab and a takeout sale share the daily and monthly numbers', () async {
+      await db.quickTakeoutReceipt(_ticket(dish, 1), null);
+      await cart(1);
+      await db.sendTableCart('t4');
+      expect(openTab().shiftOrderNumber, 2);
+      await db.settleCash('t4', 100);
+      expect(db.payments.first.monthlyOrderNumber, 2);
+    });
+
+    test('a dish that is off the menu is refused when sent', () async {
+      await cart(1);
+      await db.setItemAvailable(dish.id, false);
+      expect(await db.sendTableCart('t4'), '${AppDatabase.unavailableItemsError}Latte');
+      expect(db.orders, isEmpty);
+    });
+
+    test('taking off a dish keeps the tab; taking off the last one frees the table', () async {
+      await db.writeCarts({
+        't4': CartState(tableId: 't4', lines: [
+          ..._ticket(dish, 1),
+          OrderLine(menuItemId: dish.id, name: 'Latte extra', qty: 1, unitPrice: 3),
+        ]),
+      });
+      await db.sendTableCart('t4');
+      final lines = openTab().lines;
+      expect(await db.removeOrderLine(lines.first.id!), isNull);
+      expect(openTab().lines, hasLength(1));
+      expect(await db.removeOrderLine(openTab().lines.single.id!), isNull);
+      expect(db.orders, isEmpty);
+      expect(db.tables.single.status, TableStatus.free);
+    });
+
+    test('the chosen payment method is kept on the tab', () async {
+      await cart(1);
+      await db.sendTableCart('t4');
+      expect(await db.setTablePaymentType('slug-4', db.paymentTypes[2].id), isNull);
+      await db.settleCash('t4', 100);
+      expect(db.payments.single.paymentTypeNameEn, 'Bank Transfer');
     });
   });
 
@@ -289,6 +390,18 @@ void main() {
       expect(await store.checkoutTakeout(lines: _ticket(dish, 2), paymentTypeId: store.enabledPaymentTypes.first.id), isNull);
       expect(store.payments.single.totalDue, 15);
       expect(store.payments.single.cashierName, 'Sara Ali');
+
+      // A table: open tab, add more, settle from the floor.
+      final table = await store.addTable('7');
+      store.addToCart(table.id, dish);
+      await store.sendCartToKitchen(table.id);
+      store.addToCart(table.id, dish);
+      await store.sendCartToKitchen(table.id);
+      expect(store.openOrderFor(table.id)?.itemCount, 2);
+      expect(store.tabTotal(table.id), 15);
+      expect(await store.settleCash(tableId: table.id, cashReceived: 20), isNull);
+      expect(store.openOrderFor(table.id), isNull);
+      expect(store.payments, hasLength(2));
 
       expect(await store.closeShift(actualCash: 15), isNull);
       expect(db.shifts.single.isOpen, isFalse);

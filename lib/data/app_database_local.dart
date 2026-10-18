@@ -34,7 +34,9 @@ extension AppDatabaseLocal on AppDatabase {
       ..sort((a, b) => b.openedAt.compareTo(a.openedAt));
     _expenses = [for (final row in _store.readRecords('expenses')) _expenseFromLocal(row)]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    _carts = {};
+    _carts = {
+      for (final row in _docRows('carts')) row['tableId'] as String: CartState.fromJson(row),
+    };
     _calls = [];
     salesHasMore = false;
     loadedOnce = true;
@@ -425,6 +427,178 @@ extension AppDatabaseLocal on AppDatabase {
     return null;
   }
 
+  // ------------------------------------------------------------------ tables (open tabs)
+
+  /// The table's unpaid order, newest first, like the server picks it.
+  CafeOrder? _localOpenOrder(String tableId) {
+    final open = _orders.where((o) => o.tableId == tableId && o.status != OrderStatus.paid).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return open.firstOrNull;
+  }
+
+  void _saveLocalCarts() {
+    _store.writeDoc('carts', [
+      for (final cart in _carts.values)
+        if (cart.lines.isNotEmpty) cart.toJson(),
+    ]);
+  }
+
+  void _saveLocalTables() =>
+      _store.writeDoc('tables', [for (final t in _tables) {...t.toJson(), 'archived': t.archived}]);
+
+  /// The cashier sends the table's cart: its dishes join the open tab as a new round (or open
+  /// one, with the shared daily order number). Cashier-entered dishes need no kitchen step, so
+  /// the tab is ready to settle at once.
+  String? _localSendTableCart(String tableId) {
+    final table = _tables.where((t) => t.id == tableId && !t.archived).firstOrNull;
+    if (table == null) return 'not_found';
+    final lines = [
+      for (final line in _carts[tableId]?.lines ?? const <OrderLine>[])
+        if (line.menuItemId.isNotEmpty && line.qty > 0) line,
+    ];
+    if (lines.isEmpty) return ErrorCodes.cartEmpty;
+    final unavailable = [
+      for (final line in lines)
+        if (!_menuItems.any((m) => m.id == line.menuItemId && m.available && !m.soldOut)) line.name,
+    ];
+    if (unavailable.isNotEmpty) return '${AppDatabase.unavailableItemsError}${unavailable.join(', ')}';
+    final now = DateTime.now().toUtc();
+    _store.transaction(() {
+      var order = _localOpenOrder(tableId);
+      if (order == null) {
+        order = CafeOrder(
+          id: Secrets.id(),
+          tableId: tableId,
+          tableNumber: table.number,
+          status: OrderStatus.served,
+          createdAt: now,
+          lines: [],
+          cashierId: localCashierId,
+          yearMonth: _tripoliKey(now, withDay: false),
+          shiftOrderNumber: _nextLocalNumber('day:${_tripoliKey(now, withDay: true)}'),
+        );
+        _orders = [..._orders, order];
+      }
+      final round = order.lines.isEmpty ? 1 : order.latestRound + 1;
+      order
+        ..status = OrderStatus.served
+        ..lines.addAll([
+          for (final line in lines)
+            OrderLine(
+              id: Secrets.id(),
+              menuItemId: line.menuItemId,
+              name: line.name,
+              qty: line.qty,
+              unitPrice: line.unitPrice,
+              listUnitPrice: line.listUnitPrice,
+              round: round,
+            ),
+        ]);
+      table.status = TableStatus.dining;
+      _carts = {..._carts}..remove(tableId);
+      _store.putRecords('orders', [order.toJson()]);
+      _saveLocalTables();
+      _saveLocalCarts();
+    });
+    return null;
+  }
+
+  /// Settles the table's tab like the server's settle_cash: dishes plus the cafe's service rate
+  /// (when applied), rounded to 2 places; numbered with the monthly receipt counter and the tab's
+  /// daily number; the table is freed and the shift's totals grow.
+  String? _localSettleCash(String tableId, double cashReceived, {required bool applyService, String? paymentTypeId}) {
+    final cashierId = localCashierId;
+    final shift = _localOpenShift;
+    if (cashierId == null || shift == null) return 'sign in as a cashier first';
+    final order = _localOpenOrder(tableId);
+    if (order == null) return 'no open bill';
+    if (order.status != OrderStatus.served) return 'order is not served';
+    final rate = (_cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
+    final subtotal = order.lines.fold<double>(0, (sum, line) => sum + line.total);
+    final due = _round2(applyService ? subtotal * (1 + rate) : subtotal);
+    if (cashReceived < due) return 'insufficient cash';
+    final wanted = paymentTypeId ?? order.paymentTypeId;
+    final type = _paymentTypes.where((t) => t.id == wanted).firstOrNull;
+    final table = _tables.where((t) => t.id == tableId).firstOrNull;
+    final cashier = _cashiers.where((c) => c.id == cashierId).firstOrNull;
+    final paidAt = DateTime.now().toUtc();
+    final yymm = _tripoliKey(paidAt, withDay: false);
+    _store.transaction(() {
+      final day = order.shiftOrderNumber ?? _nextLocalNumber('day:${_tripoliKey(paidAt, withDay: true)}');
+      final month = _nextLocalNumber('month:$yymm');
+      final payment = Payment(
+        id: Secrets.id(),
+        orderId: order.id,
+        tableId: tableId,
+        tableNumber: table?.number ?? order.tableNumber,
+        cashierName: cashier?.name ?? '',
+        paymentTypeNameEn: type?.nameEn,
+        paymentTypeNameAr: type?.nameAr,
+        totalDue: due,
+        cashReceived: cashReceived,
+        changeDue: _round2(cashReceived - due),
+        cashierId: cashierId,
+        shiftId: shift.id,
+        paidAt: paidAt,
+        paymentTypeId: type?.id,
+        yearMonth: yymm,
+        shiftOrderNumber: day,
+        monthlyOrderNumber: month,
+        shiftDisplayNumber: formatSaleNumber(order.yearMonth ?? yymm, day),
+        monthlyDisplayNumber: formatSaleNumber(yymm, month),
+      );
+      order
+        ..status = OrderStatus.paid
+        ..paymentTypeId = type?.id
+        ..shiftOrderNumber = day
+        ..cashierId ??= cashierId;
+      table
+        ?..status = TableStatus.free
+        ..guests = 0;
+      shift
+        ..cashSales += due
+        ..transactionCount += 1;
+      _store.putRecords('orders', [order.toJson()]);
+      _store.putRecords('payments', [_paymentToLocal(payment)]);
+      _store.putRecords('shifts', [shift.toJson()]);
+      _saveLocalTables();
+      _payments = [payment, ..._payments];
+    });
+    return null;
+  }
+
+  /// Takes one sent dish off an unpaid tab (a cashier's correction). A tab left with no dishes
+  /// is removed and its table freed.
+  String? _localRemoveOrderLine(String lineId) {
+    final order = _orders
+        .where((o) => o.status != OrderStatus.paid && o.lines.any((line) => line.id == lineId))
+        .firstOrNull;
+    if (order == null) return ErrorCodes.lineNotFound;
+    order.lines.removeWhere((line) => line.id == lineId);
+    _store.transaction(() {
+      if (order.lines.isEmpty) {
+        _orders = _orders.where((o) => o.id != order.id).toList();
+        _store.deleteRecord('orders', order.id);
+        final table = _tables.where((t) => t.id == order.tableId).firstOrNull;
+        if (table != null && _localOpenOrder(table.id) == null) table.status = TableStatus.free;
+        _saveLocalTables();
+      } else {
+        _store.putRecords('orders', [order.toJson()]);
+      }
+    });
+    return null;
+  }
+
+  /// The payment method picked for a table's tab before it is settled.
+  String? _localSetTablePaymentType(String qrSlug, String typeId) {
+    final table = _tables.where((t) => t.qrSlug == qrSlug).firstOrNull;
+    final order = table == null ? null : _localOpenOrder(table.id);
+    if (order == null) return 'no open bill';
+    order.paymentTypeId = typeId;
+    _store.putRecords('orders', [order.toJson()]);
+    return null;
+  }
+
   // ------------------------------------------------------------------ expenses
 
   String? _localAddExpense({
@@ -532,6 +706,8 @@ extension AppDatabaseLocal on AppDatabase {
 }
 
 const _localCafeId = 'local';
+
+double _round2(double value) => (value * 100).round() / 100;
 const _maxPinTries = 5;
 const _pinLock = Duration(minutes: 15);
 const _hashRounds = 20000;

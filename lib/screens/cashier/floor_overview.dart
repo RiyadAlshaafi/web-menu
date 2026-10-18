@@ -115,7 +115,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
         }
       });
     } else if (order != null) {
-      action = SizedBox(
+      final viewCart = SizedBox(
         width: double.infinity,
         height: 44,
         child: OutlinedButton.icon(
@@ -127,6 +127,18 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
           label: Text(context.l10n.cashierViewCart, style: const TextStyle(fontWeight: FontWeight.w800)),
         ),
       );
+      // Offline the cashier keeps adding to the open tab; online the guest does.
+      action = store.isLocalMode
+          ? Row(
+              children: [
+                Expanded(child: _cardButton(context.l10n.tableOrderAddDishes, () => context.go('/pos/tables/${item.id}'))),
+                const SizedBox(width: 8),
+                Expanded(child: viewCart),
+              ],
+            )
+          : viewCart;
+    } else if (free && store.isLocalMode) {
+      action = _cardButton(context.l10n.tableOrderOpen, () => context.go('/pos/tables/${item.id}'));
     } else if (!free) {
       action = const SizedBox.shrink();
     } else {

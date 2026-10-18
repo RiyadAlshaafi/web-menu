@@ -247,6 +247,18 @@ class _TawlaAppState extends State<TawlaApp> {
                 child: DeferredView(load: _loadCashier, builder: () => cashier_ui.CashierFloorScreen()),
               ),
             ),
+            // Offline only: the cashier adds dishes to a table's bill (online, guests order by QR).
+            GoRoute(
+              path: '/pos/tables/:id',
+              redirect: (_, _) => widget.store.isLocalMode ? null : '/pos/tables',
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(
+                  load: _loadCashier,
+                  builder: () => cashier_ui.TableOrderScreen(tableId: state.pathParameters['id']!),
+                ),
+              ),
+            ),
             GoRoute(
               path: '/pos/dishes',
               pageBuilder: (_, state) => NoTransitionPage(

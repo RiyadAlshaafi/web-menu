@@ -1692,4 +1692,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String cashierNewOrderToast(String where) {
     return 'New order: $where';
   }
+
+  @override
+  String get tableOrderOpen => 'Open table';
+
+  @override
+  String get tableOrderAddDishes => 'Add dishes';
+
+  @override
+  String get tableOrderSend => 'Add to the table\'s bill';
+
+  @override
+  String tableOrderSent(String table) {
+    return 'Added to $table.';
+  }
+
+  @override
+  String get tableOrderEmpty => 'Tap dishes to add them to this table.';
+
+  @override
+  String tableOrderOnTab(String count, String total) {
+    return 'Already on the bill: $count items, $total';
+  }
+
+  @override
+  String get tableOrderBack => 'Back to floor';
 }

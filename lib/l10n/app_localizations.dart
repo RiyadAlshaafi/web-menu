@@ -3079,6 +3079,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New order: {where}'**
   String cashierNewOrderToast(String where);
+
+  /// No description provided for @tableOrderOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open table'**
+  String get tableOrderOpen;
+
+  /// No description provided for @tableOrderAddDishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dishes'**
+  String get tableOrderAddDishes;
+
+  /// No description provided for @tableOrderSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the table\'s bill'**
+  String get tableOrderSend;
+
+  /// No description provided for @tableOrderSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to {table}.'**
+  String tableOrderSent(String table);
+
+  /// No description provided for @tableOrderEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap dishes to add them to this table.'**
+  String get tableOrderEmpty;
+
+  /// No description provided for @tableOrderOnTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Already on the bill: {count} items, {total}'**
+  String tableOrderOnTab(String count, String total);
+
+  /// No description provided for @tableOrderBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to floor'**
+  String get tableOrderBack;
 }
 
 class _AppLocalizationsDelegate

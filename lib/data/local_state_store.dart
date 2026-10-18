@@ -16,6 +16,9 @@ abstract class LocalStateStore {
   /// Inserts or replaces rows of [kind] by id.
   void putRecords(String kind, Iterable<Map<String, dynamic>> rows);
 
+  /// Removes one row of [kind] (an emptied, never-paid table order).
+  void deleteRecord(String kind, String id);
+
   /// Runs [action] as one transaction, so a crash never leaves half a sale.
   void transaction(void Function() action);
 

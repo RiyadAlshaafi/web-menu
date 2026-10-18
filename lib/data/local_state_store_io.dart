@@ -71,6 +71,11 @@ class SqliteLocalStateStore implements LocalStateStore {
     }
   }
 
+  @override
+  void deleteRecord(String kind, String id) {
+    _db.execute('delete from records where kind = ? and id = ?', [kind, id]);
+  }
+
   /// Nested calls join the outer transaction.
   int _depth = 0;
 

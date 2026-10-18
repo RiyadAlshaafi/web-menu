@@ -6,7 +6,8 @@ enum InstallMode {
   online('online'),
 
   /// No internet at all: everything is kept in a local database on this PC. Only the
-  /// features that need guests' phones to reach a server (tables, QR ordering) are left out.
+  /// features that need guests' phones to reach a server (QR ordering, location check) are left
+  /// out; tables work as open tabs the cashier fills in.
   offline('offline');
 
   const InstallMode(this.key);
@@ -22,7 +23,8 @@ enum InstallMode {
 /// shifts, settings) are always on and are not listed here. [key] is the name written
 /// to `features.json` by the installer, so never rename one.
 enum AppFeature {
-  tables('tables'),
+  /// Tables & floor. Offline the cashier enters each table's dishes (open tab, pay later).
+  tables('tables', worksOffline: true),
   qrOrdering('qr_ordering'),
   locationCheck('location_check'),
   discounts('discounts', worksOffline: true),

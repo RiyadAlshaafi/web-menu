@@ -211,7 +211,7 @@ end;
 function FeatureLabel(Key: String): String;
 begin
   case Key of
-    'tables': Result := 'Tables & floor (table QR codes, floor view)';
+    'tables': Result := 'Tables & floor (open a table, add dishes, settle the bill)';
     'qr_ordering': Result := 'QR guest ordering (live alerts, staff calls, bill requests)';
     'location_check': Result := 'Guest location check';
     'discounts': Result := 'Discounts';
@@ -228,7 +228,7 @@ end;
 // Must match AppFeature.worksOffline.
 function WorksOffline(Key: String): Boolean;
 begin
-  Result := (Key <> 'tables') and (Key <> 'qr_ordering') and (Key <> 'location_check');
+  Result := (Key <> 'qr_ordering') and (Key <> 'location_check');
 end;
 
 // Must match AppFeature.requires.

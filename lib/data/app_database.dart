@@ -1180,6 +1180,7 @@ class AppDatabase {
     bool applyService = true,
     String? paymentTypeId,
   }) async {
+    if (isLocal) return _localSettleCash(tableId, cashReceived, applyService: applyService, paymentTypeId: paymentTypeId);
     if (client == null) return ErrorCodes.notConfigured;
     try {
       _applyHeaders();
@@ -1289,6 +1290,7 @@ class AppDatabase {
   }
 
   Future<String?> setTablePaymentType(String qrSlug, String typeId) async {
+    if (isLocal) return _localSetTablePaymentType(qrSlug, typeId);
     if (client == null) return ErrorCodes.notConfigured;
     _applyHeaders();
     final raw = await client!.rpc(
@@ -1699,6 +1701,10 @@ class AppDatabase {
     double? lng,
     double? accuracyM,
   }) async {
+    if (isLocal) {
+      await _cartWrites;
+      return _localSendTableCart(tableId);
+    }
     if (client == null) return ErrorCodes.notConfigured;
     await _cartWrites;
     _applyHeaders();
@@ -1734,6 +1740,10 @@ class AppDatabase {
   Future<void> _writeCarts(Map<String, CartState> carts) async {
     _epoch++;
     _carts = carts;
+    if (isLocal) {
+      _saveLocalCarts();
+      return;
+    }
     if (client == null || restaurantId == null) return;
     for (final cart in carts.values) {
       await client!.from('carts').upsert({
@@ -2009,6 +2019,7 @@ class AppDatabase {
 
   /// Removes one sent line (a refused dish) from an unpaid order.
   Future<String?> removeOrderLine(String lineId) async {
+    if (isLocal) return _localRemoveOrderLine(lineId);
     if (client == null) return null;
     _epoch++; // a load already running would bring back the removed line
     final result = await _rpcResult('remove_order_line', 'remove order line', {'p_line_id': lineId});

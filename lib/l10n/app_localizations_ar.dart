@@ -1681,4 +1681,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String cashierNewOrderToast(String where) {
     return 'طلب جديد: $where';
   }
+
+  @override
+  String get tableOrderOpen => 'فتح الطاولة';
+
+  @override
+  String get tableOrderAddDishes => 'إضافة أطباق';
+
+  @override
+  String get tableOrderSend => 'إضافة إلى فاتورة الطاولة';
+
+  @override
+  String tableOrderSent(String table) {
+    return 'أُضيفت إلى $table.';
+  }
+
+  @override
+  String get tableOrderEmpty => 'اضغط على الأطباق لإضافتها إلى هذه الطاولة.';
+
+  @override
+  String tableOrderOnTab(String count, String total) {
+    return 'على الفاتورة: $count صنف، $total';
+  }
+
+  @override
+  String get tableOrderBack => 'العودة إلى الصالة';
 }

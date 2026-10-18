@@ -308,6 +308,9 @@ class _Reopened implements LocalStateStore {
   void putRecords(String kind, Iterable<Map<String, dynamic>> rows) => inner.putRecords(kind, rows);
 
   @override
+  void deleteRecord(String kind, String id) => inner.deleteRecord(kind, id);
+
+  @override
   void transaction(void Function() action) => inner.transaction(action);
 
   @override

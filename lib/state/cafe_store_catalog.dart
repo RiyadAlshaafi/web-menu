@@ -19,6 +19,17 @@ extension CafeStoreCatalog on CafeStore {
   }
 
   Future<String?> refuseOrderLine(CafeOrder order, OrderLine line) async {
+    // Offline the cashier entered the dish: taking it off is a correction, not a refusal, so the
+    // dish stays on the menu and no guest is told.
+    if (db.isLocal) {
+      final lineId = line.id;
+      if (lineId == null) return ErrorCodes.lineNotFound;
+      final failure = await db.removeOrderLine(lineId);
+      if (failure != null) return failure;
+      _hydrateOperational();
+      notifyListeners();
+      return null;
+    }
     final name = line.name;
     // Remove just this line on the server. Rewriting the whole order used to
     // re-price every other line and could drop a round the guest just sent.

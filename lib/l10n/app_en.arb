@@ -879,5 +879,14 @@
   "errLineNotFound": "That dish is no longer on the order.",
   "errCartEmpty": "The cart is empty.",
   "cashierNewOrderToast": "New order: {where}",
-  "@cashierNewOrderToast": {"placeholders": {"where": {"type": "String"}}}
+  "@cashierNewOrderToast": {"placeholders": {"where": {"type": "String"}}},
+  "tableOrderOpen": "Open table",
+  "tableOrderAddDishes": "Add dishes",
+  "tableOrderSend": "Add to the table's bill",
+  "tableOrderSent": "Added to {table}.",
+  "@tableOrderSent": {"placeholders": {"table": {"type": "String"}}},
+  "tableOrderEmpty": "Tap dishes to add them to this table.",
+  "tableOrderOnTab": "Already on the bill: {count} items, {total}",
+  "@tableOrderOnTab": {"placeholders": {"count": {"type": "String"}, "total": {"type": "String"}}},
+  "tableOrderBack": "Back to floor"
 }

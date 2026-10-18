@@ -62,6 +62,7 @@ void main() {
   test('offline mode offers only features that work without internet', () {
     final offered = AppFeature.offeredIn(InstallMode.offline);
     expect(offered, [
+      AppFeature.tables,
       AppFeature.discounts,
       AppFeature.dishToggle,
       AppFeature.expenses,
@@ -73,11 +74,12 @@ void main() {
   });
 
   test('offline mode blocks online features even if they are listed', () {
-    final set = FeatureSet.fromJson('{"mode": "offline", "features": ["tables", "qr_ordering", "expenses"]}');
+    final set = FeatureSet.fromJson('{"mode": "offline", "features": ["tables", "qr_ordering", "location_check", "expenses"]}');
     expect(set.mode, InstallMode.offline);
     expect(set.allows(AppFeature.expenses), isTrue);
-    expect(set.allows(AppFeature.tables), isFalse);
+    expect(set.allows(AppFeature.tables), isTrue, reason: 'tables work offline as open tabs');
     expect(set.allows(AppFeature.qrOrdering), isFalse);
+    expect(set.allows(AppFeature.locationCheck), isFalse);
   });
 
   test('reads the cafe slot picked in an online setup', () {
@@ -107,10 +109,10 @@ void main() {
   });
 
   test('intersect is offline when either side is offline', () {
-    final installer = FeatureSet.fromKeys(['tables', 'expenses'], mode: InstallMode.offline);
+    final installer = FeatureSet.fromKeys(['qr_ordering', 'tables', 'expenses'], mode: InstallMode.offline);
     final both = installer.intersect(FeatureSet.all);
     expect(both.mode, InstallMode.offline);
-    expect(both.allows(AppFeature.tables), isFalse);
+    expect(both.allows(AppFeature.qrOrdering), isFalse);
     expect(both.allows(AppFeature.expenses), isTrue);
   });
 }

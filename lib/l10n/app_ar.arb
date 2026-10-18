@@ -536,5 +536,12 @@
   "errSignInAsCashier": "سجّل الدخول كأمين صندوق أولًا.",
   "errLineNotFound": "هذا الطبق لم يعد في الطلب.",
   "errCartEmpty": "السلة فارغة.",
-  "cashierNewOrderToast": "طلب جديد: {where}"
+  "cashierNewOrderToast": "طلب جديد: {where}",
+  "tableOrderOpen": "فتح الطاولة",
+  "tableOrderAddDishes": "إضافة أطباق",
+  "tableOrderSend": "إضافة إلى فاتورة الطاولة",
+  "tableOrderSent": "أُضيفت إلى {table}.",
+  "tableOrderEmpty": "اضغط على الأطباق لإضافتها إلى هذه الطاولة.",
+  "tableOrderOnTab": "على الفاتورة: {count} صنف، {total}",
+  "tableOrderBack": "العودة إلى الصالة"
 }
