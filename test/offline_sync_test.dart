@@ -95,6 +95,25 @@ void main() {
     expect(await sync.flush(), 1);
   });
 
+  test('work saved under another cashier waits for them instead of being set aside', () async {
+    final store = MemoryOutboxStore();
+    var otherCashier = true;
+    final sync = OfflineSync(
+      store: store,
+      rpc: (name, params) async =>
+          otherCashier ? {'ok': false, 'error': 'offline work belongs to another cashier'} : {'ok': true},
+    );
+    await sync.enqueue(item('x'));
+    await sync.enqueue(item('y'));
+    expect(await sync.flush(), 0);
+    expect(sync.needsSignIn, isTrue);
+    expect(sync.pendingCount, 2);
+    expect(sync.failedCount, 0);
+    otherCashier = false;
+    sync.signedIn();
+    expect(await sync.flush(), 2);
+  });
+
   test('an expired session is reported to the screen straight away', () async {
     var changes = 0;
     final sync = OfflineSync(

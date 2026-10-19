@@ -36,6 +36,12 @@ build() {
   quiet -d "$DB" -f "$CLOSE_SHIFT"
   # It also restores the older send_table_cart; put the one with dish choices back.
   quiet -d "$DB" -f "$DISH_CHOICES"
+  # That re-run in turn undoes later migrations; apply those again so the newest definitions win.
+  for file in supabase/migrations/*.sql; do
+    [[ "$file" > "$DISH_CHOICES" ]] || continue
+    case " $* " in *" $file "*) continue ;; esac
+    quiet -d "$DB" -f "$file"
+  done
 }
 
 echo "== Part 1 only: the previous app build must keep working"
@@ -54,6 +60,9 @@ loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 loud -d "$DB" -f supabase/tests/close_shift_unpaid_test.sql
 loud -d "$DB" -f supabase/tests/dish_choices_test.sql
 loud -d "$DB" -f supabase/tests/void_payment_test.sql
+loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
+loud -d "$DB" -f supabase/tests/offline_trust_test.sql
+loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do
@@ -68,6 +77,9 @@ loud -d "$DB" -f supabase/tests/guest_lock_down_test.sql
 loud -d "$DB" -f supabase/tests/close_shift_unpaid_test.sql
 loud -d "$DB" -f supabase/tests/dish_choices_test.sql
 loud -d "$DB" -f supabase/tests/void_payment_test.sql
+loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
+loud -d "$DB" -f supabase/tests/offline_trust_test.sql
+loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

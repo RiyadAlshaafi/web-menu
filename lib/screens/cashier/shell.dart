@@ -242,8 +242,8 @@ class _OfflineStatusBannerState extends State<OfflineStatusBanner> {
   }
 }
 
-/// Asks which cashier the offline receipts belong to. In an offline session ([needPin]) that
-/// cashier's PIN signs them in; when a cashier is already signed in, choosing is enough.
+/// Asks which cashier the offline receipts belong to. That cashier's PIN signs them in, so the
+/// server books the work to them. Only the cashier already signed in may take it without a PIN.
 Future<void> showClaimOfflineDialog(BuildContext context, {bool needPin = true}) {
   return showDialog<void>(
     context: context,
@@ -270,7 +270,9 @@ class _ClaimOfflineDialogState extends State<_ClaimOfflineDialog> {
   String? error;
   bool busy = false;
 
-  bool get _ready => cashierId != null && (!widget.needPin || pin.text.length == 4) && !busy;
+  bool get _needsPin => widget.needPin || cashierId != context.read<CafeStore>().currentCashier?.id;
+
+  bool get _ready => cashierId != null && (!_needsPin || pin.text.length == 4) && !busy;
 
   @override
   void dispose() {
@@ -285,7 +287,7 @@ class _ClaimOfflineDialogState extends State<_ClaimOfflineDialog> {
       busy = true;
       error = null;
     });
-    final failure = widget.needPin ? await store.claimOfflineWork(id, pin.text) : await store.assignOfflineWork(id);
+    final failure = _needsPin ? await store.claimOfflineWork(id, pin.text) : await store.assignOfflineWork(id);
     if (!mounted) return;
     if (failure != null) {
       setState(() {
@@ -328,7 +330,7 @@ class _ClaimOfflineDialogState extends State<_ClaimOfflineDialog> {
                 ],
               ),
             ),
-            if (widget.needPin) ...[
+            if (_needsPin) ...[
               const SizedBox(height: 8),
               Text(context.l10n.offlineReconnectPin, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
               TextField(

@@ -364,7 +364,8 @@ class OfflineSync {
             continue;
           }
           final error = '${answer['error'] ?? 'refused'}';
-          if (error.contains('session expired')) {
+          // Work saved under another cashier waits for that cashier to sign in; it is never dropped.
+          if (error.contains('session expired') || error.contains('another cashier')) {
             _requireSignIn();
             await store.noteAttempt(item.id, error);
             break;

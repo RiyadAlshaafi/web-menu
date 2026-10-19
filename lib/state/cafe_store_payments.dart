@@ -129,21 +129,6 @@ extension CafeStorePayments on CafeStore {
     return null;
   }
 
-  Future<String?> clearTestLogs(String scope) async {
-    final cashier = currentCashier;
-    if (cashier == null) return l10n.errCashierSignInFirst;
-    final failure = await db.clearTestLogs(scope, cashierId: cashier.id);
-    if (failure != null) {
-      if (failure == 'sign in as a cashier first') {
-        return l10n.errCashierSignInFirst;
-      }
-      return failure;
-    }
-    await syncFromDisk();
-    notifyListeners();
-    return null;
-  }
-
   double expectedDrawer(CashShift shift) {
     final cashIds = paymentTypes
         .where((type) => type.nameEn.toLowerCase() == 'cash')

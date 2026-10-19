@@ -133,7 +133,7 @@ begin
   assert (r->>'ok')::boolean, 'takeout with choices: ' || r::text;
   assert (r->>'total_due')::numeric = 21, 'takeout total is 8 + 3 + 2 * 5, got ' || (r->>'total_due');
 
-  -- ---------------------------------------------------------------- offline upload keeps the snapshot
+  -- ---------------------------------------------------------------- offline upload is priced from the menu
   execute 'set local role anon';
   r := public.reserve_receipt_numbers(1, 0);
   r := public.sync_offline_takeout(
@@ -145,8 +145,8 @@ begin
   execute 'reset role';
   assert (r->>'ok')::boolean, 'offline upload with choices: ' || r::text;
   select choices into c from public.order_lines where order_id = (r->>'order_id')::uuid;
-  assert (c->0->>'price')::numeric = 1.5, 'offline line keeps the price charged at the till: ' || c::text;
-  assert (r->>'total_due')::numeric = 9.5, 'offline total: ' || r::text;
+  assert (c->0->>'price')::numeric = 3, 'offline line takes the menu price of its extra, not the till''s 1.5: ' || c::text;
+  assert (r->>'total_due')::numeric = 11, 'offline total is the menu 8 + 3: ' || r::text;
 
   -- ---------------------------------------------------------------- helpers stay private
   assert not has_function_privilege('anon', 'private.dish_choices(jsonb, jsonb, jsonb)', 'execute'), 'helper is private';

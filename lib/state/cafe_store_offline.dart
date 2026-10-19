@@ -447,10 +447,12 @@ extension CafeStoreOffline on CafeStore {
   bool get needsCashierForOfflineWork =>
       authKind == AuthKind.cashier && !offlineSession && !isOffline && unassignedOfflineCount > 0;
 
-  /// Gives the offline work to [cashierId] (chosen by the signed-in cashier) and uploads it.
+  /// Gives the offline work to the signed-in cashier [cashierId] and uploads it. Another cashier
+  /// must take it with their PIN ([claimOfflineWork]); the server refuses work booked to someone else.
   Future<String?> assignOfflineWork(String cashierId) async {
     final sync = offline;
     if (sync == null) return null;
+    if (cashierId != currentCashier?.id) return l10n.errCashierSignInFirst;
     final cashier = cashiers.where((item) => item.id == cashierId).firstOrNull;
     await sync.assignCashier(cashierId, cashierName: cashier?.name);
     await _reloadLocalItems();

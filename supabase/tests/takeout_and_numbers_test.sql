@@ -1,6 +1,6 @@
 -- Checks 20261010100000_takeout_without_table.sql as a signed-in cashier device: quick takeout
--- needs no "takeout" table, receipt numbers are reserved only when asked for, clearing logs
--- never reissues reserved numbers, and an offline sale without a daily number keeps none.
+-- needs no "takeout" table, receipt numbers are reserved only when asked for, and an offline
+-- sale without a daily number keeps none.
 -- Run by tool/test_db.sh. Everything is rolled back; any failed check aborts with its message.
 
 begin;
@@ -77,18 +77,6 @@ begin
   assert t is null, 'no daily number must stay no daily number, got ' || coalesce(t, 'null');
   select count(*) into n from public.orders where id = (r->>'order_id')::uuid and table_id is null;
   assert n = 1, 'the offline takeout order must have no table';
-
-  -- ------------------------------------------------ clearing logs continues after held numbers
-  execute 'set local role anon';
-  r := public.clear_test_logs('shift');
-  execute 'reset role';
-  assert (r->>'ok')::boolean, 'clearing logs must work: ' || r::text;
-  select last_value into n from public.order_number_counters where restaurant_id = rid and scope = 'month:' || yymm;
-  assert n = (select max(last_no) from public.receipt_blocks where restaurant_id = rid and year_month = yymm),
-    'the month counter must continue after reserved numbers, got ' || coalesce(n::text, 'null');
-  select last_value into n from public.order_number_counters where restaurant_id = rid and scope = 'day:' || today;
-  assert n = (select max(day_last) from public.receipt_blocks where restaurant_id = rid and day_key = today),
-    'the day counter must continue after reserved numbers, got ' || coalesce(n::text, 'null');
 
   raise notice 'takeout_and_numbers_test: all checks passed';
 end $test$;
