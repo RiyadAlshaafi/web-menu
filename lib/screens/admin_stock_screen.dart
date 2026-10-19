@@ -179,10 +179,11 @@ class _StockRowState extends State<_StockRow> {
     final store = context.watch<CafeStore>();
     final dish = widget.dish;
     final left = dish.stockQty;
-    final (label, tone) = switch (left) {
-      null => (context.l10n.stockNoLimit, BadgeTone.neutral),
-      0 => (context.l10n.stockSoldOut, BadgeTone.terracotta),
-      _ => (context.l10n.stockLeft(left), BadgeTone.success),
+    // The switch already says "No limit", so the badge only shows a count.
+    final badge = switch (left) {
+      null => null,
+      0 => StatusBadge(context.l10n.stockSoldOut, tone: BadgeTone.terracotta),
+      _ => StatusBadge(context.l10n.stockLeft(left), tone: BadgeTone.success),
     };
     final name = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,23 +228,22 @@ class _StockRowState extends State<_StockRow> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: TawlaTokens.rowLine))),
-      child: Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 14,
-        runSpacing: 10,
-        children: [
-          ConstrainedBox(constraints: const BoxConstraints(minWidth: 180), child: name),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StatusBadge(label, tone: tone),
-              const SizedBox(width: 14),
-              noLimit,
-            ],
-          ),
-          if (limited) box,
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final controls = Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 14,
+            runSpacing: 10,
+            children: [?badge, if (limited) box, noLimit],
+          );
+          if (constraints.maxWidth < 560) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [name, const SizedBox(height: 10), controls],
+            );
+          }
+          return Row(children: [Expanded(child: name), const SizedBox(width: 14), controls]);
+        },
       ),
     );
   }
