@@ -291,6 +291,7 @@ function FetchResetTicket(var Ticket: String; var Problem: String): Boolean;
 var
   Http: Variant;
   Status: Integer;
+  Answer: String;
 begin
   Result := False;
   Ticket := '';
@@ -306,17 +307,18 @@ begin
     Exit;
   end;
   Status := Http.Status;
+  Answer := Http.ResponseText;
   if Status = 403 then
   begin
     Problem := 'The server refused the setup password. Go back and enter it again.';
     Exit;
   end;
-  if (Status <> 200) or (Pos('"sig":"', Http.ResponseText) = 0) then
+  if (Status <> 200) or (Pos('"sig":"', Answer) = 0) then
   begin
     Problem := 'The server could not make the admin password reset (error ' + IntToStr(Status) + '). Try again.';
     Exit;
   end;
-  Ticket := Trim(Http.ResponseText);
+  Ticket := Trim(Answer);
   Result := True;
 end;
 
