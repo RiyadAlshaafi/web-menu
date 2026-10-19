@@ -109,3 +109,9 @@ jobs:
         working-directory: guest-web
         run: npm audit --audit-level=critical
 
+      # The Edge Function that signs offline admin reset tickets.
+      - name: Edge Function tests
+        run: |
+          docker run --rm -v "$PWD/supabase/functions:/fn" -w /fn denoland/deno:2.1.4 \
+            test --allow-env --allow-net=jsr.io,registry.npmjs.org admin-reset-ticket/index_test.ts
+

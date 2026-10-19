@@ -19,11 +19,6 @@
 #ifndef SupabaseKey
   #define SupabaseKey "sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj"
 #endif
-; Signs the offline admin reset ticket. Must match adminResetKey in lib/data/admin_reset.dart;
-; the release workflow passes ADMIN_RESET_KEY from the repo secrets when it is set.
-#ifndef ResetKey
-  #define ResetKey "tawla-offline-admin-reset-v1"
-#endif
 
 [Setup]
 AppId={{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}
@@ -67,8 +62,10 @@ Type: files; Name: "{app}\admin_reset.json"
 // (offline only) -> feature checkboxes. The answers are written to {app}\features.json, which
 // lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages
 // and leave features.json as it is.
-// The admin reset writes {app}\admin_reset.json, a one-time signed ticket that lib/data/admin_reset.dart
-// checks when the app starts, so a forgotten offline admin password can be replaced without internet.
+// The admin reset writes {app}\admin_reset.json, a one-time ticket signed by the server
+// (supabase/functions/admin-reset-ticket, after the seller password check) that
+// lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
+// be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
 const
   FeatureCount = 9;
   SlotCount = 8;
@@ -79,6 +76,7 @@ var
   SlotPage: TInputOptionWizardPage;
   SlotNamesLoaded: Boolean;
   ResetPage: TInputOptionWizardPage;
+  ResetTicket: String;
   FeaturePage: TWizardPage;
   FeatureList: TNewCheckListBox;
   FeatureKeys: array of String;
@@ -275,12 +273,6 @@ begin
   Result := AddBackslash(WizardDirValue) + 'admin_reset.json';
 end;
 
-// Must match adminResetSignature in lib/data/admin_reset.dart.
-function AdminResetSignature(Nonce, Issued: String): String;
-begin
-  Result := Lowercase(GetSHA256OfString('{#ResetKey}' + '|' + Nonce + '|' + Issued));
-end;
-
 // Random id of one ticket; the app saves it once used, so a copied ticket works only once.
 function NewNonce: String;
 var
@@ -293,15 +285,39 @@ begin
   Result := Lowercase(GetSHA256OfString(Seed));
 end;
 
-// The ticket the app checks: valid for 24 hours, in this PC's local time like the app's clock.
-function ResetTicketJson: String;
+// Asks the server to sign a ticket (valid 24 hours); the seller password is checked again there.
+// The answer is saved as it is: {"nonce":"...","issued":"...","sig":"..."}.
+function FetchResetTicket(var Ticket: String; var Problem: String): Boolean;
 var
-  Nonce, Issued: String;
+  Http: Variant;
+  Status: Integer;
 begin
-  Nonce := NewNonce;
-  Issued := GetDateTimeString('yyyy/mm/dd hh:nn:ss', '-', ':');
-  Result := '{"nonce": "' + Nonce + '", "issued": "' + Issued + '", "sig": "' +
-    AdminResetSignature(Nonce, Issued) + '"}';
+  Result := False;
+  Ticket := '';
+  try
+    Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    Http.Open('POST', ServerOrigin('{#SupabaseUrl}') + '/functions/v1/admin-reset-ticket', False);
+    Http.SetTimeouts(10000, 10000, 15000, 15000);
+    Http.SetRequestHeader('apikey', '{#SupabaseKey}');
+    Http.SetRequestHeader('Content-Type', 'application/json');
+    Http.Send('{"password": ' + JsonText(PasswordPage.Values[0]) + ', "nonce": "' + NewNonce + '"}');
+  except
+    Problem := 'Could not reach the server for the admin password reset. Check the internet, then press Next again.';
+    Exit;
+  end;
+  Status := Http.Status;
+  if Status = 403 then
+  begin
+    Problem := 'The server refused the setup password. Go back and enter it again.';
+    Exit;
+  end;
+  if (Status <> 200) or (Pos('"sig":"', Http.ResponseText) = 0) then
+  begin
+    Problem := 'The server could not make the admin password reset (error ' + IntToStr(Status) + '). Try again.';
+    Exit;
+  end;
+  Ticket := Trim(Http.ResponseText);
+  Result := True;
 end;
 
 function ResetChosen: Boolean;
@@ -450,6 +466,15 @@ begin
     Result := False;
     Exit;
   end;
+  if (CurPageID = ResetPage.ID) and ResetPage.Values[0] then
+  begin
+    if not FetchResetTicket(ResetTicket, Problem) then
+    begin
+      MsgBox(Problem, mbError, MB_OK);
+      Result := False;
+    end;
+    Exit;
+  end;
   if CurPageID <> PasswordPage.ID then Exit;
   if Trim(PasswordPage.Values[0]) = '' then
   begin
@@ -471,8 +496,8 @@ begin
     MsgBox('Could not save the feature choices. Every feature will be on.', mbError, MB_OK);
   // A ticket left from an earlier run must not outlive a setup that did not ask for one.
   DeleteFile(ResetFile);
-  if ResetChosen then
-    if SaveStringToFile(ResetFile, ResetTicketJson, False) then
+  if ResetChosen and (ResetTicket <> '') then
+    if SaveStringToFile(ResetFile, ResetTicket, False) then
       MsgBox('Cafe POS will now open. Go to Admin sign-in and set the new admin password (within 24 hours).',
         mbInformation, MB_OK)
     else

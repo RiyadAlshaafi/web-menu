@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:pinenacl/ed25519.dart';
 
 import 'admin_reset_file_stub.dart' if (dart.library.io) 'admin_reset_file_io.dart' as impl;
 
@@ -8,21 +9,45 @@ import 'admin_reset_file_stub.dart' if (dart.library.io) 'admin_reset_file_io.da
 /// "Reset the offline admin password" (windows/installer/cafe_pos.iss).
 const adminResetFileName = 'admin_reset.json';
 
-/// How long a ticket stays usable after the setup wrote it.
+/// How long a ticket stays usable after the server signed it.
 const adminResetLifetime = Duration(hours: 24);
 
-/// Small allowance for a ticket stamped slightly ahead of the app's clock.
-const _clockSkew = Duration(minutes: 5);
+/// Allowance for an offline PC whose clock runs behind the server's.
+const _clockSkew = Duration(hours: 1);
 
-// The release workflow can pass a private key (`ADMIN_RESET_KEY` in .env -> --dart-define and
-// /DResetKey). It must match the setup's ResetKey, or every ticket is refused.
-const _definedKey = String.fromEnvironment('ADMIN_RESET_KEY');
-const adminResetKey = _definedKey == '' ? 'tawla-offline-admin-reset-v1' : _definedKey;
+/// Public half of the Ed25519 key that signs tickets (hex). The private half exists only as the
+/// ADMIN_RESET_PRIVATE_KEY secret of the admin-reset-ticket Edge Function, which signs a ticket
+/// only after the seller password check, so this public code can check tickets but never make one.
+const adminResetPublicKey = 'a3865715808335f57bfc210440e4c2093e33f22667ba79be40f38136d9bea11f';
 
-/// Signature the setup puts on a ticket: SHA-256 of `key|nonce|issued` in lowercase hex.
-/// Must match AdminResetSignature in cafe_pos.iss.
-String adminResetSignature(String nonce, String issued, {String key = adminResetKey}) =>
-    sha256.convert(utf8.encode('$key|$nonce|$issued')).toString();
+/// The key [AdminResetTicket.check] uses when none is passed. Tests put their own key pair here.
+@visibleForTesting
+String adminResetCheckKey = adminResetPublicKey;
+
+/// The text the server signs. Must match ticketMessage in supabase/functions/admin-reset-ticket.
+String adminResetMessage(String nonce, String issued) => 'tawla-admin-reset-v2|$nonce|$issued';
+
+Uint8List? _hexBytes(String hex, int length) {
+  if (hex.length != length * 2 || !RegExp(r'^[0-9a-fA-F]+$').hasMatch(hex)) return null;
+  return Uint8List.fromList([
+    for (var i = 0; i < hex.length; i += 2) int.parse(hex.substring(i, i + 2), radix: 16),
+  ]);
+}
+
+/// Whether [sig] (hex) is the server's signature on [nonce] and [issued], checked with [publicKey].
+bool adminResetSignatureValid(String nonce, String issued, String sig, {String? publicKey}) {
+  final key = _hexBytes(publicKey ?? adminResetCheckKey, 32);
+  final signature = _hexBytes(sig, 64);
+  if (key == null || signature == null) return false;
+  try {
+    return VerifyKey(key).verify(
+      signature: Signature(signature),
+      message: Uint8List.fromList(utf8.encode(adminResetMessage(nonce, issued))),
+    );
+  } on Exception {
+    return false;
+  }
+}
 
 /// A checked reset ticket: lets the cafe set a new offline admin password once.
 ///
@@ -34,10 +59,10 @@ class AdminResetTicket {
   /// Random id of this ticket, saved once used so a copied ticket cannot be used again.
   final String nonce;
 
-  /// When the setup wrote it, in this PC's local time (setup and app share the clock).
+  /// When the server signed it.
   final DateTime issuedAt;
 
-  static final _nonceShape = RegExp(r'^[0-9a-f]{16,128}$');
+  static final _nonceShape = RegExp(r'^[0-9a-f]{32,128}$');
 
   /// The ticket in [text], or null when it is missing, broken, wrongly signed, expired or
   /// already in [used].
@@ -45,7 +70,7 @@ class AdminResetTicket {
     String? text, {
     required DateTime now,
     required Set<String> used,
-    String key = adminResetKey,
+    String? publicKey,
   }) {
     if (text == null) return null;
     final Object? decoded;
@@ -59,13 +84,12 @@ class AdminResetTicket {
     final issued = decoded['issued'];
     final sig = decoded['sig'];
     if (nonce is! String || issued is! String || sig is! String) return null;
-    final id = nonce.toLowerCase();
-    if (!_nonceShape.hasMatch(id) || used.contains(id)) return null;
-    if (sig.toLowerCase() != adminResetSignature(nonce, issued, key: key)) return null;
+    if (!_nonceShape.hasMatch(nonce) || used.contains(nonce)) return null;
+    if (!adminResetSignatureValid(nonce, issued, sig, publicKey: publicKey)) return null;
     final issuedAt = DateTime.tryParse(issued);
     if (issuedAt == null) return null;
     if (issuedAt.isAfter(now.add(_clockSkew)) || now.difference(issuedAt) > adminResetLifetime) return null;
-    return AdminResetTicket(nonce: id, issuedAt: issuedAt);
+    return AdminResetTicket(nonce: nonce, issuedAt: issuedAt);
   }
 }
 
