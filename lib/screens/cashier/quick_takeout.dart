@@ -84,6 +84,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     if (paying || lines.isEmpty) return;
     setState(() => paying = true);
     final known = store.payments.map((payment) => payment.id).toSet();
+    final sold = [for (final line in lines) line.withQty(line.qty)];
     final error = await store.checkoutTakeout(
       lines: [
         for (final line in lines) line.withQty(line.qty),
@@ -100,9 +101,11 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
+    final added = store.payments.where((payment) => !known.contains(payment.id));
+    final paid = added.isEmpty ? null : added.first;
+    if (paid != null) printKitchenTakeout(context, store, paid, sold);
     if (store.autoPrintReceipt) {
-      final added = store.payments.where((payment) => !known.contains(payment.id));
-      final payment = added.isEmpty ? null : added.first;
+      final payment = paid;
       if (payment != null) {
         unawaited(showReceiptPrint(store, payment, context.l10n).catchError((_) {
           if (!mounted) return;

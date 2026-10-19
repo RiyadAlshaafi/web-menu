@@ -582,5 +582,21 @@
   "stockQtyHint": "الكمية",
   "stockSave": "حفظ",
   "stockInvalid": "اكتب رقمًا صحيحًا من 0 إلى 100000.",
-  "stockSaved": "تم حفظ مخزون {dish}"
+  "stockSaved": "تم حفظ مخزون {dish}",
+  "printersTitle": "الطابعات",
+  "printersHint": "اختر طابعات هذا الجهاز. طابعة المطبخ تطبع كل طلب جديد للمطبخ: رقم الطلب والأطباق وعددها والإضافات، بدون أسعار. طابعة الكاشير تطبع الإيصالات بدون سؤال.",
+  "printersWindowsOnly": "تُختار الطابعات على جهاز الكاشير (ويندوز). افتح هذه الإعدادات هناك.",
+  "printersRefresh": "ابحث عن الطابعات مرة أخرى",
+  "printersKitchen": "طابعة المطبخ",
+  "printersKitchenNone": "لا شيء (بدون تذاكر مطبخ)",
+  "printersReceipt": "طابعة الكاشير (الإيصالات)",
+  "printersReceiptNone": "لا شيء (اسأل كل مرة)",
+  "printersMissing": "{name} (غير متصلة)",
+  "printersTestKitchen": "اطبع تذكرة مطبخ تجريبية",
+  "printersTestSent": "أُرسلت التذكرة التجريبية إلى طابعة المطبخ.",
+  "kitchenPrintFailed": "لم تُطبع تذكرة المطبخ. تحقق من طابعة المطبخ في الإعدادات.",
+  "kitchenTicketTitle": "المطبخ",
+  "kitchenTicketAdded": "إضافة على الطلب",
+  "kitchenTestDish": "طبق تجريبي",
+  "printersLooking": "جارٍ البحث عن الطابعات…"
 }

@@ -3355,6 +3355,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stock saved for {dish}'**
   String stockSaved(String dish);
+
+  /// No description provided for @printersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Printers'**
+  String get printersTitle;
+
+  /// No description provided for @printersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick this till\'s printers. The kitchen printer prints each new order for the kitchen: order number, dishes, how many and toppings, no prices. The cashier printer prints receipts without asking.'**
+  String get printersHint;
+
+  /// No description provided for @printersWindowsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Printers are picked on the Windows till. Open these settings there.'**
+  String get printersWindowsOnly;
+
+  /// No description provided for @printersRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Look for printers again'**
+  String get printersRefresh;
+
+  /// No description provided for @printersKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen printer'**
+  String get printersKitchen;
+
+  /// No description provided for @printersKitchenNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None (no kitchen tickets)'**
+  String get printersKitchenNone;
+
+  /// No description provided for @printersReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier printer (receipts)'**
+  String get printersReceipt;
+
+  /// No description provided for @printersReceiptNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None (ask each time)'**
+  String get printersReceiptNone;
+
+  /// No description provided for @printersMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (not connected)'**
+  String printersMissing(String name);
+
+  /// No description provided for @printersTestKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Print a test kitchen ticket'**
+  String get printersTestKitchen;
+
+  /// No description provided for @printersTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Test ticket sent to the kitchen printer.'**
+  String get printersTestSent;
+
+  /// No description provided for @kitchenPrintFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The kitchen ticket did not print. Check the kitchen printer in Settings.'**
+  String get kitchenPrintFailed;
+
+  /// No description provided for @kitchenTicketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'KITCHEN'**
+  String get kitchenTicketTitle;
+
+  /// No description provided for @kitchenTicketAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'ADDED TO THE ORDER'**
+  String get kitchenTicketAdded;
+
+  /// No description provided for @kitchenTestDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Test dish'**
+  String get kitchenTestDish;
+
+  /// No description provided for @printersLooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for printers…'**
+  String get printersLooking;
 }
 
 class _AppLocalizationsDelegate

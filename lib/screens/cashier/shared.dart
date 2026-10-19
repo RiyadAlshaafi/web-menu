@@ -182,3 +182,23 @@ class _ArrivalFlashState extends State<_ArrivalFlash> with SingleTickerProviderS
     );
   }
 }
+
+/// Sends what the kitchen has not seen of [orderId] to the kitchen printer, if this till has one.
+/// The order is already saved, so a printer problem is only reported.
+void printKitchenRounds(BuildContext context, CafeStore store, String orderId) {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
+  unawaited(TillPrinters.printNewRounds(store, orderId, l10n).then((result) => _reportKitchenPrint(messenger, l10n, result)));
+}
+
+/// Kitchen ticket for a paid quick takeout of [lines].
+void printKitchenTakeout(BuildContext context, CafeStore store, Payment payment, List<OrderLine> lines) {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
+  unawaited(TillPrinters.printTakeout(store, payment, lines, l10n).then((result) => _reportKitchenPrint(messenger, l10n, result)));
+}
+
+void _reportKitchenPrint(ScaffoldMessengerState messenger, AppLocalizations l10n, KitchenPrintResult result) {
+  if (result != KitchenPrintResult.noPrinter && result != KitchenPrintResult.failed) return;
+  messenger.showSnackBar(SnackBar(content: Text(l10n.kitchenPrintFailed)));
+}

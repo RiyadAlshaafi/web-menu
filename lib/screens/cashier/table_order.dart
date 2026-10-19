@@ -25,13 +25,15 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
     final router = GoRouter.of(context);
+    final CafeOrder? order;
     try {
-      await store.sendCartToKitchen(table.id);
+      order = await store.sendCartToKitchen(table.id);
     } on StateError catch (error) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.errorText(error.message))));
       return;
     }
     if (!mounted) return;
+    if (order != null) printKitchenRounds(context, store, order.id);
     messenger.showSnackBar(SnackBar(content: Text(l10n.tableOrderSent(l10n.cashierTableNumber(table.number)))));
     router.go('/pos/tables');
   }

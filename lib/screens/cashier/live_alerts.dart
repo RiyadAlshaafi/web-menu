@@ -166,7 +166,12 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                     : () async {
                                         setState(() => selectedOrderId = order.id);
                                         final error = await store.setOrderStatus(order.id, next);
-                                        if (error == null || !context.mounted) return;
+                                        if (!context.mounted) return;
+                                        if (error == null) {
+                                          // Accepting a guest's order sends it to the kitchen.
+                                          if (next == OrderStatus.preparing) printKitchenRounds(context, store, order.id);
+                                          return;
+                                        }
                                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
                                       },
                               );
@@ -530,7 +535,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
             child: FilledButton(
               onPressed: () async {
                 final error = await store.setOrderStatus(order.id, next);
-                if (error == null || !context.mounted) return;
+                if (!context.mounted) return;
+                if (error == null) {
+                  if (next == OrderStatus.preparing) printKitchenRounds(context, store, order.id);
+                  return;
+                }
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorText(error))));
               },
               style: FilledButton.styleFrom(

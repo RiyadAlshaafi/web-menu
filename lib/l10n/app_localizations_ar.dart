@@ -1837,4 +1837,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String stockSaved(String dish) {
     return 'تم حفظ مخزون $dish';
   }
+
+  @override
+  String get printersTitle => 'الطابعات';
+
+  @override
+  String get printersHint =>
+      'اختر طابعات هذا الجهاز. طابعة المطبخ تطبع كل طلب جديد للمطبخ: رقم الطلب والأطباق وعددها والإضافات، بدون أسعار. طابعة الكاشير تطبع الإيصالات بدون سؤال.';
+
+  @override
+  String get printersWindowsOnly =>
+      'تُختار الطابعات على جهاز الكاشير (ويندوز). افتح هذه الإعدادات هناك.';
+
+  @override
+  String get printersRefresh => 'ابحث عن الطابعات مرة أخرى';
+
+  @override
+  String get printersKitchen => 'طابعة المطبخ';
+
+  @override
+  String get printersKitchenNone => 'لا شيء (بدون تذاكر مطبخ)';
+
+  @override
+  String get printersReceipt => 'طابعة الكاشير (الإيصالات)';
+
+  @override
+  String get printersReceiptNone => 'لا شيء (اسأل كل مرة)';
+
+  @override
+  String printersMissing(String name) {
+    return '$name (غير متصلة)';
+  }
+
+  @override
+  String get printersTestKitchen => 'اطبع تذكرة مطبخ تجريبية';
+
+  @override
+  String get printersTestSent => 'أُرسلت التذكرة التجريبية إلى طابعة المطبخ.';
+
+  @override
+  String get kitchenPrintFailed =>
+      'لم تُطبع تذكرة المطبخ. تحقق من طابعة المطبخ في الإعدادات.';
+
+  @override
+  String get kitchenTicketTitle => 'المطبخ';
+
+  @override
+  String get kitchenTicketAdded => 'إضافة على الطلب';
+
+  @override
+  String get kitchenTestDish => 'طبق تجريبي';
+
+  @override
+  String get printersLooking => 'جارٍ البحث عن الطابعات…';
 }

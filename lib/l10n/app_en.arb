@@ -931,5 +931,22 @@
   "stockSave": "Save",
   "stockInvalid": "Type a whole number from 0 to 100000.",
   "stockSaved": "Stock saved for {dish}",
-  "@stockSaved": {"placeholders": {"dish": {"type": "String"}}}
+  "@stockSaved": {"placeholders": {"dish": {"type": "String"}}},
+  "printersTitle": "Printers",
+  "printersHint": "Pick this till's printers. The kitchen printer prints each new order for the kitchen: order number, dishes, how many and toppings, no prices. The cashier printer prints receipts without asking.",
+  "printersWindowsOnly": "Printers are picked on the Windows till. Open these settings there.",
+  "printersRefresh": "Look for printers again",
+  "printersKitchen": "Kitchen printer",
+  "printersKitchenNone": "None (no kitchen tickets)",
+  "printersReceipt": "Cashier printer (receipts)",
+  "printersReceiptNone": "None (ask each time)",
+  "printersMissing": "{name} (not connected)",
+  "@printersMissing": {"placeholders": {"name": {"type": "String"}}},
+  "printersTestKitchen": "Print a test kitchen ticket",
+  "printersTestSent": "Test ticket sent to the kitchen printer.",
+  "kitchenPrintFailed": "The kitchen ticket did not print. Check the kitchen printer in Settings.",
+  "kitchenTicketTitle": "KITCHEN",
+  "kitchenTicketAdded": "ADDED TO THE ORDER",
+  "kitchenTestDish": "Test dish",
+  "printersLooking": "Looking for printers…"
 }

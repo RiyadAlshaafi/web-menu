@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 
 import '../core/choice_labels.dart';
 import '../core/ledger.dart';
+import 'kitchen_ticket.dart';
 import 'pdf_text.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
@@ -95,7 +96,19 @@ pw.Widget _item(String name, String qty, String price) {
   );
 }
 
+/// Prints straight to this till's cashier printer when one is picked in Settings; otherwise
+/// opens the print dialog. Throws when the cashier printer did not print.
 Future<void> showReceiptPrint(CafeStore store, Payment payment, AppLocalizations l10n) async {
+  final printer = (await TillPrinters.settings()).receipt;
+  if (printer != null) {
+    final result = await TillPrinters.printPdf(
+      printer,
+      name: 'receipt-${store.receiptNumber(payment)}',
+      build: () => receiptPdfBytes(store, payment, l10n),
+    );
+    if (result != KitchenPrintResult.printed) throw StateError('receipt printer: ${result.name}');
+    return;
+  }
   final bytes = await receiptPdfBytes(store, payment, l10n);
   await Printing.layoutPdf(
     name: 'receipt-${store.receiptNumber(payment)}',

@@ -1848,4 +1848,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String stockSaved(String dish) {
     return 'Stock saved for $dish';
   }
+
+  @override
+  String get printersTitle => 'Printers';
+
+  @override
+  String get printersHint =>
+      'Pick this till\'s printers. The kitchen printer prints each new order for the kitchen: order number, dishes, how many and toppings, no prices. The cashier printer prints receipts without asking.';
+
+  @override
+  String get printersWindowsOnly =>
+      'Printers are picked on the Windows till. Open these settings there.';
+
+  @override
+  String get printersRefresh => 'Look for printers again';
+
+  @override
+  String get printersKitchen => 'Kitchen printer';
+
+  @override
+  String get printersKitchenNone => 'None (no kitchen tickets)';
+
+  @override
+  String get printersReceipt => 'Cashier printer (receipts)';
+
+  @override
+  String get printersReceiptNone => 'None (ask each time)';
+
+  @override
+  String printersMissing(String name) {
+    return '$name (not connected)';
+  }
+
+  @override
+  String get printersTestKitchen => 'Print a test kitchen ticket';
+
+  @override
+  String get printersTestSent => 'Test ticket sent to the kitchen printer.';
+
+  @override
+  String get kitchenPrintFailed =>
+      'The kitchen ticket did not print. Check the kitchen printer in Settings.';
+
+  @override
+  String get kitchenTicketTitle => 'KITCHEN';
+
+  @override
+  String get kitchenTicketAdded => 'ADDED TO THE ORDER';
+
+  @override
+  String get kitchenTestDish => 'Test dish';
+
+  @override
+  String get printersLooking => 'Looking for printers…';
 }
