@@ -58,8 +58,9 @@ Type: files; Name: "{app}\features.json"
 Type: files; Name: "{app}\admin_reset.json"
 
 [Code]
-// Pages: password (checked online) -> Online/Offline -> cafe slot (online only) -> admin reset
-// (offline only) -> feature checkboxes. The answers are written to {app}\features.json, which
+// Pages: update choice (only when Cafe POS is already installed) -> password (checked online) ->
+// Online/Offline -> cafe slot (online only) -> admin reset (offline only) -> feature checkboxes.
+// Updating with "keep settings" skips the rest like a silent update: no password, nothing rewritten. The answers are written to {app}\features.json, which
 // lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages
 // and leave features.json as it is.
 // The admin reset writes {app}\admin_reset.json, a one-time ticket signed by the server
@@ -71,6 +72,8 @@ const
   SlotCount = 8;
 
 var
+  Installed: Boolean;
+  UpdatePage: TInputOptionWizardPage;
   PasswordPage: TInputQueryWizardPage;
   ModePage: TInputOptionWizardPage;
   SlotPage: TInputOptionWizardPage;
@@ -250,6 +253,12 @@ begin
   end;
 end;
 
+// An update that keeps this till's mode, slot and features: no password needed.
+function KeepSettings: Boolean;
+begin
+  Result := Installed and (UpdatePage.SelectedValueIndex = 0);
+end;
+
 function OfflineChosen: Boolean;
 begin
   Result := ModePage.SelectedValueIndex = 1;
@@ -408,7 +417,16 @@ begin
   FeatureKeys[7] := 'branding';
   FeatureKeys[8] := 'payment_types';
 
-  PasswordPage := CreateInputQueryPage(wpWelcome, 'Password',
+  Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe');
+  UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',
+    'Cafe POS is already on this PC.',
+    'Updating keeps this till''s mode, cafe slot, features, sales and settings. No password is needed.',
+    True, False);
+  UpdatePage.Add('Update and keep this till''s settings');
+  UpdatePage.Add('Change the settings or reset the offline admin password (needs the setup password)');
+  UpdatePage.SelectedValueIndex := 0;
+
+  PasswordPage := CreateInputQueryPage(UpdatePage.ID, 'Password',
     'Only the seller can install Cafe POS.',
     'Enter the setup password. This PC needs internet for this check only.');
   PasswordPage.Add('Password:', True);
@@ -448,7 +466,13 @@ end;
 // The slot page is for online tills; the admin reset is for offline tills (online ones reset by email).
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);
+  if PageID = UpdatePage.ID then
+    Result := not Installed
+  else if KeepSettings then
+    Result := (PageID = PasswordPage.ID) or (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
+      (PageID = ResetPage.ID) or (PageID = FeaturePage.ID)
+  else
+    Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
@@ -493,7 +517,7 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if (CurStep <> ssPostInstall) or WizardSilent then Exit;
+  if (CurStep <> ssPostInstall) or WizardSilent or KeepSettings then Exit;
   if not SaveStringToFile(FeaturesFile, FeaturesJson, False) then
     MsgBox('Could not save the feature choices. Every feature will be on.', mbError, MB_OK);
   // A ticket left from an earlier run must not outlive a setup that did not ask for one.
