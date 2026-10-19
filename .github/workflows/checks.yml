@@ -90,3 +90,22 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: bash tool/test_db.sh
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Fails when a key, token or password is committed (the whole history is scanned).
+      - name: Secret scan
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 git /repo --no-banner --redact
+
+      # Known high findings in build-only packages wait for upstream fixes (see Dependabot);
+      # a critical one fails the check.
+      - name: Guest web dependency audit
+        working-directory: guest-web
+        run: npm audit --audit-level=critical
+
