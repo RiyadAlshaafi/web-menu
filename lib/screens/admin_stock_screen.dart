@@ -179,9 +179,8 @@ class _StockRowState extends State<_StockRow> {
     final store = context.watch<CafeStore>();
     final dish = widget.dish;
     final left = dish.stockQty;
-    // The switch already says "No limit", so the badge only shows a count.
     final badge = switch (left) {
-      null => null,
+      null => StatusBadge(context.l10n.stockNoLimit, tone: BadgeTone.neutral),
       0 => StatusBadge(context.l10n.stockSoldOut, tone: BadgeTone.terracotta),
       _ => StatusBadge(context.l10n.stockLeft(left), tone: BadgeTone.success),
     };
@@ -193,13 +192,10 @@ class _StockRowState extends State<_StockRow> {
         Text(store.currency.format(dish.price), style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
       ],
     );
-    final noLimit = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(context.l10n.stockNoLimit, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        const SizedBox(width: 8),
-        Switch(value: !limited, onChanged: saving ? null : (value) => _setNoLimit(store, value)),
-      ],
+    // The badge beside it names the state, so the switch shows no text of its own.
+    final noLimit = Semantics(
+      label: context.l10n.stockNoLimit,
+      child: Switch(value: !limited, onChanged: saving ? null : (value) => _setNoLimit(store, value)),
     );
     final box = Row(
       mainAxisSize: MainAxisSize.min,
@@ -234,7 +230,7 @@ class _StockRowState extends State<_StockRow> {
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 14,
             runSpacing: 10,
-            children: [?badge, if (limited) box, noLimit],
+            children: [badge, if (limited) box, noLimit],
           );
           if (constraints.maxWidth < 560) {
             return Column(

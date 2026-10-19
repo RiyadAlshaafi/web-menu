@@ -45,7 +45,7 @@ class AdminShell extends StatelessWidget {
               width: railWidth,
               // In a short window the menu scrolls instead of cutting off its last entries.
               child: ScrollWhenShort(
-                minHeight: 640,
+                minHeight: 780,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(compact ? 8 : 14, 20, compact ? 8 : 14, 16),
                   child: Column(

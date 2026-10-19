@@ -67,6 +67,9 @@ class SyncStatusStrip extends StatelessWidget {
   }
 }
 
+/// Height of one side-menu entry: big enough to hit with a finger on a touch screen.
+const shellNavItemHeight = 64.0;
+
 /// One entry in the side menu. The active entry gets a soft tint of the cafe's button colour.
 class ShellNavItem extends StatelessWidget {
   const ShellNavItem({super.key, required this.section, required this.active, this.compact = false, this.badge});
@@ -86,7 +89,7 @@ class ShellNavItem extends StatelessWidget {
     final fg = active ? activeFg : idleFg;
     if (compact) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.only(bottom: 6),
         child: Tooltip(
           message: section.label(context),
           child: Material(
@@ -95,14 +98,17 @@ class ShellNavItem extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () => context.go(section.path),
-              child: SizedBox(height: 52, child: Center(child: Icon(section.icon, color: fg, semanticLabel: section.label(context)))),
+              child: SizedBox(
+                height: shellNavItemHeight,
+                child: Center(child: Icon(section.icon, size: 26, color: fg, semanticLabel: section.label(context))),
+              ),
             ),
           ),
         ),
       );
     }
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Semantics(
         selected: active,
         button: true,
@@ -113,24 +119,24 @@ class ShellNavItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             onTap: () => context.go(section.path),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 52),
+              constraints: const BoxConstraints(minHeight: shellNavItemHeight),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    Icon(section.icon, size: 20, color: fg),
-                    const SizedBox(width: 12),
+                    Icon(section.icon, size: 24, color: fg),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Text(
                         section.label(context).replaceAll('\n', ' '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, fontWeight: active ? FontWeight.w700 : FontWeight.w600, color: fg),
+                        style: TextStyle(fontSize: 16, fontWeight: active ? FontWeight.w700 : FontWeight.w600, color: fg),
                       ),
                     ),
                     if (badge != null) ...[
                       const SizedBox(width: 8),
-                      Text(badge!, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: fg)),
+                      Text(badge!, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: fg)),
                     ],
                   ],
                 ),
