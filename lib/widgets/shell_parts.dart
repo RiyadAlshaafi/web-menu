@@ -89,7 +89,7 @@ class ShellNavItem extends StatelessWidget {
     final fg = active ? activeFg : idleFg;
     if (compact) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.only(bottom: 4),
         child: Tooltip(
           message: section.label(context),
           child: Material(
@@ -100,7 +100,7 @@ class ShellNavItem extends StatelessWidget {
               onTap: () => context.go(section.path),
               child: SizedBox(
                 height: shellNavItemHeight,
-                child: Center(child: Icon(section.icon, size: 26, color: fg, semanticLabel: section.label(context))),
+                child: Center(child: Icon(section.icon, color: fg, semanticLabel: section.label(context))),
               ),
             ),
           ),
@@ -108,7 +108,7 @@ class ShellNavItem extends StatelessWidget {
       );
     }
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Semantics(
         selected: active,
         button: true,
@@ -121,22 +121,22 @@ class ShellNavItem extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: shellNavItemHeight),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 child: Row(
                   children: [
-                    Icon(section.icon, size: 24, color: fg),
-                    const SizedBox(width: 14),
+                    Icon(section.icon, size: 20, color: fg),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         section.label(context).replaceAll('\n', ' '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 16, fontWeight: active ? FontWeight.w700 : FontWeight.w600, color: fg),
+                        style: TextStyle(fontSize: 14, fontWeight: active ? FontWeight.w700 : FontWeight.w600, color: fg),
                       ),
                     ),
                     if (badge != null) ...[
                       const SizedBox(width: 8),
-                      Text(badge!, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: fg)),
+                      Text(badge!, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: fg)),
                     ],
                   ],
                 ),
