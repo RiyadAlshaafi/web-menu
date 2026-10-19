@@ -7,7 +7,7 @@
 # Run it by hand first with "dry run" ticked: it uploads and checks but deletes nothing.
 #
 # Needs these repository secrets:
-#   SUPABASE_DB_URL       the "Session pooler" connection string (also used by the backup)
+#   SUPABASE_DB_URL       the "Session pooler" connection string
 #   R2_ACCOUNT_ID         Cloudflare account id
 #   R2_ACCESS_KEY_ID      R2 API token with Object Read & Write on the archive bucket
 #   R2_SECRET_ACCESS_KEY

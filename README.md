@@ -88,6 +88,6 @@ Names only. Never commit values; `.env` and `.env.*` are git-ignored, except `.e
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` (variable `WHATSAPP_NUMBER`) | Sales page: digits of the WhatsApp number; the button is hidden when unset |
 | `NEXT_PUBLIC_DEMO_MENU_PATH` (variable `DEMO_MENU_PATH`) | Sales page: a demo menu path such as `/t/<slug>`; the button is hidden when unset |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub Actions deploys |
-| `SUPABASE_DB_URL`, `BACKUP_PASSPHRASE` | GitHub Actions database backup |
+| `SUPABASE_DB_URL`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Monthly archive of receipts and expenses to R2 (`db-archive.yml`) |
 
 Windows till releases: [docs/RELEASING.md](docs/RELEASING.md).
