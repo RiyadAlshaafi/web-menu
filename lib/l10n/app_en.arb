@@ -644,6 +644,7 @@
   "payDeleteMessage": "Past sales using this method will keep showing it.",
   "payTypeSave": "Save",
   "salesLoadMore": "Load more",
+  "salesArchiveFailed": "Sales older than two months could not be loaded. Check the internet and sign in as the admin, then pick the dates again.",
   "cafeLocationRequire": "Require guests to be near the cafe to order",
   "cafeLocationUseCurrent": "Use my current location",
   "cafeLocationLatitude": "Latitude",

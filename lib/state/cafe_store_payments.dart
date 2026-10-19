@@ -86,6 +86,9 @@ extension CafeStorePayments on CafeStore {
 
   bool get salesHasMore => db.salesHasMore;
 
+  /// The chosen dates reach archived months that could not be loaded (offline, signed out).
+  bool get salesArchiveFailed => db.salesArchiveFailed;
+
   Future<void> loadMoreSales() async {
     await db.loadMoreSales();
     _hydrateOperational();

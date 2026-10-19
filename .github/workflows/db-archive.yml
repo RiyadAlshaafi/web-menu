@@ -1,0 +1,70 @@
+# Moves cafe sales older than the last two months from Supabase to the private R2 bucket, so the
+# database stays small (tool/archive_months.sh, supabase/migrations/20261019150000_monthly_archive.sql).
+# Each month is uploaded and read back before the database deletes it.
+#
+# Off until the repository variable ARCHIVE_ENABLED is "true" (Settings -> Secrets and variables ->
+# Actions -> Variables): turn it on only once the app can show archived months.
+# Run it by hand first with "dry run" ticked: it uploads and checks but deletes nothing.
+#
+# Needs these repository secrets:
+#   SUPABASE_DB_URL       the "Session pooler" connection string (also used by the backup)
+#   R2_ACCOUNT_ID         Cloudflare account id
+#   R2_ACCESS_KEY_ID      R2 API token with Object Read & Write on the archive bucket
+#   R2_SECRET_ACCESS_KEY
+# and the variable ARCHIVE_BUCKET (default "backup").
+name: Monthly archive
+
+on:
+  schedule:
+    - cron: '41 1 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Upload and check only, delete nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ARCHIVE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the secrets are set
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          ACCOUNT: ${{ secrets.R2_ACCOUNT_ID }}
+          KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$ACCOUNT" ] || [ -z "$KEY_ID" ] || [ -z "$SECRET" ]; then
+            echo "Add SUPABASE_DB_URL, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY first (see this file's header)." >&2
+            exit 1
+          fi
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Archive due months
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          S3_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          ARCHIVE_BUCKET: ${{ vars.ARCHIVE_BUCKET || 'backup' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '' }}
+        run: bash tool/archive_months.sh

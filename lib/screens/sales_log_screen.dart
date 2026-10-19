@@ -140,6 +140,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
             const SizedBox(height: 16),
             Wrap(spacing: 10, runSpacing: 10, children: filters),
           ],
+          if (store.salesArchiveFailed) ...[
+            const SizedBox(height: 12),
+            Text(context.l10n.salesArchiveFailed, style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
+          ],
           const SizedBox(height: 16),
           Expanded(
             child: TawlaPanel(

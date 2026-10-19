@@ -1112,6 +1112,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesLoadMore => 'Load more';
 
   @override
+  String get salesArchiveFailed =>
+      'Sales older than two months could not be loaded. Check the internet and sign in as the admin, then pick the dates again.';
+
+  @override
   String get cafeLocationRequire =>
       'Require guests to be near the cafe to order';
 

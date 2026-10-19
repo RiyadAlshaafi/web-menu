@@ -2090,6 +2090,12 @@ abstract class AppLocalizations {
   /// **'Load more'**
   String get salesLoadMore;
 
+  /// No description provided for @salesArchiveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales older than two months could not be loaded. Check the internet and sign in as the admin, then pick the dates again.'**
+  String get salesArchiveFailed;
+
   /// No description provided for @cafeLocationRequire.
   ///
   /// In en, this message translates to:

@@ -1,0 +1,19 @@
+{
+  // Serves archived sales months from the private R2 bucket to the cafe's admin (src/index.ts).
+  // It sits on the staff site's own address, so the browser app calls it without CORS.
+  // Deploy: npx wrangler@4 deploy --config archive-worker/wrangler.jsonc
+  "name": "tawla-archive",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-10",
+  "routes": [
+    { "pattern": "staff.tawla.ly/api/archive/*", "zone_name": "tawla.ly" },
+    { "pattern": "tawla.ly/api/archive/*", "zone_name": "tawla.ly" }
+  ],
+  "r2_buckets": [{ "binding": "ARCHIVE", "bucket_name": "backup" }],
+  // Both are public (every web page carries them); the Worker holds no secret.
+  "vars": {
+    "SUPABASE_URL": "https://kzafgozkgvcflcizuemr.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_CWfwwYkp5D8nc_U0x3mjjg_YiYKg0Tj"
+  },
+  "observability": { "enabled": false }
+}
