@@ -58,7 +58,7 @@ jobs:
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath CafePOS-windows.zip
           "Built from ${{ github.sha }} on $(Get-Date -Format 'yyyy-MM-dd HH:mm') UTC" | Out-File BUILD.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: CafePOS-windows
           path: CafePOS-windows.zip
