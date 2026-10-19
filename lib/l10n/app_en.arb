@@ -948,5 +948,6 @@
   "kitchenTicketTitle": "KITCHEN",
   "kitchenTicketAdded": "ADDED TO THE ORDER",
   "kitchenTestDish": "Test dish",
-  "printersLooking": "Looking for printers…"
+  "printersLooking": "Looking for printers…",
+  "printersReceiptHint": "Pick this till's cashier printer. Receipts then print on it without asking."
 }

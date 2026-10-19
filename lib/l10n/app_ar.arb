@@ -598,5 +598,6 @@
   "kitchenTicketTitle": "المطبخ",
   "kitchenTicketAdded": "إضافة على الطلب",
   "kitchenTestDish": "طبق تجريبي",
-  "printersLooking": "جارٍ البحث عن الطابعات…"
+  "printersLooking": "جارٍ البحث عن الطابعات…",
+  "printersReceiptHint": "اختر طابعة الكاشير لهذا الجهاز. تُطبع الإيصالات عليها بدون سؤال."
 }

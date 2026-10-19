@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/choice_labels.dart';
 import '../core/report_error.dart';
 import '../core/time_format.dart';
+import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
 import 'pdf_text.dart';
@@ -63,7 +64,7 @@ class TillPrinters {
   /// order, or only what was added later.
   static Future<KitchenPrintResult> printNewRounds(CafeStore store, String orderId, AppLocalizations l10n) async {
     final kitchen = (await settings()).kitchen;
-    if (kitchen == null) return KitchenPrintResult.off;
+    if (kitchen == null || !store.allows(AppFeature.kitchenPrinter)) return KitchenPrintResult.off;
     var order = store.orders.where((item) => item.id == orderId).firstOrNull;
     if (order == null) return KitchenPrintResult.nothingNew;
     if (order.shiftOrderNumber == null) {
@@ -99,7 +100,7 @@ class TillPrinters {
   /// Prints a paid quick takeout: [lines] are the dishes just sold.
   static Future<KitchenPrintResult> printTakeout(CafeStore store, Payment payment, List<OrderLine> lines, AppLocalizations l10n) async {
     final kitchen = (await settings()).kitchen;
-    if (kitchen == null) return KitchenPrintResult.off;
+    if (kitchen == null || !store.allows(AppFeature.kitchenPrinter)) return KitchenPrintResult.off;
     if (lines.isEmpty) return KitchenPrintResult.nothingNew;
     return printPdf(
       kitchen,

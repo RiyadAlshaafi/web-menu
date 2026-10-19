@@ -1890,4 +1890,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get printersLooking => 'جارٍ البحث عن الطابعات…';
+
+  @override
+  String get printersReceiptHint =>
+      'اختر طابعة الكاشير لهذا الجهاز. تُطبع الإيصالات عليها بدون سؤال.';
 }

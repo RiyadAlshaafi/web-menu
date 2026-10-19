@@ -34,14 +34,22 @@ enum AppFeature {
   reports('reports', worksOffline: true),
   /// Custom app colours (the logo stays with the cafe name, which is core).
   branding('branding', worksOffline: true),
-  paymentTypes('payment_types', worksOffline: true);
+  paymentTypes('payment_types', worksOffline: true),
+  /// Counted dish stock: the admin's Stock page; at 0 a dish is sold out.
+  stock('stock', worksOffline: true, addedLater: true),
+  /// Kitchen tickets on this till's kitchen printer.
+  kitchenPrinter('kitchen_printer', worksOffline: true, addedLater: true);
 
-  const AppFeature(this.key, {this.worksOffline = false});
+  const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false});
 
   final String key;
 
   /// Whether this works in offline mode (local database, no internet).
   final bool worksOffline;
+
+  /// Added after tills were already set up: a features.json written before it existed (no
+  /// "listed" field) leaves it on, so an update never takes it away.
+  final bool addedLater;
 
   /// The feature this one cannot work without, if any.
   AppFeature? get requires => switch (this) {
@@ -79,8 +87,10 @@ class FeatureSet {
     return FeatureSet._(mode, Set.unmodifiable(enabled), validSlot);
   }
 
-  /// Reads the installer's `features.json` (`{"mode": "online", "features": [...], "slot": 3}`).
-  /// A missing or broken file means every feature is on, so a bad write never
+  /// Reads the installer's `features.json`
+  /// (`{"mode": "online", "features": [...], "listed": [...], "slot": 3}`). "listed" names the
+  /// boxes the setup showed; a file without it predates the [AppFeature.addedLater] features, which
+  /// then stay on. A missing or broken file means every feature is on, so a bad write never
   /// takes features away from a cafe.
   factory FeatureSet.fromJson(String? json) {
     if (json == null) return all;
@@ -89,8 +99,14 @@ class FeatureSet {
       if (decoded is! Map || decoded['features'] is! List) return all;
       final mode = InstallMode.fromKey(decoded['mode'] as String?);
       final slot = decoded['slot'];
+      final listed = decoded['listed'];
       return FeatureSet.fromKeys(
-        (decoded['features'] as List).whereType<String>(),
+        [
+          ...(decoded['features'] as List).whereType<String>(),
+          if (listed is! List)
+            for (final feature in AppFeature.values)
+              if (feature.addedLater) feature.key,
+        ],
         mode: mode,
         slot: slot is int ? slot : null,
       );

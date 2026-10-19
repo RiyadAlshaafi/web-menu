@@ -3451,6 +3451,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Looking for printers…'**
   String get printersLooking;
+
+  /// No description provided for @printersReceiptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick this till\'s cashier printer. Receipts then print on it without asking.'**
+  String get printersReceiptHint;
 }
 
 class _AppLocalizationsDelegate

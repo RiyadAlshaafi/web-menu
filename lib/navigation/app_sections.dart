@@ -45,6 +45,7 @@ class AppSections {
     ),
     AppSection(
       path: '/admin/stock',
+      feature: AppFeature.stock,
       labelOf: (l) => l.navStock,
       crumbOf: (l) => l.navStock,
       icon: Icons.inventory_2_outlined,

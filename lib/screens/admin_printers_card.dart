@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/l10n_ext.dart';
+import '../features/app_feature.dart';
 import '../printing/kitchen_ticket.dart';
+import '../state/cafe_store.dart';
 import '../widgets/tawla_ui.dart';
 
 /// This till's printers, from the ones Windows finds: which one is the kitchen printer (kitchen
@@ -63,6 +66,7 @@ class _PrintersCardState extends State<PrintersCard> {
 
   @override
   Widget build(BuildContext context) {
+    final kitchenOn = context.watch<CafeStore>().allows(AppFeature.kitchenPrinter);
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +84,11 @@ class _PrintersCardState extends State<PrintersCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            supported ? context.l10n.printersHint : context.l10n.printersWindowsOnly,
+            !supported
+                ? context.l10n.printersWindowsOnly
+                : kitchenOn
+                    ? context.l10n.printersHint
+                    : context.l10n.printersReceiptHint,
             style: const TextStyle(color: TawlaTokens.muted, fontSize: 13),
           ),
           if (loading)
@@ -89,6 +97,7 @@ class _PrintersCardState extends State<PrintersCard> {
               child: Text(context.l10n.printersLooking, style: const TextStyle(fontWeight: FontWeight.w600)),
             )
           else if (supported) ...[
+            if (kitchenOn) ...[
             const SizedBox(height: 14),
             _picker(
               label: context.l10n.printersKitchen,
@@ -99,6 +108,7 @@ class _PrintersCardState extends State<PrintersCard> {
                 TillPrinters.saveKitchen(value);
               },
             ),
+            ],
             const SizedBox(height: 12),
             _picker(
               label: context.l10n.printersReceipt,
@@ -109,7 +119,7 @@ class _PrintersCardState extends State<PrintersCard> {
                 TillPrinters.saveReceipt(value);
               },
             ),
-            if (kitchen != null) ...[
+            if (kitchenOn && kitchen != null) ...[
               const SizedBox(height: 12),
               OutlineAction(
                 label: context.l10n.printersTestKitchen,

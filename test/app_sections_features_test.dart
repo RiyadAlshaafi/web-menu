@@ -13,7 +13,7 @@ void main() {
   });
 
   test('core only keeps the always-on sections', () {
-    expect(_paths(AppSections.visible(AppSections.admin, coreOnly)), ['/admin/menu', '/admin/stock', '/admin/settings']);
+    expect(_paths(AppSections.visible(AppSections.admin, coreOnly)), ['/admin/menu', '/admin/settings']);
     expect(_paths(AppSections.visible(AppSections.cashier, coreOnly)), ['/pos/takeout', '/pos/log', '/pos/shifts']);
   });
 
@@ -41,7 +41,7 @@ void main() {
   });
 
   test('offline mode hides online-only sections even when ticked', () {
-    final offline = FeatureSet.fromKeys(['tables', 'qr_ordering', 'reports', 'expenses'], mode: InstallMode.offline);
+    final offline = FeatureSet.fromKeys(['tables', 'qr_ordering', 'reports', 'expenses', 'stock'], mode: InstallMode.offline);
     expect(
       _paths(AppSections.visible(AppSections.admin, offline)),
       ['/admin/dashboard', '/admin/menu', '/admin/stock', '/admin/tables', '/admin/sales', '/admin/wages', '/admin/settings'],

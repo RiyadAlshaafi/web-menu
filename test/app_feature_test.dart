@@ -47,10 +47,26 @@ void main() {
   });
 
   test('fromJson with an empty list allows only core', () {
-    final set = FeatureSet.fromJson('{"features": []}');
+    final set = FeatureSet.fromJson('{"features": [], "listed": ["tables", "stock", "kitchen_printer"]}');
     for (final feature in AppFeature.values) {
       expect(set.allows(feature), isFalse, reason: feature.key);
     }
+  });
+
+  test('a file from before stock and kitchen printing keeps both on', () {
+    final set = FeatureSet.fromJson('{"mode": "offline", "features": ["tables"]}');
+    expect(set.allows(AppFeature.stock), isTrue);
+    expect(set.allows(AppFeature.kitchenPrinter), isTrue);
+    expect(set.allows(AppFeature.discounts), isFalse);
+  });
+
+  test('a newer setup that showed stock and kitchen printing and left them unticked turns them off', () {
+    final set = FeatureSet.fromJson('{"mode": "online", "features": ["tables"], "listed": ["tables", "stock", "kitchen_printer"]}');
+    expect(set.allows(AppFeature.stock), isFalse);
+    expect(set.allows(AppFeature.kitchenPrinter), isFalse);
+    final ticked = FeatureSet.fromJson('{"mode": "offline", "features": ["stock", "kitchen_printer"], "listed": ["stock", "kitchen_printer"]}');
+    expect(ticked.allows(AppFeature.stock), isTrue, reason: 'stock works offline');
+    expect(ticked.allows(AppFeature.kitchenPrinter), isTrue, reason: 'kitchen printing works offline');
   });
 
   test('fromJson falls back to all when there is no file or it is broken', () {
@@ -69,6 +85,8 @@ void main() {
       AppFeature.reports,
       AppFeature.branding,
       AppFeature.paymentTypes,
+      AppFeature.stock,
+      AppFeature.kitchenPrinter,
     ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });

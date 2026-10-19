@@ -68,7 +68,7 @@ Type: files; Name: "{app}\admin_reset.json"
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
 // be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
 const
-  FeatureCount = 9;
+  FeatureCount = 11;
   SlotCount = 8;
 
 var
@@ -221,6 +221,8 @@ begin
     'reports': Result := 'Reports (dashboard, sales log, CSV/PDF export)';
     'branding': Result := 'Custom colours';
     'payment_types': Result := 'Extra payment types (card, etc.)';
+    'stock': Result := 'Dish stock (count what is left; sold out at 0)';
+    'kitchen_printer': Result := 'Kitchen printer (kitchen ticket for each order)';
   else
     Result := Key;
   end;
@@ -336,10 +338,12 @@ begin
   Result := OfflineChosen and ResetPage.Values[0];
 end;
 
-// Ticked when there is no saved choice yet, otherwise as saved.
+// Ticked when there is no saved choice yet, otherwise as saved. A box an older setup never showed
+// (not in "listed") starts ticked, like the app treats it.
 function StartsTicked(Key, Saved: String): Boolean;
 begin
-  Result := (Saved = '') or (Pos('"' + Key + '"', Saved) > 0);
+  Result := (Saved = '') or (Pos('"' + Key + '"', Saved) > 0) or
+    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer')));
 end;
 
 procedure FillFeatureList;
@@ -383,10 +387,11 @@ begin
   Result := RowTicked(Key) and ((RequiredKey(Key) = '') or KeyOn(RequiredKey(Key)));
 end;
 
+// "listed" names every box this setup showed, so the app knows an unticked one is off.
 function FeaturesJson: String;
 var
-  I: Integer;
-  Mode, List: String;
+  I, Row: Integer;
+  Mode, List, Listed: String;
 begin
   if OfflineChosen then Mode := 'offline' else Mode := 'online';
   List := '';
@@ -396,7 +401,13 @@ begin
       if List <> '' then List := List + ', ';
       List := List + '"' + FeatureKeys[I] + '"';
     end;
-  Result := '{"mode": "' + Mode + '", "features": [' + List + ']';
+  Listed := '';
+  for Row := 0 to GetArrayLength(RowKeys) - 1 do
+  begin
+    if Listed <> '' then Listed := Listed + ', ';
+    Listed := Listed + '"' + RowKeys[Row] + '"';
+  end;
+  Result := '{"mode": "' + Mode + '", "features": [' + List + '], "listed": [' + Listed + ']';
   if not OfflineChosen and (SlotPage.SelectedValueIndex >= 0) then
     Result := Result + ', "slot": ' + IntToStr(SlotPage.SelectedValueIndex + 1);
   Result := Result + '}';
@@ -416,6 +427,8 @@ begin
   FeatureKeys[6] := 'reports';
   FeatureKeys[7] := 'branding';
   FeatureKeys[8] := 'payment_types';
+  FeatureKeys[9] := 'stock';
+  FeatureKeys[10] := 'kitchen_printer';
 
   Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe');
   UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',

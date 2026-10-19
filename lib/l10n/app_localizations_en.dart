@@ -1901,4 +1901,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printersLooking => 'Looking for printers…';
+
+  @override
+  String get printersReceiptHint =>
+      'Pick this till\'s cashier printer. Receipts then print on it without asking.';
 }
