@@ -1,0 +1,9 @@
+# Secret scan settings (the "security" job in .github/workflows/checks.yml).
+# Uses gitleaks' default rules, minus one value that is public by design: the Supabase publishable
+# key, which every web page carries and which row-level security protects.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Supabase publishable key (public)"
+regexes = ['''sb_publishable_[A-Za-z0-9_-]+''']
