@@ -1,6 +1,6 @@
 part of '../cashier_screens.dart';
 
-/// Offline tables: the cashier adds dishes to one table's bill (an open tab). The dishes wait in
+/// The cashier adds dishes to one table's bill (an open tab). The dishes wait in
 /// the table's cart until "Add to the table's bill"; the bill is settled later from the floor.
 class TableOrderScreen extends StatefulWidget {
   const TableOrderScreen({super.key, required this.tableId});
@@ -96,7 +96,7 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
                 description: item.description,
                 price: store.currency.format(item.salePrice),
                 count: inCart,
-                enabled: item.available && !item.soldOut && !sending,
+                enabled: item.available && !item.soldOut && !sending && item.canSellMore(inCart),
                 onTap: () => store.addToCart(table.id, item),
                 onHold: item.options.isEmpty || sending ? null : () => _addWithChoices(context, store, item),
               );

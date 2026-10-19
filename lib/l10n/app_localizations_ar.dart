@@ -1805,4 +1805,36 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get voidWaitForSync =>
       'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم ألغه.';
+
+  @override
+  String get navStock => 'المخزون';
+
+  @override
+  String get stockHelp =>
+      'أوقف \"بدون حد\" واكتب الكمية المتبقية. كل بيع ينقص العدد، وعند 0 يصبح الطبق نافدًا.';
+
+  @override
+  String get stockNoLimit => 'بدون حد';
+
+  @override
+  String stockLeft(int count) {
+    return 'متبقي $count';
+  }
+
+  @override
+  String get stockSoldOut => 'نفد';
+
+  @override
+  String get stockQtyHint => 'الكمية';
+
+  @override
+  String get stockSave => 'حفظ';
+
+  @override
+  String get stockInvalid => 'اكتب رقمًا صحيحًا من 0 إلى 100000.';
+
+  @override
+  String stockSaved(String dish) {
+    return 'تم حفظ مخزون $dish';
+  }
 }

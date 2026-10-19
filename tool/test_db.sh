@@ -64,6 +64,7 @@ loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
 loud -d "$DB" -f supabase/tests/offline_trust_test.sql
 loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
 loud -d "$DB" -f supabase/tests/monthly_archive_test.sql
+loud -d "$DB" -f supabase/tests/dish_stock_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do

@@ -920,5 +920,16 @@
   "voidNotAllowed": "Only the cashier who took this sale can void it, while their shift is open.",
   "voidAlreadyDone": "This sale is already voided.",
   "voidReasonRequired": "Write a reason for the void.",
-  "voidWaitForSync": "This sale hasn't reached the server yet. Wait until it syncs, then void it."
+  "voidWaitForSync": "This sale hasn't reached the server yet. Wait until it syncs, then void it.",
+  "navStock": "Stock",
+  "stockHelp": "Turn off \"No limit\" and type how many are left. Every sale lowers the number, and at 0 the dish is sold out.",
+  "stockNoLimit": "No limit",
+  "stockLeft": "{count} left",
+  "@stockLeft": {"placeholders": {"count": {"type": "int"}}},
+  "stockSoldOut": "Sold out",
+  "stockQtyHint": "How many",
+  "stockSave": "Save",
+  "stockInvalid": "Type a whole number from 0 to 100000.",
+  "stockSaved": "Stock saved for {dish}",
+  "@stockSaved": {"placeholders": {"dish": {"type": "String"}}}
 }

@@ -65,6 +65,7 @@ extension CafeStoreOrders on CafeStore {
   void addToCart(String tableId, MenuItem item, {Set<String>? onIds}) {
     if (item.soldOut || !item.available) return;
     final cart = cartFor(tableId);
+    if (!item.canSellMore(_dishCountIn(cart, item.id))) return;
     final added = item.lineWith(locale: locale, onIds: onIds);
     final existing = cart.lines.where((line) => line.mergeKey == added.mergeKey);
     if (existing.isNotEmpty && existing.first.qty >= maxDishQty) return;
@@ -73,18 +74,28 @@ extension CafeStoreOrders on CafeStore {
     } else {
       existing.first.qty += 1;
     }
-    _saveCarts();
+    _saveCarts(tableId);
   }
 
   /// Sets the quantity of the cart line whose [OrderLine.mergeKey] is [lineKey].
   void setCartQty(String tableId, String lineKey, int qty) {
     qty = qty > maxDishQty ? maxDishQty : qty;
     final cart = cartFor(tableId);
+    final line = cart.lines.where((line) => line.mergeKey == lineKey).firstOrNull;
+    final item = menuItems.where((item) => item.id == line?.menuItemId).firstOrNull;
+    final left = item?.stockQty;
+    if (line != null && left != null && qty > line.qty) {
+      // Raise this line only as far as the dish's stock allows across the whole cart.
+      final others = _dishCountIn(cart, line.menuItemId) - line.qty;
+      final most = left - others;
+      if (most <= line.qty) return;
+      if (qty > most) qty = most;
+    }
     cart.lines.removeWhere((line) => line.mergeKey == lineKey && qty <= 0);
     for (final line in cart.lines.where((line) => line.mergeKey == lineKey)) {
       line.qty = qty;
     }
-    _saveCarts();
+    _saveCarts(tableId);
   }
 
   /// Gives the cart line [lineKey] the choices [onIds]; it merges with a line that already has them.
@@ -97,12 +108,16 @@ extension CafeStoreOrders on CafeStore {
     for (final merged in cart.lines.where((other) => other.qty > maxDishQty)) {
       merged.qty = maxDishQty;
     }
-    _saveCarts();
+    _saveCarts(tableId);
   }
 
-  void _saveCarts() {
+  /// Saves only [tableId]'s cart, so another till's cart for a different table is never overwritten.
+  int _dishCountIn(CartState cart, String menuItemId) =>
+      cart.lines.where((line) => line.menuItemId == menuItemId).fold<int>(0, (sum, line) => sum + line.qty);
+
+  void _saveCarts(String tableId) {
     _pendingWrites += 1;
-    db.writeCarts(carts).whenComplete(_writeFinished);
+    db.writeCarts(carts, tableId: tableId).whenComplete(_writeFinished);
     notifyListeners();
   }
 
@@ -130,9 +145,12 @@ extension CafeStoreOrders on CafeStore {
       final slug = table.isEmpty ? '' : table.first.qrSlug;
       final block = slug.isEmpty ? null : await prepareGuestOrderLocation(slug);
       if (block != null) throw StateError(block);
+      final staff = authKind != AuthKind.none;
       final error = await db.sendTableCart(
         tableId,
         serviceType: serviceForTable(tableId),
+        // A guest's table comes from the request header; staff name the table they opened.
+        qrSlug: staff && slug.isNotEmpty ? slug : null,
         lat: guestLocation == GuestLocationStatus.allowed ? _guestLat : null,
         lng: guestLocation == GuestLocationStatus.allowed ? _guestLng : null,
         accuracyM: guestLocation == GuestLocationStatus.allowed ? _guestAccuracyM : null,
@@ -147,6 +165,7 @@ extension CafeStoreOrders on CafeStore {
       }
       if (error != null) throw StateError(error);
       _hydrateOperational();
+      if (staff) await _acceptOwnOrder(tableId);
     } finally {
       _writeFinished();
       _sendingTables.remove(tableId);
@@ -155,6 +174,15 @@ extension CafeStoreOrders on CafeStore {
     }
     notifyListeners();
     return openOrderFor(tableId);
+  }
+
+  /// The cashier typed this order in: it skips the "accept" step and the new-order sound.
+  Future<void> _acceptOwnOrder(String tableId) async {
+    _alertNewOrders(exceptTableId: tableId);
+    final order = openOrderFor(tableId);
+    if (db.isLocal || order == null || order.status != OrderStatus.received) return;
+    final error = await setOrderStatus(order.id, OrderStatus.preparing);
+    if (error != null) reportError('accept own table order', StateError(error), StackTrace.current);
   }
 
   List<CafeTable> get diningTables =>

@@ -759,7 +759,7 @@ class AppDatabase {
           ? Future<dynamic>.value(null)
           : liveOnly
           ? client!.from('menu_items').select(
-              'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied, options',
+              'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied, options, stock_qty',
             )
           : client!.from('menu_items').select(),
       // Only carts that hold something; empty carts outnumber them and
@@ -832,6 +832,7 @@ class AppDatabase {
               discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
               discountApplied: row['discount_applied'] as bool? ?? false,
               options: parseJsonList(row['options'], DishOption.fromJson),
+              stockQty: (row['stock_qty'] as num?)?.toInt(),
             ),
           )
           .toList();
@@ -1651,6 +1652,27 @@ class AppDatabase {
     if (ids.isNotEmpty) await client!.from('menu_items').delete().inFilter('id', ids);
   }
 
+  /// Sets how many of dish [id] are left ([qty] null: no limit). Kept apart from
+  /// [writeMenuItems], so saving an older copy of a dish never brings sold stock back.
+  Future<String?> setDishStock(String id, int? qty) async {
+    if (isLocal) return _localSetDishStock(id, qty);
+    if (client == null) return ErrorCodes.notConfigured;
+    final soldOut = qty == 0;
+    try {
+      await client!.from('menu_items').update({
+        'stock_qty': qty,
+        if (qty != null) 'sold_out': soldOut,
+      }).eq('id', id);
+    } on PostgrestException catch (error) {
+      return _errorCode(error);
+    }
+    for (final item in _menuItems.where((item) => item.id == id)) {
+      item.stockQty = qty;
+      if (qty != null) item.soldOut = soldOut;
+    }
+    return null;
+  }
+
   /// What the database is known to hold, so unchanged calls are not rewritten
   /// (the call list grows daily).
   final Map<String, bool> _callWritten = {};
@@ -1663,8 +1685,9 @@ class AppDatabase {
 
   Future<void> _cartWrites = Future.value();
 
-  Future<void> writeCarts(Map<String, CartState> carts) {
-    final next = _cartWrites.then((_) => _writeCarts(carts));
+  /// Keeps [carts] and saves them; with [tableId], only that table's cart goes to the server.
+  Future<void> writeCarts(Map<String, CartState> carts, {String? tableId}) {
+    final next = _cartWrites.then((_) => _writeCarts(carts, tableId: tableId));
     _cartWrites = next.catchError((Object error, StackTrace stackTrace) {
       reportError('write carts', error, stackTrace);
     });
@@ -1839,7 +1862,7 @@ class AppDatabase {
     return null;
   }
 
-  Future<void> _writeCarts(Map<String, CartState> carts) async {
+  Future<void> _writeCarts(Map<String, CartState> carts, {String? tableId}) async {
     _epoch++;
     _carts = carts;
     if (isLocal) {
@@ -1848,6 +1871,7 @@ class AppDatabase {
     }
     if (client == null || restaurantId == null) return;
     for (final cart in carts.values) {
+      if (tableId != null && cart.tableId != tableId) continue;
       await client!.from('carts').upsert({
         'table_id': cart.tableId,
         'restaurant_id': restaurantId,

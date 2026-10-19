@@ -307,8 +307,9 @@ class CafeStore extends ChangeNotifier {
     await ensureShiftNumbers();
   }
 
-  void _alertNewOrders() {
-    final fresh = _newOrderWatch.newOrders(orders);
+  /// Rings for orders not seen before; [exceptTableId]'s order is the cashier's own and stays quiet.
+  void _alertNewOrders({String? exceptTableId}) {
+    final fresh = _newOrderWatch.newOrders(orders).where((order) => order.tableId != exceptTableId).toList();
     if (fresh.isEmpty || authKind != AuthKind.cashier) return;
     lastNewOrders = fresh;
     newOrderAlerts++;

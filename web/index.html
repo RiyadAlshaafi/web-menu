@@ -20,8 +20,37 @@
 
   <title>Tawla</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Boot loader: the Tawla mark draws itself in until Flutter paints its first frame. -->
+  <style>
+    #tawla-boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #E7EEF2; transition: opacity .25s; }
+    #tawla-boot svg { width: 88px; height: 88px; animation: tawla-fade 2s infinite; }
+    #tawla-boot .p { transform-box: fill-box; transform-origin: center; animation: tawla-pop 2s infinite cubic-bezier(.34, 1.56, .64, 1) both; }
+    #tawla-boot .p2 { animation-delay: .17s; } #tawla-boot .p3 { animation-delay: .33s; }
+    #tawla-boot .p4 { animation-delay: .44s; } #tawla-boot .p5 { animation-delay: .55s; } #tawla-boot .p6 { animation-delay: .72s; }
+    @keyframes tawla-pop { 0% { opacity: 0; transform: scale(0); } 33%, 100% { opacity: 1; transform: scale(1); } }
+    @keyframes tawla-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { #tawla-boot svg, #tawla-boot .p { animation: none; } }
+  </style>
 </head>
 <body>
+  <div id="tawla-boot" aria-label="Loading Tawla" role="img">
+    <svg viewBox="0 0 120 120" fill="none" stroke="#1B3A4B" stroke-width="9" stroke-linecap="round">
+      <g class="p p1"><rect x="8" y="8" width="36" height="36" rx="10"/><rect x="19" y="19" width="14" height="14" rx="4" fill="#1B3A4B" stroke="none"/></g>
+      <g class="p p2"><rect x="76" y="8" width="36" height="36" rx="10"/><rect x="87" y="19" width="14" height="14" rx="4" fill="#1B3A4B" stroke="none"/></g>
+      <g class="p p3"><rect x="8" y="76" width="36" height="36" rx="10"/><rect x="19" y="87" width="14" height="14" rx="4" fill="#1B3A4B" stroke="none"/></g>
+      <rect class="p p4" x="55" y="55" width="10" height="10" rx="3" fill="#1B3A4B" stroke="none"/>
+      <g class="p p5"><circle cx="90" cy="90" r="17"/><line x1="103" y1="103" x2="110" y2="110"/></g>
+      <circle class="p p6" cx="90" cy="90" r="8" fill="#BA5333" stroke="none"/>
+    </svg>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var boot = document.getElementById('tawla-boot');
+      if (!boot) return;
+      boot.style.opacity = '0';
+      setTimeout(function () { boot.remove(); }, 300);
+    });
+  </script>
   <!-- Guest QR links (#/t/<slug>[/cart|/bill]) go to the guest web app when tool/build_web.sh
        stamps GUEST_WEB_URL here; left as the placeholder or empty, nothing happens. Runs before
        Flutter downloads, so guests don't load the staff app first. -->

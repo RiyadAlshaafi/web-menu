@@ -3301,6 +3301,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.'**
   String get voidWaitForSync;
+
+  /// No description provided for @navStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get navStock;
+
+  /// No description provided for @stockHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off \"No limit\" and type how many are left. Every sale lowers the number, and at 0 the dish is sold out.'**
+  String get stockHelp;
+
+  /// No description provided for @stockNoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get stockNoLimit;
+
+  /// No description provided for @stockLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left'**
+  String stockLeft(int count);
+
+  /// No description provided for @stockSoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold out'**
+  String get stockSoldOut;
+
+  /// No description provided for @stockQtyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How many'**
+  String get stockQtyHint;
+
+  /// No description provided for @stockSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get stockSave;
+
+  /// No description provided for @stockInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a whole number from 0 to 100000.'**
+  String get stockInvalid;
+
+  /// No description provided for @stockSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock saved for {dish}'**
+  String stockSaved(String dish);
 }
 
 class _AppLocalizationsDelegate

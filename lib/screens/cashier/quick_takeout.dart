@@ -22,9 +22,18 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
 
   double get total => lines.fold<double>(0, (sum, line) => sum + line.total);
 
+  int _inTicket(String menuItemId) =>
+      lines.where((line) => line.menuItemId == menuItemId).fold<int>(0, (sum, line) => sum + line.qty);
+
+  /// Whether one more of [menuItemId] fits in what is left of its stock.
+  bool _canAddOne(CafeStore store, String menuItemId) {
+    final item = store.menuItems.where((item) => item.id == menuItemId).firstOrNull;
+    return item == null || item.canSellMore(_inTicket(menuItemId));
+  }
+
   /// A tap on a dish adds it as it comes; its choices are changed from the ticket line.
   void _add(CafeStore store, MenuItem item) {
-    if (item.soldOut || !item.available) return;
+    if (item.soldOut || !item.available || !item.canSellMore(_inTicket(item.id))) return;
     final existing = lines.where((line) => line.menuItemId == item.id && line.choices.isEmpty);
     setState(() {
       if (existing.isEmpty) {
@@ -45,7 +54,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
       locale: store.locale,
       money: store.currency.format,
     );
-    if (on == null || !mounted) return;
+    if (on == null || !mounted || !item.canSellMore(_inTicket(item.id))) return;
     final line = item.lineWith(locale: store.locale, onIds: on);
     setState(() {
       final twin = lines.where((other) => other.mergeKey == line.mergeKey);
@@ -168,14 +177,14 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                         itemCount: dishes.length,
                         itemBuilder: (context, index) {
                           final item = dishes[index];
-                          final inTicket = lines.where((line) => line.menuItemId == item.id).fold<int>(0, (sum, line) => sum + line.qty);
+                          final inTicket = _inTicket(item.id);
                           return _TakeoutDishButton(
                             category: categoryNames[item.categoryId] ?? '',
                             name: item.displayName(store.locale),
                             description: item.description,
                             price: store.currency.format(item.salePrice),
                             count: inTicket,
-                            enabled: item.available && !item.soldOut,
+                            enabled: item.available && !item.soldOut && item.canSellMore(inTicket),
                             onTap: () => _add(store, item),
                             onHold: item.options.isEmpty ? null : () => _addWithChoices(store, item),
                           );
@@ -231,7 +240,9 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                                             width: 36,
                                             child: Text('${line.qty}', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                                           ),
-                                          _stepButton(Icons.add, () => setState(() => line.qty += 1)),
+                                          _stepButton(Icons.add, () {
+                                            if (_canAddOne(store, line.menuItemId)) setState(() => line.qty += 1);
+                                          }),
                                           SizedBox(
                                             width: 92,
                                             child: Text(store.currency.format(line.total), textAlign: TextAlign.end, style: const TextStyle(fontSize: 14)),

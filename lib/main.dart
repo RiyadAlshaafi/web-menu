@@ -16,7 +16,7 @@ import 'screens/sales_log_screen.dart' deferred as sales_ui;
 import 'screens/dish_availability_screen.dart' deferred as dishes_ui;
 import 'state/cafe_store.dart';
 import 'theme/cafe_theme.dart';
-import 'widgets/cafe_widgets.dart';
+import 'widgets/tawla_mark.dart';
 
 Future<void> _loadAuth() => auth_ui.loadLibrary();
 
@@ -106,14 +106,8 @@ class StaffOpeningBody extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CafeLogo(size: 72, showWordmark: false),
+          const TawlaLoader(size: 88),
           const SizedBox(height: 18),
-          SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(strokeWidth: 2.4, color: Theme.of(context).colorScheme.primary),
-          ),
-          const SizedBox(height: 14),
           Text(l10n?.staffOpening ?? 'Opening...', style: const TextStyle(color: CafeColors.inkMuted)),
         ],
       ),
@@ -247,10 +241,9 @@ class _TawlaAppState extends State<TawlaApp> {
                 child: DeferredView(load: _loadCashier, builder: () => cashier_ui.CashierFloorScreen()),
               ),
             ),
-            // Offline only: the cashier adds dishes to a table's bill (online, guests order by QR).
+            // The cashier adds dishes to a table's bill (online, guests can also order by QR).
             GoRoute(
               path: '/pos/tables/:id',
-              redirect: (_, _) => widget.store.isLocalMode ? null : '/pos/tables',
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: DeferredView(
@@ -323,6 +316,13 @@ class _TawlaAppState extends State<TawlaApp> {
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: DeferredView(load: _loadAdminSales, builder: () => sales_ui.SalesLogScreen()),
+              ),
+            ),
+            GoRoute(
+              path: '/admin/stock',
+              pageBuilder: (_, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: DeferredView(load: _loadAdmin, builder: () => admin_ui.AdminStockScreen()),
               ),
             ),
             GoRoute(

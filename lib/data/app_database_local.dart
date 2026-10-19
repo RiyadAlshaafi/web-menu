@@ -364,7 +364,33 @@ extension AppDatabaseLocal on AppDatabase {
       _store.putRecords('shifts', [shift.toJson()]);
       _orders = [..._orders, order];
       _payments = [payment, ..._payments];
+      _localTakeStock(lines);
     });
+    return null;
+  }
+
+  /// Lowers the stock of each dish in [lines], like the server's take_dish_stock trigger:
+  /// never below 0, and at 0 the dish is sold out.
+  void _localTakeStock(List<OrderLine> lines) {
+    var changed = false;
+    for (final line in lines) {
+      if (line.qty <= 0) continue;
+      for (final item in _menuItems.where((item) => item.id == line.menuItemId && item.stockQty != null)) {
+        final left = item.stockQty! - line.qty;
+        item.stockQty = left < 0 ? 0 : left;
+        if (item.stockQty == 0) item.soldOut = true;
+        changed = true;
+      }
+    }
+    if (changed) _store.writeDoc('menuItems', [for (final m in _menuItems) m.toJson()]);
+  }
+
+  String? _localSetDishStock(String id, int? qty) {
+    final item = _menuItems.where((item) => item.id == id).firstOrNull;
+    if (item == null) return 'not_found';
+    item.stockQty = qty;
+    if (qty != null) item.soldOut = qty == 0;
+    _saveLocalCatalog();
     return null;
   }
 
@@ -525,6 +551,7 @@ extension AppDatabaseLocal on AppDatabase {
       _store.putRecords('orders', [order.toJson()]);
       _saveLocalTables();
       _saveLocalCarts();
+      _localTakeStock(lines);
     });
     return null;
   }

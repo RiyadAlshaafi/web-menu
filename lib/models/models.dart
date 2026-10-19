@@ -124,6 +124,7 @@ class MenuItem {
     this.discountPercent = 0,
     this.discountApplied = false,
     this.options = const [],
+    this.stockQty,
   });
 
   final String id;
@@ -143,13 +144,24 @@ class MenuItem {
   /// Ingredients and extra toppings, in the order the admin set them.
   List<DishOption> options;
 
+  /// How many are left to sell; null means no limit. At 0 the dish is sold out.
+  int? stockQty;
+
+  bool get hasStockLimit => stockQty != null;
+
+  /// Whether one more can go on a ticket that already holds [inTicket] of this dish.
+  bool canSellMore(int inTicket) {
+    final left = stockQty;
+    return left == null || inTicket < left;
+  }
+
   bool get hasDiscount => discountApplied && discountPercent > 0;
   double get salePrice =>
       hasDiscount ? (price * (100 - discountPercent) / 100) : price;
 
   /// Change detection without embedding the photo bytes.
   String get syncKey =>
-      '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}|${options.map((option) => option.syncKey).join(';')}';
+      '$id|$nameIt|$nameEn|${description.hashCode}|$price|$categoryId|$available|$soldOut|$featured|$sortOrder|$discountPercent|$discountApplied|${imageUrl.length}:${imageUrl.hashCode}|${options.map((option) => option.syncKey).join(';')}|$stockQty';
 
   Set<String> get defaultOnIds => {for (final option in options) if (option.defaultOn) option.id};
 
@@ -187,6 +199,7 @@ class MenuItem {
     discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
     discountApplied: json['discountApplied'] as bool? ?? false,
     options: parseJsonList(json['options'], DishOption.fromJson),
+    stockQty: (json['stockQty'] as num?)?.toInt(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -204,6 +217,7 @@ class MenuItem {
     'discountPercent': discountPercent,
     'discountApplied': discountApplied,
     'options': options.map((option) => option.toJson()).toList(),
+    if (stockQty != null) 'stockQty': stockQty,
   };
 }
 

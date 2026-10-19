@@ -145,6 +145,44 @@ void main() {
     });
   });
 
+  group('dish stock', () {
+    test('each sale lowers the stock and at 0 the dish is sold out', () async {
+      final dish = await _dish();
+      expect(await db.setDishStock(dish.id, 3), isNull);
+      await _openShift(await _cashier('Sara', '1234'));
+
+      await db.quickTakeoutReceipt(_ticket(dish, 2), null);
+      expect(db.menuItems.single.stockQty, 1);
+      expect(db.menuItems.single.soldOut, isFalse);
+
+      await db.writeCarts({'t1': CartState(tableId: 't1', lines: _ticket(dish, 1))});
+      final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
+      await db.writeTables([table], changed: [table]);
+      expect(await db.sendTableCart('t1'), isNull);
+      expect(db.menuItems.single.stockQty, 0);
+      expect(db.menuItems.single.soldOut, isTrue);
+    });
+
+    test('a dish without a limit is never counted', () async {
+      final dish = await _dish();
+      await _openShift(await _cashier('Sara', '1234'));
+      await db.quickTakeoutReceipt(_ticket(dish, 5), null);
+      expect(db.menuItems.single.stockQty, isNull);
+      expect(db.menuItems.single.soldOut, isFalse);
+    });
+
+    test('restocking turns a sold-out dish back on; no limit keeps it as it was', () async {
+      final dish = await _dish();
+      await db.setDishStock(dish.id, 0);
+      expect(db.menuItems.single.soldOut, isTrue);
+      await db.setDishStock(dish.id, 13);
+      expect(db.menuItems.single.soldOut, isFalse);
+      expect(db.menuItems.single.stockQty, 13);
+      await db.setDishStock(dish.id, null);
+      expect(db.menuItems.single.stockQty, isNull);
+    });
+  });
+
   group('voided sales', () {
     test('a void keeps the sale listed but takes it off the shift, and the order stays paid', () async {
       final dish = await _dish();
@@ -467,6 +505,20 @@ void main() {
       expect(await store.closeShift(actualCash: 15), isNull);
       expect(db.shifts.single.isOpen, isFalse);
       expect(db.shifts.single.actualCash, 15);
+    });
+
+    test('a table cart holds no more of a dish than its stock', () async {
+      await _dish();
+      await store.syncFromDisk();
+      final item = store.menuItems.single;
+      expect(await store.setDishStock(item, 2), isNull);
+      final table = await store.addTable('3');
+      for (var i = 0; i < 3; i++) {
+        store.addToCart(table.id, item);
+      }
+      expect(store.cartFor(table.id).lines.single.qty, 2);
+      store.setCartQty(table.id, store.cartFor(table.id).lines.single.mergeKey, 5);
+      expect(store.cartFor(table.id).lines.single.qty, 2);
     });
   });
 }

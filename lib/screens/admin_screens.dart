@@ -20,6 +20,7 @@ import '../widgets/tawla_ui.dart';
 export 'admin_menu_layout_screen.dart';
 export 'admin_catalog_screens.dart';
 export 'admin_dashboard_screen.dart';
+export 'admin_stock_screen.dart';
 export 'admin_wages_screen.dart';
 
 class AdminShell extends StatelessWidget {

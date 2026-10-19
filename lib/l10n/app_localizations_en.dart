@@ -1816,4 +1816,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voidWaitForSync =>
       'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.';
+
+  @override
+  String get navStock => 'Stock';
+
+  @override
+  String get stockHelp =>
+      'Turn off \"No limit\" and type how many are left. Every sale lowers the number, and at 0 the dish is sold out.';
+
+  @override
+  String get stockNoLimit => 'No limit';
+
+  @override
+  String stockLeft(int count) {
+    return '$count left';
+  }
+
+  @override
+  String get stockSoldOut => 'Sold out';
+
+  @override
+  String get stockQtyHint => 'How many';
+
+  @override
+  String get stockSave => 'Save';
+
+  @override
+  String get stockInvalid => 'Type a whole number from 0 to 100000.';
+
+  @override
+  String stockSaved(String dish) {
+    return 'Stock saved for $dish';
+  }
 }

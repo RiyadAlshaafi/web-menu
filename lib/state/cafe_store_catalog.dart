@@ -138,6 +138,17 @@ extension CafeStoreCatalog on CafeStore {
     notifyListeners();
   }
 
+  /// Sets how many of [item] are left to sell; [qty] null means no limit.
+  Future<String?> setDishStock(MenuItem item, int? qty) async {
+    final error = await db.setDishStock(item.id, qty);
+    if (error == null) {
+      item.stockQty = qty;
+      if (qty != null) item.soldOut = qty == 0;
+    }
+    notifyListeners();
+    return error;
+  }
+
   Future<void> reorderDishes(String categoryId, int oldIndex, int newIndex) async {
     final ordered = dishesIn(categoryId);
     if (oldIndex < 0 || oldIndex >= ordered.length) return;

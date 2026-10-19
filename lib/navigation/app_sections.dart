@@ -44,6 +44,12 @@ class AppSections {
       icon: Icons.chrome_reader_mode_outlined,
     ),
     AppSection(
+      path: '/admin/stock',
+      labelOf: (l) => l.navStock,
+      crumbOf: (l) => l.navStock,
+      icon: Icons.inventory_2_outlined,
+    ),
+    AppSection(
       path: '/admin/discounts',
       feature: AppFeature.discounts,
       labelOf: (l) => l.navDiscounts,
