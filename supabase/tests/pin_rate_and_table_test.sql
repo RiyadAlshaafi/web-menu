@@ -1,6 +1,7 @@
 -- Checks 20261019130000_pin_rate_and_table_limits.sql: a correct PIN doesn't clear earlier misses,
 -- misses fade after a day, a cafe flooded with wrong PINs pauses sign-in, a guest table can't send
--- more than 10 orders a minute, and a cashier device can't add, edit or delete tables.
+-- more than 10 orders a minute, a cashier stays online between 30 s heartbeats, and a cashier
+-- device can't add, edit or delete tables.
 -- Run by tool/test_db.sh. Everything is rolled back; any failed check aborts with its message.
 
 begin;
@@ -80,6 +81,12 @@ begin
   assert blocked, 'the 11th send in a minute must be refused';
   select count(*) into n from public.order_lines l join public.orders o on o.id = l.order_id where o.table_id = tid;
   assert n = 10, 'only the 10 allowed sends are saved, got ' || n;
+
+  -- ------------------------------------------------ 30 s heartbeats keep a cashier online (20261019140000)
+  update public.cashier_presence set last_seen = now() - interval '60 seconds' where session_id = sid;
+  assert private.cashier_online(rid), 'a cashier seen 60 s ago (one missed heartbeat) is still online';
+  update public.cashier_presence set last_seen = now() - interval '80 seconds' where session_id = sid;
+  assert not private.cashier_online(rid), 'a cashier silent for 80 s is offline';
 
   -- ------------------------------------------------ cashier devices read tables only
   insert into public.cashier_sessions (cashier_id, restaurant_id, token_hash, expires_at)

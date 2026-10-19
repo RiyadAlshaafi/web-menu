@@ -83,7 +83,7 @@ extension CafeStoreOffline on CafeStore {
     _cashierPulse?.cancel();
     offline?.signedIn();
     unawaited(_pulse());
-    _cashierPulse = Timer.periodic(const Duration(seconds: 15), (_) => unawaited(_pulse()));
+    _cashierPulse = Timer.periodic(const Duration(seconds: 30), (_) => unawaited(_pulse()));
   }
 
   void _stopCashierPulse() {
@@ -91,7 +91,7 @@ extension CafeStoreOffline on CafeStore {
     _cashierPulse = null;
   }
 
-  /// Every 15 s: tell the server a cashier is here, upload waiting work, keep numbers in stock.
+  /// Every 30 s (the server counts a cashier online for 75 s): tell the server a cashier is here, upload waiting work, keep numbers in stock.
   Future<void> _pulse() async {
     if (authKind != AuthKind.cashier || db.client == null) return;
     final sync = offline;

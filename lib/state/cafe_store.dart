@@ -76,6 +76,12 @@ class CafeStore extends ChangeNotifier {
   bool otpVerified = false;
   int otpSecondsLeft = 0;
   Timer? _liveSync;
+  DateTime _lastSyncAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// How often to reload while realtime is connected; it pushes every change, so this only
+  /// catches a ping that got lost. Without a connection the app reloads every [_pollOffline].
+  static const _pollWhileLive = Duration(minutes: 5);
+  static const _pollOffline = Duration(seconds: 90);
   /// Fingerprint of local state, computed lazily so mutations stay cheap.
   String? _syncStampCache;
   String get _syncStamp => _syncStampCache ??= _stamp();
@@ -212,12 +218,14 @@ class CafeStore extends ChangeNotifier {
         if (db.onLiveChange != null) unawaited(syncFromDisk());
       },
     );
-    db.onLiveChange = () {
-      unawaited(syncFromDisk());
+    db.onLiveChange = (salesOnly) {
+      unawaited(syncFromDisk(salesOnly: salesOnly));
     };
     db.startRealtime();
-    // Realtime pushes changes; this poll is only a safety net if the channel drops.
-    _liveSync = Timer.periodic(const Duration(seconds: 90), (_) {
+    // Realtime pushes changes; this poll is only a safety net if a ping is lost or the channel drops.
+    _liveSync = Timer.periodic(_pollOffline, (_) {
+      final quiet = DateTime.now().difference(_lastSyncAt);
+      if (db.liveConnected && quiet < _pollWhileLive) return;
       unawaited(syncFromDisk());
     });
   }
@@ -280,13 +288,15 @@ class CafeStore extends ChangeNotifier {
     }
   }
 
-  Future<void> syncFromDisk() async {
+  /// Reloads what live screens show. [salesOnly] skips the menu and settings (a sales ping).
+  Future<void> syncFromDisk({bool salesOnly = false}) async {
     if (_pendingWrites > 0) {
       // Loading now would bring back the pre-save copy; sync once it lands.
       _syncDeferred = true;
       return;
     }
-    await db.refreshFromDisk(liveOnly: true);
+    _lastSyncAt = DateTime.now();
+    await db.refreshFromDisk(liveOnly: true, salesOnly: salesOnly);
     final next = _stampFromDb();
     if (next != _syncStamp) {
       _hydrateOperational();

@@ -65,6 +65,10 @@ class AppDatabase {
   }
 
   bool _ready = false;
+
+  /// Uses the already initialised Supabase client without the app's start-up loads (tests).
+  @visibleForTesting
+  void useInitialisedClient() => _ready = true;
   bool _listening = false;
   bool _realtimeLive = false;
   bool _realtimeSeenDrop = false;
@@ -73,7 +77,22 @@ class AppDatabase {
   Timer? _liveRefresh;
   RealtimeChannel? _syncChannel;
   RealtimeChannel? _pingChannel;
-  void Function()? onLiveChange;
+  /// Called after a change ping; [salesOnly] means only sales data changed (orders, carts,
+  /// payments, shifts, tables), so the menu, settings and sign-in need no reload.
+  void Function(bool salesOnly)? onLiveChange;
+
+  /// Tables named by the pings since the last live reload; null in it means "unknown".
+  final _dirtyTables = <String?>{};
+
+  /// Whether the change-ping channel is connected, so the app may poll rarely.
+  bool get liveConnected => _pingLive;
+  bool _pingLive = false;
+
+  /// Tables whose changes leave the menu, settings and sign-in as they were.
+  static const _salesTables = {
+    'orders', 'order_lines', 'carts', 'cart_lines', 'staff_calls', 'payments', 'shifts',
+    'shift_expenses', 'dining_tables',
+  };
   DateTime? _salesFrom;
   DateTime? _salesTo;
   int _salesLimit = salesPageSize;
@@ -310,6 +329,8 @@ class AppDatabase {
     final ping = _pingChannel;
     _syncChannel = null;
     _pingChannel = null;
+    _pingLive = false;
+    _dirtyTables.clear();
     _listening = false;
     _listenRestaurantId = null;
     _realtimeLive = false;
@@ -330,12 +351,22 @@ class AppDatabase {
       guestSlug != null && guestSlug.isNotEmpty ? 'guest:$guestSlug' : 'cafe:$restaurantId';
 
   void _emitLive() {
+    // A ping names only the first table its change touched; sales tables change together.
+    final salesOnly = _dirtyTables.isNotEmpty && _dirtyTables.every(_salesTables.contains);
+    _dirtyTables.clear();
     final hook = onLiveChange;
     if (hook != null) {
-      hook();
+      hook(salesOnly);
     } else {
-      refreshFromDisk(liveOnly: true);
+      refreshFromDisk(liveOnly: true, salesOnly: salesOnly);
     }
+  }
+
+  /// The table a broadcast ping names ({"table": ...}, maybe wrapped in the message).
+  static String? _pingTable(Map<String, dynamic> message) {
+    final inner = message['payload'];
+    final table = message['table'] ?? (inner is Map ? inner['table'] : null);
+    return table is String ? table : null;
   }
 
   /// Tables whose changes refresh this device, all carrying `restaurant_id`.
@@ -367,7 +398,8 @@ class AppDatabase {
     try {
       _listening = true;
       _listenRestaurantId = rid;
-      void scheduleLive() {
+      void scheduleLive(String? table) {
+        _dirtyTables.add(table);
         _liveRefresh?.cancel();
         _liveRefresh = Timer(const Duration(milliseconds: 300), _emitLive);
       }
@@ -383,7 +415,7 @@ class AppDatabase {
             column: 'restaurant_id',
             value: rid,
           ),
-          callback: (_) => scheduleLive(),
+          callback: (change) => scheduleLive(change.table),
         );
       }
       channel = channel.onPostgresChanges(
@@ -395,7 +427,7 @@ class AppDatabase {
           column: 'id',
           value: rid,
         ),
-        callback: (_) => scheduleLive(),
+        callback: (_) => scheduleLive('restaurants'),
       );
       // Row changes reach only signed-in admins: cashier and guest policies read request
       // headers, which Realtime never sets. Everyone gets the database's change pings below.
@@ -415,8 +447,9 @@ class AppDatabase {
       var pingDropped = false;
       _pingChannel = client!
           .channel(liveTopic(restaurantId: rid))
-          .onBroadcast(event: 'change', callback: (_) => scheduleLive())
+          .onBroadcast(event: 'change', callback: (message) => scheduleLive(_pingTable(message)))
           .subscribe((status, _) {
+            _pingLive = status == RealtimeSubscribeStatus.subscribed;
             if (status == RealtimeSubscribeStatus.subscribed) {
               // Back after a drop: catch up on anything missed while disconnected.
               if (pingDropped) _emitLive();
@@ -460,6 +493,7 @@ class AppDatabase {
   Future<void>? _refreshInFlight;
   bool _refreshRerun = false;
   bool _refreshRerunFull = false;
+  bool _refreshRerunWide = false;
   Timer? _retryTimer;
   int _retryAttempt = 0;
 
@@ -468,21 +502,24 @@ class AppDatabase {
   /// starts after the current one and returns a future covering both. That
   /// keeps an older, slower load from overwriting newer data, and guarantees a
   /// caller that just wrote something reads it back.
-  Future<void> refreshFromDisk({bool liveOnly = false}) {
+  /// [salesOnly] (with [liveOnly]) reloads only orders, carts, payments, shifts and tables.
+  Future<void> refreshFromDisk({bool liveOnly = false, bool salesOnly = false}) {
     if (client == null || offlineMode) return Future<void>.value();
     final running = _refreshInFlight;
     if (running != null) {
       _refreshRerun = true;
       if (!liveOnly) _refreshRerunFull = true;
+      if (!salesOnly) _refreshRerunWide = true;
       return running;
     }
-    final run = _runRefreshes(liveOnly).whenComplete(() => _refreshInFlight = null);
+    final run = _runRefreshes(liveOnly, salesOnly).whenComplete(() => _refreshInFlight = null);
     _refreshInFlight = run;
     return run;
   }
 
-  Future<void> _runRefreshes(bool liveOnly) async {
+  Future<void> _runRefreshes(bool liveOnly, bool salesOnly) async {
     var live = liveOnly;
+    var sales = liveOnly && salesOnly;
     var interrupted = 0;
     do {
       _refreshRerun = false;
@@ -492,7 +529,10 @@ class AppDatabase {
       var failed = false;
       var completed = true;
       try {
-        completed = await _refreshFromDisk(liveOnly: live && catalogFresh);
+        // Sales-only needs the menu and settings loaded once; menu changes send their own ping.
+        completed = sales && _catalogAt != null && loadedOnce
+            ? await _refreshFromDisk(liveOnly: true, salesOnly: true)
+            : await _refreshFromDisk(liveOnly: live && catalogFresh);
       } catch (error, stack) {
         failed = true;
         reportError('supabase refresh', error, stack);
@@ -508,10 +548,13 @@ class AppDatabase {
         );
         _refreshRerun = true;
         if (!live) _refreshRerunFull = true;
+        if (!sales) _refreshRerunWide = true;
       }
       _afterRefresh(failed: failed);
       live = !_refreshRerunFull;
+      sales = live && !_refreshRerunWide;
       _refreshRerunFull = false;
+      _refreshRerunWide = false;
     } while (_refreshRerun);
   }
 
@@ -604,34 +647,8 @@ class AppDatabase {
     }
   }
 
-  /// Loads everything. Returns false when a local save happened mid-load and
-  /// the (now stale) results were dropped, so the caller should load again.
-  Future<bool> _refreshFromDisk({bool liveOnly = false}) async {
-    final epoch = _epoch;
-    final watch = Stopwatch()..start();
-    _applyHeaders();
-    final user = client!.auth.currentUser;
-    final cafeId = restaurantId ?? boundRestaurantId;
-    final opened = await Future.wait<dynamic>([
-      // An unlinked device has no cafe whose admin it could sign in, so it
-      // is sent to the setup screen, which asks for the device to be linked.
-      cafeId == null
-          ? Future<dynamic>.value(false)
-          : client!.rpc('has_any_admin', params: {'p_restaurant_id': cafeId}),
-      if (user != null)
-        client!
-            .from('profiles')
-            .select('restaurant_id, display_name')
-            .eq('id', user.id)
-            .maybeSingle()
-      else
-        Future<dynamic>.value(null),
-      client!.from('dining_tables').select(),
-    ]);
-    if (epoch != _epoch) return false;
-    anyAdmin = opened[0] as bool? ?? false;
-    final profile = opened[1] as Map<String, dynamic>?;
-    final tableList = opened[2] as List;
+  /// Who is signed in and which cafe this device shows, from the profile and table rows.
+  void _applySignIn(User? user, Map<String, dynamic>? profile, List tableList) {
     final profileRestaurant = profile?['restaurant_id'] as String?;
     // A device linked to a cafe slot only accepts that cafe's admin; an admin
     // of another cafe must not sign in here (e.g. on an empty slot).
@@ -659,6 +676,37 @@ class AppDatabase {
       // Only an unlinked device falls back to whatever table is visible.
       restaurantId = tableList.first['restaurant_id'] as String?;
     }
+  }
+
+  /// Loads everything. Returns false when a local save happened mid-load and
+  /// the (now stale) results were dropped, so the caller should load again.
+  Future<bool> _refreshFromDisk({bool liveOnly = false, bool salesOnly = false}) async {
+    final epoch = _epoch;
+    final watch = Stopwatch()..start();
+    _applyHeaders();
+    final user = client!.auth.currentUser;
+    final cafeId = restaurantId ?? boundRestaurantId;
+    final opened = await Future.wait<dynamic>([
+      // An unlinked device has no cafe whose admin it could sign in, so it
+      // is sent to the setup screen, which asks for the device to be linked.
+      salesOnly || cafeId == null
+          ? Future<dynamic>.value(salesOnly ? anyAdmin : false)
+          : client!.rpc('has_any_admin', params: {'p_restaurant_id': cafeId}),
+      if (user != null && !salesOnly)
+        client!
+            .from('profiles')
+            .select('restaurant_id, display_name')
+            .eq('id', user.id)
+            .maybeSingle()
+      else
+        Future<dynamic>.value(null),
+      client!.from('dining_tables').select(),
+    ]);
+    if (epoch != _epoch) return false;
+    anyAdmin = opened[0] as bool? ?? false;
+    final profile = opened[1] as Map<String, dynamic>?;
+    final tableList = opened[2] as List;
+    if (!salesOnly) _applySignIn(user, profile, tableList);
     if (restaurantId == null) {
       _tables = [];
       _categories = [];
@@ -692,10 +740,13 @@ class AppDatabase {
         .toList();
     final staffed = client!.auth.currentUser != null || cashierToken != null;
     final historyFrom = _salesFrom ?? salesHistoryCutoff(DateTime.now());
+    // Sales-only skips the cafe settings, menu, payment and expense types (index 0, 2, 5, 6).
     final batch = await Future.wait<dynamic>([
-      _loadRestaurant(),
+      salesOnly ? Future<dynamic>.value(null) : _loadRestaurant(),
       liveOnly ? Future<dynamic>.value(null) : client!.from('menu_categories').select(),
-      liveOnly
+      salesOnly
+          ? Future<dynamic>.value(null)
+          : liveOnly
           ? client!.from('menu_items').select(
               'id, name_it, name_en, description, price, category_id, image_url, available, sold_out, featured, sort_order, discount_percent, discount_applied, options',
             )
@@ -704,8 +755,12 @@ class AppDatabase {
       // change nothing on staff screens.
       client!.from('carts').select('*, cart_lines!inner(*)'),
       _selectCalls(),
-      _selectOrEmpty(client!.from('payment_types').select().order('sort_order', ascending: true), 'payment types'),
-      _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
+      salesOnly
+          ? Future<dynamic>.value(null)
+          : _selectOrEmpty(client!.from('payment_types').select().order('sort_order', ascending: true), 'payment types'),
+      salesOnly
+          ? Future<dynamic>.value(null)
+          : _selectOrEmpty(client!.from('expense_categories').select().order('sort_order', ascending: true), 'expense categories'),
       staffed
           ? client!
                 .from('shift_expenses')
@@ -747,27 +802,29 @@ class AppDatabase {
         );
       }).toList();
     }
-    final itemRows = batch[2] as List;
-    _menuItems = itemRows
-        .map(
-          (row) => MenuItem(
-            id: row['id'] as String,
-            nameIt: row['name_it'] as String? ?? '',
-            nameEn: row['name_en'] as String? ?? '',
-            description: row['description'] as String? ?? '',
-            price: (row['price'] as num).toDouble(),
-            categoryId: row['category_id'] as String,
-            imageUrl: row['image_url'] as String? ?? '',
-            available: row['available'] as bool? ?? true,
-            soldOut: row['sold_out'] as bool? ?? false,
-            featured: row['featured'] as bool? ?? false,
-            sortOrder: row['sort_order'] as int? ?? 0,
-            discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
-            discountApplied: row['discount_applied'] as bool? ?? false,
-            options: parseJsonList(row['options'], DishOption.fromJson),
-          ),
-        )
-        .toList();
+    final itemRows = batch[2] as List?;
+    if (itemRows != null) {
+      _menuItems = itemRows
+          .map(
+            (row) => MenuItem(
+              id: row['id'] as String,
+              nameIt: row['name_it'] as String? ?? '',
+              nameEn: row['name_en'] as String? ?? '',
+              description: row['description'] as String? ?? '',
+              price: (row['price'] as num).toDouble(),
+              categoryId: row['category_id'] as String,
+              imageUrl: row['image_url'] as String? ?? '',
+              available: row['available'] as bool? ?? true,
+              soldOut: row['sold_out'] as bool? ?? false,
+              featured: row['featured'] as bool? ?? false,
+              sortOrder: row['sort_order'] as int? ?? 0,
+              discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
+              discountApplied: row['discount_applied'] as bool? ?? false,
+              options: parseJsonList(row['options'], DishOption.fromJson),
+            ),
+          )
+          .toList();
+    }
     if (!liveOnly) _catalogAt = DateTime.now();
     final cartRows = batch[3] as List;
     _carts = {
@@ -800,21 +857,23 @@ class AppDatabase {
         resolved: row['resolved'] as bool? ?? false,
       );
     }).toList();
-    _paymentTypes = _mapPaymentTypes(batch[5] as List?);
+    if (!salesOnly) _paymentTypes = _mapPaymentTypes(batch[5] as List?);
     final expenseCategoryRows = batch[6] as List?;
-    _expenseCategories = expenseCategoryRows == null
-        ? []
-        : expenseCategoryRows
-              .map(
-                (row) => ExpenseCategory(
-                  id: row['id'] as String,
-                  nameEn: row['name_en'] as String? ?? '',
-                  nameAr: row['name_ar'] as String? ?? '',
-                  enabled: row['enabled'] as bool? ?? true,
-                  sortOrder: row['sort_order'] as int? ?? 0,
-                ),
-              )
-              .toList();
+    if (!salesOnly) {
+      _expenseCategories = expenseCategoryRows == null
+          ? []
+          : expenseCategoryRows
+                .map(
+                  (row) => ExpenseCategory(
+                    id: row['id'] as String,
+                    nameEn: row['name_en'] as String? ?? '',
+                    nameAr: row['name_ar'] as String? ?? '',
+                    enabled: row['enabled'] as bool? ?? true,
+                    sortOrder: row['sort_order'] as int? ?? 0,
+                  ),
+                )
+                .toList();
+    }
     _orders = (batch[8] as List).cast<CafeOrder>();
     if (staffed) {
       final expenseRows = batch[7] as List;
