@@ -37,7 +37,12 @@ function problem(status: number, error: string): Response {
   });
 }
 
-export async function handle(request: Request, env: Env, fetcher: Fetcher = fetch): Promise<Response> {
+// The default calls fetch directly: a detached fetch can throw "Illegal invocation" on Workers.
+export async function handle(
+  request: Request,
+  env: Env,
+  fetcher: Fetcher = (input, init) => fetch(input, init),
+): Promise<Response> {
   const route = ROUTE.exec(new URL(request.url).pathname);
   if (!route) return problem(404, "not found");
   if (request.method !== "GET") return problem(405, "use GET");

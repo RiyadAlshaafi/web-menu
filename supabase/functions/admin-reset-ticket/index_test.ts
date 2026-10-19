@@ -1,6 +1,6 @@
 // Run: deno test --allow-env supabase/functions/admin-reset-ticket/index_test.ts
 import { assert, assertEquals } from "jsr:@std/assert@1.0.8";
-import { handle, ticketMessage } from "./index.ts";
+import { handle, ticketMessage } from "./handler.ts";
 
 const pair = (await crypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"])) as CryptoKeyPair;
 const pkcs8 = new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey));
