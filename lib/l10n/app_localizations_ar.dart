@@ -1894,4 +1894,42 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get printersReceiptHint =>
       'اختر طابعة الكاشير لهذا الجهاز. تُطبع الإيصالات عليها بدون سؤال.';
+
+  @override
+  String get feedbackTitle => 'ملاحظات إلى مزوّد الخدمة';
+
+  @override
+  String get feedbackHint => 'وجدت مشكلة أو لديك فكرة؟ أخبرنا. نقرأ كل رسالة.';
+
+  @override
+  String get feedbackKindProblem => 'مشكلة';
+
+  @override
+  String get feedbackKindIdea => 'فكرة';
+
+  @override
+  String get feedbackKindQuestion => 'سؤال';
+
+  @override
+  String get feedbackKindOther => 'أخرى';
+
+  @override
+  String get feedbackMessageLabel => 'رسالتك';
+
+  @override
+  String get feedbackSend => 'إرسال';
+
+  @override
+  String get feedbackSent => 'شكراً، تم إرسال رسالتك.';
+
+  @override
+  String get feedbackEmpty => 'اكتب رسالة أولاً.';
+
+  @override
+  String get feedbackTooMany =>
+      'وصلت إلى الحد الأقصى للرسائل اليوم. حاول مرة أخرى غداً.';
+
+  @override
+  String get feedbackFailed =>
+      'تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى.';
 }

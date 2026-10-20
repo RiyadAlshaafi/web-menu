@@ -33,6 +33,7 @@ part 'cafe_store_catalog.dart';
 part 'cafe_store_orders.dart';
 part 'cafe_store_payments.dart';
 part 'cafe_store_location.dart';
+part 'cafe_store_feedback.dart';
 part 'cafe_store_offline.dart';
 part 'cafe_store_update.dart';
 

@@ -3457,6 +3457,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick this till\'s cashier printer. Receipts then print on it without asking.'**
   String get printersReceiptHint;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback to your provider'**
+  String get feedbackTitle;
+
+  /// No description provided for @feedbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a problem or have an idea? Tell us. Every message is read.'**
+  String get feedbackHint;
+
+  /// No description provided for @feedbackKindProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem'**
+  String get feedbackKindProblem;
+
+  /// No description provided for @feedbackKindIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea'**
+  String get feedbackKindIdea;
+
+  /// No description provided for @feedbackKindQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get feedbackKindQuestion;
+
+  /// No description provided for @feedbackKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get feedbackKindOther;
+
+  /// No description provided for @feedbackMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message'**
+  String get feedbackMessageLabel;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you, your message was sent.'**
+  String get feedbackSent;
+
+  /// No description provided for @feedbackEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message first.'**
+  String get feedbackEmpty;
+
+  /// No description provided for @feedbackTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent the most messages allowed today. Try again tomorrow.'**
+  String get feedbackTooMany;
+
+  /// No description provided for @feedbackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your message. Check the connection and try again.'**
+  String get feedbackFailed;
 }
 
 class _AppLocalizationsDelegate

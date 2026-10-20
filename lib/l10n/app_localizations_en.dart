@@ -1905,4 +1905,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get printersReceiptHint =>
       'Pick this till\'s cashier printer. Receipts then print on it without asking.';
+
+  @override
+  String get feedbackTitle => 'Feedback to your provider';
+
+  @override
+  String get feedbackHint =>
+      'Found a problem or have an idea? Tell us. Every message is read.';
+
+  @override
+  String get feedbackKindProblem => 'Problem';
+
+  @override
+  String get feedbackKindIdea => 'Idea';
+
+  @override
+  String get feedbackKindQuestion => 'Question';
+
+  @override
+  String get feedbackKindOther => 'Other';
+
+  @override
+  String get feedbackMessageLabel => 'Your message';
+
+  @override
+  String get feedbackSend => 'Send';
+
+  @override
+  String get feedbackSent => 'Thank you, your message was sent.';
+
+  @override
+  String get feedbackEmpty => 'Write a message first.';
+
+  @override
+  String get feedbackTooMany =>
+      'You have sent the most messages allowed today. Try again tomorrow.';
+
+  @override
+  String get feedbackFailed =>
+      'Couldn\'t send your message. Check the connection and try again.';
 }

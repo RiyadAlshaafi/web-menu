@@ -599,5 +599,17 @@
   "kitchenTicketAdded": "إضافة على الطلب",
   "kitchenTestDish": "طبق تجريبي",
   "printersLooking": "جارٍ البحث عن الطابعات…",
-  "printersReceiptHint": "اختر طابعة الكاشير لهذا الجهاز. تُطبع الإيصالات عليها بدون سؤال."
+  "printersReceiptHint": "اختر طابعة الكاشير لهذا الجهاز. تُطبع الإيصالات عليها بدون سؤال.",
+  "feedbackTitle": "ملاحظات إلى مزوّد الخدمة",
+  "feedbackHint": "وجدت مشكلة أو لديك فكرة؟ أخبرنا. نقرأ كل رسالة.",
+  "feedbackKindProblem": "مشكلة",
+  "feedbackKindIdea": "فكرة",
+  "feedbackKindQuestion": "سؤال",
+  "feedbackKindOther": "أخرى",
+  "feedbackMessageLabel": "رسالتك",
+  "feedbackSend": "إرسال",
+  "feedbackSent": "شكراً، تم إرسال رسالتك.",
+  "feedbackEmpty": "اكتب رسالة أولاً.",
+  "feedbackTooMany": "وصلت إلى الحد الأقصى للرسائل اليوم. حاول مرة أخرى غداً.",
+  "feedbackFailed": "تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى."
 }

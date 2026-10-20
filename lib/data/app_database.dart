@@ -1758,6 +1758,19 @@ class AppDatabase {
     }
   }
 
+  /// Sends a message to the provider. Returns null once it is stored, otherwise the server's error
+  /// text, or an error code when the call itself failed. Needs the server: an offline-only install
+  /// has none.
+  Future<String?> sendFeedback({required String kind, required String message, required String appVersion}) async {
+    if (client == null || isLocal) return ErrorCodes.notConfigured;
+    final result = await _rpcResult('send_feedback', 'send feedback', {
+      'p_kind': kind,
+      'p_message': message,
+      'p_app_version': appVersion,
+    });
+    return _failure(result, ErrorCodes.failed);
+  }
+
   Future<bool> checkDevAccess(String password) async {
     if (client == null) return false;
     try {

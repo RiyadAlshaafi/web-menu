@@ -949,5 +949,17 @@
   "kitchenTicketAdded": "ADDED TO THE ORDER",
   "kitchenTestDish": "Test dish",
   "printersLooking": "Looking for printers…",
-  "printersReceiptHint": "Pick this till's cashier printer. Receipts then print on it without asking."
+  "printersReceiptHint": "Pick this till's cashier printer. Receipts then print on it without asking.",
+  "feedbackTitle": "Feedback to your provider",
+  "feedbackHint": "Found a problem or have an idea? Tell us. Every message is read.",
+  "feedbackKindProblem": "Problem",
+  "feedbackKindIdea": "Idea",
+  "feedbackKindQuestion": "Question",
+  "feedbackKindOther": "Other",
+  "feedbackMessageLabel": "Your message",
+  "feedbackSend": "Send",
+  "feedbackSent": "Thank you, your message was sent.",
+  "feedbackEmpty": "Write a message first.",
+  "feedbackTooMany": "You have sent the most messages allowed today. Try again tomorrow.",
+  "feedbackFailed": "Couldn't send your message. Check the connection and try again."
 }
