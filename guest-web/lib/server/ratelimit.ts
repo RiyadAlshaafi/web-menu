@@ -10,7 +10,8 @@ export type Endpoint =
   | "call-staff"
   | "bill"
   | "payment-type"
-  | "refusal";
+  | "refusal"
+  | "visit";
 
 // Requests per minute. Guests on cafe Wi-Fi share one IP, so per-IP limits are generous and the
 // tight limits are per table (docs/archive/guest-migration/02_PLAN.md, "Rate limits").
@@ -24,6 +25,8 @@ export const LIMITS: Record<Endpoint, { ip: number; slug: number }> = {
   bill: { ip: 20, slug: 6 },
   "payment-type": { ip: 20, slug: 6 },
   refusal: { ip: 20, slug: 6 },
+  // Once per guest per visit; a cafe's Wi-Fi shares one IP, so these are generous.
+  visit: { ip: 60, slug: 120 },
 };
 
 const WINDOW_MS = 60_000;

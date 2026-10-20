@@ -65,6 +65,11 @@ loud -d "$DB" -f supabase/tests/offline_trust_test.sql
 loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
 loud -d "$DB" -f supabase/tests/monthly_archive_test.sql
 loud -d "$DB" -f supabase/tests/dish_stock_test.sql
+loud -d "$DB" -f supabase/tests/vendor_fleet_test.sql
+loud -d "$DB" -f supabase/tests/slot_suspension_test.sql
+loud -d "$DB" -f supabase/tests/vendor_export_logs_test.sql
+loud -d "$DB" -f supabase/tests/vendor_db_health_test.sql
+loud -d "$DB" -f supabase/tests/guest_visitors_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do

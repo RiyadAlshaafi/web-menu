@@ -223,4 +223,6 @@ export const guest = {
   paymentType: (slug: string, typeId: string) =>
     call("set_table_payment_type", { p_qr_slug: slug, p_type_id: typeId }, doneSchema),
   refusal: (slug: string) => call("guest_confirm_refusal", { p_qr_slug: slug }, doneSchema),
+  visit: (slug: string, visitor: string) =>
+    call("guest_record_visit", { p_qr_slug: slug, p_visitor: visitor }, doneSchema),
 };

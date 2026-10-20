@@ -10,7 +10,8 @@ export type RpcName =
   | "guest_call_staff"
   | "request_bill"
   | "set_table_payment_type"
-  | "guest_confirm_refusal";
+  | "guest_confirm_refusal"
+  | "guest_record_visit";
 
 export type RpcResult =
   | { kind: "ok"; body: unknown }

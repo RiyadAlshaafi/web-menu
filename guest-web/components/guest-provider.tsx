@@ -6,6 +6,7 @@ import { api } from "@/lib/client/api";
 import { MENU_TABLES, subscribeLive } from "@/lib/client/live";
 import { errorText } from "@/lib/client/messages";
 import { readRaw, useStoredRaw, writeRaw } from "@/lib/client/stored";
+import { recordVisit } from "@/lib/client/visit";
 import { t, type Lang, type TextKey } from "@/lib/i18n";
 import type { GuestStatus, Menu, MenuItem, Tab } from "@/lib/types";
 
@@ -100,6 +101,11 @@ export function GuestProvider({
 
   const text = useCallback((key: TextKey, vars?: Record<string, string | number>) => t(lang, key, vars), [lang]);
   const href = useCallback((path = "") => `/t/${slug}${path}?lang=${lang}`, [slug, lang]);
+
+  // Counts this browser once as a visitor of the cafe (no personal data; see lib/client/visit).
+  useEffect(() => {
+    recordVisit(slug);
+  }, [slug]);
 
   const showToast = useCallback((message: string) => {
     clearTimeout(toastTimer.current);

@@ -17,7 +17,10 @@ export const menuQuery = z.object({ slug, v: z.string().regex(/^\d{1,16}$/).opti
 
 export const slugBody = z.object({ slug }).strict();
 
-export const locationBody = z.object({ slug, lat, lng, accuracy: accuracy.optional() }).strict();
+// A random id the guest's own browser made (a UUID). The database keeps only a per-day hash of it.
+export const visitBody = z.object({ slug, visitor: z.string().regex(/^[A-Za-z0-9-]{16,64}$/) }).strict();
+
+export const locationBody =z.object({ slug, lat, lng, accuracy: accuracy.optional() }).strict();
 
 // A dish never has more options than the database allows (valid_dish_options).
 const MAX_OPTIONS = 40;

@@ -36,4 +36,5 @@ export const api = {
   bill: (slug: string) => post<Done>("/api/guest/bill", { slug }),
   paymentType: (slug: string, typeId: string) => post<Done>("/api/guest/payment-type", { slug, typeId }),
   refusal: (slug: string) => post<Done>("/api/guest/refusal", { slug }),
+  visit: (slug: string, visitor: string) => post<Done>("/api/guest/visit", { slug, visitor }),
 };

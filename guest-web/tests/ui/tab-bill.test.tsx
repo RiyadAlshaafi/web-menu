@@ -216,7 +216,7 @@ describe("live updates and refetching", () => {
     });
     await screen.findByRole("list", { name: /Ready/i });
     expect(calls.map((c) => new URL(c.url, "http://x").pathname).sort()).toEqual(
-      ["/api/guest/menu", "/api/guest/status", "/api/guest/tab"],
+      ["/api/guest/menu", "/api/guest/status", "/api/guest/tab", "/api/guest/visit"],
     );
   });
 

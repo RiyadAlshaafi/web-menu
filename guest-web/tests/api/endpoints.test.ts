@@ -8,6 +8,7 @@ import * as refusal from "@/app/api/guest/refusal/route";
 import * as location from "@/app/api/guest/location/route";
 import * as order from "@/app/api/guest/order/route";
 import * as paymentType from "@/app/api/guest/payment-type/route";
+import * as visit from "@/app/api/guest/visit/route";
 import { freshLimits, get, ITEM, json, mockSupabase, post, setEnv, SLUG, TYPE } from "./helpers";
 
 beforeEach(() => {
@@ -433,5 +434,35 @@ describe("POST /api/guest/refusal", () => {
     expect((await json(await refusal.POST(post("/api/guest/refusal", { slug: SLUG })))).error?.code).toBe(
       "no_open_bill",
     );
+  });
+});
+
+describe("POST /api/guest/visit", () => {
+  const VISITOR = "0b1f4c52-6a1e-4d0b-9c5e-3f7a2d9e8c11";
+
+  it("counts the visit with the slug and the browser's random id, and nothing else", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true } }));
+    const res = await visit.POST(post("/api/guest/visit", { slug: SLUG, visitor: VISITOR }));
+    expect(res.status).toBe(200);
+    expect((await json(res)).data).toEqual({ done: true });
+    expect(calls).toEqual([
+      expect.objectContaining({ name: "guest_record_visit", args: { p_qr_slug: SLUG, p_visitor: VISITOR } }),
+    ]);
+  });
+
+  it("never passes the visitor's IP or user agent to the database", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true } }));
+    await visit.POST(post("/api/guest/visit", { slug: SLUG, visitor: VISITOR }, "203.0.113.9"));
+    expect(JSON.stringify(calls[0].args)).not.toContain("203.0.113.9");
+    expect(Object.keys(calls[0].args).sort()).toEqual(["p_qr_slug", "p_visitor"]);
+  });
+
+  it("refuses a visitor id that is missing, too short, too long or has other characters", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true } }));
+    for (const bad of [undefined, "", "short", "x".repeat(65), "has spaces in it 12345", "semi;colon-0123456789"]) {
+      const res = await visit.POST(post("/api/guest/visit", { slug: SLUG, visitor: bad }));
+      expect(res.status, String(bad)).toBe(400);
+    }
+    expect(calls).toHaveLength(0);
   });
 });

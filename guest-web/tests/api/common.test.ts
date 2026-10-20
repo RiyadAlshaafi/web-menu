@@ -8,6 +8,7 @@ import * as refusal from "@/app/api/guest/refusal/route";
 import * as location from "@/app/api/guest/location/route";
 import * as order from "@/app/api/guest/order/route";
 import * as paymentType from "@/app/api/guest/payment-type/route";
+import * as visit from "@/app/api/guest/visit/route";
 import { LIMITS } from "@/lib/server/ratelimit";
 import { freshLimits, get, ITEM, json, mockSupabase, post, setEnv, SLUG, TYPE } from "./helpers";
 
@@ -29,7 +30,10 @@ const cases: Case[] = [
     call: (s, ip) => order.POST(post("/api/guest/order", { slug: s, lines: [{ menuItemId: ITEM, qty: 1 }] }, ip)),
   },
   { name: "payment-type", call: (s, ip) => paymentType.POST(post("/api/guest/payment-type", { slug: s, typeId: TYPE }, ip)) },
+  { name: "visit", call: (s, ip) => visit.POST(post("/api/guest/visit", { slug: s, visitor: VISITOR }, ip)) },
 ];
+
+const VISITOR = "0b1f4c52-6a1e-4d0b-9c5e-3f7a2d9e8c11";
 
 beforeEach(() => {
   setEnv();
@@ -107,7 +111,7 @@ describe.each(cases)("$name: shared rules", ({ name, call }) => {
     mockSupabase(() => ({ body: { ok: true, surprise: "column" } }));
     const res = await call(SLUG);
     // Endpoints that only confirm (call-staff, bill, ...) accept { ok: true }.
-    if (["call-staff", "bill", "refusal", "payment-type"].includes(name)) {
+    if (["call-staff", "bill", "refusal", "payment-type", "visit"].includes(name)) {
       expect(res.status).toBe(200);
       expect((await json(res)).data).toEqual({ done: true });
     } else {
@@ -128,7 +132,7 @@ describe.each(cases)("$name: shared rules", ({ name, call }) => {
 
 describe.each(cases.filter((c) => !["menu", "status", "tab"].includes(c.name)))("$name: request body", ({ name }) => {
   const path = `/api/guest/${name}`;
-  const handler = { "call-staff": callStaff, bill, refusal, location, order, "payment-type": paymentType }[
+  const handler = { "call-staff": callStaff, bill, refusal, location, order, "payment-type": paymentType, visit }[
     name as "call-staff"
   ];
 
