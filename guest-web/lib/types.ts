@@ -87,3 +87,7 @@ export type TabOrder = {
 export type Tab = { table: { number: string; status: string }; order: TabOrder | null };
 
 export type Done = { done: true };
+
+// "owner" may order at this table; "viewer" can only look at the menu because another phone holds
+// the table; "none" means nobody holds it and this phone is not (yet) at the cafe to take it.
+export type TableClaim = { role: "owner" | "viewer" | "none" };

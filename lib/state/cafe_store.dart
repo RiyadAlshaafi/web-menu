@@ -81,7 +81,7 @@ class CafeStore extends ChangeNotifier {
 
   /// How often to reload while realtime is connected; it pushes every change, so this only
   /// catches a ping that got lost. Without a connection the app reloads every [_pollOffline].
-  static const _pollWhileLive = Duration(minutes: 5);
+  static const _pollWhileLive = Duration(minutes: 10);
   static const _pollOffline = Duration(seconds: 90);
   /// Fingerprint of local state, computed lazily so mutations stay cheap.
   String? _syncStampCache;
@@ -105,6 +105,9 @@ class CafeStore extends ChangeNotifier {
   FeatureSet features = FeatureSet.all;
 
   bool allows(AppFeature feature) => features.allows(feature);
+
+  /// Whether [item] offers choices on this till: it has some and the install has the feature on.
+  bool hasChoices(MenuItem item) => item.options.isNotEmpty && allows(AppFeature.dishChoices);
 
   /// The server could not be reached at startup (or since); the till can run from its saved copy.
   bool serverUnreachable = false;

@@ -835,6 +835,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierAttended => 'تمت المتابعة';
 
   @override
+  String get cashierClearTable => 'إفراغ الطاولة';
+
+  @override
+  String cashierClearTableTitle(String number) {
+    return 'إفراغ الطاولة $number؟';
+  }
+
+  @override
+  String get cashierClearTableBody =>
+      'سيتم إلغاء كل طلب على هذه الطاولة لم يُدفع بعد، وإفراغ سلتها وتحرير الطاولة. المبيعات المدفوعة لا تتأثر. هل أنت متأكد؟';
+
+  @override
+  String get cashierClearTableConfirm => 'نعم، أفرغ الطاولة';
+
+  @override
+  String cashierClearTableDone(String number) {
+    return 'تم إفراغ الطاولة $number';
+  }
+
+  @override
   String get cashierNewOrder => 'طلب جديد';
 
   @override

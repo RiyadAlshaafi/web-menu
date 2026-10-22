@@ -34,6 +34,8 @@ export function errorText(
       return t(lang, "noOrders");
     case "not_served":
       return t(lang, "guestBillAfterServed");
+    case "not_table_owner":
+      return t(lang, "guestViewOnly");
     case "network":
       return online ? t(lang, "errGeneric") : t(lang, "errOffline");
     default:

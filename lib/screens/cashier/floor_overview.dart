@@ -176,6 +176,16 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                   context.l10n.cashierElapsedMinutes('${DateTime.now().difference(order.createdAt).inMinutes}'),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
                 ),
+              if (!free)
+                IconButton(
+                  key: Key('clear-table-${item.id}'),
+                  tooltip: context.l10n.cashierClearTable,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _confirmClear(context, store, item),
+                  icon: const Icon(Icons.layers_clear_outlined, size: 20, color: TawlaTokens.muted),
+                ),
             ],
           ),
           const Spacer(),
@@ -202,6 +212,41 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
           action,
         ],
       ),
+    );
+  }
+
+  /// Asks "are you sure?" before freeing a table: its unpaid orders are cancelled for good.
+  Future<void> _confirmClear(BuildContext context, CafeStore store, CafeTable table) async {
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.cashierClearTableTitle(table.number)),
+        content: Text(l10n.cashierClearTableBody),
+        actions: [
+          OutlineAction(
+            label: MaterialLocalizations.of(dialogContext).cancelButtonLabel,
+            height: 44,
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+          ),
+          FilledButton(
+            key: const Key('confirm-clear-table'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            child: Text(l10n.cashierClearTableConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final error = await store.clearTable(table.id);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error == null ? l10n.cashierClearTableDone(table.number) : l10n.errorText(error))),
     );
   }
 

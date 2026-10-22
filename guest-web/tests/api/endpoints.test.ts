@@ -9,6 +9,7 @@ import * as location from "@/app/api/guest/location/route";
 import * as order from "@/app/api/guest/order/route";
 import * as paymentType from "@/app/api/guest/payment-type/route";
 import * as visit from "@/app/api/guest/visit/route";
+import * as claim from "@/app/api/guest/claim/route";
 import { freshLimits, get, ITEM, json, mockSupabase, post, setEnv, SLUG, TYPE } from "./helpers";
 
 beforeEach(() => {
@@ -82,7 +83,7 @@ describe("GET /api/guest/menu", () => {
     const calls = mockSupabase(() => ({ body: menuRow }));
     const res = await menu.GET(get(`/api/guest/menu?slug=${SLUG}`));
     expect(res.status).toBe(200);
-    expect(res.headers.get("Cache-Control")).toBe("public, s-maxage=5, stale-while-revalidate=30");
+    expect(res.headers.get("Cache-Control")).toBe("public, s-maxage=60, stale-while-revalidate=300");
     const body = await json(res);
     expect(body.ok).toBe(true);
     expect(body.data).toMatchObject({
@@ -463,6 +464,62 @@ describe("POST /api/guest/visit", () => {
       const res = await visit.POST(post("/api/guest/visit", { slug: SLUG, visitor: bad }));
       expect(res.status, String(bad)).toBe(400);
     }
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe("POST /api/guest/claim", () => {
+  const VISITOR = "0b1f4c52-6a1e-4d0b-9c5e-3f7a2d9e8c11";
+
+  it("asks the database whether this phone owns the table and returns only the role", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, role: "viewer", extra: "never shown" } }));
+    const res = await claim.POST(post("/api/guest/claim", { slug: SLUG, visitor: VISITOR }));
+    expect(res.status).toBe(200);
+    expect((await json(res)).data).toEqual({ role: "viewer" });
+    expect(calls).toEqual([
+      expect.objectContaining({ name: "guest_claim_table", args: { p_qr_slug: SLUG, p_visitor: VISITOR, p_lat: null, p_lng: null, p_accuracy_m: null } }),
+    ]);
+  });
+
+  it("refuses a visitor id that is missing or malformed without calling the database", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, role: "owner" } }));
+    for (const bad of [undefined, "", "short", "has spaces in it 12345"]) {
+      const res = await claim.POST(post("/api/guest/claim", { slug: SLUG, visitor: bad }));
+      expect(res.status, String(bad)).toBe(400);
+    }
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe("POST /api/guest/order with a table owner", () => {
+  const VISITOR = "0b1f4c52-6a1e-4d0b-9c5e-3f7a2d9e8c11";
+  const lines = [{ menuItemId: ITEM, qty: 1 }];
+
+  it("tells the database which phone is ordering through the x-guest-visitor header, not an argument", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, order_id: "o1", round: 1 } }));
+    const res = await order.POST(post("/api/guest/order", { slug: SLUG, lines, visitor: VISITOR }));
+    expect(res.status).toBe(200);
+    expect(calls[0].headers.get("x-guest-visitor")).toBe(VISITOR);
+    expect(JSON.stringify(calls[0].args)).not.toContain(VISITOR);
+  });
+
+  it("sends no header when the phone gave no id", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, order_id: "o1", round: 1 } }));
+    await order.POST(post("/api/guest/order", { slug: SLUG, lines }));
+    expect(calls[0].headers.get("x-guest-visitor")).toBeNull();
+  });
+
+  it("answers 403 not_table_owner when the database says another phone owns the table", async () => {
+    mockSupabase(() => ({ status: 400, body: { message: "not_table_owner" } }));
+    const res = await order.POST(post("/api/guest/order", { slug: SLUG, lines, visitor: VISITOR }));
+    expect(res.status).toBe(403);
+    expect((await json(res)).error?.code).toBe("not_table_owner");
+  });
+
+  it("refuses a malformed visitor id", async () => {
+    const calls = mockSupabase(() => ({ body: { ok: true, order_id: "o1", round: 1 } }));
+    const res = await order.POST(post("/api/guest/order", { slug: SLUG, lines, visitor: "bad id!" }));
+    expect(res.status).toBe(400);
     expect(calls).toHaveLength(0);
   });
 });

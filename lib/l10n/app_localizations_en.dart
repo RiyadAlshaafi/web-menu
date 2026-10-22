@@ -836,6 +836,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierAttended => 'Attended';
 
   @override
+  String get cashierClearTable => 'Clear table';
+
+  @override
+  String cashierClearTableTitle(String number) {
+    return 'Clear table $number?';
+  }
+
+  @override
+  String get cashierClearTableBody =>
+      'This cancels every order on this table that is not paid yet, empties its cart and frees the table. Paid sales are not touched. Are you sure?';
+
+  @override
+  String get cashierClearTableConfirm => 'Yes, clear table';
+
+  @override
+  String cashierClearTableDone(String number) {
+    return 'Table $number is clear';
+  }
+
+  @override
   String get cashierNewOrder => 'New Order';
 
   @override

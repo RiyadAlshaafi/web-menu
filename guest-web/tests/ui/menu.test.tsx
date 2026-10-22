@@ -70,7 +70,7 @@ describe("MenuScreen", () => {
     await waitFor(() => expect(router.push).toHaveBeenCalledWith(`/t/${SLUG}/tab?lang=en`));
     const order = calls.find((c) => c.url.endsWith("/api/guest/order"))!;
     expect(order.method).toBe("POST");
-    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: TEA, qty: 2 }] });
+    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: TEA, qty: 2 }], visitor: expect.stringMatching(/^[A-Za-z0-9-]{16,64}$/) });
     expect(localStorage.getItem(`tawla-cart:${SLUG}`)).toBeNull();
     expect(sessionStorage.getItem(`tawla-had-order:${SLUG}`)).toBe("1");
   });
@@ -127,7 +127,7 @@ describe("MenuScreen", () => {
     fireEvent.click(within(review).getByRole("button", { name: /Confirm & Send to Kitchen/ }));
     await waitFor(() => expect(router.push).toHaveBeenCalled());
     const order = calls.find((c) => c.url.endsWith("/api/guest/order"))!;
-    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: CAPPU, qty: 2, on: [SHOT] }] });
+    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: CAPPU, qty: 2, on: [SHOT] }], visitor: expect.stringMatching(/^[A-Za-z0-9-]{16,64}$/) });
   });
 
   it("adds a free extra without a price and shows the sheet in Arabic", async () => {
@@ -213,6 +213,38 @@ describe("location check", () => {
     expect(calls.filter((c) => c.url.includes("/location"))).toHaveLength(1); // cached point reused
   });
 
+  it("asks for the table with the checked position once the phone is at the cafe", async () => {
+    geo((ok) => ok({ coords: { latitude: 32.9, longitude: 13.18, accuracy: 12 } } as GeolocationPosition));
+    const calls = mockApi((url) =>
+      url.includes("/location")
+        ? ok({ enabled: true, status: "allowed" })
+        : url.endsWith("/claim")
+          ? ok({ role: "owner" })
+          : ok(tabEmpty),
+    );
+    await renderGuest(<MenuScreen />, { status: located });
+    await waitFor(() =>
+      expect(calls.some((c) => c.url.endsWith("/claim") && "lat" in (c.body as object))).toBe(true),
+    );
+    const withPosition = calls.filter((c) => c.url.endsWith("/claim") && "lat" in (c.body as object));
+    expect(withPosition.at(-1)!.body).toMatchObject({ slug: SLUG, lat: 32.9, lng: 13.18, accuracy: 12 });
+  });
+
+  it("does not send a position for a phone that is too far, and keeps ordering blocked by distance", async () => {
+    geo((ok) => ok({ coords: { latitude: 1, longitude: 1, accuracy: 5 } } as GeolocationPosition));
+    const calls = mockApi((url) =>
+      url.includes("/location")
+        ? ok({ enabled: true, status: "too_far" })
+        : url.endsWith("/claim")
+          ? ok({ role: "none" })
+          : ok(tabEmpty),
+    );
+    await renderGuest(<MenuScreen />, { status: located });
+    await screen.findByText(/too far from the cafe/);
+    expect(calls.filter((c) => c.url.endsWith("/claim")).every((c) => !("lat" in (c.body as object)))).toBe(true);
+    expect(screen.queryByText(/Someone else at this table/)).toBeNull();
+  });
+
   it("says too far and lets the guest retry", async () => {
     geo((ok) => ok({ coords: { latitude: 1, longitude: 1, accuracy: 5 } } as GeolocationPosition));
     const calls = mockApi((url) => (url.includes("/location") ? ok({ enabled: true, status: "too_far" }) : ok(tabEmpty)));
@@ -273,7 +305,7 @@ describe("location check", () => {
     await send();
     await waitFor(() => expect(router.push).toHaveBeenCalled());
     const order = calls.find((c) => c.url.endsWith("/order"))!;
-    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: TEA, qty: 1 }] });
+    expect(order.body).toEqual({ slug: SLUG, lines: [{ menuItemId: TEA, qty: 1 }], visitor: expect.stringMatching(/^[A-Za-z0-9-]{16,64}$/) });
 
     cleanup();
     localStorage.setItem(`tawla-cart:${SLUG}`, JSON.stringify({ [TEA]: 1 }));
@@ -287,3 +319,52 @@ describe("location check", () => {
   });
 });
 
+
+describe("table ownership", () => {
+  const VIEW_ONLY = /Someone else at this table is placing the order/;
+
+  it("asks the server who owns the table when the page opens, with the browser's own id", async () => {
+    const calls = mockApi((url) => (url.endsWith("/claim") ? ok({ role: "owner" }) : ok(tabEmpty)));
+    await renderGuest(<MenuScreen />);
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/api/guest/claim"))).toBe(true));
+    const claim = calls.find((c) => c.url.endsWith("/api/guest/claim"))!;
+    expect(claim.method).toBe("POST");
+    expect(claim.body).toEqual({ slug: SLUG, visitor: expect.stringMatching(/^[A-Za-z0-9-]{16,64}$/) });
+    expect(screen.queryByText(VIEW_ONLY)).toBeNull();
+    fireEvent.click(addButton(/^Add Mint Tea/));
+    expect(storedQty()).toEqual({ [TEA]: 1 });
+  });
+
+  it("lets a second phone look at the menu but not order", async () => {
+    mockApi((url) => (url.endsWith("/claim") ? ok({ role: "viewer" }) : ok(tabEmpty)));
+    await renderGuest(<MenuScreen />);
+    expect(await screen.findByText(VIEW_ONLY)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mint Tea" })).toBeInTheDocument();
+    fireEvent.click(addButton(/^Add Mint Tea/));
+    expect(storedQty()).toEqual({});
+    expect(screen.getAllByText(VIEW_ONLY).length).toBeGreaterThan(1); // banner and toast
+  });
+
+  it("keeps ordering open when the answer never comes: the server still decides", async () => {
+    mockApi((url) => (url.endsWith("/claim") ? err("server_error") : ok(tabEmpty)));
+    await renderGuest(<MenuScreen />);
+    fireEvent.click(addButton(/^Add Mint Tea/));
+    expect(storedQty()).toEqual({ [TEA]: 1 });
+    expect(screen.queryByText(VIEW_ONLY)).toBeNull();
+  });
+
+  it("turns view-only when the server refuses the order because another phone owns the table", async () => {
+    const calls = mockApi((url) => {
+      if (url.endsWith("/claim")) return ok({ role: "owner" });
+      if (url.endsWith("/order")) return err("not_table_owner");
+      return ok(tabEmpty);
+    });
+    await renderGuest(<MenuScreen />);
+    fireEvent.click(addButton(/^Add Mint Tea/));
+    fireEvent.click(screen.getByRole("button", { name: /1 items • Cart/ }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Confirm & Send to Kitchen/ }));
+    expect(await screen.findAllByText(VIEW_ONLY)).not.toHaveLength(0);
+    expect(calls.filter((c) => c.url.endsWith("/order"))).toHaveLength(1);
+    expect(router.push).not.toHaveBeenCalled();
+  });
+});

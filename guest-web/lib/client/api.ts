@@ -1,5 +1,6 @@
 import type { ApiResponse } from "../server/respond";
-import type { Done, GuestStatus, LocationVerdict, Menu, OrderSent, Tab } from "../types";
+import type { Done, GuestStatus, LocationVerdict, Menu, OrderSent, Tab, TableClaim } from "../types";
+import { visitorId } from "./visitor";
 
 // Browser side of /api/guest/*. Never throws: a network failure comes back as `network`.
 export type Result<T> = ApiResponse<T> | { ok: false; data: null; error: { code: "network"; message: string } };
@@ -31,7 +32,14 @@ export const api = {
     slug: string,
     lines: { menuItemId: string; qty: number; on?: string[] }[],
     point?: { lat: number; lng: number; accuracy?: number },
-  ) => post<OrderSent>("/api/guest/order", { slug, lines, ...point }),
+  ) => post<OrderSent>("/api/guest/order", { slug, lines, ...point, visitor: visitorId() ?? undefined }),
+  // Asks whether this phone owns the table or only views it (the first phone to ask owns it).
+  claim: (slug: string, point?: { lat: number; lng: number; accuracy?: number }) => {
+    const visitor = visitorId();
+    return visitor
+      ? post<TableClaim>("/api/guest/claim", { slug, visitor, ...point })
+      : Promise.resolve<Result<TableClaim>>({ ok: false, data: null, error: { code: "network", message: "" } });
+  },
   callStaff: (slug: string) => post<Done>("/api/guest/call-staff", { slug }),
   bill: (slug: string) => post<Done>("/api/guest/bill", { slug }),
   paymentType: (slug: string, typeId: string) => post<Done>("/api/guest/payment-type", { slug, typeId }),

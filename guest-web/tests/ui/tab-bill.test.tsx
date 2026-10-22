@@ -200,6 +200,8 @@ describe("live updates and refetching", () => {
     act(() => fire("cafe:cafe-1", "menu_items"));
     await screen.findByText("Green Tea");
     expect(calls.filter((c) => c.url.includes("/menu"))).toHaveLength(1);
+    // A ping reloads under a stamp, so the edge cache cannot hand back the menu from before the change.
+    expect(calls.find((c) => c.url.includes("/menu"))!.url).toMatch(/&v=\d+$/);
 
     act(() => fire("cafe:cafe-1", "cashier_presence"));
     await waitFor(() => expect(calls.some((c) => c.url.includes("/status"))).toBe(true));
@@ -207,7 +209,7 @@ describe("live updates and refetching", () => {
     expect(live.removed).toBeGreaterThan(0);
   });
 
-  it("refetches when the page becomes visible again", async () => {
+  it("refetches status and tab, but not a fresh menu, when the page becomes visible again", async () => {
     const { menu } = await import("./setup");
     const calls = mockApi((url) => (url.includes("/status") ? ok(open) : url.includes("/menu") ? ok(menu()) : ok(tabWith("ready"))));
     await renderGuest(<TabScreen />, { tab: tabWith("received") });
@@ -216,19 +218,45 @@ describe("live updates and refetching", () => {
     });
     await screen.findByRole("list", { name: /Ready/i });
     expect(calls.map((c) => new URL(c.url, "http://x").pathname).sort()).toEqual(
-      ["/api/guest/menu", "/api/guest/status", "/api/guest/tab", "/api/guest/visit"],
+      ["/api/guest/claim", "/api/guest/claim", "/api/guest/status", "/api/guest/tab", "/api/guest/visit"],
     );
   });
 
-  it("polls status every 15 seconds", async () => {
+  it("refetches the menu when the page becomes visible after it went stale", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { menu } = await import("./setup");
+    const calls = mockApi((url) => (url.includes("/status") ? ok(open) : url.includes("/menu") ? ok(menu()) : ok(tabWith("ready"))));
+    await renderGuest(<TabScreen />, { tab: tabWith("received") });
+    vi.setSystemTime(Date.now() + 5 * 60_000 + 1);
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await waitFor(() => expect(calls.some((c) => c.url.includes("/menu"))).toBe(true));
+    // A plain reload carries no stamp, so it can be served from the shared edge copy.
+    expect(calls.find((c) => c.url.includes("/menu"))!.url).not.toContain("&v=");
+  });
+
+  it("polls status every 30 seconds", async () => {
     vi.useFakeTimers();
     const calls = mockApi((url) => (url.includes("/status") ? ok({ ...open, orderingOpen: false }) : ok(tabWith("ready"))));
     await renderGuest(<MenuScreen />);
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(15_000);
+      await vi.advanceTimersByTimeAsync(30_000);
     });
     expect(calls.filter((c) => c.url.includes("/status"))).toHaveLength(1);
     expect(screen.getAllByText(/cashier/i).length).toBeGreaterThan(0);
+  });
+
+  it("does not poll status while the page is hidden", async () => {
+    vi.useFakeTimers();
+    const calls = mockApi((url) => (url.includes("/status") ? ok(open) : ok(tabWith("ready"))));
+    await renderGuest(<MenuScreen />);
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+    expect(calls.filter((c) => c.url.includes("/status"))).toHaveLength(0);
+    visibility.mockRestore();
   });
 });
 

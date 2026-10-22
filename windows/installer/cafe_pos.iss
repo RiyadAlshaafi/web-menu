@@ -68,7 +68,7 @@ Type: files; Name: "{app}\admin_reset.json"
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
 // be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
 const
-  FeatureCount = 11;
+  FeatureCount = 12;
   SlotCount = 8;
 
 var
@@ -223,6 +223,7 @@ begin
     'payment_types': Result := 'Extra payment types (card, etc.)';
     'stock': Result := 'Dish stock (count what is left; sold out at 0)';
     'kitchen_printer': Result := 'Kitchen printer (kitchen ticket for each order)';
+    'dish_choices': Result := 'Dish choices & extras (ingredients to remove, toppings to add)';
   else
     Result := Key;
   end;
@@ -343,7 +344,7 @@ end;
 function StartsTicked(Key, Saved: String): Boolean;
 begin
   Result := (Saved = '') or (Pos('"' + Key + '"', Saved) > 0) or
-    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer')));
+    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices')));
 end;
 
 procedure FillFeatureList;
@@ -429,6 +430,7 @@ begin
   FeatureKeys[8] := 'payment_types';
   FeatureKeys[9] := 'stock';
   FeatureKeys[10] := 'kitchen_printer';
+  FeatureKeys[11] := 'dish_choices';
 
   Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe');
   UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',

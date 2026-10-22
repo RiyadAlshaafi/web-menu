@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/app_database.dart';
+import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../navigation/app_sections.dart';
@@ -666,8 +667,11 @@ Future<void> showAddDishDialog(
                       ),
                     ),
                     const SizedBox(height: 16),
-                    DishChoicesEditor(initial: options, onChanged: (value) => options = value),
-                    const SizedBox(height: 18),
+                    // Choices already on the dish stay as they are when the feature is off.
+                    if (store.allows(AppFeature.dishChoices)) ...[
+                      DishChoicesEditor(initial: options, onChanged: (value) => options = value),
+                      const SizedBox(height: 18),
+                    ],
                     Row(
                       children: [
                         const Spacer(),

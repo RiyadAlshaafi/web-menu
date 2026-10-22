@@ -38,7 +38,10 @@ enum AppFeature {
   /// Counted dish stock: the admin's Stock page; at 0 a dish is sold out.
   stock('stock', worksOffline: true, addedLater: true),
   /// Kitchen tickets on this till's kitchen printer.
-  kitchenPrinter('kitchen_printer', worksOffline: true, addedLater: true);
+  kitchenPrinter('kitchen_printer', worksOffline: true, addedLater: true),
+  /// Ingredient and topping choices on a dish: the admin's choices editor, and the cashier's hold
+  /// on a dish (or tap on a ticket line) to change them. Off, dishes are sold as they come.
+  dishChoices('dish_choices', worksOffline: true, addedLater: true);
 
   const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false});
 

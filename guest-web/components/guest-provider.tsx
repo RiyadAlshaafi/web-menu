@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cartCount, cartKey, cartLines, cartTotal, loadCart, prune, setQty as setCartQty, add as addToCart, type Cart, type CartLine } from "@/lib/cart";
 import { api } from "@/lib/client/api";
+import { isFresh, pingStamp } from "@/lib/client/freshness";
 import { MENU_TABLES, subscribeLive } from "@/lib/client/live";
 import { errorText } from "@/lib/client/messages";
 import { readRaw, useStoredRaw, writeRaw } from "@/lib/client/stored";
@@ -55,8 +56,10 @@ export function useGuest(): Guest {
   return value;
 }
 
-const STATUS_POLL_MS = 15_000;
-const SAFETY_NET_MS = 90_000;
+const STATUS_POLL_MS = 30_000;
+const SAFETY_NET_MS = 180_000;
+// The menu changes rarely and a ping reloads it at once, so timers and tab switches reuse it.
+const MENU_FRESH_MS = 5 * 60_000;
 const PING_DEBOUNCE_MS = 300;
 const POINT_TTL_MS = 10 * 60_000;
 
@@ -132,14 +135,43 @@ export function GuestProvider({
   const lines = useMemo(() => cartLines(cart, menu.items), [cart, menu.items]);
 
   // ---------------------------------------------------------------- server state
-  const refreshMenu = useCallback(async () => {
-    const result = await api.menu(slug, Date.now());
-    if (result.ok) setMenu(result.data);
-  }, [slug]);
+  // The server rendered the menu just now. A ping forces a reload under a shared edge-cache key;
+  // timers and tab switches reuse the menu while it is fresh and otherwise use the plain edge copy.
+  const menuAt = useRef(0);
+  useEffect(() => {
+    menuAt.current = Date.now();
+  }, []);
+  const refreshMenu = useCallback(
+    async (force = false) => {
+      if (!force && isFresh(menuAt.current, MENU_FRESH_MS)) return;
+      const result = await api.menu(slug, force ? pingStamp() : undefined);
+      if (!result.ok) return;
+      menuAt.current = Date.now();
+      setMenu(result.data);
+    },
+    [slug],
+  );
 
   const refreshStatus = useCallback(async () => {
     const result = await api.status(slug);
     if (result.ok) setStatus(result.data);
+  }, [slug]);
+
+  // The first phone at a table owns it and may order; the others only look. Unknown (null) until
+  // the first answer, and when the answer fails: the server refuses a non-owner's order anyway.
+  const [role, setRole] = useState<"owner" | "viewer" | null>(null);
+  const roleRef = useRef(role);
+  useEffect(() => {
+    roleRef.current = role;
+  }, [role]);
+  // A free table is only taken by a phone at the cafe, so the checked position goes along when
+  // there is one. "none" (too far, not checked yet) leaves ordering to the location rules.
+  const claimPoint = useRef<{ lat: number; lng: number; accuracy: number } | null>(null);
+  const claimTable = useCallback(async () => {
+    const result = await api.claim(slug, claimPoint.current ?? undefined);
+    if (!result.ok) return;
+    if (result.data.role === "owner" || result.data.role === "viewer") setRole(result.data.role);
+    else if (result.data.role === "none") setRole(null);
   }, [slug]);
 
   const refreshTab = useCallback(async () => {
@@ -150,8 +182,15 @@ export function GuestProvider({
   }, [slug, hadOrderKey]);
 
   useEffect(() => {
-    const poll = setInterval(() => void refreshStatus(), STATUS_POLL_MS);
+    // A hidden tab needs nothing: coming back refreshes at once (onVisible below).
+    const poll = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void refreshStatus();
+      // A viewer keeps asking: the owner's claim may have run out.
+      if (roleRef.current === "viewer") void claimTable();
+    }, STATUS_POLL_MS);
     const net = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
       void refreshMenu();
       void refreshTab();
     }, SAFETY_NET_MS);
@@ -160,16 +199,20 @@ export function GuestProvider({
       void refreshStatus();
       void refreshMenu();
       void refreshTab();
+      void claimTable();
     };
+    // On opening the page, so the phone knows at once whether it may order.
+    const first = setTimeout(() => void claimTable(), 0);
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("pageshow", onVisible);
     return () => {
+      clearTimeout(first);
       clearInterval(poll);
       clearInterval(net);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("pageshow", onVisible);
     };
-  }, [refreshMenu, refreshStatus, refreshTab]);
+  }, [claimTable, refreshMenu, refreshStatus, refreshTab]);
 
   // Live pings: the guest's own table, and menu changes in the cafe.
   useEffect(() => {
@@ -181,8 +224,11 @@ export function GuestProvider({
     let unsubscribe = () => {};
     const start = () => {
       unsubscribe = subscribeLive([`guest:${slug}`, `cafe:${menu.cafe.id}`], (ping) => {
-        if (ping.topic.startsWith("guest:")) debounce("tab", () => void refreshTab());
-        else if (MENU_TABLES.has(ping.table)) debounce("menu", () => void refreshMenu());
+        if (ping.topic.startsWith("guest:")) {
+          debounce("tab", () => void refreshTab());
+          // The table was paid or cleared: a phone that could only look may own it now.
+          if (roleRef.current === "viewer") debounce("claim", () => void claimTable());
+        } else if (MENU_TABLES.has(ping.table)) debounce("menu", () => void refreshMenu(true));
         if (ping.table === "restaurants" || ping.table === "cashier_presence") debounce("status", () => void refreshStatus());
       });
     };
@@ -196,7 +242,7 @@ export function GuestProvider({
       Object.values(timers).forEach(clearTimeout);
       unsubscribe();
     };
-  }, [slug, menu.cafe.id, refreshMenu, refreshStatus, refreshTab]);
+  }, [slug, menu.cafe.id, claimTable, refreshMenu, refreshStatus, refreshTab]);
 
   // ---------------------------------------------------------------- location (inventory §2.9)
   const locationEnabled = status?.location.enabled ?? false;
@@ -222,21 +268,28 @@ export function GuestProvider({
           const result = await api.location(slug, lat, lng, Math.min(accuracy, 10_000));
           if (result.ok && result.data.status === "allowed") {
             point.current = { lat, lng, accuracy: Math.min(accuracy, 10_000), until: Date.now() + POINT_TTL_MS };
+            claimPoint.current = { lat, lng, accuracy: Math.min(accuracy, 10_000) };
             settle("allowed");
+            // At the cafe now: this phone may take the table if it is still free.
+            void claimTable();
           } else if (result.ok && result.data.status === "too_far") {
             point.current = null;
+            claimPoint.current = null;
             settle("tooFar");
           } else if (result.ok && !result.data.enabled) {
             // Staff switched the check off since the last status: pick that up now.
             point.current = null;
+            claimPoint.current = null;
             settle("off");
             await refreshStatus();
           } else {
             point.current = null;
+            claimPoint.current = null;
             settle("unavailable");
           }
         } catch (error) {
           point.current = null;
+          claimPoint.current = null;
           const code = (error as { code?: number })?.code;
           settle(code === 1 ? "denied" : "unavailable");
         } finally {
@@ -246,7 +299,7 @@ export function GuestProvider({
       locationBusy.current = run;
       return run;
     },
-    [locationEnabled, refreshStatus, slug],
+    [claimTable, locationEnabled, refreshStatus, slug],
   );
 
   // The check only applies while the cafe has it switched on.
@@ -254,9 +307,11 @@ export function GuestProvider({
 
   const orderingOpen = status?.orderingOpen ?? true;
   const locationOk = location === "off" || location === "allowed";
-  const canPlaceOrder = orderingOpen && locationOk && !(locationEnabled && location === "off");
+  const viewOnly = role === "viewer";
+  const canPlaceOrder = !viewOnly && orderingOpen && locationOk && !(locationEnabled && location === "off");
 
   const blockedMessage = useMemo(() => {
+    if (viewOnly) return t(lang, "guestViewOnly");
     if (!orderingOpen) return t(lang, "guestOrderingPaused");
     switch (location) {
       case "tooFar":
@@ -272,12 +327,13 @@ export function GuestProvider({
       default:
         return null;
     }
-  }, [lang, location, locationEnabled, orderingOpen]);
+  }, [lang, location, locationEnabled, orderingOpen, viewOnly]);
 
   // ---------------------------------------------------------------- actions
   const fail = useCallback(
     (error: { code: string; items?: string[] }) => {
       if (error.code === "cashier_offline") setStatus((s) => (s ? { ...s, orderingOpen: false } : s));
+      if (error.code === "not_table_owner") setRole("viewer");
       if (error.code === "too_far") setLocation("tooFar");
       if (error.code === "location_required") setLocation("denied");
       showToast(errorText(lang, error, menu.items));

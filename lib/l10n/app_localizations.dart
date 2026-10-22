@@ -1622,6 +1622,36 @@ abstract class AppLocalizations {
   /// **'Attended'**
   String get cashierAttended;
 
+  /// No description provided for @cashierClearTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear table'**
+  String get cashierClearTable;
+
+  /// No description provided for @cashierClearTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear table {number}?'**
+  String cashierClearTableTitle(String number);
+
+  /// No description provided for @cashierClearTableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This cancels every order on this table that is not paid yet, empties its cart and frees the table. Paid sales are not touched. Are you sure?'**
+  String get cashierClearTableBody;
+
+  /// No description provided for @cashierClearTableConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, clear table'**
+  String get cashierClearTableConfirm;
+
+  /// No description provided for @cashierClearTableDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} is clear'**
+  String cashierClearTableDone(String number);
+
   /// No description provided for @cashierNewOrder.
   ///
   /// In en, this message translates to:

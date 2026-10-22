@@ -100,7 +100,7 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
                 count: inCart,
                 enabled: item.available && !item.soldOut && !sending && item.canSellMore(inCart),
                 onTap: () => store.addToCart(table.id, item),
-                onHold: item.options.isEmpty || sending ? null : () => _addWithChoices(context, store, item),
+                onHold: !store.hasChoices(item) || sending ? null : () => _addWithChoices(context, store, item),
               );
             },
           ),
@@ -147,7 +147,7 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
                                 child: TicketLineName(
                                   line: line,
                                   locale: store.locale,
-                                  editable: !sending && store.menuItems.any((item) => item.id == line.menuItemId && item.options.isNotEmpty),
+                                  editable: !sending && store.menuItems.any((item) => item.id == line.menuItemId && store.hasChoices(item)),
                                   onTap: () => _editChoices(context, store, line),
                                 ),
                               ),

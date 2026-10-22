@@ -642,6 +642,30 @@ extension AppDatabaseLocal on AppDatabase {
     return null;
   }
 
+  /// Frees a table whatever its state, like the server's cashier_clear_table: unpaid tabs are
+  /// cancelled (paid history stays), the cart is emptied and the table's open calls are closed.
+  String? _localClearTable(String tableId) {
+    final table = _tables.where((t) => t.id == tableId && !t.archived).firstOrNull;
+    if (table == null) return 'table not found';
+    final unpaid = _orders.where((o) => o.tableId == tableId && o.status != OrderStatus.paid).toList();
+    _store.transaction(() {
+      _orders = _orders.where((o) => !unpaid.contains(o)).toList();
+      for (final order in unpaid) {
+        _store.deleteRecord('orders', order.id);
+      }
+      _carts = {..._carts}..remove(tableId);
+      for (final call in _calls.where((c) => c.tableId == tableId)) {
+        call.resolved = true;
+      }
+      table
+        ..status = TableStatus.free
+        ..guests = 0;
+      _saveLocalTables();
+      _saveLocalCarts();
+    });
+    return null;
+  }
+
   /// The payment method picked for a table's tab before it is settled.
   String? _localSetTablePaymentType(String qrSlug, String typeId) {
     final table = _tables.where((t) => t.qrSlug == qrSlug).firstOrNull;

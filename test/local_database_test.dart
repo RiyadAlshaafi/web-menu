@@ -428,6 +428,36 @@ void main() {
       expect(db.tables.single.status, TableStatus.free);
     });
 
+    test('clearing a table cancels its unpaid tab, empties the cart and frees it; paid sales stay', () async {
+      // A paid sale on table 4 first.
+      await cart(1);
+      await db.sendTableCart('t4');
+      await db.settleCash('t4', 100);
+      expect(db.payments, hasLength(1));
+      // Then a new unpaid tab, a pending cart and an open call.
+      await cart(2);
+      await db.sendTableCart('t4');
+      await cart(1);
+      await db.writeCalls([
+        StaffCall(id: 'c1', tableId: 't4', tableNumber: '4', createdAt: DateTime.now(), kind: 'assistance'),
+      ]);
+      expect(db.tables.single.status, TableStatus.dining);
+
+      expect(await db.clearTable('t4'), isNull);
+
+      expect(db.orders.where((o) => o.status != OrderStatus.paid), isEmpty, reason: 'the unpaid tab is cancelled');
+      expect(db.orders.where((o) => o.status == OrderStatus.paid), hasLength(1), reason: 'paid history stays');
+      expect(db.payments, hasLength(1));
+      expect(db.carts['t4']?.lines ?? const [], isEmpty);
+      expect(db.calls.where((c) => !c.resolved), isEmpty);
+      expect(db.tables.single.status, TableStatus.free);
+      expect(db.tables.single.guests, 0);
+    });
+
+    test('clearing a table that does not exist is refused', () async {
+      expect(await db.clearTable('nope'), 'table not found');
+    });
+
     test('the chosen payment method is kept on the tab', () async {
       await cart(1);
       await db.sendTableCart('t4');

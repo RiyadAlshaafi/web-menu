@@ -70,6 +70,7 @@ loud -d "$DB" -f supabase/tests/slot_suspension_test.sql
 loud -d "$DB" -f supabase/tests/vendor_export_logs_test.sql
 loud -d "$DB" -f supabase/tests/vendor_db_health_test.sql
 loud -d "$DB" -f supabase/tests/guest_visitors_test.sql
+loud -d "$DB" -f supabase/tests/table_claims_test.sql
 loud -d "$DB" -f supabase/tests/feedback_test.sql
 loud -d "$DB" -f supabase/tests/dev_import_test.sql
 
@@ -90,6 +91,7 @@ loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
 loud -d "$DB" -f supabase/tests/offline_trust_test.sql
 loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
 loud -d "$DB" -f supabase/tests/monthly_archive_test.sql
+loud -d "$DB" -f supabase/tests/table_claims_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

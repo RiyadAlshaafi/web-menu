@@ -6,5 +6,5 @@ export const POST = guestRoute({
   endpoint: "order",
   method: "POST",
   schema: orderBody,
-  run: ({ slug, lines, lat, lng, accuracy }) => guest.order(slug, lines, { lat, lng, accuracy }),
+  run: ({ slug, lines, lat, lng, accuracy, visitor }) => guest.order(slug, lines, { lat, lng, accuracy }, visitor),
 });

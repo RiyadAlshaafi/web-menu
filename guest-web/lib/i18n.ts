@@ -77,6 +77,8 @@ const en = {
   guestQtyTooLarge: "You can order up to 99 of one dish at a time.",
   guestOrderingPaused:
     "Ordering is paused right now because the cashier is offline. You can still browse the menu.",
+  guestViewOnly:
+    "Someone else at this table is placing the order. You can browse the menu, but not order.",
   guestPayLabel: "Payment method",
   guestOpenMenu: "Open the menu",
   guestPoweredBy: "Powered by",
@@ -170,6 +172,7 @@ const ar: Record<TextKey, string> = {
   guestItemsUnavailable: "عذراً، هذه الأطباق لم تعد متوفرة: {items}. احذفها من طلبك وحاول مرة أخرى.",
   guestQtyTooLarge: "يمكنك طلب 99 قطعة كحد أقصى من الطبق الواحد في كل مرة.",
   guestOrderingPaused: "الطلب متوقف حالياً لأن الكاشير غير متصل. يمكنك تصفح القائمة.",
+  guestViewOnly: "شخص آخر على هذه الطاولة يقوم بالطلب. يمكنك تصفح القائمة لكن لا يمكنك الطلب.",
   guestPayLabel: "طريقة الدفع",
   guestOpenMenu: "افتح القائمة",
   guestPoweredBy: "مدعوم من",

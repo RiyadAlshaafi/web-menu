@@ -300,6 +300,20 @@ extension CafeStoreOrders on CafeStore {
     return null;
   }
 
+  /// Frees a table for good: unpaid orders are cancelled, the cart is emptied and the table goes
+  /// back to free. Needs the server (or this PC's own database); returns the error, if any.
+  Future<String?> clearTable(String tableId) async {
+    if (db.offlineMode) return ErrorCodes.network;
+    final failure = await db.clearTable(tableId);
+    if (failure != null) {
+      _sessionExpired(failure); // signs the cashier out when the session ended
+      return failure;
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return null;
+  }
+
   Future<void> callStaff(String tableId, {String kind = 'assistance'}) async {
     calls.add(
       StaffCall(

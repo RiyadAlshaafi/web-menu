@@ -2,15 +2,20 @@ import { z } from "zod";
 import { codeForDbError } from "./errors";
 import type { Outcome } from "./handler";
 import { callRpc, type RpcName } from "./rpc";
-import type { Done, GuestStatus, LocationVerdict, Menu, OrderSent, Tab } from "../types";
+import type { Done, GuestStatus, LocationVerdict, Menu, OrderSent, Tab, TableClaim } from "../types";
 
 // One function per endpoint. Each makes exactly one RPC call and maps its result; RPC output is
 // checked against a schema so a database change can't leak unexpected fields to the browser.
 
 const failure = z.object({ ok: z.literal(false), error: z.string(), items: z.array(z.string()).optional() });
 
-async function call<T>(name: RpcName, args: Record<string, unknown>, success: z.ZodType<T>): Promise<Outcome<T>> {
-  const result = await callRpc(name, args);
+async function call<T>(
+  name: RpcName,
+  args: Record<string, unknown>,
+  success: z.ZodType<T>,
+  visitor?: string,
+): Promise<Outcome<T>> {
+  const result = await callRpc(name, args, visitor);
   if (result.kind === "unreachable") return { ok: false, code: "server_error" };
   if (result.kind === "db_error") return { ok: false, code: codeForDbError(result.message) };
   const refused = failure.safeParse(result.body);
@@ -190,6 +195,10 @@ const tabSchema = z
 
 const doneSchema = z.object({ ok: z.literal(true) }).transform((): Done => ({ done: true }));
 
+const claimSchema = z
+  .object({ ok: z.literal(true), role: z.enum(["owner", "viewer", "none"]) })
+  .transform((c): TableClaim => ({ role: c.role }));
+
 export const guest = {
   menu: (slug: string) => call("guest_menu", { p_qr_slug: slug }, menuSchema),
   status: (slug: string) => call("guest_status", { p_qr_slug: slug }, statusSchema),
@@ -203,6 +212,7 @@ export const guest = {
     slug: string,
     lines: { menuItemId: string; qty: number; on?: string[] }[],
     position: { lat?: number; lng?: number; accuracy?: number },
+    visitor?: string,
   ) =>
     call(
       "send_table_cart",
@@ -216,6 +226,20 @@ export const guest = {
         p_accuracy_m: position.accuracy ?? null,
       },
       orderSchema,
+      visitor,
+    ),
+  // The first phone to ask owns the table; the others only look. See table_claims in the database.
+  claim: (slug: string, visitor: string, position: { lat?: number; lng?: number; accuracy?: number }) =>
+    call(
+      "guest_claim_table",
+      {
+        p_qr_slug: slug,
+        p_visitor: visitor,
+        p_lat: position.lat ?? null,
+        p_lng: position.lng ?? null,
+        p_accuracy_m: position.accuracy ?? null,
+      },
+      claimSchema,
     ),
   tab: (slug: string) => call("guest_tab", { p_qr_slug: slug }, tabSchema),
   callStaff: (slug: string) => call("guest_call_staff", { p_qr_slug: slug }, doneSchema),

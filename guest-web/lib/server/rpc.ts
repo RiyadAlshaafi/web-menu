@@ -11,7 +11,8 @@ export type RpcName =
   | "request_bill"
   | "set_table_payment_type"
   | "guest_confirm_refusal"
-  | "guest_record_visit";
+  | "guest_record_visit"
+  | "guest_claim_table";
 
 export type RpcResult =
   | { kind: "ok"; body: unknown }
@@ -22,15 +23,17 @@ export type RpcResult =
 
 const TIMEOUT_MS = 8000;
 
-// One PostgREST call with the anon key and no guest header: every guest function takes the
-// QR slug as an argument, so nothing else identifies the table.
-export async function callRpc(name: RpcName, args: Record<string, unknown>): Promise<RpcResult> {
+// One PostgREST call with the anon key: every guest function takes the QR slug as an argument,
+// so nothing else identifies the table. `visitor` is the guest browser's own random id; the
+// database reads it from x-guest-visitor to tell the phone that owns the table from the others.
+export async function callRpc(name: RpcName, args: Record<string, unknown>, visitor?: string): Promise<RpcResult> {
   const { url, key } = supabaseEnv();
   const headers: Record<string, string> = {
     apikey: key,
     "Content-Type": "application/json",
     Accept: "application/json",
   };
+  if (visitor) headers["x-guest-visitor"] = visitor;
   // Legacy anon keys are JWTs and go in Authorization too; publishable keys only in apikey.
   if (key.split(".").length === 3) headers.Authorization = `Bearer ${key}`;
   let response: Response;

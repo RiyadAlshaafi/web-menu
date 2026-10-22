@@ -68,7 +68,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
 
   Future<void> _editChoices(CafeStore store, OrderLine line) async {
     final item = store.menuItems.where((item) => item.id == line.menuItemId).firstOrNull;
-    if (item == null || item.options.isEmpty) return;
+    if (item == null || !store.hasChoices(item)) return;
     final on = await showDishChoicesSheet(
       context,
       item: item,
@@ -189,7 +189,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                             count: inTicket,
                             enabled: item.available && !item.soldOut && item.canSellMore(inTicket),
                             onTap: () => _add(store, item),
-                            onHold: item.options.isEmpty ? null : () => _addWithChoices(store, item),
+                            onHold: store.hasChoices(item) ? () => _addWithChoices(store, item) : null,
                           );
                         },
                       ),
@@ -231,7 +231,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                                             child: TicketLineName(
                                               line: line,
                                               locale: store.locale,
-                                              editable: store.menuItems.any((item) => item.id == line.menuItemId && item.options.isNotEmpty),
+                                              editable: store.menuItems.any((item) => item.id == line.menuItemId && store.hasChoices(item)),
                                               onTap: () => _editChoices(store, line),
                                             ),
                                           ),

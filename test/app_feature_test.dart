@@ -47,16 +47,17 @@ void main() {
   });
 
   test('fromJson with an empty list allows only core', () {
-    final set = FeatureSet.fromJson('{"features": [], "listed": ["tables", "stock", "kitchen_printer"]}');
+    final set = FeatureSet.fromJson('{"features": [], "listed": ["tables", "stock", "kitchen_printer", "dish_choices"]}');
     for (final feature in AppFeature.values) {
       expect(set.allows(feature), isFalse, reason: feature.key);
     }
   });
 
-  test('a file from before stock and kitchen printing keeps both on', () {
+  test('a file from before stock, kitchen printing and dish choices keeps all three on', () {
     final set = FeatureSet.fromJson('{"mode": "offline", "features": ["tables"]}');
     expect(set.allows(AppFeature.stock), isTrue);
     expect(set.allows(AppFeature.kitchenPrinter), isTrue);
+    expect(set.allows(AppFeature.dishChoices), isTrue);
     expect(set.allows(AppFeature.discounts), isFalse);
   });
 
@@ -67,6 +68,13 @@ void main() {
     final ticked = FeatureSet.fromJson('{"mode": "offline", "features": ["stock", "kitchen_printer"], "listed": ["stock", "kitchen_printer"]}');
     expect(ticked.allows(AppFeature.stock), isTrue, reason: 'stock works offline');
     expect(ticked.allows(AppFeature.kitchenPrinter), isTrue, reason: 'kitchen printing works offline');
+  });
+
+  test('a setup that showed dish choices and left the box unticked turns them off; ticked keeps them', () {
+    final off = FeatureSet.fromJson('{"mode": "online", "features": ["tables"], "listed": ["tables", "dish_choices"]}');
+    expect(off.allows(AppFeature.dishChoices), isFalse);
+    final on = FeatureSet.fromJson('{"mode": "offline", "features": ["dish_choices"], "listed": ["dish_choices"]}');
+    expect(on.allows(AppFeature.dishChoices), isTrue, reason: 'dish choices work offline');
   });
 
   test('fromJson falls back to all when there is no file or it is broken', () {
@@ -87,6 +95,7 @@ void main() {
       AppFeature.paymentTypes,
       AppFeature.stock,
       AppFeature.kitchenPrinter,
+      AppFeature.dishChoices,
     ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });

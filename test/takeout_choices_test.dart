@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/features/app_feature.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/screens/cashier_screens.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
@@ -99,5 +100,22 @@ void main() {
     await tapAndWait(tester, find.textContaining('Apply'));
     expect(find.textContaining('+ Extra cheese'), findsOneWidget);
     expect(find.textContaining('21.500'), findsWidgets);
+  });
+
+  testWidgets('with the dish choices feature off, holding a dish and the ticket line have no choices', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    store.features = FeatureSet.fromKeys(const ['tables']);
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+
+    final hold = await tester.startGesture(tester.getCenter(find.text('Burger').first));
+    await tester.pump(const Duration(milliseconds: 1100));
+    await hold.up();
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    ignoreOverflow(tester);
+    expect(find.byType(CheckboxListTile), findsNothing, reason: 'no choices sheet');
+    expect(find.descendant(of: find.byType(TicketLineName), matching: find.byIcon(Icons.tune)), findsNothing);
+    expect(store.hasChoices(store.menuItems.single), isFalse);
   });
 }

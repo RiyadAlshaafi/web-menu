@@ -17,8 +17,17 @@ export const menuQuery = z.object({ slug, v: z.string().regex(/^\d{1,16}$/).opti
 
 export const slugBody = z.object({ slug }).strict();
 
-// A random id the guest's own browser made (a UUID). The database keeps only a per-day hash of it.
-export const visitBody = z.object({ slug, visitor: z.string().regex(/^[A-Za-z0-9-]{16,64}$/) }).strict();
+// A random id the guest's own browser made (a UUID). The database keeps only hashes of it.
+const visitor = z.string().regex(/^[A-Za-z0-9-]{16,64}$/);
+
+export const visitBody = z.object({ slug, visitor }).strict();
+
+// Asks whether this phone owns the table or only views it. A free table is only taken by a phone
+// that is at the cafe, so the position goes along when the cafe checks locations.
+export const claimBody = z
+  .object({ slug, visitor, lat: lat.optional(), lng: lng.optional(), accuracy: accuracy.optional() })
+  .strict()
+  .refine((body) => (body.lat === undefined) === (body.lng === undefined), { message: "lat and lng go together" });
 
 export const locationBody =z.object({ slug, lat, lng, accuracy: accuracy.optional() }).strict();
 
@@ -49,6 +58,7 @@ export const orderBody = z
     lat: lat.optional(),
     lng: lng.optional(),
     accuracy: accuracy.optional(),
+    visitor: visitor.optional(),
   })
   .strict()
   .refine((body) => (body.lat === undefined) === (body.lng === undefined), { message: "lat and lng go together" });

@@ -2189,6 +2189,16 @@ class AppDatabase {
     return _failure(result, 'The line was not removed.');
   }
 
+  /// Frees a table whatever state it is in: its unpaid orders are cancelled, the cart is emptied,
+  /// open calls are closed and the phone that held the table loses it. Paid history stays.
+  Future<String?> clearTable(String tableId) async {
+    if (isLocal) return _localClearTable(tableId);
+    if (client == null) return null;
+    _epoch++; // a load already running would bring back the cancelled orders
+    final result = await _rpcResult('cashier_clear_table', 'clear table', {'p_table_id': tableId});
+    return _failure(result, 'The table was not cleared.');
+  }
+
   /// Asks for the bill: a guest passes the table's QR slug, staff the table id.
   Future<String?> requestBill({String? qrSlug, String? tableId}) async {
     if (client == null) return null;
@@ -2339,7 +2349,8 @@ class AppDatabase {
     await bucket.uploadBinary(
       path,
       bytes,
-      fileOptions: FileOptions(contentType: contentType),
+      // The name changes on every upload, so a year-long cache never shows a stale picture.
+      fileOptions: FileOptions(contentType: contentType, cacheControl: _imageCacheSeconds),
     );
     final oldPath = _storedImagePath(previous);
     if (oldPath != null && oldPath != path) {
@@ -2354,6 +2365,7 @@ class AppDatabase {
   }
 
   static const _imageBucket = 'menu-images';
+  static const _imageCacheSeconds = '31536000';
 
   /// The storage path of [url] when it is a picture this cafe stored, else null.
   String? _storedImagePath(String? url) {
