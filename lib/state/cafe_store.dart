@@ -870,7 +870,6 @@ class CafeStore extends ChangeNotifier {
   }
 
   Future<void> _dropForeignAdmin() async {
-    db.salesArchive.clear();
     try {
       await db.client?.auth.signOut();
     } catch (error, stackTrace) {
@@ -890,8 +889,6 @@ class CafeStore extends ChangeNotifier {
     currentShift = null;
     pinBuffer = '';
     db.cashierToken = null;
-    // Archived months belong to the admin who opened them.
-    db.salesArchive.clear();
     if (db.isLocal) {
       db.localCashierId = null;
       db.signOutLocalAdmin();

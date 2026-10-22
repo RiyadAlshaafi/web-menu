@@ -1,0 +1,1 @@
+-- Undoes 20261022120000_remove_monthly_archive.sql: run 20261019150000_monthly_archive.sql again.

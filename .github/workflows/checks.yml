@@ -114,9 +114,3 @@ jobs:
         run: |
           docker run --rm -v "$PWD/supabase/functions:/fn" -w /fn denoland/deno:2.1.4 \
             test --allow-env --allow-net=jsr.io,registry.npmjs.org admin-reset-ticket/index_test.ts
-
-      # The Worker that serves archived sales months.
-      - name: Archive Worker tests
-        run: |
-          docker run --rm -v "$PWD/archive-worker:/w" -w /w node:22.11.0 \
-            node --experimental-strip-types --no-warnings --test src/index_test.ts

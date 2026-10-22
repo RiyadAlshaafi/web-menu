@@ -17,7 +17,6 @@ import 'error_codes.dart';
 import 'image_shrink.dart';
 import 'local_env.dart' if (dart.library.io) 'local_env_io.dart';
 import 'local_state_store.dart';
-import 'sales_archive.dart';
 import 'sales_history.dart';
 
 part 'app_database_local.dart';
@@ -97,15 +96,6 @@ class AppDatabase {
   DateTime? _salesFrom;
   DateTime? _salesTo;
 
-  /// Months the database no longer holds, read from the archive Worker for admins.
-  SalesArchiveClient salesArchive = SalesArchiveClient();
-
-  /// Stands in for the admin's sign-in token in tests.
-  @visibleForTesting
-  String? Function()? archiveTokenOverride;
-
-  /// The chosen sales window reaches archived months that could not be loaded.
-  bool salesArchiveFailed = false;
   int _salesLimit = salesPageSize;
   bool salesHasMore = false;
   String? restaurantId;
@@ -912,11 +902,6 @@ class AppDatabase {
       }
       final shiftRows = batch[9] as List;
       _shifts = [for (final row in shiftRows) _mapShift(Map<String, dynamic>.from(row as Map))];
-      if (_salesFrom != null) {
-        if (!await _mergeArchive(historyFrom, _salesTo ?? DateTime.now(), epoch)) return false;
-      } else {
-        salesArchiveFailed = false;
-      }
     } else {
       _payments = [];
       _shifts = [];
@@ -1045,74 +1030,6 @@ class AppDatabase {
     actorRole: row['actor_role'] as String? ?? '',
     createdAt: DateTime.parse(row['created_at'] as String),
   );
-
-  /// Adds the archived months (moved out of the database, see tool/archive_months.sh) that the
-  /// chosen sales window reaches. Only a signed-in admin can read them; if they can't be loaded
-  /// the live rows stay and [salesArchiveFailed] is set. False when a newer load started meanwhile.
-  Future<bool> _mergeArchive(DateTime from, DateTime to, int epoch) async {
-    salesArchiveFailed = false;
-    final token = archiveTokenOverride?.call() ?? client!.auth.currentSession?.accessToken;
-    if (token == null) return true;
-    final months = monthsBetween(from, to);
-    try {
-      final rows =
-          await client!
-                  .from('archived_months')
-                  .select('year_month')
-                  .gte('year_month', months.first)
-                  .lte('year_month', months.last)
-              as List;
-      final archived = {for (final row in rows) row['year_month'] as String}.toList()..sort();
-      final loaded = [for (final month in archived) await salesArchive.month(month, token)];
-      if (epoch != _epoch) return false;
-      for (final sales in loaded) {
-        _addArchived(sales, from, to);
-      }
-    } catch (error, stack) {
-      salesArchiveFailed = true;
-      reportError('sales archive', error, stack);
-    }
-    return true;
-  }
-
-  /// Merges archived rows inside [from]..[to] that are not already loaded.
-  void _addArchived(ArchivedSales sales, DateTime from, DateTime to) {
-    bool inWindow(Object? at) {
-      final time = DateTime.tryParse(at as String? ?? '');
-      return time != null && !time.isBefore(from) && !time.isAfter(to);
-    }
-
-    final changes = <String, List<PaymentMethodChange>>{};
-    for (final row in sales.changes) {
-      final change = _mapChange(row);
-      changes.putIfAbsent(change.paymentId, () => []).add(change);
-    }
-    final knownPayments = {for (final payment in _payments) payment.id};
-    final added = [
-      for (final row in sales.payments)
-        if (inWindow(row['paid_at']) && !knownPayments.contains(row['id'])) _mapPayment(row, changes),
-    ];
-    _payments = [..._payments, ...added]..sort((a, b) => b.paidAt.compareTo(a.paidAt));
-    final wanted = {for (final payment in added) payment.orderId}..removeAll(_orders.map((order) => order.id));
-    _orders = [
-      ..._orders,
-      for (final row in sales.orders)
-        if (wanted.remove(row['id'])) _mapOrder(row),
-    ];
-    final knownShifts = {for (final shift in _shifts) shift.id};
-    _shifts = [
-      ..._shifts,
-      for (final row in sales.shifts)
-        if ((inWindow(row['opened_at']) || inWindow(row['closed_at'])) && knownShifts.add(row['id'] as String))
-          _mapShift(row),
-    ];
-    final knownExpenses = {for (final expense in _expenses) expense.id};
-    _expenses = [
-      ..._expenses,
-      for (final row in sales.expenses)
-        if (inWindow(row['created_at']) && knownExpenses.add(row['id'] as String)) _mapExpense(row),
-    ];
-  }
 
   Payment _mapPayment(
     Map<String, dynamic> row,

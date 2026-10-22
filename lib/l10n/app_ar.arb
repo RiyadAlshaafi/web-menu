@@ -382,7 +382,6 @@
   "payDeleteMessage": "المبيعات السابقة التي استخدمت هذه الطريقة ستبقى كما هي.",
   "payTypeSave": "حفظ",
   "salesLoadMore": "تحميل المزيد",
-  "salesArchiveFailed": "تعذّر تحميل المبيعات الأقدم من شهرين. تحقق من الإنترنت وسجّل الدخول كمسؤول، ثم اختر التواريخ مرة أخرى.",
   "cafeLocationRequire": "اطلب من الضيوف أن يكونوا قرب المقهى ليتمكنوا من الطلب",
   "cafeLocationUseCurrent": "استخدم موقعي الحالي",
   "cafeLocationLatitude": "خط العرض",

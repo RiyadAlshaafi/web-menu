@@ -63,7 +63,6 @@ loud -d "$DB" -f supabase/tests/void_payment_test.sql
 loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
 loud -d "$DB" -f supabase/tests/offline_trust_test.sql
 loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
-loud -d "$DB" -f supabase/tests/monthly_archive_test.sql
 loud -d "$DB" -f supabase/tests/dish_stock_test.sql
 loud -d "$DB" -f supabase/tests/vendor_fleet_test.sql
 loud -d "$DB" -f supabase/tests/slot_suspension_test.sql
@@ -90,7 +89,6 @@ loud -d "$DB" -f supabase/tests/void_payment_test.sql
 loud -d "$DB" -f supabase/tests/same_cafe_links_test.sql
 loud -d "$DB" -f supabase/tests/offline_trust_test.sql
 loud -d "$DB" -f supabase/tests/pin_rate_and_table_test.sql
-loud -d "$DB" -f supabase/tests/monthly_archive_test.sql
 loud -d "$DB" -f supabase/tests/table_claims_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"

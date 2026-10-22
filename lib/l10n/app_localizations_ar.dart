@@ -1148,10 +1148,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesLoadMore => 'تحميل المزيد';
 
   @override
-  String get salesArchiveFailed =>
-      'تعذّر تحميل المبيعات الأقدم من شهرين. تحقق من الإنترنت وسجّل الدخول كمسؤول، ثم اختر التواريخ مرة أخرى.';
-
-  @override
   String get cafeLocationRequire =>
       'اطلب من الضيوف أن يكونوا قرب المقهى ليتمكنوا من الطلب';
 
