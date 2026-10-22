@@ -12,6 +12,8 @@ end $$;
 
 drop function if exists public.assign_shift_order_numbers(uuid[]);
 
+-- Later migrations add columns to the result, which create-or-replace cannot undo.
+drop function if exists public.list_pos_cashiers(uuid);
 create or replace function public.list_pos_cashiers(p_restaurant_id uuid default null)
 returns table (id uuid, name text, initials text)
 language plpgsql
