@@ -742,13 +742,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogCashierNameHint => 'e.g. Luca Neri';
 
   @override
-  String get catalogCashierName => 'Cashier name';
+  String get catalogCashierName => 'Name';
+
+  @override
+  String get catalogStaffRoleLabel => 'Job';
+
+  @override
+  String get staffRoleCashier => 'Cashier';
+
+  @override
+  String get staffRoleChef => 'Chef';
+
+  @override
+  String get staffRoleServer => 'Server';
+
+  @override
+  String get staffRoleCleaner => 'Cleaner';
 
   @override
   String get catalogCashierPinLabel => '4-digit secret passcode';
 
   @override
-  String get catalogSaveCashier => 'Save Cashier';
+  String get catalogSaveCashier => 'Save Staff Member';
 
   @override
   String get cashierLanguage => 'Language';

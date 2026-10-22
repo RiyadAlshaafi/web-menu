@@ -919,7 +919,7 @@ class CafeStore extends ChangeNotifier {
     return true;
   }
 
-  Future<void> addCashier({required String name, required String pin}) async {
+  Future<void> addCashier({required String name, String pin = '', String role = StaffJob.cashier}) async {
     final initials = name
         .trim()
         .split(RegExp(r'\s+'))
@@ -932,6 +932,7 @@ class CafeStore extends ChangeNotifier {
       name: name.trim(),
       pin: pin,
       initials: initials.isEmpty ? 'C' : initials,
+      role: role,
     );
     if (id == null) return;
     await syncFromDisk();

@@ -327,6 +327,7 @@ class AdminSettingsScreen extends StatefulWidget {
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final cashierName = TextEditingController();
   final cashierPin = TextEditingController();
+  String staffRole = StaffJob.cashier;
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
   bool changingPassword = false;
@@ -409,6 +410,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
+  String _roleLabel(String role) => switch (role) {
+    StaffJob.chef => context.l10n.staffRoleChef,
+    StaffJob.server => context.l10n.staffRoleServer,
+    StaffJob.cleaner => context.l10n.staffRoleCleaner,
+    _ => context.l10n.staffRoleCashier,
+  };
+
   Widget _cashierPanel(CafeStore store) {
     return TawlaPanel(
       child: Column(
@@ -440,7 +448,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(member.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: CafeColors.ink)),
-                        Text(context.l10n.catalogCashierPinMasked, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted)),
+                        Text(
+                          member.canSignIn
+                              ? '${_roleLabel(member.role)} · ${context.l10n.catalogCashierPinMasked}'
+                              : _roleLabel(member.role),
+                          style: const TextStyle(fontSize: 12, color: TawlaTokens.muted),
+                        ),
                       ],
                     ),
                   ),
@@ -463,24 +476,41 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               Expanded(
                 flex: 2,
                 child: LabeledField(
-                  label: context.l10n.catalogCashierPinLabel,
-                  child: TextField(
-                    controller: cashierPin,
-                    maxLength: 4,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(hintText: '••••', counterText: ''),
+                  label: context.l10n.catalogStaffRoleLabel,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: staffRole,
+                    items: [
+                      for (final role in StaffJob.all) DropdownMenuItem(value: role, child: Text(_roleLabel(role))),
+                    ],
+                    onChanged: (value) => setState(() => staffRole = value ?? StaffJob.cashier),
                   ),
                 ),
               ),
+              if (staffRole == StaffJob.cashier) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: LabeledField(
+                    label: context.l10n.catalogCashierPinLabel,
+                    child: TextField(
+                      controller: cashierPin,
+                      maxLength: 4,
+                      obscureText: true,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(hintText: '••••', counterText: ''),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 14),
           NavyButton(
             label: context.l10n.catalogSaveCashier,
             onPressed: () async {
-              if (cashierName.text.trim().isEmpty || cashierPin.text.length != 4) return;
-              await store.addCashier(name: cashierName.text, pin: cashierPin.text);
+              final needsPin = staffRole == StaffJob.cashier;
+              if (cashierName.text.trim().isEmpty || (needsPin && cashierPin.text.length != 4)) return;
+              await store.addCashier(name: cashierName.text, pin: needsPin ? cashierPin.text : '', role: staffRole);
               cashierName.clear();
               cashierPin.clear();
             },

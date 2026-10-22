@@ -1469,8 +1469,38 @@ abstract class AppLocalizations {
   /// No description provided for @catalogCashierName.
   ///
   /// In en, this message translates to:
-  /// **'Cashier name'**
+  /// **'Name'**
   String get catalogCashierName;
+
+  /// No description provided for @catalogStaffRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Job'**
+  String get catalogStaffRoleLabel;
+
+  /// No description provided for @staffRoleCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier'**
+  String get staffRoleCashier;
+
+  /// No description provided for @staffRoleChef.
+  ///
+  /// In en, this message translates to:
+  /// **'Chef'**
+  String get staffRoleChef;
+
+  /// No description provided for @staffRoleServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get staffRoleServer;
+
+  /// No description provided for @staffRoleCleaner.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaner'**
+  String get staffRoleCleaner;
 
   /// No description provided for @catalogCashierPinLabel.
   ///
@@ -1481,7 +1511,7 @@ abstract class AppLocalizations {
   /// No description provided for @catalogSaveCashier.
   ///
   /// In en, this message translates to:
-  /// **'Save Cashier'**
+  /// **'Save Staff Member'**
   String get catalogSaveCashier;
 
   /// No description provided for @cashierLanguage.

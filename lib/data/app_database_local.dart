@@ -178,12 +178,13 @@ extension AppDatabaseLocal on AppDatabase {
 
   // ------------------------------------------------------------------ cashiers
 
-  String _localCreateCashier(String name, String pin, String initials) {
-    final cashier = Cashier(id: Secrets.id(), name: name, initials: initials);
+  String _localCreateCashier(String name, String pin, String initials, String role) {
+    final cashier = Cashier(id: Secrets.id(), name: name, initials: initials, role: role);
     final salt = Secrets.publicId(16);
     _cashiers = [..._cashiers, cashier];
     _store.transaction(() {
       _saveLocalCashierRows();
+      if (!cashier.canSignIn) return;
       final pins = _localPins();
       pins[cashier.id] = {'salt': salt, 'hash': _localHash(pin, salt), 'failed': 0};
       _store.writeDoc('cashierPins', pins);

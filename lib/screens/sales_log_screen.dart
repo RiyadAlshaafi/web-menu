@@ -546,6 +546,15 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                         ])
                     .toList(),
               ),
+              pw.SizedBox(height: 10),
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pdfText(
+                  'Total (excl. void): ${store.currency.format(rows.where((r) => !r.payment.isVoided).fold<num>(0, (sum, r) => sum + r.total))}',
+                  size: 14,
+                  bold: true,
+                ),
+              ),
             ],
           ),
         );

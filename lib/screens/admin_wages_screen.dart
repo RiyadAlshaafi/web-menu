@@ -331,6 +331,15 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                     ],
                 ],
               ),
+              pw.SizedBox(height: 10),
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pdfText(
+                  'Total (excl. void): ${rows.where((r) => !r.voided).fold<double>(0, (sum, r) => sum + r.amount)}',
+                  size: 14,
+                  bold: true,
+                ),
+              ),
             ],
           ),
         );

@@ -45,7 +45,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final cashiers = store.cashiers.where((item) => item.active).toList();
+    final cashiers = store.cashiers.where((item) => item.active && item.canSignIn).toList();
     final selected = cashiers.where((item) => item.id == store.selectedCashierId);
     final selectedName = selected.isEmpty ? context.l10n.authGuestCashier : selected.first.name;
 

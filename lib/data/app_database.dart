@@ -810,6 +810,7 @@ class AppDatabase {
           id: map['id'] as String,
           name: map['name'] as String,
           initials: map['initials'] as String? ?? 'C',
+          role: StaffJob.parse(map['role'] as String?),
         );
       }).toList();
     }
@@ -1274,16 +1275,18 @@ class AppDatabase {
         .eq('id', restaurantId!);
   }
 
+  /// [pin] is needed only for a cashier; other roles never sign in.
   Future<String?> createCashier({
     required String name,
-    required String pin,
+    String pin = '',
     required String initials,
+    String role = StaffJob.cashier,
   }) async {
-    if (isLocal) return _localCreateCashier(name, pin, initials);
+    if (isLocal) return _localCreateCashier(name, pin, initials, role);
     if (client == null) return null;
     final id = await client!.rpc(
       'create_cashier',
-      params: {'p_name': name, 'p_pin': pin, 'p_initials': initials},
+      params: {'p_name': name, 'p_pin': pin, 'p_initials': initials, 'p_role': role},
     );
     await refreshFromDisk();
     return id as String?;
@@ -2089,7 +2092,7 @@ class AppDatabase {
       for (final e in _expenseCategories)
         {'id': e.id, 'nameEn': e.nameEn, 'nameAr': e.nameAr, 'enabled': e.enabled, 'sortOrder': e.sortOrder},
     ],
-    'cashiers': [for (final c in _cashiers) {'id': c.id, 'name': c.name, 'initials': c.initials}],
+    'cashiers': [for (final c in _cashiers) {'id': c.id, 'name': c.name, 'initials': c.initials, 'role': c.role}],
   };
 
   /// Loads a copy saved by [offlineSnapshot] so the till can open without internet.
@@ -2130,7 +2133,12 @@ class AppDatabase {
     ];
     _cashiers = [
       for (final r in rows('cashiers'))
-        Cashier(id: r['id'] as String, name: r['name'] as String, initials: r['initials'] as String? ?? 'C'),
+        Cashier(
+          id: r['id'] as String,
+          name: r['name'] as String,
+          initials: r['initials'] as String? ?? 'C',
+          role: StaffJob.parse(r['role'] as String?),
+        ),
     ];
     _orders = [];
     _payments = [];

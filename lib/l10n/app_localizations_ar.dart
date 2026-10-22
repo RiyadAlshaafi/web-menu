@@ -741,13 +741,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogCashierNameHint => 'مثال: لوكا نيري';
 
   @override
-  String get catalogCashierName => 'اسم الكاشير';
+  String get catalogCashierName => 'الاسم';
+
+  @override
+  String get catalogStaffRoleLabel => 'الوظيفة';
+
+  @override
+  String get staffRoleCashier => 'كاشير';
+
+  @override
+  String get staffRoleChef => 'طباخ';
+
+  @override
+  String get staffRoleServer => 'نادل';
+
+  @override
+  String get staffRoleCleaner => 'عامل نظافة';
 
   @override
   String get catalogCashierPinLabel => 'رمز PIN سري من 4 أرقام';
 
   @override
-  String get catalogSaveCashier => 'حفظ الكاشير';
+  String get catalogSaveCashier => 'حفظ الموظف';
 
   @override
   String get cashierLanguage => 'اللغة';

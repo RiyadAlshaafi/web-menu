@@ -42,12 +42,24 @@ class AdminAccount {
   };
 }
 
+/// The jobs a staff member can have. Matches the `role` check on the cashiers table.
+abstract final class StaffJob {
+  static const cashier = 'cashier';
+  static const chef = 'chef';
+  static const server = 'server';
+  static const cleaner = 'cleaner';
+  static const all = [cashier, chef, server, cleaner];
+
+  static String parse(String? value) => all.contains(value) ? value! : cashier;
+}
+
 class Cashier {
   Cashier({
     required this.id,
     required this.name,
     required this.initials,
     this.active = true,
+    this.role = StaffJob.cashier,
   });
 
   final String id;
@@ -55,11 +67,17 @@ class Cashier {
   String initials;
   bool active;
 
+  /// One of [StaffJob.all]. Only cashiers have a PIN and can sign in.
+  final String role;
+
+  bool get canSignIn => role == StaffJob.cashier;
+
   factory Cashier.fromJson(Map<String, dynamic> json) => Cashier(
     id: json['id'] as String,
     name: json['name'] as String,
     initials: json['initials'] as String,
     active: json['active'] as bool? ?? true,
+    role: StaffJob.parse(json['role'] as String?),
   );
 
   Map<String, dynamic> toJson() => {
@@ -67,6 +85,7 @@ class Cashier {
     'name': name,
     'initials': initials,
     'active': active,
+    'role': role,
   };
 }
 

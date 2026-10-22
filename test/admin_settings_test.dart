@@ -23,7 +23,7 @@ class _SettingsStore extends CafeStore {
   String? passwordError;
 
   @override
-  Future<void> addCashier({required String name, required String pin}) async {
+  Future<void> addCashier({required String name, String pin = '', String role = StaffJob.cashier}) async {
     added.add((name, pin));
     cashiers = [...cashiers, Cashier(id: 'c${cashiers.length + 1}', name: name, initials: 'N')];
     notifyListeners();
