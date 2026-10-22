@@ -95,7 +95,7 @@ jobs:
           Get-Content build\installer\latest.json
 
       # Run by hand, this also creates the tag on the commit that was built.
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
