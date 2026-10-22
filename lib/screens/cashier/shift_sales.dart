@@ -481,6 +481,10 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
     text: widget.editing?.description ?? '',
   );
   late String? categoryId = _initialCategoryId();
+  String? paidToId;
+
+  bool get _isWithdrawal =>
+      widget.store.expenseCategories.where((item) => item.id == categoryId && item.nameEn == 'Cash Withdrawal').isNotEmpty;
 
   String? _initialCategoryId() {
     final editing = widget.editing;
@@ -520,6 +524,7 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
             categoryId: categoryId!,
             amount: parsed,
             description: description.text,
+            paidToId: _isWithdrawal ? paidToId : null,
           )
         : await widget.store.editShiftExpense(
             expense: editing,
@@ -578,6 +583,18 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
                     ? null
                     : (value) => setState(() => categoryId = value),
               ),
+              if (widget.editing == null && _isWithdrawal && widget.store.payees.length > 1) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: paidToId ?? widget.store.currentCashier?.id,
+                  decoration: InputDecoration(labelText: context.l10n.expensePaidTo),
+                  items: [
+                    for (final person in widget.store.payees)
+                      DropdownMenuItem(value: person.id, child: Text(person.name)),
+                  ],
+                  onChanged: saving ? null : (value) => setState(() => paidToId = value),
+                ),
+              ],
               const SizedBox(height: 10),
               TextField(
                 controller: amount,

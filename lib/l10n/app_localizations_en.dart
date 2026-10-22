@@ -748,6 +748,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogStaffRoleLabel => 'Job';
 
   @override
+  String get expensePaidTo => 'Paid to';
+
+  @override
   String get staffRoleCashier => 'Cashier';
 
   @override

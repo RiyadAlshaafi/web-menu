@@ -1478,6 +1478,12 @@ abstract class AppLocalizations {
   /// **'Job'**
   String get catalogStaffRoleLabel;
 
+  /// No description provided for @expensePaidTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid to'**
+  String get expensePaidTo;
+
   /// No description provided for @staffRoleCashier.
   ///
   /// In en, this message translates to:

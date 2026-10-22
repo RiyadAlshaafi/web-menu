@@ -936,6 +936,7 @@ class CafeStore extends ChangeNotifier {
     );
     if (id == null) return;
     await syncFromDisk();
+    cashiers = db.cashiers;
     notifyListeners();
   }
 

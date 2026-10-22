@@ -202,6 +202,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
           Expanded(flex: 2, child: TableHead(context.l10n.expenseColId)),
           Expanded(flex: 3, child: TableHead(context.l10n.expenseColWhen)),
           Expanded(flex: 3, child: TableHead(context.l10n.expenseColCashier)),
+          Expanded(flex: 3, child: TableHead(context.l10n.expensePaidTo)),
           Expanded(flex: 3, child: TableHead(context.l10n.expenseColType)),
           Expanded(flex: 4, child: TableHead(context.l10n.expenseColDescription)),
           Expanded(flex: 2, child: TableHead(context.l10n.expenseColAmount, align: TextAlign.end)),
@@ -219,6 +220,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
           Expanded(flex: 2, child: Text(row.shortId, style: body.copyWith(fontWeight: FontWeight.w800))),
           Expanded(flex: 3, child: Text(formatTripoliDateTime(row.createdAt), style: body)),
           Expanded(flex: 3, child: Text(expenseCashierName(store, row), maxLines: 1, overflow: TextOverflow.ellipsis, style: body)),
+          Expanded(flex: 3, child: Text(row.paidToCashierName, maxLines: 1, overflow: TextOverflow.ellipsis, style: body)),
           Expanded(
             flex: 3,
             child: Align(alignment: AlignmentDirectional.centerStart, child: StatusBadge(store.expenseCategoryLabel(row), tone: _tone(store, row))),
@@ -275,12 +277,13 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<ShiftExpense> rows) async {
-    final buffer = StringBuffer('id,when,cashier,type,description,amount\n');
+    final buffer = StringBuffer('id,when,cashier,paid_to,type,description,amount\n');
     for (final row in rows) {
       buffer.writeln([
         row.shortId,
         formatTripoliDateTime(row.createdAt),
         expenseCashierName(store, row),
+        row.paidToCashierName,
         store.expenseCategoryLabel(row),
         row.description,
         row.amount,
@@ -315,6 +318,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                   pdfText(store.l10n.expenseColId, bold: true),
                   pdfText(store.l10n.expenseColWhen, bold: true),
                   pdfText(store.l10n.expenseColCashier, bold: true),
+                  pdfText(store.l10n.expensePaidTo, bold: true),
                   pdfText(store.l10n.expenseColType, bold: true),
                   pdfText(store.l10n.expenseColDescription, bold: true),
                   pdfText(store.l10n.expenseColAmount, bold: true),
@@ -325,6 +329,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                       row.shortId,
                       formatTripoliDateTime(row.createdAt),
                       expenseCashierName(store, row),
+                      row.paidToCashierName,
                       store.expenseCategoryLabel(row),
                       row.description,
                       row.amount.toString(),

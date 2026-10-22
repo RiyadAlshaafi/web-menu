@@ -237,6 +237,7 @@
   "catalogCashierNameHint": "مثال: لوكا نيري",
   "catalogCashierName": "الاسم",
   "catalogStaffRoleLabel": "الوظيفة",
+  "expensePaidTo": "المدفوع إلى",
   "staffRoleCashier": "كاشير",
   "staffRoleChef": "طباخ",
   "staffRoleServer": "نادل",

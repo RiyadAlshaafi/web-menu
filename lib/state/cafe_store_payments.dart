@@ -172,10 +172,17 @@ extension CafeStorePayments on CafeStore {
   Future<String?> deleteExpenseCategory(String id) =>
       _refreshAfter(db.deleteExpenseCategory(id));
 
+  /// Who a cash withdrawal can be paid to: the signed-in cashier, then staff who never sign in.
+  List<Cashier> get payees => [
+    ...?(currentCashier == null ? null : [currentCashier!]),
+    ...cashiers.where((item) => item.active && !item.canSignIn),
+  ];
+
   Future<String?> addShiftExpense({
     required String categoryId,
     required double amount,
     required String description,
+    String? paidToId,
   }) async {
     var shift = currentShift ?? openShift;
     final cashier = currentCashier;
@@ -195,6 +202,7 @@ extension CafeStorePayments on CafeStore {
         description.trim().isEmpty) {
       return l10n.cashierExpenseInvalid;
     }
+    final paidTo = paidToId == null ? null : payees.where((item) => item.id == paidToId).firstOrNull;
     if (offlineEnabled) {
       final localShift = shift;
       return _guarded(
@@ -205,6 +213,7 @@ extension CafeStorePayments on CafeStore {
           category: category.first,
           amount: amount,
           description: description.trim(),
+          paidTo: paidTo,
         ),
       );
     }
@@ -218,7 +227,7 @@ extension CafeStorePayments on CafeStore {
       cashierId: cashier.id,
       categoryId: categoryId,
       paidToCafe: !withdrawal,
-      paidToCashierId: withdrawal ? cashier.id : null,
+      paidToCashierId: withdrawal ? (paidTo?.id ?? cashier.id) : null,
       amount: amount,
       description: description.trim(),
     );

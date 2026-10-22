@@ -263,20 +263,22 @@ extension CafeStoreOffline on CafeStore {
     required ExpenseCategory category,
     required double amount,
     required String description,
+    Cashier? paidTo,
   }) async {
     final sync = offline!;
     final id = Secrets.id();
     final now = DateTime.now().toUtc();
     final withdrawal = category.nameEn == 'Cash Withdrawal';
     final name = cashier?.name ?? l10n.offlineUnassigned;
+    final payee = paidTo != null && paidTo.id != cashier?.id ? paidTo : null;
     final expense = ShiftExpense(
       id: id,
       shiftId: shift.id,
       cashierId: cashier?.id ?? '',
       cashierName: name,
       paidToCafe: !withdrawal,
-      paidToCashierId: withdrawal ? cashier?.id : null,
-      paidToCashierName: withdrawal ? name : '',
+      paidToCashierId: withdrawal ? (payee?.id ?? cashier?.id) : null,
+      paidToCashierName: withdrawal ? (payee?.name ?? name) : '',
       amount: amount,
       description: description,
       createdAt: now,
@@ -298,6 +300,7 @@ extension CafeStoreOffline on CafeStore {
           'p_amount': amount,
           'p_description': description,
           'p_created_at': now.toIso8601String(),
+          if (withdrawal && payee != null) 'p_paid_to': payee.id,
         },
         'local': {'expense': _expenseToJson(expense)},
       },

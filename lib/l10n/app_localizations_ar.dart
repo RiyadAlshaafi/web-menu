@@ -747,6 +747,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogStaffRoleLabel => 'الوظيفة';
 
   @override
+  String get expensePaidTo => 'المدفوع إلى';
+
+  @override
   String get staffRoleCashier => 'كاشير';
 
   @override

@@ -1985,6 +1985,7 @@ class AppDatabase {
           'p_expense_category_id': categoryId,
           'p_amount': amount,
           'p_description': description,
+          if (!paidToCafe && paidToCashierId != null && paidToCashierId != cashierId) 'p_paid_to': paidToCashierId,
         },
       );
       final result = Map<String, dynamic>.from(raw as Map);

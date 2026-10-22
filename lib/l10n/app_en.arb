@@ -348,6 +348,7 @@
   "catalogCashierNameHint": "e.g. Luca Neri",
   "catalogCashierName": "Name",
   "catalogStaffRoleLabel": "Job",
+  "expensePaidTo": "Paid to",
   "staffRoleCashier": "Cashier",
   "staffRoleChef": "Chef",
   "staffRoleServer": "Server",
