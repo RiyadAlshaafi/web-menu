@@ -610,6 +610,7 @@ class AppDatabase {
       'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
       'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
       'requireCashierOnline': restaurant['require_cashier_online'] as bool? ?? false,
+      'takeoutLayout': restaurant['takeout_layout'] as String? ?? 'cards',
     };
   }
 
@@ -798,6 +799,7 @@ class AppDatabase {
               sortOrder: row['sort_order'] as int? ?? 0,
               spotlight: row['spotlight'] as bool? ?? false,
               visible: row['visible'] as bool? ?? true,
+              imageUrl: row['image_url'] as String? ?? '',
               kitchenId: row['kitchen_id'] as String?,
             ),
           )
@@ -1172,6 +1174,13 @@ class AppDatabase {
     await client!.from('restaurants').update({'auto_print_receipt': value}).eq('id', restaurantId!);
   }
 
+  Future<void> writeTakeoutLayout(String layout) async {
+    _cafe = {..._cafe, 'takeoutLayout': layout};
+    _saveLocalSettingsIfLocal();
+    if (client == null || restaurantId == null) return;
+    await client!.from('restaurants').update({'takeout_layout': layout}).eq('id', restaurantId!);
+  }
+
   Future<void> writeRequireCashierOnline(bool value) async {
     _cafe = {..._cafe, 'requireCashierOnline': value};
     _saveLocalSettingsIfLocal();
@@ -1520,23 +1529,38 @@ class AppDatabase {
     Iterable<MenuCategory> changed = const [],
     Iterable<String> deleted = const [],
   }) async {
+    final previousImages = {
+      for (final item in _categories) item.id: item.imageUrl,
+    };
     _categories = all;
+    if (isLocal) {
+      for (final item in changed) {
+        item.imageUrl = _localImage(item.imageUrl);
+      }
+    }
     _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
-    final rows = [
-      for (final item in changed)
-        {
-          'id': item.id,
-          'restaurant_id': restaurantId,
-          'name_en': item.nameEn,
-          'name_ar': item.nameAr,
-          'sort_order': item.sortOrder,
-          'spotlight': item.spotlight,
-          'visible': item.visible,
-          // Left out for a cafe with no kitchens, whose database may not have the column yet.
-          if (_kitchens.isNotEmpty || item.kitchenId != null) 'kitchen_id': item.kitchenId,
-        },
-    ];
+    final rows = <Map<String, dynamic>>[];
+    for (final item in changed) {
+      item.imageUrl = await _storeImage(
+        'cat-${item.id}',
+        item.imageUrl,
+        previous: previousImages[item.id],
+      );
+      rows.add({
+        'id': item.id,
+        'restaurant_id': restaurantId,
+        'name_en': item.nameEn,
+        'name_ar': item.nameAr,
+        'sort_order': item.sortOrder,
+        'spotlight': item.spotlight,
+        'visible': item.visible,
+        // Left out until a picture exists, so a cafe whose database has not got the column yet still saves.
+        if (item.imageUrl.isNotEmpty) 'image_url': item.imageUrl,
+        // Left out for a cafe with no kitchens, whose database may not have the column yet.
+        if (_kitchens.isNotEmpty || item.kitchenId != null) 'kitchen_id': item.kitchenId,
+      });
+    }
     if (rows.isNotEmpty) await client!.from('menu_categories').upsert(rows);
     final ids = deleted.toList();
     if (ids.isNotEmpty) await client!.from('menu_categories').delete().inFilter('id', ids);

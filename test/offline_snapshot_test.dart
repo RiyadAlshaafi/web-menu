@@ -20,7 +20,7 @@ void main() {
         {'id': 't2', 'number': '1', 'qrSlug': 'def', 'zone': 'Main Floor', 'seats': 4, 'status': 'free', 'guests': 0, 'archived': true},
       ],
       'categories': [
-        {'id': 'c1', 'nameEn': 'Food', 'nameAr': 'طعام', 'sortOrder': 1, 'spotlight': false, 'visible': true, 'kitchenId': 'kt1'},
+        {'id': 'c1', 'nameEn': 'Food', 'nameAr': 'طعام', 'sortOrder': 1, 'spotlight': false, 'visible': true, 'imageUrl': '', 'kitchenId': 'kt1'},
       ],
       'kitchens': [
         {'id': 'kt1', 'name': 'Pizza oven', 'sortOrder': 0},

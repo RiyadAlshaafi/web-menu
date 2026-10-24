@@ -79,6 +79,17 @@ extension CafeStoreSettings on CafeStore {
     notifyListeners();
     await db.writeAutoPrintReceipt(value);
   }
+  /// How the takeout counter shows the menu: 'cards' (category cards with pictures) or 'classic'
+  /// (every dish with a category bar on top).
+  bool get takeoutCards => (cafe['takeoutLayout'] as String?) != 'classic';
+
+  Future<void> setTakeoutCards(bool value) async {
+    final layout = value ? 'cards' : 'classic';
+    cafe = {...cafe, 'takeoutLayout': layout};
+    notifyListeners();
+    await db.writeTakeoutLayout(layout);
+  }
+
   /// Guests can only order while a cashier device is online (off until the admin turns it on).
   bool get requireCashierOnline => cafe['requireCashierOnline'] as bool? ?? false;
 

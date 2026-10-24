@@ -3691,6 +3691,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send your message. Check the connection and try again.'**
   String get feedbackFailed;
+
+  /// No description provided for @takeoutScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout screen'**
+  String get takeoutScreenTitle;
+
+  /// No description provided for @takeoutLayoutClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get takeoutLayoutClassic;
+
+  /// No description provided for @takeoutLayoutClassicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All dishes at once, with a bar on top to filter by category.'**
+  String get takeoutLayoutClassicHint;
+
+  /// No description provided for @takeoutLayoutCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Category cards'**
+  String get takeoutLayoutCards;
+
+  /// No description provided for @takeoutLayoutCardsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'White cards with a picture for each category; tap one to see its dishes.'**
+  String get takeoutLayoutCardsHint;
 }
 
 class _AppLocalizationsDelegate

@@ -640,5 +640,10 @@
   "feedbackSent": "شكراً، تم إرسال رسالتك.",
   "feedbackEmpty": "اكتب رسالة أولاً.",
   "feedbackTooMany": "وصلت إلى الحد الأقصى للرسائل اليوم. حاول مرة أخرى غداً.",
-  "feedbackFailed": "تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى."
+  "feedbackFailed": "تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى.",
+  "takeoutScreenTitle": "شاشة السفري",
+  "takeoutLayoutClassic": "الكلاسيكية",
+  "takeoutLayoutClassicHint": "كل الأطباق معاً، مع شريط في الأعلى لتصفية الأصناف.",
+  "takeoutLayoutCards": "بطاقات الأصناف",
+  "takeoutLayoutCardsHint": "بطاقات بيضاء بصورة لكل صنف؛ اضغط على صنف لعرض أطباقه."
 }

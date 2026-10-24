@@ -56,7 +56,7 @@ void main() {
 
   testWidgets('a cashier is saved only with a name and a 4-digit PIN', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
 
     await tester.enterText(find.widgetWithText(TextField, l10n.catalogCashierNameHint), 'Omar');
     await tester.enterText(find.widgetWithText(TextField, '••••'), '123');
@@ -71,7 +71,7 @@ void main() {
 
   testWidgets('removing a cashier asks first', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
     final removeSara = find.descendant(
       of: find.ancestor(of: find.text('Sara Ali'), matching: find.byType(Row)).first,
       matching: find.text(l10n.commonRemove),
@@ -90,7 +90,7 @@ void main() {
 
   testWidgets('the language is saved only after choosing a different one', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
 
     final save = find.ancestor(of: find.text(l10n.catalogSaveLanguage), matching: find.bySubtype<ButtonStyleButton>());
     expect(tester.widget<ButtonStyleButton>(save).onPressed, isNull, reason: 'English is already the language');
@@ -104,7 +104,7 @@ void main() {
 
   testWidgets('a refused password change shows why and keeps what was typed', (tester) async {
     final store = _SettingsStore()..passwordError = 'Current password is wrong.';
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
 
     await tester.enterText(_field(l10n.catalogCurrentPassword), 'old');
     await tester.enterText(_field(l10n.catalogNewPassword), 'NewPass1!');
@@ -117,7 +117,7 @@ void main() {
 
   testWidgets('a successful password change confirms and clears both fields', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
 
     await tester.enterText(_field(l10n.catalogCurrentPassword), 'old');
     await tester.enterText(_field(l10n.catalogNewPassword), 'NewPass1!');

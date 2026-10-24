@@ -2029,4 +2029,21 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get feedbackFailed =>
       'تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get takeoutScreenTitle => 'شاشة السفري';
+
+  @override
+  String get takeoutLayoutClassic => 'الكلاسيكية';
+
+  @override
+  String get takeoutLayoutClassicHint =>
+      'كل الأطباق معاً، مع شريط في الأعلى لتصفية الأصناف.';
+
+  @override
+  String get takeoutLayoutCards => 'بطاقات الأصناف';
+
+  @override
+  String get takeoutLayoutCardsHint =>
+      'بطاقات بيضاء بصورة لكل صنف؛ اضغط على صنف لعرض أطباقه.';
 }

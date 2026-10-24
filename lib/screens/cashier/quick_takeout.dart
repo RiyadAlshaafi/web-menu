@@ -121,6 +121,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final needle = search.text.trim().toLowerCase();
+    final cardsLayout = store.takeoutCards;
     final categories = store.categories.where((item) => item.visible).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     final dishes = store.menuItems.where((item) {
@@ -152,25 +153,56 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 14),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          FilterPill(label: context.l10n.quickTakeoutAll, selected: categoryId == null, onTap: () => setState(() => categoryId = null)),
-                          for (final category in categories) ...[
-                            const SizedBox(width: 8),
-                            FilterPill(
-                              label: category.label(store.locale),
-                              selected: categoryId == category.id,
-                              onTap: () => setState(() => categoryId = category.id),
-                            ),
+                    if (!cardsLayout)
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            FilterPill(label: context.l10n.quickTakeoutAll, selected: categoryId == null, onTap: () => setState(() => categoryId = null)),
+                            for (final category in categories) ...[
+                              const SizedBox(width: 8),
+                              FilterPill(
+                                label: category.label(store.locale),
+                                selected: categoryId == category.id,
+                                onTap: () => setState(() => categoryId = category.id),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
+                      )
+                    // Cards layout: inside a category one button goes back to the cards.
+                    else if (categoryId != null)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: FilterPill(
+                          label: '${context.l10n.quickTakeoutAll}  ·  ${categoryNames[categoryId] ?? ''}',
+                          selected: true,
+                          onTap: () => setState(() => categoryId = null),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: !cardsLayout || categoryId != null ? 14 : 0),
                     Expanded(
-                      child: GridView.builder(
+                      child: cardsLayout && categoryId == null && needle.isEmpty
+                          ? GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 260,
+                                mainAxisExtent: 124,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                              ),
+                              itemCount: categories.length,
+                              itemBuilder: (context, index) {
+                                final category = categories[index];
+                                final count = store.menuItems.where((item) => item.categoryId == category.id).length;
+                                return _TakeoutCategoryCard(
+                                  name: category.label(store.locale),
+                                  imageUrl: category.imageUrl,
+                                  count: count,
+                                  onTap: () => setState(() => categoryId = category.id),
+                                );
+                              },
+                            )
+                          : GridView.builder(
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 260,
                           mainAxisExtent: 124,
@@ -324,6 +356,58 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
       child: IconButton.filled(
         onPressed: onPressed,
         icon: Icon(icon, size: 18),
+      ),
+    );
+  }
+}
+
+/// A white category card on the takeout counter; tapping it shows that category's dishes.
+class _TakeoutCategoryCard extends StatelessWidget {
+  const _TakeoutCategoryCard({required this.name, required this.imageUrl, required this.count, required this.onTap});
+
+  final String name;
+  final String imageUrl;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: name,
+      excludeSemantics: true,
+      child: Material(
+        color: CafeColors.paper,
+        elevation: 1,
+        shadowColor: const Color(0x221B3A4B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Row(
+            children: [
+              if (imageUrl.isNotEmpty) DishPhoto(path: imageUrl, size: 124, width: 90, radius: 0),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, height: 1.25, color: CafeColors.ink),
+                      ),
+                      const Spacer(),
+                      Text('$count', style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w700, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

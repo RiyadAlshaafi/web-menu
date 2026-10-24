@@ -463,3 +463,153 @@ class _OrderingCardState extends State<OrderingCard> {
     );
   }
 }
+
+/// Settings: which takeout counter the cashiers get. Two big buttons, each with a small picture of its screen.
+class TakeoutLayoutCard extends StatelessWidget {
+  const TakeoutLayoutCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    return TawlaPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PanelTitle(context.l10n.takeoutScreenTitle, size: 18),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _TakeoutLayoutOption(
+                  title: context.l10n.takeoutLayoutClassic,
+                  hint: context.l10n.takeoutLayoutClassicHint,
+                  selected: !store.takeoutCards,
+                  picture: const _LayoutPicture(cards: false),
+                  onTap: () => store.setTakeoutCards(false),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TakeoutLayoutOption(
+                  title: context.l10n.takeoutLayoutCards,
+                  hint: context.l10n.takeoutLayoutCardsHint,
+                  selected: store.takeoutCards,
+                  picture: const _LayoutPicture(cards: true),
+                  onTap: () => store.setTakeoutCards(true),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TakeoutLayoutOption extends StatelessWidget {
+  const _TakeoutLayoutOption({
+    required this.title,
+    required this.hint,
+    required this.selected,
+    required this.picture,
+    required this.onTap,
+  });
+
+  final String title;
+  final String hint;
+  final bool selected;
+  final Widget picture;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaces = CafeSurfaces.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: title,
+      excludeSemantics: true,
+      child: Material(
+        color: CafeColors.paper,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: selected ? surfaces.button : CafeColors.line, width: selected ? 2 : 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(aspectRatio: 1.5, child: picture),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: CafeColors.ink))),
+                    if (selected) Icon(Icons.check_circle, size: 20, color: surfaces.button),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(hint, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, height: 1.35)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small drawing of the takeout counter: a category bar over dishes, or a grid of category cards.
+class _LayoutPicture extends StatelessWidget {
+  const _LayoutPicture({required this.cards});
+
+  final bool cards;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = CafeSurfaces.of(context).button;
+    Widget box({Color? color, bool border = true}) => Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: color ?? Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: border ? Border.all(color: CafeColors.line) : null,
+            ),
+          ),
+        );
+    Widget pill(bool on) => Container(
+          width: 26,
+          height: 10,
+          margin: const EdgeInsets.only(right: 4),
+          decoration: BoxDecoration(
+            color: on ? accent : Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: on ? accent : CafeColors.line),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: CafeColors.creamDark, borderRadius: BorderRadius.circular(10)),
+      child: cards
+          ? Column(
+              children: [
+                Expanded(child: Row(children: [box(color: const Color(0xFFE9B48F)), box(color: const Color(0xFF9CC3E0))])),
+                Expanded(child: Row(children: [box(color: const Color(0xFFB9D9A8)), box(color: const Color(0xFFE6C6D8))])),
+              ],
+            )
+          : Column(
+              children: [
+                Row(children: [pill(true), pill(false), pill(false), pill(false)]),
+                const SizedBox(height: 4),
+                Expanded(child: Row(children: [box(), box(), box()])),
+                Expanded(child: Row(children: [box(), box(), box()])),
+              ],
+            ),
+    );
+  }
+}

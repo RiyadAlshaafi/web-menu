@@ -97,6 +97,7 @@ class MenuCategory {
     this.sortOrder = 0,
     this.spotlight = false,
     this.visible = true,
+    this.imageUrl = '',
     this.kitchenId,
   });
 
@@ -106,6 +107,9 @@ class MenuCategory {
   int sortOrder;
   bool spotlight;
   bool visible;
+
+  /// The category's picture: a stored URL, or a data: URL until it is saved.
+  String imageUrl;
 
   /// The kitchen that makes this category's dishes; null means the cafe's first kitchen.
   String? kitchenId;
@@ -119,6 +123,7 @@ class MenuCategory {
     sortOrder: json['sortOrder'] as int? ?? 0,
     spotlight: json['spotlight'] as bool? ?? false,
     visible: json['visible'] as bool? ?? true,
+    imageUrl: json['imageUrl'] as String? ?? '',
     kitchenId: json['kitchenId'] as String?,
   );
 
@@ -129,6 +134,7 @@ class MenuCategory {
     'sortOrder': sortOrder,
     'spotlight': spotlight,
     'visible': visible,
+    'imageUrl': imageUrl,
     'kitchenId': kitchenId,
   };
 }

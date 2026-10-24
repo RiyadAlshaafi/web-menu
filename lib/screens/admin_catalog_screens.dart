@@ -380,7 +380,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (_languagePanel(store), const OrderingCard()),
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersCard(), store.isLocalMode ? null : const FeedbackCard()),
-      if (store.allows(AppFeature.kitchenPrinter)) (const KitchensCard(), null),
+      (store.allows(AppFeature.kitchenPrinter) ? const KitchensCard() : const SizedBox.shrink(), const TakeoutLayoutCard()),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {

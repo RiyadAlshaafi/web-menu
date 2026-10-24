@@ -47,6 +47,7 @@ void main() {
     final store = CafeStore(AppDatabase.instance);
     await store.load();
     store.locale = 'en';
+    store.categories = [MenuCategory(id: 'c', nameEn: 'Food', nameAr: 'طعام')];
     store.menuItems = [
       MenuItem(
         id: 'burger',
@@ -63,9 +64,23 @@ void main() {
     return store;
   }
 
+  testWidgets('the classic takeout layout shows every dish at once, the cards layout only categories', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    store.cafe = {...store.cafe, 'takeoutLayout': 'classic'};
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    expect(find.text('Burger'), findsOneWidget, reason: 'classic lists the dish straight away');
+
+    store.cafe = {...store.cafe, 'takeoutLayout': 'cards'};
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    expect(find.text('Burger'), findsNothing, reason: 'cards show categories first');
+    expect(store.takeoutCards, isTrue);
+  });
+
   testWidgets('tapping the ticket line opens the choices and the extra is charged', (tester) async {
     final store = (await tester.runAsync(storeWithBurger))!;
     await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    // The counter opens on category cards; open the one holding the burger.
+    await tapAndWait(tester, find.text('Food').last);
     await tapAndWait(tester, find.text('Burger').first);
     await tapAndWait(tester, find.descendant(of: find.byType(TicketLineName), matching: find.byIcon(Icons.tune)));
     expect(find.text('Extra cheese'), findsOneWidget);
@@ -78,6 +93,8 @@ void main() {
   testWidgets('holding a dish for a second opens its choices; a short tap just adds it', (tester) async {
     final store = (await tester.runAsync(storeWithBurger))!;
     await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    // The counter opens on category cards; open the one holding the burger.
+    await tapAndWait(tester, find.text('Food').last);
 
     // A press shorter than a second is an ordinary tap: the dish goes on the ticket as it comes.
     final quick = await tester.startGesture(tester.getCenter(find.text('Burger').first));
@@ -106,6 +123,8 @@ void main() {
     final store = (await tester.runAsync(storeWithBurger))!;
     store.features = FeatureSet.fromKeys(const ['tables']);
     await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    // The counter opens on category cards; open the one holding the burger.
+    await tapAndWait(tester, find.text('Food').last);
 
     final hold = await tester.startGesture(tester.getCenter(find.text('Burger').first));
     await tester.pump(const Duration(milliseconds: 1100));

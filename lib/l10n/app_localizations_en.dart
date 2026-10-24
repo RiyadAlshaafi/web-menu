@@ -2041,4 +2041,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get feedbackFailed =>
       'Couldn\'t send your message. Check the connection and try again.';
+
+  @override
+  String get takeoutScreenTitle => 'Takeout screen';
+
+  @override
+  String get takeoutLayoutClassic => 'Classic';
+
+  @override
+  String get takeoutLayoutClassicHint =>
+      'All dishes at once, with a bar on top to filter by category.';
+
+  @override
+  String get takeoutLayoutCards => 'Category cards';
+
+  @override
+  String get takeoutLayoutCardsHint =>
+      'White cards with a picture for each category; tap one to see its dishes.';
 }

@@ -995,5 +995,10 @@
   "feedbackSent": "Thank you, your message was sent.",
   "feedbackEmpty": "Write a message first.",
   "feedbackTooMany": "You have sent the most messages allowed today. Try again tomorrow.",
-  "feedbackFailed": "Couldn't send your message. Check the connection and try again."
+  "feedbackFailed": "Couldn't send your message. Check the connection and try again.",
+  "takeoutScreenTitle": "Takeout screen",
+  "takeoutLayoutClassic": "Classic",
+  "takeoutLayoutClassicHint": "All dishes at once, with a bar on top to filter by category.",
+  "takeoutLayoutCards": "Category cards",
+  "takeoutLayoutCardsHint": "White cards with a picture for each category; tap one to see its dishes."
 }

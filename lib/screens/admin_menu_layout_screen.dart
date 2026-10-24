@@ -262,6 +262,22 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Tooltip(
+                message: context.l10n.layoutDishPictureLabel,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => _pickPicture(store),
+                  child: category.imageUrl.isEmpty
+                      ? Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(color: const Color(0xFFFBF6F0), borderRadius: BorderRadius.circular(12)),
+                          child: const Icon(Icons.add_photo_alternate_outlined, color: CafeColors.terracotta),
+                        )
+                      : DishPhoto(path: category.imageUrl, size: 56, radius: 12),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,6 +364,23 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
         ],
       ),
     );
+  }
+
+  Future<void> _pickPicture(CafeStore store) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true, allowMultiple: false);
+      final file = result?.files.isNotEmpty == true ? result!.files.single : null;
+      final bytes = file?.bytes;
+      if (bytes == null || bytes.isEmpty) return;
+      if (bytes.length > 10 * 1024 * 1024) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.layoutImageTooLarge)));
+        return;
+      }
+      final mime = (file!.extension ?? 'jpg').toLowerCase() == 'png' ? 'image/png' : 'image/jpeg';
+      await store.saveCategory(widget.category..imageUrl = 'data:$mime;base64,${base64Encode(bytes)}');
+    } catch (error, stackTrace) {
+      reportError('category photo', error, stackTrace);
+    }
   }
 
   Future<void> _confirmDeleteCategory(BuildContext context, CafeStore store, MenuCategory category) async {
