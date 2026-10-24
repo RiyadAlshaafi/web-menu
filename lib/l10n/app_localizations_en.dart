@@ -1712,6 +1712,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Confirm the account from the email we sent, then sign in.';
 
   @override
+  String get catalogPublicMenuUrlReadOnly =>
+      'Set by the developer. Table QR codes open this address.';
+
+  @override
+  String get catalogPublicMenuUrlDefault =>
+      'The default address, until the developer sets one for this cafe. Table QR codes open it.';
+
+  @override
   String get errGeneric => 'Something went wrong. Try again.';
 
   @override

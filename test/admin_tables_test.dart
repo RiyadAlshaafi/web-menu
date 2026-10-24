@@ -40,8 +40,18 @@ void main() {
     expect(_store(menuUrl: 'https://menu.example/').guestLink('slug-one'), 'https://menu.example/t/slug-one');
   });
 
-  testWidgets('without a menu address there is no QR code to print', (tester) async {
+  test('a cafe without its own address links to the default guest address', () {
+    expect(_store(menuUrl: '').guestLink('slug-one'), '$defaultGuestMenuUrl/t/slug-one');
+  });
+
+  testWidgets('a new cafe can print QR codes before the developer sets its address', (tester) async {
     await pumpAdminScreen(tester, const AdminTablesScreen(), _store(menuUrl: ''));
+
+    expect(find.byType(QrImageView), findsWidgets);
+  });
+
+  testWidgets('a saved address that is not a web address makes no QR code to print', (tester) async {
+    await pumpAdminScreen(tester, const AdminTablesScreen(), _store(menuUrl: 'not-a-web-address'));
 
     expect(find.byType(QrImageView), findsNothing);
     final print = tester.widget<Widget>(find.ancestor(of: find.text(l10n.adminPrintStandCard).first, matching: find.bySubtype<ButtonStyleButton>()).first);

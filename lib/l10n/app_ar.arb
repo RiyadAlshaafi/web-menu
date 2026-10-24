@@ -543,6 +543,8 @@
   "authConfirmEmailFirst": "أكّد الحساب من البريد الذي أرسلناه، ثم سجّل الدخول.",
   "catalogPublicMenuUrl": "عنوان قائمة الزبائن (يُستخدم في رموز QR للطاولات)",
   "catalogPublicMenuUrlHint": "https://menu.your-cafe.ly",
+  "catalogPublicMenuUrlReadOnly": "يضبطه المطوّر. رموز QR للطاولات تفتح هذا العنوان.",
+  "catalogPublicMenuUrlDefault": "العنوان الافتراضي، إلى أن يضبط المطوّر عنواناً لهذا المقهى. رموز QR للطاولات تفتحه.",
   "errGeneric": "حدث خطأ. حاول مجددًا.",
   "errSessionExpired": "انتهت الجلسة. سجّل الدخول مجددًا.",
   "errNoOpenBill": "لا توجد فاتورة مفتوحة لهذه الطاولة.",

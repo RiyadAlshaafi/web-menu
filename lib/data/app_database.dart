@@ -1167,6 +1167,12 @@ class AppDatabase {
     if (isLocal) _saveLocalCatalog();
   }
 
+  /// Keeps the guest menu address the developer just saved, without writing it (the dev RPC did).
+  void rememberPublicMenuUrl(String url) {
+    _cafe = {..._cafe, 'publicMenuUrl': url};
+    _saveLocalSettingsIfLocal();
+  }
+
   Future<void> writeAutoPrintReceipt(bool value) async {
     _cafe = {..._cafe, 'autoPrintReceipt': value};
     _saveLocalSettingsIfLocal();
@@ -1207,7 +1213,7 @@ class AppDatabase {
         .update({
           'name': cafe['name'] ?? '',
           'logo_url': cafe['logoUrl'] ?? '',
-          'public_menu_url': cafe['publicMenuUrl'] ?? '',
+          // public_menu_url is left out: only the developer changes it (dev_set_public_menu_url).
           'header_color': cafe['headerColor'] ?? '',
           'sidebar_color': cafe['sidebarColor'] ?? '',
           'background_color': cafe['backgroundColor'] ?? '',

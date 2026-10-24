@@ -1,5 +1,9 @@
 part of 'cafe_store.dart';
 
+/// The guest menu address used when a cafe has none of its own yet: the same one the web
+/// build defaults to (tool/build_web.sh).
+const defaultGuestMenuUrl = 'https://tawla.ly';
+
 extension CafeStoreSettings on CafeStore {
   String get cafeName {
     final name = (cafe['name'] as String?)?.trim() ?? '';
@@ -8,14 +12,16 @@ extension CafeStoreSettings on CafeStore {
 
   String get logoUrl => (cafe['logoUrl'] as String?)?.trim() ?? '';
 
-  /// The web address this cafe's guests open, saved with the cafe.
+  /// The web address this cafe's guests open, saved with the cafe. Only the developer sets it
+  /// (dev screen); empty until then.
   String get publicMenuUrl => (cafe['publicMenuUrl'] as String?)?.trim() ?? '';
 
-  /// Address printed in table QR codes: the cafe's own menu address first,
-  /// then the PUBLIC_MENU_URL build setting, then the address the admin is
-  /// using unless that is a local test address (a QR pointing at localhost
-  /// works on no guest's phone). Empty when none is known, so no QR is made.
-  String guestLink(String slug) {
+  /// Address table QR codes point to: the cafe's own menu address first, then the
+  /// PUBLIC_MENU_URL build setting, then the address the admin is using unless that is a local
+  /// test address (a QR pointing at localhost works on no guest's phone), then
+  /// [defaultGuestMenuUrl], so a new cafe's QR codes work before the developer sets one.
+  /// Empty only when the saved address is not a web address, so no QR is made.
+  String get guestMenuBase {
     var base = publicMenuUrl;
     if (base.isEmpty) base = const String.fromEnvironment('PUBLIC_MENU_URL').trim();
     if (base.isEmpty && kIsWeb) {
@@ -24,16 +30,29 @@ extension CafeStoreSettings on CafeStore {
       final origin = Uri.base.origin;
       if (!local && origin.startsWith('http')) base = origin;
     }
+    if (base.isEmpty) base = defaultGuestMenuUrl;
     base = base.trim().replaceFirst(RegExp(r'/+$'), '');
     if (base.endsWith('/rest/v1')) base = base.substring(0, base.length - 7).replaceFirst(RegExp(r'/+$'), '');
-    if (!base.startsWith('http')) return '';
+    return base.startsWith('http') ? base : '';
+  }
+
+  /// The table's guest menu link, or empty when there is no address (see [guestMenuBase]).
+  String guestLink(String slug) {
+    final base = guestMenuBase;
+    if (base.isEmpty) return '';
     // A plain path: the guest web app (guest-web/) serves /t/<slug>, and a hash never reaches it.
     return '$base/t/$slug';
   }
 
+  /// The developer saved a new guest menu address for this cafe on the dev screen.
+  void applyPublicMenuUrl(String url) {
+    cafe = {...cafe, 'publicMenuUrl': url.trim()};
+    db.rememberPublicMenuUrl(url.trim());
+    notifyListeners();
+  }
+
   Future<void> saveCompany({
     required String name,
-    String? publicMenuUrl,
     String? logoDataUrl,
     bool removeLogo = false,
   }) async {
@@ -47,7 +66,6 @@ extension CafeStoreSettings on CafeStore {
       ...cafe,
       'name': name.trim(),
       'logoUrl': logo,
-      if (publicMenuUrl != null) 'publicMenuUrl': publicMenuUrl.trim(),
     };
     await db.writeCafe(cafe);
     notifyListeners();

@@ -23,7 +23,6 @@ class CompanyInfoCard extends StatefulWidget {
 
 class _CompanyInfoCardState extends State<CompanyInfoCard> {
   late final TextEditingController name;
-  late final TextEditingController menuUrl;
   String? pendingLogo;
   bool removeLogo = false;
 
@@ -32,13 +31,11 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
     super.initState();
     final cafe = context.read<CafeStore>().cafe;
     name = TextEditingController(text: (cafe['name'] as String?) ?? '');
-    menuUrl = TextEditingController(text: (cafe['publicMenuUrl'] as String?) ?? '');
   }
 
   @override
   void dispose() {
     name.dispose();
-    menuUrl.dispose();
     super.dispose();
   }
 
@@ -70,13 +67,20 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
           const SizedBox(height: 14),
           LabeledField(label: context.l10n.catalogCafeName, child: TextField(controller: name)),
           const SizedBox(height: 14),
+          // Read-only: only the developer changes it, on the dev screen.
           LabeledField(
             label: context.l10n.catalogPublicMenuUrl,
-            child: TextField(
-              controller: menuUrl,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(hintText: context.l10n.catalogPublicMenuUrlHint),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(10), border: Border.all(color: TawlaTokens.border)),
+              child: SelectableText(store.guestMenuBase, style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            store.publicMenuUrl.isEmpty ? context.l10n.catalogPublicMenuUrlDefault : context.l10n.catalogPublicMenuUrlReadOnly,
+            style: const TextStyle(color: TawlaTokens.muted, fontSize: 12),
           ),
           const SizedBox(height: 14),
           NavyButton(
@@ -84,7 +88,6 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
             onPressed: () async {
               await store.saveCompany(
                 name: name.text,
-                publicMenuUrl: menuUrl.text,
                 logoDataUrl: pendingLogo != null && pendingLogo!.startsWith('data:') ? pendingLogo : null,
                 removeLogo: removeLogo,
               );

@@ -3110,6 +3110,18 @@ abstract class AppLocalizations {
   /// **'Confirm the account from the email we sent, then sign in.'**
   String get authConfirmEmailFirst;
 
+  /// No description provided for @catalogPublicMenuUrlReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Set by the developer. Table QR codes open this address.'**
+  String get catalogPublicMenuUrlReadOnly;
+
+  /// No description provided for @catalogPublicMenuUrlDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'The default address, until the developer sets one for this cafe. Table QR codes open it.'**
+  String get catalogPublicMenuUrlDefault;
+
   /// No description provided for @errGeneric.
   ///
   /// In en, this message translates to:

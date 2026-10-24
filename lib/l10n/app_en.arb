@@ -885,6 +885,8 @@
   "authConfirmEmailFirst": "Confirm the account from the email we sent, then sign in.",
   "catalogPublicMenuUrl": "Guest menu address (used in table QR codes)",
   "catalogPublicMenuUrlHint": "https://menu.your-cafe.ly",
+  "catalogPublicMenuUrlReadOnly": "Set by the developer. Table QR codes open this address.",
+  "catalogPublicMenuUrlDefault": "The default address, until the developer sets one for this cafe. Table QR codes open it.",
   "errGeneric": "Something went wrong. Try again.",
   "errSessionExpired": "Your session ended. Sign in again.",
   "errNoOpenBill": "This table has no open bill.",

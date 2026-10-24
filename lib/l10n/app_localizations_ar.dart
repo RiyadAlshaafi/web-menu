@@ -1701,6 +1701,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'أكّد الحساب من البريد الذي أرسلناه، ثم سجّل الدخول.';
 
   @override
+  String get catalogPublicMenuUrlReadOnly =>
+      'يضبطه المطوّر. رموز QR للطاولات تفتح هذا العنوان.';
+
+  @override
+  String get catalogPublicMenuUrlDefault =>
+      'العنوان الافتراضي، إلى أن يضبط المطوّر عنواناً لهذا المقهى. رموز QR للطاولات تفتحه.';
+
+  @override
   String get errGeneric => 'حدث خطأ. حاول مجددًا.';
 
   @override

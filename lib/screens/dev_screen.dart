@@ -80,6 +80,14 @@ class _DevScreenState extends State<DevScreen> {
     await _loadSlots();
   }
 
+  /// The cafe's guest menu address changed: reload the slots, and show it at once when this
+  /// device belongs to that cafe.
+  Future<void> _guestUrlSaved(String restaurantId, String url) async {
+    if (AppDatabase.instance.restaurantId == restaurantId) context.read<CafeStore>().applyPublicMenuUrl(url);
+    setState(() => notice = url.isEmpty ? 'Guest menu address cleared: the QR codes use the default address.' : 'Guest menu address saved: $url');
+    await _loadSlots();
+  }
+
   Future<void> _issueCode() async {
     final slot = selectedSlot;
     if (slot == null) return;
@@ -463,6 +471,14 @@ class _DevScreenState extends State<DevScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              _GuestUrlEditor(
+                key: ValueKey('guest-url-${current['slot']}'),
+                password: widget.password,
+                restaurantId: current['id'] as String,
+                saved: (current['public_menu_url'] as String?) ?? '',
+                onSaved: _guestUrlSaved,
+              ),
             ],
           ],
         ),
@@ -658,6 +674,83 @@ class _DevicesCardState extends State<_DevicesCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The guest menu address of one cafe (used in its table QR codes). Only the developer changes
+/// it; the server checks the developer password. Empty means the app's default address.
+class _GuestUrlEditor extends StatefulWidget {
+  const _GuestUrlEditor({super.key, required this.password, required this.restaurantId, required this.saved, required this.onSaved});
+
+  final String password;
+  final String restaurantId;
+  final String saved;
+  final Future<void> Function(String restaurantId, String url) onSaved;
+
+  @override
+  State<_GuestUrlEditor> createState() => _GuestUrlEditorState();
+}
+
+class _GuestUrlEditorState extends State<_GuestUrlEditor> {
+  late final url = TextEditingController(text: widget.saved);
+  bool saving = false;
+  String? error;
+
+  @override
+  void dispose() {
+    url.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      saving = true;
+      error = null;
+    });
+    final result = await AppDatabase.instance.devCall(
+      'dev_set_public_menu_url',
+      widget.password,
+      {'p_restaurant_id': widget.restaurantId, 'p_url': url.text.trim()},
+    );
+    if (!mounted) return;
+    setState(() => saving = false);
+    if (result?['ok'] != true) {
+      setState(() => error = '${result?['error'] ?? 'Could not save the address.'}');
+      return;
+    }
+    final saved = (result?['public_menu_url'] as String?) ?? '';
+    url.text = saved;
+    await widget.onSaved(widget.restaurantId, saved);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Guest menu address (used in table QR codes)', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        const Text('A plain https:// address with no path. Leave empty to use the default ($defaultGuestMenuUrl).'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: url,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(hintText: 'https://menu.your-cafe.ly'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(onPressed: saving ? null : _save, child: Text(saving ? 'Saving…' : 'Save address')),
+          ],
+        ),
+        if (error != null) ...[
+          const SizedBox(height: 6),
+          Text(error!, style: const TextStyle(color: CafeColors.alert, fontWeight: FontWeight.w700)),
+        ],
+      ],
     );
   }
 }
