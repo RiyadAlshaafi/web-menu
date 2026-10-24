@@ -418,12 +418,6 @@ class _OrderingCardState extends State<OrderingCard> {
             value: requireNear,
             onChanged: (value) => setState(() => requireNear = value),
           ),
-          SwitchRow(
-            title: context.l10n.adminAutoPrintReceipt,
-            hint: context.l10n.adminAutoPrintReceiptHint,
-            value: store.autoPrintReceipt,
-            onChanged: (value) => store.setAutoPrintReceipt(value),
-          ),
           if (store.allows(AppFeature.qrOrdering))
           SwitchRow(
             title: context.l10n.adminRequireCashierOnline,

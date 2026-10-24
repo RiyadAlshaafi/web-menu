@@ -1195,7 +1195,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminAutoPrintReceiptHint =>
-      'Opens the print dialog when a dine-in or takeout sale is settled.';
+      'Prints when a dine-in or takeout sale is settled: on this till\'s cashier printer when one is picked, otherwise (web, or no printer) the print dialog opens.';
 
   @override
   String get receiptThankYou => 'Thank you';
@@ -1946,6 +1946,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsScopeThisTill => 'This till · saved on this device only';
+
+  @override
+  String get settingsScopeWholeCafe => 'Whole cafe · same on every till';
 
   @override
   String get printersTitle => 'Printers';

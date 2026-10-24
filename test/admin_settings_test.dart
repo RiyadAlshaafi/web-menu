@@ -136,5 +136,7 @@ void main() {
 
     expect(find.text(l10n.printersKitchensTitle), findsOneWidget);
     expect(find.text(l10n.kitchensTitle), findsNothing);
+    // The auto-print switch moved here from Ordering, so it shows once.
+    expect(find.text(l10n.adminAutoPrintReceipt), findsOneWidget);
   });
 }

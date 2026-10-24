@@ -2237,7 +2237,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminAutoPrintReceiptHint.
   ///
   /// In en, this message translates to:
-  /// **'Opens the print dialog when a dine-in or takeout sale is settled.'**
+  /// **'Prints when a dine-in or takeout sale is settled: on this till\'s cashier printer when one is picked, otherwise (web, or no printer) the print dialog opens.'**
   String get adminAutoPrintReceiptHint;
 
   /// No description provided for @receiptThankYou.
@@ -3523,6 +3523,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This till · saved on this device only'**
   String get settingsScopeThisTill;
+
+  /// No description provided for @settingsScopeWholeCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole cafe · same on every till'**
+  String get settingsScopeWholeCafe;
 
   /// No description provided for @printersTitle.
   ///

@@ -376,7 +376,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     final pairs = <(Widget, Widget?)>[
       (const CompanyInfoCard(), store.allows(AppFeature.branding) ? const AppearanceCard() : null),
       (_cashierPanel(store), store.allows(AppFeature.paymentTypes) ? const PaymentTypesCard() : null),
-      (_languagePanel(store), const OrderingCard()),
+      // Ordering has nothing to show when neither of its features is on.
+      (_languagePanel(store), store.allows(AppFeature.locationCheck) || store.allows(AppFeature.qrOrdering) ? const OrderingCard() : null),
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersKitchensCard(), store.isLocalMode ? null : const FeedbackCard()),
       (const TakeoutLayoutCard(), null),

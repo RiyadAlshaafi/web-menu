@@ -1191,7 +1191,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminAutoPrintReceiptHint =>
-      'يفتح نافذة الطباعة عند تسوية طلب داخلي أو سفري.';
+      'يطبع عند تسوية طلب داخلي أو سفري: على طابعة الكاشير في هذا الجهاز إن اختيرت، وإلا (على الويب أو بدون طابعة) تفتح نافذة الطباعة.';
 
   @override
   String get receiptThankYou => 'شكراً لكم';
@@ -1935,6 +1935,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsScopeThisTill => 'هذا الجهاز · يُحفظ على هذا الجهاز فقط';
+
+  @override
+  String get settingsScopeWholeCafe =>
+      'المقهى كله · نفس الإعداد على كل الأجهزة';
 
   @override
   String get printersTitle => 'الطابعات';

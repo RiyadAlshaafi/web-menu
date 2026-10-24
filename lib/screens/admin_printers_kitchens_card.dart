@@ -15,8 +15,8 @@ import '../widgets/tawla_ui.dart';
 /// printer for kitchen tickets, the cashier printer for receipts), saved on this device only.
 /// Below, when the kitchen feature is on, the cafe's kitchens (pizza oven, grill, bar): each one
 /// makes the categories ticked for it and prints on the printer picked for it on this till.
-/// Dishes of unticked categories go to the first kitchen. The card always shows, also on the
-/// web, so its cafe-wide settings can be changed anywhere.
+/// Dishes of unticked categories go to the first kitchen. Between them, the cafe-wide auto-print
+/// switch, the same on every till. The card always shows, also on the web.
 class PrintersKitchensCard extends StatefulWidget {
   const PrintersKitchensCard({super.key});
 
@@ -132,6 +132,16 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
           EyebrowLabel(context.l10n.settingsScopeThisTill),
           const SizedBox(height: 4),
           ..._tillPrinters(store, kitchenOn),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: TawlaTokens.border),
+          const SizedBox(height: 14),
+          EyebrowLabel(context.l10n.settingsScopeWholeCafe),
+          SwitchRow(
+            title: context.l10n.adminAutoPrintReceipt,
+            hint: context.l10n.adminAutoPrintReceiptHint,
+            value: store.autoPrintReceipt,
+            onChanged: (value) => store.setAutoPrintReceipt(value),
+          ),
           if (kitchenOn) ...[
             const SizedBox(height: 18),
             const Divider(height: 1, color: TawlaTokens.border),

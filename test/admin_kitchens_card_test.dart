@@ -13,6 +13,7 @@ import 'support/admin_test_app.dart';
 final l10n = lookupAppLocalizations(const Locale('en'));
 
 CafeStore _store() => CafeStore(AppDatabase.instance)
+  ..cafe = {'name': 'Test Cafe', 'autoPrintReceipt': true}
   ..categories = [
     MenuCategory(id: 'pizza', nameEn: 'Pizza', nameAr: 'بيتزا', sortOrder: 1),
     MenuCategory(id: 'drinks', nameEn: 'Drinks', nameAr: 'مشروبات', sortOrder: 2),
@@ -128,5 +129,21 @@ void main() {
     expect(find.text(l10n.printersWindowsOnly), findsOneWidget);
     expect(find.text(l10n.kitchensTitle), findsNothing);
     expect(find.text('+ ${l10n.kitchensAdd}'), findsNothing);
+  });
+
+  testWidgets('the cafe-wide auto-print switch sits in its own part, also with the kitchen feature off', (tester) async {
+    final store = _store()..features = FeatureSet.fromKeys(const ['tables']);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
+    await tester.pump();
+
+    final till = tester.getTopLeft(find.text(l10n.settingsScopeThisTill.toUpperCase())).dy;
+    final cafe = tester.getTopLeft(find.text(l10n.settingsScopeWholeCafe.toUpperCase())).dy;
+    expect(cafe, greaterThan(till));
+    expect(find.text(l10n.adminAutoPrintReceipt), findsOneWidget);
+    expect(store.autoPrintReceipt, isTrue);
+
+    await tapVisible(tester, find.byType(Switch));
+    expect(store.autoPrintReceipt, isFalse);
+    expect(store.cafe['autoPrintReceipt'], isFalse);
   });
 }
