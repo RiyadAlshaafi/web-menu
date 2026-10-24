@@ -120,7 +120,10 @@ String? expenseEmployeeId(ShiftExpense expense) {
 sealed class EmployeeFilter {
   const EmployeeFilter();
 
-  bool matches(ShiftExpense expense);
+  bool matches(ShiftExpense expense) => matchesEmployee(expenseEmployeeId(expense));
+
+  /// [employeeId] is the expense's employee, null when it has none.
+  bool matchesEmployee(String? employeeId);
 }
 
 /// Every expense.
@@ -128,7 +131,7 @@ final class AllEmployees extends EmployeeFilter {
   const AllEmployees();
 
   @override
-  bool matches(ShiftExpense expense) => true;
+  bool matchesEmployee(String? employeeId) => true;
 
   @override
   bool operator ==(Object other) => other is AllEmployees;
@@ -142,7 +145,7 @@ final class NoEmployee extends EmployeeFilter {
   const NoEmployee();
 
   @override
-  bool matches(ShiftExpense expense) => expenseEmployeeId(expense) == null;
+  bool matchesEmployee(String? employeeId) => employeeId == null;
 
   @override
   bool operator ==(Object other) => other is NoEmployee;
@@ -158,7 +161,7 @@ final class OneEmployee extends EmployeeFilter {
   final String id;
 
   @override
-  bool matches(ShiftExpense expense) => expenseEmployeeId(expense) == id;
+  bool matchesEmployee(String? employeeId) => employeeId == id;
 
   @override
   bool operator ==(Object other) => other is OneEmployee && other.id == id;

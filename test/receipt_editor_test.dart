@@ -88,4 +88,13 @@ void main() {
     expect(find.text('preview wages 297mm'), findsOneWidget);
     expect(find.text(l10n.receiptCsvColumns(expensesCsvColumns.join(', '))), findsOneWidget);
   });
+
+  testWidgets('the sales report has a preview too, at the cashier printer width', (tester) async {
+    await _pump(tester, _store());
+
+    await tapVisible(tester, find.widgetWithText(ChoiceChip, l10n.receiptPreviewReport));
+    expect(find.text(l10n.receiptPreviewBothWidths), findsOneWidget, reason: 'no cashier printer in tests');
+    expect(find.text('preview slip-58 57mm'), findsOneWidget);
+    expect(find.text('preview slip-80 80mm'), findsOneWidget);
+  });
 }

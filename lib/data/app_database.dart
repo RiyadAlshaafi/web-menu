@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/money.dart';
+import '../core/sales_report.dart';
 import '../models/models.dart';
 import '../printing/takeout_receipt.dart';
 import '../offline/offline_sync.dart' show isNetworkError;
@@ -1803,6 +1804,24 @@ class AppDatabase {
     final item = _menuItems.where((item) => item.id == line.menuItemId);
     if (item.isNotEmpty) params['on'] = onIdsFor(item.first.options, line.choices).toList();
     return params;
+  }
+
+  /// The admin's summary report of the Tripoli days [from] to [to] (both included): from the
+  /// server online, from every sale saved on this PC on an offline till. A till that lost its
+  /// connection has only part of the sales, so it gets an error instead of wrong totals.
+  Future<({SalesReport? report, String? error})> salesReport(DateTime from, DateTime to) async {
+    if (isLocal) return (report: _localSalesReport(from, to), error: null);
+    if (client == null) return (report: null, error: ErrorCodes.notConfigured);
+    if (offlineMode) return (report: null, error: ErrorCodes.network);
+    String day(DateTime value) => '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+    try {
+      final raw = await client!.rpc('admin_sales_report', params: {'p_from': day(from), 'p_to': day(to)});
+      if (raw is Map && raw['ok'] == true) return (report: SalesReport.fromJson(Map<String, dynamic>.from(raw)), error: null);
+      return (report: null, error: ErrorCodes.failed);
+    } catch (error, stackTrace) {
+      reportError('admin_sales_report', error, stackTrace);
+      return (report: null, error: _errorCode(error));
+    }
   }
 
   Future<String?> quickTakeoutReceipt(List<OrderLine> lines, String? paymentTypeId) async {

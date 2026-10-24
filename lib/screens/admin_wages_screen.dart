@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
+import '../core/sales_report.dart';
 import '../printing/export_pdfs.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
@@ -16,6 +17,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../core/time_format.dart';
 import '../widgets/cafe_widgets.dart';
+import '../widgets/sales_report_dialog.dart';
 import '../widgets/tawla_ui.dart';
 
 class AdminWagesScreen extends StatefulWidget {
@@ -32,6 +34,12 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   EmployeeFilter employee = const AllEmployees();
   String? categoryId;
 
+  /// The cards' totals, from the server (or this till's own records offline): the recent sales
+  /// loaded for the list are not the whole month.
+  SalesReport? summary;
+  String? summaryError;
+  String? summaryKey;
+
   @override
   void dispose() {
     search.dispose();
@@ -43,15 +51,13 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     final store = context.watch<CafeStore>();
     final rows = _rows(store);
     final window = summaryWindow(from: from, to: to);
-    final expensesTotal = expenseLedgerRows(
-      store,
-      query: search.text,
-      employee: employee,
-      categoryId: categoryId,
-      from: window.from,
-      to: window.to,
-    ).fold<double>(0, (sum, row) => sum + row.amount);
-    final salesTotal = saleLedgerRows(store, from: window.from, to: window.to).fold<double>(0, (sum, row) => sum + row.total);
+    _watchSummary(store, window);
+    final report = summary;
+    String figure(double Function(SalesReport report) pick) =>
+        report == null ? (summaryError == null ? '…' : '—') : store.currency.format(pick(report));
+    final salesFigure = figure((report) => report.salesTotal);
+    final expensesFigure = figure((report) => report.expensesWhere(employee: employee, typeId: categoryId));
+    final netFigure = figure((report) => report.salesTotal - report.expensesWhere(typeId: categoryId));
     final period = window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange;
     final employees = expenseEmployees(store);
     // One person's expenses next to the whole cafe's sales make no net figure, so Net hides then.
@@ -70,15 +76,15 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 _figure(
                   context,
                   oneEmployee ? '${context.l10n.summarySales} · $period · ${context.l10n.summaryWholeCafe}' : '${context.l10n.summarySales} · $period',
-                  store.currency.format(salesTotal),
+                  salesFigure,
                 ),
                 _figure(
                   context,
                   oneEmployee ? '${context.l10n.summaryExpenses} · $period · ${_employeeLabel(context, employees)}' : '${context.l10n.summaryExpenses} · $period',
-                  store.currency.format(expensesTotal),
+                  expensesFigure,
                   color: CafeColors.terracottaDark,
                 ),
-                if (!oneEmployee) _figure(context, '${context.l10n.summaryNet} · $period', store.currency.format(salesTotal - expensesTotal), dark: true),
+                if (!oneEmployee) _figure(context, '${context.l10n.summaryNet} · $period', netFigure, dark: true),
               ];
               if (constraints.maxWidth < 720) {
                 return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 12), child: card)]);
@@ -93,7 +99,12 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
+          Text(
+            summaryError == null ? context.l10n.summaryCardsNote : context.l10n.summaryNeedsServer,
+            style: TextStyle(color: summaryError == null ? TawlaTokens.muted : CafeColors.alert, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -114,6 +125,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 height: 44,
                 onPressed: () => _exportPdf(store, rows, oneEmployee ? _employeeLabel(context, employees) : null),
               ),
+              const PrintReportButton(),
             ],
           ),
           const SizedBox(height: 12),
@@ -188,6 +200,23 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         ],
       ),
     );
+  }
+
+  /// Fetches the cards' totals again when the days change, or a sale or expense comes in.
+  void _watchSummary(CafeStore store, SummaryWindow window) {
+    final days = reportDaysFor(window);
+    final key = '${days.from}|${days.to}|${store.payments.length}|${store.payments.firstOrNull?.id}'
+        '|${store.expenses.length}|${store.expenses.firstOrNull?.id}|${store.expenses.where((e) => e.voided).length}';
+    if (key == summaryKey) return;
+    summaryKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final result = await store.salesReport(days.from, days.to);
+      if (!mounted || summaryKey != key) return;
+      setState(() {
+        summary = result.report;
+        summaryError = result.report == null ? (result.error ?? 'failed') : null;
+      });
+    });
   }
 
   /// What the employee filter shows now, for card labels and the PDF.

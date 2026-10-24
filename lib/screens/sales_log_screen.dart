@@ -18,6 +18,7 @@ import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/tawla_ui.dart';
+import '../widgets/sales_report_dialog.dart';
 import '../widgets/void_sale_dialog.dart';
 
 enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
@@ -133,6 +134,8 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                 exportCsv,
                 const SizedBox(width: 12),
                 exportPdf,
+                const SizedBox(width: 12),
+                const PrintReportButton(height: 52),
               ],
             ),
             const SizedBox(height: 16),

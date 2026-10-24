@@ -18,6 +18,7 @@ import '../features/app_feature.dart';
 import '../features/feature_file.dart';
 import '../models/models.dart';
 import '../core/money.dart';
+import '../core/sales_report.dart';
 import '../offline/offline_sync.dart';
 import '../offline/outbox_store.dart';
 import '../core/report_error.dart';
@@ -107,6 +108,9 @@ class CafeStore extends ChangeNotifier {
   FeatureSet features = FeatureSet.all;
 
   bool allows(AppFeature feature) => features.allows(feature);
+
+  /// The admin's summary report of the Tripoli days [from] to [to]; see [AppDatabase.salesReport].
+  Future<({SalesReport? report, String? error})> salesReport(DateTime from, DateTime to) => db.salesReport(from, to);
 
   /// Whether [item] offers choices on this till: it has some and the install has the feature on.
   bool hasChoices(MenuItem item) => item.options.isNotEmpty && allows(AppFeature.dishChoices);

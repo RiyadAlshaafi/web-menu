@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:menu_web_v1/core/money.dart';
 import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/data/local_state_store.dart';
 import 'package:menu_web_v1/data/local_state_store_io.dart' show SqliteLocalStateStore, localDatabaseFileName;
@@ -255,6 +256,37 @@ void main() {
       final fixed = db.expenses.firstWhere((e) => !e.voided);
       expect(fixed.staffId, 'chef-1');
       expect(fixed.employeeName, 'Omar');
+    });
+
+    test('the report is worked out from the SQLite file: voids apart, an edit counts once', () async {
+      final sara = await _cashier('Sara', '1234');
+      final shift = await _openShift(sara);
+      final dish = await _dish();
+      await db.quickTakeoutReceipt(_ticket(dish, 2), db.paymentTypes.first.id);
+      await db.quickTakeoutReceipt(_ticket(dish, 1), db.paymentTypes.first.id);
+      expect(await db.voidPayment(db.payments.first.id, 'mistake'), isNull);
+      final cafe = db.expenseCategories.first.id;
+      await db.addShiftExpense(
+        shiftId: shift.id,
+        cashierId: sara,
+        categoryId: cafe,
+        paidToCafe: true,
+        paidToCashierId: null,
+        amount: 10,
+        description: 'milk',
+      );
+      await db.editShiftExpense(id: db.expenses.single.id, categoryId: cafe, amount: 12, description: 'milk x');
+
+      final local = toTripoli(DateTime.now());
+      final today = DateTime(local.year, local.month, local.day);
+      final result = await db.salesReport(today, today);
+      final report = result.report!;
+      expect((report.salesCount, report.salesTotal), (1, 15.0));
+      expect((report.voidCount, report.voidTotal), (1, 7.5));
+      expect(report.expensesTotal, 12, reason: 'the edited expense counts once');
+      expect(report.net, 3);
+      final empty = (await db.salesReport(DateTime(2020, 1, 1), DateTime(2020, 1, 31))).report!;
+      expect(empty.isEmpty, isTrue);
     });
 
     test('are numbered E-001, E-002 and an edit voids the old one', () async {

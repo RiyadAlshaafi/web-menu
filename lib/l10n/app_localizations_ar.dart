@@ -2234,4 +2234,118 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get receiptKitchenFixed =>
       'تذاكر المطبخ تعرض الأطباق والخيارات فقط، بدون أسعار. إعدادات الإيصال أعلاه لا تغيّرها.';
+
+  @override
+  String get reportButton => 'طباعة تقرير';
+
+  @override
+  String get reportTitle => 'تقرير المبيعات';
+
+  @override
+  String reportPrintedAt(String when) {
+    return 'طُبع $when';
+  }
+
+  @override
+  String get reportEmpty => 'لا مبيعات ولا مصروفات في هذه الأيام.';
+
+  @override
+  String reportSales(int count) {
+    return 'المبيعات ($count)';
+  }
+
+  @override
+  String reportCountOf(String name, int count) {
+    return '$name ($count)';
+  }
+
+  @override
+  String get reportNoMethod => 'بدون طريقة دفع';
+
+  @override
+  String reportVoids(int count) {
+    return 'الملغاة ($count)';
+  }
+
+  @override
+  String get reportExpenses => 'المصروفات';
+
+  @override
+  String get reportByType => 'حسب النوع';
+
+  @override
+  String get reportByEmployee => 'حسب الموظف';
+
+  @override
+  String get reportNet => 'الصافي';
+
+  @override
+  String reportToday(String day) {
+    return 'اليوم، $day';
+  }
+
+  @override
+  String reportFromTo(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get reportPickDays =>
+      'اختر اليومين، ويكون الأول قبل الأخير أو في نفس اليوم.';
+
+  @override
+  String reportTooLong(int days) {
+    return 'يغطي التقرير $days يوماً على الأكثر.';
+  }
+
+  @override
+  String reportFailed(String reason) {
+    return 'تعذّر جلب المجاميع: $reason';
+  }
+
+  @override
+  String get reportPrinted => 'أُرسل التقرير إلى طابعة الكاشير.';
+
+  @override
+  String get reportPrinterFailed =>
+      'لم تطبع طابعة الكاشير التقرير. افحصها وحاول مرة أخرى.';
+
+  @override
+  String get reportRangeToday => 'اليوم';
+
+  @override
+  String get reportRangeMonth => 'شهر';
+
+  @override
+  String get reportRangeCustom => 'من – إلى';
+
+  @override
+  String get reportTripoliNote =>
+      'الأيام بتوقيت طرابلس. المجاميع من الخادم (وعلى جهاز يعمل بدون إنترنت من مبيعاته المحفوظة)، لا من المبيعات المعروضة على الشاشة.';
+
+  @override
+  String reportGoesToPrinter(String printer, int mm) {
+    return 'يُطبع على طابعة الكاشير في هذا الجهاز: $printer ($mm مم).';
+  }
+
+  @override
+  String get reportGoesToPreview =>
+      'لا توجد طابعة كاشير هنا (ويب، أو لم تُختر على هذا الجهاز): يُفتح التقرير في معاينة الطباعة.';
+
+  @override
+  String get reportWorking => 'جارٍ العمل…';
+
+  @override
+  String get reportPrint => 'طباعة';
+
+  @override
+  String get receiptPreviewReport => 'تقرير المبيعات';
+
+  @override
+  String get summaryNeedsServer =>
+      'هذه المجاميع من الخادم، وتعذّر الوصول إليه. حاول مرة أخرى عند عودة الاتصال.';
+
+  @override
+  String get summaryCardsNote =>
+      'البطاقات: مجاميع الخادم للتواريخ والنوع والموظف المختارة. مربع البحث يضيّق القائمة فقط.';
 }

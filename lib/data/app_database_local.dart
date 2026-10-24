@@ -6,6 +6,20 @@ part of 'app_database.dart';
 extension AppDatabaseLocal on AppDatabase {
   LocalStateStore get _store => _localStore!;
 
+  // ------------------------------------------------------------------ report
+
+  /// The summary report from every sale and expense in the SQLite file (not only the ones
+  /// loaded for the screens), with removed staff too, so their expenses keep their names.
+  SalesReport _localSalesReport(DateTime from, DateTime to) => SalesReport.fromRows(
+        from: from,
+        to: to,
+        payments: [for (final row in _store.readRecords('payments')) _paymentFromLocal(row)],
+        expenses: [for (final row in _store.readRecords('expenses')) _expenseFromLocal(row)],
+        paymentTypes: _paymentTypes,
+        expenseCategories: _expenseCategories,
+        staff: [for (final row in _docRows('cashiers')) Cashier.fromJson(row)],
+      );
+
   // ------------------------------------------------------------------ load
 
   void _loadLocal() {

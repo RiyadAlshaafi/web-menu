@@ -4045,6 +4045,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.'**
   String get receiptKitchenFixed;
+
+  /// No description provided for @reportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Print report'**
+  String get reportButton;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales report'**
+  String get reportTitle;
+
+  /// No description provided for @reportPrintedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Printed {when}'**
+  String reportPrintedAt(String when);
+
+  /// No description provided for @reportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales or expenses on these days.'**
+  String get reportEmpty;
+
+  /// No description provided for @reportSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales ({count})'**
+  String reportSales(int count);
+
+  /// No description provided for @reportCountOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ({count})'**
+  String reportCountOf(String name, int count);
+
+  /// No description provided for @reportNoMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment type'**
+  String get reportNoMethod;
+
+  /// No description provided for @reportVoids.
+  ///
+  /// In en, this message translates to:
+  /// **'Voids ({count})'**
+  String reportVoids(int count);
+
+  /// No description provided for @reportExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get reportExpenses;
+
+  /// No description provided for @reportByType.
+  ///
+  /// In en, this message translates to:
+  /// **'By type'**
+  String get reportByType;
+
+  /// No description provided for @reportByEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'By employee'**
+  String get reportByEmployee;
+
+  /// No description provided for @reportNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get reportNet;
+
+  /// No description provided for @reportToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today, {day}'**
+  String reportToday(String day);
+
+  /// No description provided for @reportFromTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} to {to}'**
+  String reportFromTo(String from, String to);
+
+  /// No description provided for @reportPickDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick both days, the first one on or before the last.'**
+  String get reportPickDays;
+
+  /// No description provided for @reportTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'A report covers at most {days} days.'**
+  String reportTooLong(int days);
+
+  /// No description provided for @reportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get the totals: {reason}'**
+  String reportFailed(String reason);
+
+  /// No description provided for @reportPrinted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent to the cashier printer.'**
+  String get reportPrinted;
+
+  /// No description provided for @reportPrinterFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The cashier printer did not print the report. Check it and try again.'**
+  String get reportPrinterFailed;
+
+  /// No description provided for @reportRangeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get reportRangeToday;
+
+  /// No description provided for @reportRangeMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'A month'**
+  String get reportRangeMonth;
+
+  /// No description provided for @reportRangeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'From – to'**
+  String get reportRangeCustom;
+
+  /// No description provided for @reportTripoliNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Days are Tripoli time. Totals come from the server (on a till that works offline, from its own saved sales), not from the sales on screen.'**
+  String get reportTripoliNote;
+
+  /// No description provided for @reportGoesToPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Prints on this till\'s cashier printer: {printer} ({mm} mm).'**
+  String reportGoesToPrinter(String printer, int mm);
+
+  /// No description provided for @reportGoesToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'No cashier printer here (web, or none picked on this till): the report opens in the print preview.'**
+  String get reportGoesToPreview;
+
+  /// No description provided for @reportWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get reportWorking;
+
+  /// No description provided for @reportPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get reportPrint;
+
+  /// No description provided for @receiptPreviewReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales report'**
+  String get receiptPreviewReport;
+
+  /// No description provided for @summaryNeedsServer.
+  ///
+  /// In en, this message translates to:
+  /// **'These totals come from the server, which could not be reached. Try again when the connection is back.'**
+  String get summaryNeedsServer;
+
+  /// No description provided for @summaryCardsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards: server totals for the dates, type and employee picked. The search box only narrows the list.'**
+  String get summaryCardsNote;
 }
 
 class _AppLocalizationsDelegate

@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../core/ledger.dart';
+import '../core/sales_report.dart';
 import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
@@ -14,6 +15,7 @@ import '../printing/export_pdfs.dart';
 import '../printing/kitchen_ticket.dart';
 import '../printing/receipt_print.dart';
 import '../printing/receipt_settings.dart';
+import '../printing/report_print.dart';
 import '../printing/slip.dart';
 import '../state/cafe_store.dart';
 import '../widgets/tawla_ui.dart';
@@ -71,6 +73,16 @@ final class _KitchenTicket extends _Printout {
 
   @override
   int get hashCode => kitchen?.id.hashCode ?? 0;
+}
+
+final class _Report extends _Printout {
+  const _Report();
+
+  @override
+  bool operator ==(Object other) => other is _Report;
+
+  @override
+  int get hashCode => 3;
 }
 
 final class _SalesLog extends _Printout {
@@ -336,6 +348,7 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
         if (store.kitchens.isEmpty) (const _KitchenTicket(null), context.l10n.receiptPreviewKitchen),
         for (final kitchen in store.orderedKitchens) (_KitchenTicket(kitchen), context.l10n.receiptPreviewKitchenOf(kitchen.name)),
       ],
+      (const _Report(), context.l10n.receiptPreviewReport),
       (const _SalesLog(), context.l10n.receiptPreviewSalesLog),
       if (store.allows(AppFeature.expenses)) (const _Expenses(), context.l10n.receiptPreviewExpenses),
     ];
@@ -353,7 +366,7 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
 
   /// The printer this till uses for [printout], or null when it has none (or it is an A4 export).
   String? _printerFor(_Printout printout) => switch (printout) {
-        _Receipt() => receiptPrinter,
+        _Receipt() || _Report() => receiptPrinter,
         _KitchenTicket(:final kitchen) => (kitchen == null ? null : kitchenPrinters[kitchen.id]) ?? kitchenPrinter,
         _SalesLog() || _Expenses() => null,
       };
@@ -386,6 +399,7 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
     final slip = switch (printout) {
       _Receipt(:final takeout) => receiptSlip(store, ReceiptData.sample(store, l10n, takeout: takeout), l10n, settings: draft),
       _KitchenTicket(:final kitchen) => _sampleTicket(store, kitchen),
+      _Report() => _sampleReport(store),
       _SalesLog() || _Expenses() => const <SlipLine>[],
     };
     // A new key when the content changes, so the page is drawn again.
@@ -423,6 +437,43 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
           ],
         ),
       ],
+    );
+  }
+
+  /// A made-up day's report, laid out as the report printout.
+  List<SlipLine> _sampleReport(CafeStore store) {
+    final l10n = context.l10n;
+    final now = DateTime.now();
+    final cash = store.paymentTypes.firstOrNull;
+    final report = SalesReport(
+      from: now,
+      to: now,
+      salesCount: 12,
+      salesTotal: 345.5,
+      voidCount: 1,
+      voidTotal: 20,
+      methods: [ReportMethod(id: cash?.id, nameEn: cash?.nameEn ?? l10n.receiptSampleMethod, nameAr: cash?.nameAr ?? '', count: 12, total: 345.5)],
+      expenses: [
+        ReportExpenseGroup(typeKey: 'cafe', typeId: null, typeEn: 'Café Expense', typeAr: 'مصروف المقهى', employeeId: null, employee: '', count: 3, total: 60),
+        ReportExpenseGroup(
+          typeKey: 'withdrawal',
+          typeId: null,
+          typeEn: 'Cash Withdrawal',
+          typeAr: 'سحب نقدي',
+          employeeId: 'sample',
+          employee: store.cashiers.firstOrNull?.name ?? l10n.receiptSampleCashier,
+          count: 1,
+          total: 50,
+        ),
+      ],
+    );
+    return reportSlip(
+      report: report,
+      cafeName: store.cafeName,
+      rangeLabel: l10n.reportRangeToday,
+      printedAt: now,
+      l10n: l10n,
+      money: store.currency.format,
     );
   }
 

@@ -2245,4 +2245,118 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get receiptKitchenFixed =>
       'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.';
+
+  @override
+  String get reportButton => 'Print report';
+
+  @override
+  String get reportTitle => 'Sales report';
+
+  @override
+  String reportPrintedAt(String when) {
+    return 'Printed $when';
+  }
+
+  @override
+  String get reportEmpty => 'No sales or expenses on these days.';
+
+  @override
+  String reportSales(int count) {
+    return 'Sales ($count)';
+  }
+
+  @override
+  String reportCountOf(String name, int count) {
+    return '$name ($count)';
+  }
+
+  @override
+  String get reportNoMethod => 'No payment type';
+
+  @override
+  String reportVoids(int count) {
+    return 'Voids ($count)';
+  }
+
+  @override
+  String get reportExpenses => 'Expenses';
+
+  @override
+  String get reportByType => 'By type';
+
+  @override
+  String get reportByEmployee => 'By employee';
+
+  @override
+  String get reportNet => 'Net';
+
+  @override
+  String reportToday(String day) {
+    return 'Today, $day';
+  }
+
+  @override
+  String reportFromTo(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String get reportPickDays =>
+      'Pick both days, the first one on or before the last.';
+
+  @override
+  String reportTooLong(int days) {
+    return 'A report covers at most $days days.';
+  }
+
+  @override
+  String reportFailed(String reason) {
+    return 'Could not get the totals: $reason';
+  }
+
+  @override
+  String get reportPrinted => 'Report sent to the cashier printer.';
+
+  @override
+  String get reportPrinterFailed =>
+      'The cashier printer did not print the report. Check it and try again.';
+
+  @override
+  String get reportRangeToday => 'Today';
+
+  @override
+  String get reportRangeMonth => 'A month';
+
+  @override
+  String get reportRangeCustom => 'From – to';
+
+  @override
+  String get reportTripoliNote =>
+      'Days are Tripoli time. Totals come from the server (on a till that works offline, from its own saved sales), not from the sales on screen.';
+
+  @override
+  String reportGoesToPrinter(String printer, int mm) {
+    return 'Prints on this till\'s cashier printer: $printer ($mm mm).';
+  }
+
+  @override
+  String get reportGoesToPreview =>
+      'No cashier printer here (web, or none picked on this till): the report opens in the print preview.';
+
+  @override
+  String get reportWorking => 'Working…';
+
+  @override
+  String get reportPrint => 'Print';
+
+  @override
+  String get receiptPreviewReport => 'Sales report';
+
+  @override
+  String get summaryNeedsServer =>
+      'These totals come from the server, which could not be reached. Try again when the connection is back.';
+
+  @override
+  String get summaryCardsNote =>
+      'Cards: server totals for the dates, type and employee picked. The search box only narrows the list.';
 }

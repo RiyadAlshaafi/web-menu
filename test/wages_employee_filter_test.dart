@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/core/ledger.dart';
+import 'package:menu_web_v1/core/sales_report.dart';
 import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
@@ -62,9 +63,35 @@ ShiftExpense _expense(
       editedFrom: editedFrom,
     );
 
+/// Answers the cards' report as the server would, from every sale and expense in [all] (which
+/// can hold more than the loaded lists), or with [error].
+class _ServerStore extends CafeStore {
+  _ServerStore() : super(AppDatabase.instance);
+
+  List<ShiftExpense>? all;
+  String? error;
+  final asked = <(DateTime, DateTime)>[];
+
+  @override
+  Future<({SalesReport? report, String? error})> salesReport(DateTime from, DateTime to) async {
+    asked.add((from, to));
+    if (error != null) return (report: null, error: error);
+    final report = SalesReport.fromRows(
+      from: from,
+      to: to,
+      payments: payments,
+      expenses: all ?? expenses,
+      paymentTypes: paymentTypes,
+      expenseCategories: expenseCategories,
+      staff: cashiers,
+    );
+    return (report: report, error: null);
+  }
+}
+
 /// Sara (cashier), Omar (cashier, records everything), Lina (chef) and Hani, who was removed
 /// but still has an expense under his saved name.
-CafeStore _store() => CafeStore(AppDatabase.instance)
+_ServerStore _store() => _ServerStore()
   ..cafe = {'name': 'Test Cafe'}
   ..cashiers = [
     Cashier(id: 'c1', name: 'Sara Ali', initials: 'SA'),
@@ -132,6 +159,7 @@ void main() {
     testWidgets('all employees: every expense, and Net is sales minus all expenses', (tester) async {
       final store = _store();
       await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await tester.pumpAndSettle();
 
       expect(find.text(l10n.expenseAllEmployees), findsOneWidget);
       expect(find.text(store.currency.format(160)), findsOneWidget);
@@ -213,6 +241,35 @@ void main() {
       final lines = File(file).readAsLinesSync();
       expect(lines, hasLength(3), reason: 'a header and Sara\'s two expenses');
       expect(lines.skip(1).every((line) => line.contains('Sara')), isTrue);
+    });
+  
+    testWidgets('the cards show the server totals for the month, not only the loaded rows', (tester) async {
+      final store = _store()
+        ..all = [
+          ..._store().expenses,
+          // Earlier this month, no longer in the loaded list.
+          _expense('old', 500, 'Rent', staff: 'k1', staffName: 'Lina'),
+        ];
+      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await tester.pumpAndSettle();
+
+      expect(store.asked, isNotEmpty);
+      expect(store.asked.last.$1.day, 1, reason: 'this month from the 1st');
+      expect(find.text(store.currency.format(660)), findsOneWidget, reason: '160 loaded + 500 from the server');
+      expect(find.text('Rent'), findsNothing, reason: 'the list still shows the loaded rows');
+      await _pick(tester, l10n.expenseAllEmployees, 'Lina');
+      expect(find.text(store.currency.format(530)), findsOneWidget);
+    });
+
+    testWidgets('without the server the cards say so instead of showing partial totals', (tester) async {
+      final store = _store()..error = 'network';
+      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await tester.pumpAndSettle();
+
+      // Three cards, plus the two empty date boxes, which show a dash too.
+      expect(find.text('—'), findsNWidgets(5));
+      expect(find.text(l10n.summaryNeedsServer), findsOneWidget);
+      expect(find.text(store.currency.format(160)), findsNothing);
     });
   });
 }
