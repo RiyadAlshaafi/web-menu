@@ -591,7 +591,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online',
+          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout',
         )
         .eq('id', id)
         .maybeSingle();
