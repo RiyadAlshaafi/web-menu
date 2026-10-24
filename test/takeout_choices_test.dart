@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/features/app_feature.dart';
 import 'package:menu_web_v1/models/models.dart';
+import 'package:menu_web_v1/screens/admin_brand_settings.dart';
 import 'package:menu_web_v1/screens/cashier_screens.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 
@@ -74,6 +75,20 @@ void main() {
     await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
     expect(find.text('Burger'), findsNothing, reason: 'cards show categories first');
     expect(store.takeoutCards, isTrue);
+  });
+
+  testWidgets('the takeout screen choice is kept only after Save is pressed', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    await pumpAdminScreen(tester, const TakeoutLayoutCard(), store);
+    expect(store.takeoutCards, isTrue);
+
+    await tester.tap(find.text('Classic'));
+    await tester.pump();
+    expect(store.takeoutCards, isTrue, reason: 'picking alone changes nothing');
+
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+    expect(store.takeoutCards, isFalse);
   });
 
   testWidgets('tapping the ticket line opens the choices and the extra is charged', (tester) async {

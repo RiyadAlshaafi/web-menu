@@ -3698,6 +3698,24 @@ abstract class AppLocalizations {
   /// **'Takeout screen'**
   String get takeoutScreenTitle;
 
+  /// No description provided for @takeoutLayoutSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get takeoutLayoutSave;
+
+  /// No description provided for @takeoutLayoutSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout screen saved.'**
+  String get takeoutLayoutSaved;
+
+  /// No description provided for @takeoutLayoutSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the takeout screen. Check the connection and try again.'**
+  String get takeoutLayoutSaveFailed;
+
   /// No description provided for @takeoutLayoutClassic.
   ///
   /// In en, this message translates to:

@@ -2034,6 +2034,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get takeoutScreenTitle => 'شاشة السفري';
 
   @override
+  String get takeoutLayoutSave => 'حفظ';
+
+  @override
+  String get takeoutLayoutSaved => 'تم حفظ شاشة السفري.';
+
+  @override
+  String get takeoutLayoutSaveFailed =>
+      'تعذر حفظ شاشة السفري. تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
   String get takeoutLayoutClassic => 'الكلاسيكية';
 
   @override

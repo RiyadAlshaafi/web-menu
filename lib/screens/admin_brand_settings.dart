@@ -464,13 +464,44 @@ class _OrderingCardState extends State<OrderingCard> {
   }
 }
 
-/// Settings: which takeout counter the cashiers get. Two big buttons, each with a small picture of its screen.
-class TakeoutLayoutCard extends StatelessWidget {
+/// Settings: which takeout counter the cashiers get. Two big buttons, each with a small picture of
+/// its screen; the choice is kept only when Save is pressed.
+class TakeoutLayoutCard extends StatefulWidget {
   const TakeoutLayoutCard({super.key});
+
+  @override
+  State<TakeoutLayoutCard> createState() => _TakeoutLayoutCardState();
+}
+
+class _TakeoutLayoutCardState extends State<TakeoutLayoutCard> {
+  /// The option picked on screen; null until the admin picks, then the saved one is not shown.
+  bool? picked;
+  var saving = false;
+
+  Future<void> _save(CafeStore store, bool cards) async {
+    final l10n = context.l10n;
+    setState(() => saving = true);
+    String message;
+    try {
+      await store.setTakeoutCards(cards);
+      message = l10n.takeoutLayoutSaved;
+    } on Exception catch (error, stackTrace) {
+      reportError('takeout layout', error, stackTrace);
+      message = l10n.takeoutLayoutSaveFailed;
+    }
+    if (!mounted) return;
+    setState(() {
+      saving = false;
+      picked = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
+    final cards = picked ?? store.takeoutCards;
+    final changed = cards != store.takeoutCards;
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,9 +515,9 @@ class TakeoutLayoutCard extends StatelessWidget {
                 child: _TakeoutLayoutOption(
                   title: context.l10n.takeoutLayoutClassic,
                   hint: context.l10n.takeoutLayoutClassicHint,
-                  selected: !store.takeoutCards,
+                  selected: !cards,
                   picture: const _LayoutPicture(cards: false),
-                  onTap: () => store.setTakeoutCards(false),
+                  onTap: () => setState(() => picked = false),
                 ),
               ),
               const SizedBox(width: 12),
@@ -494,12 +525,21 @@ class TakeoutLayoutCard extends StatelessWidget {
                 child: _TakeoutLayoutOption(
                   title: context.l10n.takeoutLayoutCards,
                   hint: context.l10n.takeoutLayoutCardsHint,
-                  selected: store.takeoutCards,
+                  selected: cards,
                   picture: const _LayoutPicture(cards: true),
-                  onTap: () => store.setTakeoutCards(true),
+                  onTap: () => setState(() => picked = true),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: NavyButton(
+              label: context.l10n.takeoutLayoutSave,
+              height: 44,
+              onPressed: changed && !saving ? () => _save(store, cards) : null,
+            ),
           ),
         ],
       ),

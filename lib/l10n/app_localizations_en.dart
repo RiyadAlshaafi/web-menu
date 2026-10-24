@@ -2046,6 +2046,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takeoutScreenTitle => 'Takeout screen';
 
   @override
+  String get takeoutLayoutSave => 'Save';
+
+  @override
+  String get takeoutLayoutSaved => 'Takeout screen saved.';
+
+  @override
+  String get takeoutLayoutSaveFailed =>
+      'Couldn\'t save the takeout screen. Check the connection and try again.';
+
+  @override
   String get takeoutLayoutClassic => 'Classic';
 
   @override
