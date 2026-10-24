@@ -11,6 +11,9 @@ import 'support/admin_test_app.dart';
 
 final l10n = lookupAppLocalizations(const Locale('en'));
 
+/// Tall enough for every Settings card, the receipt editor with its preview included.
+const _tall = Size(1600, 3600);
+
 /// Records what the settings screen asks the server to do, and answers with [passwordError].
 class _SettingsStore extends CafeStore {
   _SettingsStore() : super(AppDatabase.instance) {
@@ -57,7 +60,7 @@ void main() {
 
   testWidgets('a cashier is saved only with a name and a 4-digit PIN', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     await tester.enterText(find.widgetWithText(TextField, l10n.catalogCashierNameHint), 'Omar');
     await tester.enterText(find.widgetWithText(TextField, '••••'), '123');
@@ -72,7 +75,7 @@ void main() {
 
   testWidgets('removing a cashier asks first', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
     final removeSara = find.descendant(
       of: find.ancestor(of: find.text('Sara Ali'), matching: find.byType(Row)).first,
       matching: find.text(l10n.commonRemove),
@@ -91,7 +94,7 @@ void main() {
 
   testWidgets('the language is saved only after choosing a different one', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     final save = find.ancestor(of: find.text(l10n.catalogSaveLanguage), matching: find.bySubtype<ButtonStyleButton>());
     expect(tester.widget<ButtonStyleButton>(save).onPressed, isNull, reason: 'English is already the language');
@@ -105,7 +108,7 @@ void main() {
 
   testWidgets('a refused password change shows why and keeps what was typed', (tester) async {
     final store = _SettingsStore()..passwordError = 'Current password is wrong.';
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     await tester.enterText(_field(l10n.catalogCurrentPassword), 'old');
     await tester.enterText(_field(l10n.catalogNewPassword), 'NewPass1!');
@@ -118,7 +121,7 @@ void main() {
 
   testWidgets('a successful password change confirms and clears both fields', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     await tester.enterText(_field(l10n.catalogCurrentPassword), 'old');
     await tester.enterText(_field(l10n.catalogNewPassword), 'NewPass1!');
@@ -131,7 +134,7 @@ void main() {
 
   testWidgets('the printers & kitchens card shows even with the kitchen feature off', (tester) async {
     final store = _SettingsStore()..features = FeatureSet.fromKeys(const ['tables']);
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
     await tester.pump();
 
     expect(find.text(l10n.printersKitchensTitle), findsOneWidget);
@@ -142,7 +145,7 @@ void main() {
 
   testWidgets('the admin sees the guest menu address read-only, and saving cafe info keeps it', (tester) async {
     final store = _SettingsStore()..cafe = {'name': 'Test Cafe', 'publicMenuUrl': 'https://menu.example.com'};
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     expect(find.text(l10n.catalogPublicMenuUrl), findsOneWidget);
     expect(find.widgetWithText(SelectableText, 'https://menu.example.com'), findsOneWidget);
@@ -158,7 +161,7 @@ void main() {
 
   testWidgets('a cafe without its own address shows the default one', (tester) async {
     final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
     expect(find.widgetWithText(SelectableText, defaultGuestMenuUrl), findsOneWidget);
     expect(find.text(l10n.catalogPublicMenuUrlDefault), findsOneWidget);

@@ -3,14 +3,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
-import '../printing/pdf_text.dart';
+import '../printing/export_pdfs.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
@@ -302,7 +300,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<ShiftExpense> rows) async {
-    final buffer = StringBuffer('id,when,cashier,paid_to,type,description,amount\n');
+    final buffer = StringBuffer('${expensesCsvColumns.join(',')}\n');
     for (final row in rows) {
       buffer.writeln([
         row.shortId,
@@ -329,58 +327,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   /// [employee] names the employee filter when one is picked, so the printout says whose
   /// expenses these are.
   Future<void> _exportPdf(CafeStore store, List<ShiftExpense> rows, String? employee) async {
-    await Printing.layoutPdf(
-      name: 'wages',
-      onLayout: (PdfPageFormat format) async {
-        final theme = await PdfFonts.theme();
-        final doc = pw.Document(theme: theme);
-        doc.addPage(
-          pw.MultiPage(
-            pageFormat: PdfPageFormat.a4.landscape,
-            theme: theme,
-            build: (context) => [
-              if (employee != null) ...[
-                pdfText(store.l10n.expenseFilterEmployee(employee), size: 13, bold: true),
-                pw.SizedBox(height: 8),
-              ],
-              pw.TableHelper.fromTextArray(
-                cellBuilder: (index, data, rowNum) => pdfText('$data'),
-                headers: [
-                  pdfText(store.l10n.expenseColId, bold: true),
-                  pdfText(store.l10n.expenseColWhen, bold: true),
-                  pdfText(store.l10n.expenseColCashier, bold: true),
-                  pdfText(store.l10n.expensePaidTo, bold: true),
-                  pdfText(store.l10n.expenseColType, bold: true),
-                  pdfText(store.l10n.expenseColDescription, bold: true),
-                  pdfText(store.l10n.expenseColAmount, bold: true),
-                ],
-                data: [
-                  for (final row in rows)
-                    [
-                      row.shortId,
-                      formatTripoliDateTime(row.createdAt),
-                      expenseCashierName(store, row),
-                      row.employeeName,
-                      store.expenseCategoryLabel(row),
-                      row.description,
-                      row.amount.toString(),
-                    ],
-                ],
-              ),
-              pw.SizedBox(height: 10),
-              pw.Align(
-                alignment: pw.Alignment.centerRight,
-                child: pdfText(
-                  'Total (excl. void): ${rows.where((r) => !r.voided).fold<double>(0, (sum, r) => sum + r.amount)}',
-                  size: 14,
-                  bold: true,
-                ),
-              ),
-            ],
-          ),
-        );
-        return doc.save();
-      },
-    );
+    await Printing.layoutPdf(name: 'wages', onLayout: (_) => expensesPdf(store, rows, employee: employee));
   }
 }

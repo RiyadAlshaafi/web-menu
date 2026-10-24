@@ -3805,6 +3805,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'White cards with a picture for each category; tap one to see its dishes.'**
   String get takeoutLayoutCardsHint;
+
+  /// No description provided for @receiptSampleCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Sara'**
+  String get receiptSampleCashier;
+
+  /// No description provided for @receiptSampleMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get receiptSampleMethod;
+
+  /// No description provided for @receiptCashierLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier: {name}'**
+  String receiptCashierLine(String name);
+
+  /// No description provided for @receiptEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts & printouts'**
+  String get receiptEditorTitle;
+
+  /// No description provided for @receiptEditorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How the printouts look. Each preview is drawn by the same layout the printer gets.'**
+  String get receiptEditorHint;
+
+  /// No description provided for @receiptShowCafeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe name on receipts'**
+  String get receiptShowCafeName;
+
+  /// No description provided for @receiptShowLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo on receipts'**
+  String get receiptShowLogo;
+
+  /// No description provided for @receiptNoLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'No logo yet: add one in Cafe info.'**
+  String get receiptNoLogo;
+
+  /// No description provided for @receiptHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Header text (under the cafe name)'**
+  String get receiptHeader;
+
+  /// No description provided for @receiptHeaderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Address, phone…'**
+  String get receiptHeaderHint;
+
+  /// No description provided for @receiptFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Footer text'**
+  String get receiptFooter;
+
+  /// No description provided for @receiptFooterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty: “{thanks}”'**
+  String receiptFooterHint(String thanks);
+
+  /// No description provided for @receiptLinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines on the receipt'**
+  String get receiptLinesTitle;
+
+  /// No description provided for @receiptLineOrderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Order number'**
+  String get receiptLineOrderNumber;
+
+  /// No description provided for @receiptLineTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table or takeout'**
+  String get receiptLineTable;
+
+  /// No description provided for @receiptLineDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date and time'**
+  String get receiptLineDate;
+
+  /// No description provided for @receiptLineCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier name'**
+  String get receiptLineCashier;
+
+  /// No description provided for @receiptLineChoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish choices'**
+  String get receiptLineChoices;
+
+  /// No description provided for @receiptLineDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get receiptLineDiscount;
+
+  /// No description provided for @receiptLineService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service charge'**
+  String get receiptLineService;
+
+  /// No description provided for @receiptLineMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get receiptLineMethod;
+
+  /// No description provided for @receiptSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save receipt settings'**
+  String get receiptSave;
+
+  /// No description provided for @receiptSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt settings saved.'**
+  String get receiptSaved;
+
+  /// No description provided for @receiptPaperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper width of each printer'**
+  String get receiptPaperTitle;
+
+  /// No description provided for @receiptPaperNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No printer is picked on this till yet (Printers & kitchens). Until then the previews show both widths, and printing opens the print dialog.'**
+  String get receiptPaperNone;
+
+  /// No description provided for @receiptPaperWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper width is picked on the Windows till, next to its printers. Here the previews show both widths, and printing opens the print dialog.'**
+  String get receiptPaperWeb;
+
+  /// No description provided for @receiptPrinterOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{role}: {printer}'**
+  String receiptPrinterOf(String role, String printer);
+
+  /// No description provided for @receiptPaperMm.
+  ///
+  /// In en, this message translates to:
+  /// **'{mm} mm'**
+  String receiptPaperMm(int mm);
+
+  /// No description provided for @receiptPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get receiptPreviewTitle;
+
+  /// No description provided for @receiptPreviewReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier receipt'**
+  String get receiptPreviewReceipt;
+
+  /// No description provided for @receiptPreviewTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Takeout receipt'**
+  String get receiptPreviewTakeout;
+
+  /// No description provided for @receiptPreviewKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen ticket'**
+  String get receiptPreviewKitchen;
+
+  /// No description provided for @receiptPreviewKitchenOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket: {kitchen}'**
+  String receiptPreviewKitchenOf(String kitchen);
+
+  /// No description provided for @receiptPreviewSalesLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales log (A4)'**
+  String get receiptPreviewSalesLog;
+
+  /// No description provided for @receiptPreviewExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses (A4)'**
+  String get receiptPreviewExpenses;
+
+  /// No description provided for @receiptPreviewPrinterWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'As this till prints it: {mm} mm paper.'**
+  String receiptPreviewPrinterWidth(int mm);
+
+  /// No description provided for @receiptPreviewBothWidths.
+  ///
+  /// In en, this message translates to:
+  /// **'This printout has no printer on this till, so both paper widths are shown.'**
+  String get receiptPreviewBothWidths;
+
+  /// No description provided for @receiptPreviewA4.
+  ///
+  /// In en, this message translates to:
+  /// **'A4 page, as the export button makes it (with the latest loaded rows).'**
+  String get receiptPreviewA4;
+
+  /// No description provided for @receiptCsvColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'The CSV export has no layout. Its columns: {columns}'**
+  String receiptCsvColumns(String columns);
+
+  /// No description provided for @receiptKitchenFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.'**
+  String get receiptKitchenFixed;
 }
 
 class _AppLocalizationsDelegate

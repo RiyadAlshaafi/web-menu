@@ -2105,4 +2105,144 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get takeoutLayoutCardsHint =>
       'White cards with a picture for each category; tap one to see its dishes.';
+
+  @override
+  String get receiptSampleCashier => 'Sara';
+
+  @override
+  String get receiptSampleMethod => 'Cash';
+
+  @override
+  String receiptCashierLine(String name) {
+    return 'Cashier: $name';
+  }
+
+  @override
+  String get receiptEditorTitle => 'Receipts & printouts';
+
+  @override
+  String get receiptEditorHint =>
+      'How the printouts look. Each preview is drawn by the same layout the printer gets.';
+
+  @override
+  String get receiptShowCafeName => 'Cafe name on receipts';
+
+  @override
+  String get receiptShowLogo => 'Logo on receipts';
+
+  @override
+  String get receiptNoLogo => 'No logo yet: add one in Cafe info.';
+
+  @override
+  String get receiptHeader => 'Header text (under the cafe name)';
+
+  @override
+  String get receiptHeaderHint => 'Address, phone…';
+
+  @override
+  String get receiptFooter => 'Footer text';
+
+  @override
+  String receiptFooterHint(String thanks) {
+    return 'Empty: “$thanks”';
+  }
+
+  @override
+  String get receiptLinesTitle => 'Lines on the receipt';
+
+  @override
+  String get receiptLineOrderNumber => 'Order number';
+
+  @override
+  String get receiptLineTable => 'Table or takeout';
+
+  @override
+  String get receiptLineDate => 'Date and time';
+
+  @override
+  String get receiptLineCashier => 'Cashier name';
+
+  @override
+  String get receiptLineChoices => 'Dish choices';
+
+  @override
+  String get receiptLineDiscount => 'Discount';
+
+  @override
+  String get receiptLineService => 'Service charge';
+
+  @override
+  String get receiptLineMethod => 'Payment method';
+
+  @override
+  String get receiptSave => 'Save receipt settings';
+
+  @override
+  String get receiptSaved => 'Receipt settings saved.';
+
+  @override
+  String get receiptPaperTitle => 'Paper width of each printer';
+
+  @override
+  String get receiptPaperNone =>
+      'No printer is picked on this till yet (Printers & kitchens). Until then the previews show both widths, and printing opens the print dialog.';
+
+  @override
+  String get receiptPaperWeb =>
+      'Paper width is picked on the Windows till, next to its printers. Here the previews show both widths, and printing opens the print dialog.';
+
+  @override
+  String receiptPrinterOf(String role, String printer) {
+    return '$role: $printer';
+  }
+
+  @override
+  String receiptPaperMm(int mm) {
+    return '$mm mm';
+  }
+
+  @override
+  String get receiptPreviewTitle => 'Preview';
+
+  @override
+  String get receiptPreviewReceipt => 'Cashier receipt';
+
+  @override
+  String get receiptPreviewTakeout => 'Takeout receipt';
+
+  @override
+  String get receiptPreviewKitchen => 'Kitchen ticket';
+
+  @override
+  String receiptPreviewKitchenOf(String kitchen) {
+    return 'Ticket: $kitchen';
+  }
+
+  @override
+  String get receiptPreviewSalesLog => 'Sales log (A4)';
+
+  @override
+  String get receiptPreviewExpenses => 'Expenses (A4)';
+
+  @override
+  String receiptPreviewPrinterWidth(int mm) {
+    return 'As this till prints it: $mm mm paper.';
+  }
+
+  @override
+  String get receiptPreviewBothWidths =>
+      'This printout has no printer on this till, so both paper widths are shown.';
+
+  @override
+  String get receiptPreviewA4 =>
+      'A4 page, as the export button makes it (with the latest loaded rows).';
+
+  @override
+  String receiptCsvColumns(String columns) {
+    return 'The CSV export has no layout. Its columns: $columns';
+  }
+
+  @override
+  String get receiptKitchenFixed =>
+      'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.';
 }

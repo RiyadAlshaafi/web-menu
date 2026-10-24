@@ -21,6 +21,7 @@ import '../core/money.dart';
 import '../offline/offline_sync.dart';
 import '../offline/outbox_store.dart';
 import '../core/report_error.dart';
+import '../printing/receipt_settings.dart';
 import '../printing/takeout_receipt.dart';
 import '../theme/cafe_theme.dart';
 import '../update/app_version.dart';
@@ -260,7 +261,8 @@ class CafeStore extends ChangeNotifier {
   }
 
   String _cafeStamp(Map<String, dynamic> cafe, String locale) =>
-      '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}';
+      '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}'
+      '|${jsonEncode(cafe['receiptSettings'])}';
 
   String _stamp() => _fingerprint(
     cafe: cafe,

@@ -13,7 +13,13 @@ void main() {
       'boundSlug': 'cafe-1',
       'boundHasAdmin': true,
       'anyAdmin': true,
-      'cafe': {'name': 'Test Cafe', 'serviceChargeRate': 0.1, 'taxRate': 0, 'autoPrintReceipt': true},
+      'cafe': {
+        'name': 'Test Cafe',
+        'serviceChargeRate': 0.1,
+        'taxRate': 0,
+        'autoPrintReceipt': true,
+        'receiptSettings': {'header': 'Via Roma 1', 'footer': 'Grazie', 'showCashier': true, 'showLogo': false},
+      },
       'locale': 'ar',
       'tables': [
         {'id': 't1', 'number': 'Takeout', 'qrSlug': 'abc', 'zone': 'Main Floor', 'seats': 1, 'status': 'free', 'guests': 0, 'archived': false},

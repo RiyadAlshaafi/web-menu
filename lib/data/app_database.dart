@@ -591,7 +591,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout',
+          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout, receipt_settings',
         )
         .eq('id', id)
         .maybeSingle();
@@ -611,6 +611,7 @@ class AppDatabase {
       'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
       'requireCashierOnline': restaurant['require_cashier_online'] as bool? ?? false,
       'takeoutLayout': restaurant['takeout_layout'] as String? ?? 'cards',
+      'receiptSettings': restaurant['receipt_settings'] is Map ? Map<String, dynamic>.from(restaurant['receipt_settings'] as Map) : <String, dynamic>{},
     };
   }
 
@@ -1178,6 +1179,13 @@ class AppDatabase {
     _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({'auto_print_receipt': value}).eq('id', restaurantId!);
+  }
+
+  Future<void> writeReceiptSettings(Map<String, dynamic> settings) async {
+    _cafe = {..._cafe, 'receiptSettings': settings};
+    _saveLocalSettingsIfLocal();
+    if (client == null || restaurantId == null) return;
+    await client!.from('restaurants').update({'receipt_settings': settings}).eq('id', restaurantId!);
   }
 
   Future<void> writeTakeoutLayout(String layout) async {

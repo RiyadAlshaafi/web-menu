@@ -2094,4 +2094,144 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get takeoutLayoutCardsHint =>
       'بطاقات بيضاء بصورة لكل صنف؛ اضغط على صنف لعرض أطباقه.';
+
+  @override
+  String get receiptSampleCashier => 'سارة';
+
+  @override
+  String get receiptSampleMethod => 'نقداً';
+
+  @override
+  String receiptCashierLine(String name) {
+    return 'الكاشير: $name';
+  }
+
+  @override
+  String get receiptEditorTitle => 'الإيصالات والمطبوعات';
+
+  @override
+  String get receiptEditorHint =>
+      'شكل المطبوعات. كل معاينة تُرسم بنفس التصميم الذي يصل إلى الطابعة.';
+
+  @override
+  String get receiptShowCafeName => 'اسم المقهى على الإيصالات';
+
+  @override
+  String get receiptShowLogo => 'الشعار على الإيصالات';
+
+  @override
+  String get receiptNoLogo => 'لا يوجد شعار بعد: أضفه في معلومات المقهى.';
+
+  @override
+  String get receiptHeader => 'نص الرأس (تحت اسم المقهى)';
+
+  @override
+  String get receiptHeaderHint => 'العنوان، الهاتف…';
+
+  @override
+  String get receiptFooter => 'نص التذييل';
+
+  @override
+  String receiptFooterHint(String thanks) {
+    return 'فارغ: «$thanks»';
+  }
+
+  @override
+  String get receiptLinesTitle => 'الأسطر على الإيصال';
+
+  @override
+  String get receiptLineOrderNumber => 'رقم الطلب';
+
+  @override
+  String get receiptLineTable => 'الطاولة أو سفري';
+
+  @override
+  String get receiptLineDate => 'التاريخ والوقت';
+
+  @override
+  String get receiptLineCashier => 'اسم الكاشير';
+
+  @override
+  String get receiptLineChoices => 'خيارات الأطباق';
+
+  @override
+  String get receiptLineDiscount => 'الخصم';
+
+  @override
+  String get receiptLineService => 'رسوم الخدمة';
+
+  @override
+  String get receiptLineMethod => 'طريقة الدفع';
+
+  @override
+  String get receiptSave => 'حفظ إعدادات الإيصال';
+
+  @override
+  String get receiptSaved => 'تم حفظ إعدادات الإيصال.';
+
+  @override
+  String get receiptPaperTitle => 'عرض الورق لكل طابعة';
+
+  @override
+  String get receiptPaperNone =>
+      'لم تُختر طابعة على هذا الجهاز بعد (الطابعات والمطابخ). حتى ذلك الحين تعرض المعاينة العرضين، وتفتح الطباعة نافذة الطباعة.';
+
+  @override
+  String get receiptPaperWeb =>
+      'يُختار عرض الورق على جهاز الكاشير (ويندوز) بجانب طابعاته. هنا تعرض المعاينة العرضين، وتفتح الطباعة نافذة الطباعة.';
+
+  @override
+  String receiptPrinterOf(String role, String printer) {
+    return '$role: $printer';
+  }
+
+  @override
+  String receiptPaperMm(int mm) {
+    return '$mm مم';
+  }
+
+  @override
+  String get receiptPreviewTitle => 'معاينة';
+
+  @override
+  String get receiptPreviewReceipt => 'إيصال الكاشير';
+
+  @override
+  String get receiptPreviewTakeout => 'إيصال السفري';
+
+  @override
+  String get receiptPreviewKitchen => 'تذكرة المطبخ';
+
+  @override
+  String receiptPreviewKitchenOf(String kitchen) {
+    return 'تذكرة: $kitchen';
+  }
+
+  @override
+  String get receiptPreviewSalesLog => 'سجل المبيعات (A4)';
+
+  @override
+  String get receiptPreviewExpenses => 'المصروفات (A4)';
+
+  @override
+  String receiptPreviewPrinterWidth(int mm) {
+    return 'كما يطبعها هذا الجهاز: ورق $mm مم.';
+  }
+
+  @override
+  String get receiptPreviewBothWidths =>
+      'لا توجد طابعة لهذه المطبوعة على هذا الجهاز، لذلك يظهر عرضا الورق.';
+
+  @override
+  String get receiptPreviewA4 =>
+      'صفحة A4 كما يصنعها زر التصدير (بآخر الصفوف المحمّلة).';
+
+  @override
+  String receiptCsvColumns(String columns) {
+    return 'تصدير CSV بلا تصميم. أعمدته: $columns';
+  }
+
+  @override
+  String get receiptKitchenFixed =>
+      'تذاكر المطبخ تعرض الأطباق والخيارات فقط، بدون أسعار. إعدادات الإيصال أعلاه لا تغيّرها.';
 }

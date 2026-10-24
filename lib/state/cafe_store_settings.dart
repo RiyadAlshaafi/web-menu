@@ -97,6 +97,16 @@ extension CafeStoreSettings on CafeStore {
     notifyListeners();
     await db.writeAutoPrintReceipt(value);
   }
+  /// How the cafe's printouts look, the same on every till.
+  ReceiptSettings get receiptSettings => ReceiptSettings.fromJson(cafe['receiptSettings']);
+
+  Future<void> saveReceiptSettings(ReceiptSettings value) async {
+    final json = value.toJson();
+    cafe = {...cafe, 'receiptSettings': json};
+    notifyListeners();
+    await db.writeReceiptSettings(json);
+  }
+
   /// How the takeout counter shows the menu: 'cards' (category cards with pictures) or 'classic'
   /// (every dish with a category bar on top).
   bool get takeoutCards => (cafe['takeoutLayout'] as String?) != 'classic';

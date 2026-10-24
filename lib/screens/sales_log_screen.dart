@@ -3,15 +3,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../core/choice_labels.dart';
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
-import '../printing/pdf_text.dart';
+import '../printing/export_pdfs.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../core/time_format.dart';
@@ -466,7 +464,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   }
 
   Future<void> _exportCsv(CafeStore store, List<SaleLedgerRow> rows) async {
-    final buffer = StringBuffer('${context.l10n.salesReceiptNo},${context.l10n.salesOrderNo},date,table,cashier,items,subtotal,discount,total,method,status,void_reason\n');
+    final buffer = StringBuffer('${salesLogCsvColumns(context.l10n).join(',')}\n');
     for (final row in rows) {
       buffer.writeln([
         store.receiptNumber(row.payment),
@@ -497,65 +495,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
 
   Future<void> _exportPdf(CafeStore store, List<SaleLedgerRow> rows) async {
     final l10n = context.l10n;
-    final receiptHeader = l10n.salesReceiptNo;
-    final orderHeader = l10n.salesOrderNo;
-    await Printing.layoutPdf(
-      name: 'sales-log',
-      onLayout: (PdfPageFormat format) async {
-        final theme = await PdfFonts.theme();
-        final doc = pw.Document(theme: theme);
-        doc.addPage(
-          pw.MultiPage(
-            pageFormat: PdfPageFormat.a4.landscape,
-            theme: theme,
-            build: (context) => [
-              pdfText('Sales Log', size: 18, bold: true),
-              pw.SizedBox(height: 8),
-              pw.TableHelper.fromTextArray(
-                cellBuilder: (index, data, rowNum) => pdfText('$data'),
-                headers: [
-                  pdfText(receiptHeader, bold: true),
-                  pdfText(orderHeader, bold: true),
-                  pdfText('When', bold: true),
-                  pdfText('Table', bold: true),
-                  pdfText('Cashier', bold: true),
-                  pdfText('Items', bold: true),
-                  pdfText('Subtotal', bold: true),
-                  pdfText('Discount', bold: true),
-                  pdfText('Total', bold: true),
-                  pdfText('Method', bold: true),
-                  pdfText('Status', bold: true),
-                ],
-                data: rows
-                    .map((row) => [
-                          '$receiptHeader ${store.receiptNumber(row.payment)}',
-                          l10n.cashierOrderNumber(store.orderNumber(row.payment.shiftOrderNumber)),
-                          formatTripoliDateTime(row.payment.paidAt),
-                          row.takeout ? 'Takeout' : row.tableNumber,
-                          row.cashierName,
-                          '${row.itemCount}',
-                          store.currency.format(row.subtotal),
-                          store.currency.format(row.discount),
-                          store.currency.format(row.total),
-                          store.paymentLabel(row.payment),
-                          row.payment.isVoided ? 'Void' : 'Paid',
-                        ])
-                    .toList(),
-              ),
-              pw.SizedBox(height: 10),
-              pw.Align(
-                alignment: pw.Alignment.centerRight,
-                child: pdfText(
-                  'Total (excl. void): ${store.currency.format(rows.where((r) => !r.payment.isVoided).fold<num>(0, (sum, r) => sum + r.total))}',
-                  size: 14,
-                  bold: true,
-                ),
-              ),
-            ],
-          ),
-        );
-        return doc.save();
-      },
-    );
+    await Printing.layoutPdf(name: 'sales-log', onLayout: (_) => salesLogPdf(store, rows, l10n));
   }
 }

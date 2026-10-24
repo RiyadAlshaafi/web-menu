@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,7 +11,7 @@ import '../core/time_format.dart';
 import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
-import 'pdf_text.dart';
+import 'slip.dart';
 
 /// What happened when a kitchen ticket was asked for.
 enum KitchenPrintResult { off, nothingNew, printed, noPrinter, failed }
@@ -31,11 +29,12 @@ class KitchenPrintReport {
 /// no kitchens set up.
 typedef KitchenTicketGroup = ({Kitchen? kitchen, List<OrderLine> lines});
 
-/// Sends one PDF to a printer; the real one is [TillPrinters.printPdf].
+/// Sends one PDF to a printer; the real one is [TillPrinters.printPdf]. [build] lays the PDF out
+/// for that printer's paper width in mm.
 typedef PdfSender = Future<KitchenPrintResult> Function(
   String? printerUrl, {
   required String name,
-  required Future<Uint8List> Function() build,
+  required Future<Uint8List> Function(int paperMm) build,
 });
 
 /// Splits [lines] into one group per kitchen, in kitchen order, keeping the dishes' order.
@@ -61,6 +60,7 @@ class TillPrinters {
   static const _kitchenKey = 'kitchenPrinterUrl';
   static const _kitchensKey = 'kitchenPrinterUrls';
   static const _receiptKey = 'receiptPrinterUrl';
+  static const _widthsKey = 'printerPaperWidths';
   static const _printedKey = 'kitchenPrintedRounds';
 
   /// How many printed rounds are remembered, so a round is never printed twice.
@@ -120,6 +120,33 @@ class TillPrinters {
 
   static Future<void> saveReceipt(String? printerUrl) => _save(_receiptKey, printerUrl);
 
+  /// The paper width of each printer on this till, in mm, by printer. A printer never set is
+  /// [defaultPaperMm], the width every printout had before widths could be picked.
+  static Future<Map<String, int>> paperWidths() async {
+    if (kIsWeb) return const {};
+    final raw = (await SharedPreferences.getInstance()).getString(_widthsKey);
+    if (raw == null) return const {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      return {
+        for (final entry in decoded.entries)
+          if (paperWidthsMm.contains(entry.value)) entry.key.toString(): entry.value as int,
+      };
+    } on FormatException {
+      return const {};
+    }
+  }
+
+  static Future<int> paperWidthOf(String? printerUrl) async =>
+      printerUrl == null ? defaultPaperMm : (await paperWidths())[printerUrl] ?? defaultPaperMm;
+
+  static Future<void> savePaperWidth(String printerUrl, int paperMm) async {
+    if (!paperWidthsMm.contains(paperMm)) return;
+    final next = {...await paperWidths(), printerUrl: paperMm};
+    await (await SharedPreferences.getInstance()).setString(_widthsKey, jsonEncode(next));
+  }
+
   static Future<void> _save(String key, String? printerUrl) async {
     final prefs = await SharedPreferences.getInstance();
     if (printerUrl == null || printerUrl.isEmpty) {
@@ -159,7 +186,7 @@ class TillPrinters {
     ].where((group) => group.lines.isNotEmpty).toList();
     if (groups.isEmpty) return const KitchenPrintReport(KitchenPrintResult.nothingNew);
     final takeout = shown.serviceType == 'takeout';
-    final report = await _printGroups(groups, main, perKitchen, name: 'kitchen-$orderId', ticket: (group) {
+    final report = await _printGroups(groups, main, perKitchen, name: 'kitchen-$orderId', ticket: (group, paperMm) {
       final rounds = {for (final line in group.lines) line.round};
       return kitchenTicketPdf(
         l10n: l10n,
@@ -169,6 +196,7 @@ class TillPrinters {
         added: rounds.any((round) => round > 1),
         at: DateTime.now(),
         lines: group.lines,
+        paperMm: paperMm,
       );
     }, onPrinted: (group) {
       printed.addAll({for (final line in group.lines) key(line.round, group.kitchen)});
@@ -191,7 +219,7 @@ class TillPrinters {
       main,
       perKitchen,
       name: 'kitchen-${payment.id}',
-      ticket: (group) => kitchenTicketPdf(
+      ticket: (group, paperMm) => kitchenTicketPdf(
         l10n: l10n,
         number: payment.shiftOrderNumber == null ? '' : store.orderNumber(payment.shiftOrderNumber),
         where: l10n.serviceTakeout,
@@ -199,6 +227,7 @@ class TillPrinters {
         added: false,
         at: payment.paidAt,
         lines: group.lines,
+        paperMm: paperMm,
       ),
     );
   }
@@ -209,7 +238,7 @@ class TillPrinters {
     String? main,
     Map<String, String> perKitchen, {
     required String name,
-    required Future<Uint8List> Function(KitchenTicketGroup group) ticket,
+    required Future<Uint8List> Function(KitchenTicketGroup group, int paperMm) ticket,
     void Function(KitchenTicketGroup group)? onPrinted,
   }) async {
     final failed = <String>[];
@@ -218,7 +247,7 @@ class TillPrinters {
       final result = await send(
         _printerFor(group.kitchen, main, perKitchen),
         name: group.kitchen == null ? name : '$name-${group.kitchen!.id}',
-        build: () => ticket(group),
+        build: (paperMm) => ticket(group, paperMm),
       );
       if (result == KitchenPrintResult.printed) {
         onPrinted?.call(group);
@@ -235,7 +264,8 @@ class TillPrinters {
     return send(
       printerUrl,
       name: 'kitchen-test',
-      build: () => kitchenTicketPdf(
+      build: (paperMm) => kitchenTicketPdf(
+        paperMm: paperMm,
         l10n: l10n,
         number: '1',
         where: l10n.cashierTableShort('1'),
@@ -247,13 +277,14 @@ class TillPrinters {
   }
 
   /// Prints the PDF from [build] on the printer [printerUrl] with no dialog.
-  static Future<KitchenPrintResult> printPdf(String? printerUrl, {required String name, required Future<Uint8List> Function() build}) async {
+  static Future<KitchenPrintResult> printPdf(String? printerUrl, {required String name, required Future<Uint8List> Function(int paperMm) build}) async {
     if (printerUrl == null || printerUrl.isEmpty) return KitchenPrintResult.noPrinter;
     try {
       final printer = (await printers()).where((item) => item.url == printerUrl).firstOrNull;
       if (printer == null) return KitchenPrintResult.noPrinter;
-      final bytes = await build();
-      final done = await Printing.directPrintPdf(printer: printer, name: name, format: PdfPageFormat.roll80, onLayout: (_) async => bytes);
+      final paperMm = await paperWidthOf(printerUrl);
+      final bytes = await build(paperMm);
+      final done = await Printing.directPrintPdf(printer: printer, name: name, format: rollFormat(paperMm), onLayout: (_) async => bytes);
       return done ? KitchenPrintResult.printed : KitchenPrintResult.failed;
     } catch (error, stackTrace) {
       // Any printer driver failure: the sale is saved, so tell the cashier and carry on.
@@ -263,8 +294,35 @@ class TillPrinters {
   }
 }
 
-/// One kitchen ticket on an 80 mm roll: the kitchen, order number, table or takeout, then each
-/// dish with how many and its choices (added toppings, removed ingredients). No prices.
+/// One kitchen ticket as slip lines: the kitchen, order number, table or takeout, then each dish
+/// with how many and its choices (removed ingredients first, then added toppings). No prices.
+List<SlipLine> kitchenSlip({
+  required AppLocalizations l10n,
+  required String number,
+  required String where,
+  required bool added,
+  required DateTime at,
+  required List<OrderLine> lines,
+  String? kitchen,
+}) =>
+    [
+      SlipText(l10n.kitchenTicketTitle, center: true, size: 14, bold: true),
+      if (kitchen != null && kitchen.isNotEmpty) SlipText(kitchen, center: true, size: 16, bold: true),
+      const SlipGap(4),
+      if (number.isNotEmpty) SlipText(l10n.cashierOrderNumber(number), center: true, size: 24, bold: true),
+      SlipText(where, center: true, size: 18, bold: true),
+      if (added) SlipText(l10n.kitchenTicketAdded, center: true, size: 13, bold: true),
+      SlipText(formatTripoliDateTime(at), center: true),
+      const SlipDivider(),
+      for (final line in lines) ...[
+        SlipText('${line.qty} × ${line.name}', size: 15, bold: true),
+        for (final choice in [...line.choices.where((choice) => !choice.on), ...line.choices.where((choice) => choice.on)])
+          SlipText(choiceText(choice, l10n.localeName, without: l10n.dishChoiceWithout), size: 12, indent: true),
+        const SlipGap(),
+      ],
+    ];
+
+/// One kitchen ticket on a roll [paperMm] wide; see [kitchenSlip].
 Future<Uint8List> kitchenTicketPdf({
   required AppLocalizations l10n,
   required String number,
@@ -273,36 +331,9 @@ Future<Uint8List> kitchenTicketPdf({
   required DateTime at,
   required List<OrderLine> lines,
   String? kitchen,
-}) async {
-  final theme = await PdfFonts.theme();
-  final doc = pw.Document(theme: theme);
-  doc.addPage(
-    pw.Page(
-      pageFormat: PdfPageFormat.roll80,
-      theme: theme,
-      build: (context) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pdfText(l10n.kitchenTicketTitle, align: pw.TextAlign.center, size: 14, bold: true),
-          if (kitchen != null && kitchen.isNotEmpty) pdfText(kitchen, align: pw.TextAlign.center, size: 16, bold: true),
-          pw.SizedBox(height: 4),
-          if (number.isNotEmpty) pdfText(l10n.cashierOrderNumber(number), align: pw.TextAlign.center, size: 24, bold: true),
-          pdfText(where, align: pw.TextAlign.center, size: 18, bold: true),
-          if (added) pdfText(l10n.kitchenTicketAdded, align: pw.TextAlign.center, size: 13, bold: true),
-          pdfText(formatTripoliDateTime(at), align: pw.TextAlign.center, size: 10),
-          pw.Divider(),
-          for (final line in lines) ...[
-            pdfText('${line.qty} × ${line.name}', size: 15, bold: true),
-            for (final choice in [...line.choices.where((choice) => !choice.on), ...line.choices.where((choice) => choice.on)])
-              pw.Padding(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 12),
-                child: pdfText(choiceText(choice, l10n.localeName, without: l10n.dishChoiceWithout), size: 12),
-              ),
-            pw.SizedBox(height: 6),
-          ],
-        ],
-      ),
-    ),
-  );
-  return doc.save();
-}
+  int paperMm = defaultPaperMm,
+}) =>
+    slipPdf(
+      kitchenSlip(l10n: l10n, number: number, where: where, added: added, at: at, lines: lines, kitchen: kitchen),
+      paperMm: paperMm,
+    );

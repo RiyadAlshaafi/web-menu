@@ -324,6 +324,7 @@ void main() {
       db.createLocalAdmin(email: 'owner@cafe.ly', password: 'Secret#123');
       await db.writeCafe({...db.cafe, 'name': 'Tawla Test'});
       await db.writeLocale('ar');
+      await db.writeReceiptSettings({'footer': 'Grazie', 'showCashier': true});
       final dish = await _dish();
       final sara = await _cashier('Sara', '1234');
       await _openShift(sara);
@@ -336,6 +337,7 @@ void main() {
 
       expect(db.cafe['name'], 'Tawla Test');
       expect(db.locale, 'ar');
+      expect(db.cafe['receiptSettings'], {'footer': 'Grazie', 'showCashier': true}, reason: 'receipt settings live on an offline till too');
       expect(db.anyAdmin, isTrue);
       expect(db.admin, isNull, reason: 'the admin was not kept signed in');
       expect(db.menuItems.single.available, isFalse);
