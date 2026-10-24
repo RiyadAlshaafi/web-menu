@@ -1925,6 +1925,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The kitchen ticket did not print. Check the kitchen printer in Settings.';
 
   @override
+  String kitchenPrintFailedAt(String kitchens) {
+    return 'The ticket for $kitchens did not print. Check its printer in Settings.';
+  }
+
+  @override
   String get kitchenTicketTitle => 'KITCHEN';
 
   @override

@@ -957,6 +957,8 @@
   "printersTestKitchen": "Print a test kitchen ticket",
   "printersTestSent": "Test ticket sent to the kitchen printer.",
   "kitchenPrintFailed": "The kitchen ticket did not print. Check the kitchen printer in Settings.",
+  "kitchenPrintFailedAt": "The ticket for {kitchens} did not print. Check its printer in Settings.",
+  "@kitchenPrintFailedAt": {"placeholders": {"kitchens": {"type": "String"}}},
   "kitchenTicketTitle": "KITCHEN",
   "kitchenTicketAdded": "ADDED TO THE ORDER",
   "kitchenTestDish": "Test dish",

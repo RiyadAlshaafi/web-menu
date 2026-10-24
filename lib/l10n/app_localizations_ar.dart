@@ -1914,6 +1914,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم تُطبع تذكرة المطبخ. تحقق من طابعة المطبخ في الإعدادات.';
 
   @override
+  String kitchenPrintFailedAt(String kitchens) {
+    return 'لم تُطبع تذكرة $kitchens. تحقق من طابعتها في الإعدادات.';
+  }
+
+  @override
   String get kitchenTicketTitle => 'المطبخ';
 
   @override

@@ -3488,6 +3488,12 @@ abstract class AppLocalizations {
   /// **'The kitchen ticket did not print. Check the kitchen printer in Settings.'**
   String get kitchenPrintFailed;
 
+  /// No description provided for @kitchenPrintFailedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'The ticket for {kitchens} did not print. Check its printer in Settings.'**
+  String kitchenPrintFailedAt(String kitchens);
+
   /// No description provided for @kitchenTicketTitle.
   ///
   /// In en, this message translates to:

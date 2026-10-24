@@ -198,7 +198,10 @@ void printKitchenTakeout(BuildContext context, CafeStore store, Payment payment,
   unawaited(TillPrinters.printTakeout(store, payment, lines, l10n).then((result) => _reportKitchenPrint(messenger, l10n, result)));
 }
 
-void _reportKitchenPrint(ScaffoldMessengerState messenger, AppLocalizations l10n, KitchenPrintResult result) {
-  if (result != KitchenPrintResult.noPrinter && result != KitchenPrintResult.failed) return;
-  messenger.showSnackBar(SnackBar(content: Text(l10n.kitchenPrintFailed)));
+void _reportKitchenPrint(ScaffoldMessengerState messenger, AppLocalizations l10n, KitchenPrintReport report) {
+  final names = report.failed.where((name) => name.isNotEmpty).toList();
+  if (report.failed.isEmpty) return;
+  messenger.showSnackBar(
+    SnackBar(content: Text(names.isEmpty ? l10n.kitchenPrintFailed : l10n.kitchenPrintFailedAt(names.join(', ')))),
+  );
 }

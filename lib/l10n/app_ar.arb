@@ -607,6 +607,7 @@
   "printersTestKitchen": "اطبع تذكرة مطبخ تجريبية",
   "printersTestSent": "أُرسلت التذكرة التجريبية إلى طابعة المطبخ.",
   "kitchenPrintFailed": "لم تُطبع تذكرة المطبخ. تحقق من طابعة المطبخ في الإعدادات.",
+  "kitchenPrintFailedAt": "لم تُطبع تذكرة {kitchens}. تحقق من طابعتها في الإعدادات.",
   "kitchenTicketTitle": "المطبخ",
   "kitchenTicketAdded": "إضافة على الطلب",
   "kitchenTestDish": "طبق تجريبي",
