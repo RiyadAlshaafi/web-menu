@@ -66,7 +66,8 @@ class _PrintersCardState extends State<PrintersCard> {
 
   @override
   Widget build(BuildContext context) {
-    final kitchenOn = context.watch<CafeStore>().allows(AppFeature.kitchenPrinter);
+    final store = context.watch<CafeStore>();
+    final kitchenOn = store.allows(AppFeature.kitchenPrinter);
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +101,8 @@ class _PrintersCardState extends State<PrintersCard> {
             if (kitchenOn) ...[
             const SizedBox(height: 14),
             _picker(
-              label: context.l10n.printersKitchen,
+              // With kitchens, this one prints for every kitchen that has no printer of its own.
+              label: store.kitchens.isEmpty ? context.l10n.printersKitchen : context.l10n.kitchensPrinterMain,
               none: context.l10n.printersKitchenNone,
               value: kitchen,
               onChanged: (value) {

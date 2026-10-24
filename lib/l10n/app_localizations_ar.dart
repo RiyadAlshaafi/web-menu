@@ -1873,6 +1873,64 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get kitchensTitle => 'المطابخ';
+
+  @override
+  String get kitchensHint =>
+      'أضف مطبخاً لكل مكان يطبخ (فرن البيتزا، الشواية، البار) وحدد الأقسام التي يحضّرها. كل مطبخ يستلم تذكرة بأطباقه فقط. أطباق الأقسام غير المحددة تذهب إلى المطبخ الأول.';
+
+  @override
+  String get kitchensAdd => 'إضافة مطبخ';
+
+  @override
+  String get kitchensAddTitle => 'مطبخ جديد';
+
+  @override
+  String get kitchensEditTitle => 'تعديل المطبخ';
+
+  @override
+  String get kitchensName => 'اسم المطبخ';
+
+  @override
+  String get kitchensCategories => 'الأقسام التي يحضّرها';
+
+  @override
+  String kitchensNowIn(String kitchen) {
+    return 'الآن في $kitchen؛ التحديد ينقله إلى هنا';
+  }
+
+  @override
+  String get kitchensPrinter => 'الطابعة على هذا الجهاز';
+
+  @override
+  String get kitchensPrinterMain => 'طابعة المطبخ الرئيسية';
+
+  @override
+  String kitchensPrintsOn(String printer) {
+    return 'يطبع على: $printer';
+  }
+
+  @override
+  String kitchensFirst(String name) {
+    return '$name (الأول: يستلم الأقسام غير المحددة)';
+  }
+
+  @override
+  String get kitchensNoCategories => 'لا توجد أقسام محددة';
+
+  @override
+  String get kitchensSave => 'حفظ';
+
+  @override
+  String kitchensDeleteTitle(String name) {
+    return 'حذف $name؟';
+  }
+
+  @override
+  String get kitchensDeleteMessage =>
+      'تنتقل أقسامه إلى المطبخ الأول. التذاكر المطبوعة لا تتغير.';
+
+  @override
   String get printersTitle => 'الطابعات';
 
   @override

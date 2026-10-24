@@ -1884,6 +1884,64 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get kitchensTitle => 'Kitchens';
+
+  @override
+  String get kitchensHint =>
+      'Add a kitchen for each place that cooks (pizza oven, grill, bar) and tick the categories it makes. Each kitchen gets a ticket with only its own dishes. Dishes from unticked categories go to the first kitchen.';
+
+  @override
+  String get kitchensAdd => 'Add kitchen';
+
+  @override
+  String get kitchensAddTitle => 'New kitchen';
+
+  @override
+  String get kitchensEditTitle => 'Edit kitchen';
+
+  @override
+  String get kitchensName => 'Kitchen name';
+
+  @override
+  String get kitchensCategories => 'Categories it makes';
+
+  @override
+  String kitchensNowIn(String kitchen) {
+    return 'Now in $kitchen; ticking moves it here';
+  }
+
+  @override
+  String get kitchensPrinter => 'Printer on this till';
+
+  @override
+  String get kitchensPrinterMain => 'Main kitchen printer';
+
+  @override
+  String kitchensPrintsOn(String printer) {
+    return 'Prints on: $printer';
+  }
+
+  @override
+  String kitchensFirst(String name) {
+    return '$name (first: gets unticked categories)';
+  }
+
+  @override
+  String get kitchensNoCategories => 'No categories ticked';
+
+  @override
+  String get kitchensSave => 'Save';
+
+  @override
+  String kitchensDeleteTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get kitchensDeleteMessage =>
+      'Its categories go to the first kitchen. Tickets already printed are not changed.';
+
+  @override
   String get printersTitle => 'Printers';
 
   @override

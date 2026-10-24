@@ -11,6 +11,7 @@ import '../widgets/cafe_widgets.dart';
 import '../widgets/tawla_ui.dart';
 import 'admin_brand_settings.dart';
 import 'admin_feedback_card.dart';
+import 'admin_kitchens_card.dart';
 import 'admin_printers_card.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
@@ -379,6 +380,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (_languagePanel(store), const OrderingCard()),
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersCard(), store.isLocalMode ? null : const FeedbackCard()),
+      if (store.allows(AppFeature.kitchenPrinter)) (const KitchensCard(), null),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {

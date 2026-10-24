@@ -146,7 +146,8 @@ extension CafeStoreCatalog on CafeStore {
 
   /// Adds a kitchen, or renames [kitchenId], and gives it exactly [categoryIds]: a ticked category
   /// moves here from any other kitchen, an unticked one that was here goes back to the first one.
-  Future<void> saveKitchen({String? kitchenId, required String name, required Set<String> categoryIds}) async {
+  /// Returns the kitchen's id.
+  Future<String> saveKitchen({String? kitchenId, required String name, required Set<String> categoryIds}) async {
     final existing = kitchens.where((item) => item.id == kitchenId).firstOrNull;
     final kitchen = existing?.copyWith(name: name.trim()) ??
         Kitchen(
@@ -165,11 +166,15 @@ extension CafeStoreCatalog on CafeStore {
     }
     if (changed.isNotEmpty) await db.writeCategories(categories, changed: changed);
     notifyListeners();
+    return kitchen.id;
   }
 
   /// Removes a kitchen; its categories go back to the first kitchen.
   Future<void> deleteKitchen(String kitchenId) async {
     kitchens = [for (final item in kitchens) if (item.id != kitchenId) item];
+    for (final category in categories) {
+      if (category.kitchenId == kitchenId) category.kitchenId = null;
+    }
     await db.writeKitchens(kitchens, deleted: [kitchenId]);
     notifyListeners();
   }

@@ -3416,6 +3416,102 @@ abstract class AppLocalizations {
   /// **'Stock saved for {dish}'**
   String stockSaved(String dish);
 
+  /// No description provided for @kitchensTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchens'**
+  String get kitchensTitle;
+
+  /// No description provided for @kitchensHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a kitchen for each place that cooks (pizza oven, grill, bar) and tick the categories it makes. Each kitchen gets a ticket with only its own dishes. Dishes from unticked categories go to the first kitchen.'**
+  String get kitchensHint;
+
+  /// No description provided for @kitchensAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add kitchen'**
+  String get kitchensAdd;
+
+  /// No description provided for @kitchensAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New kitchen'**
+  String get kitchensAddTitle;
+
+  /// No description provided for @kitchensEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit kitchen'**
+  String get kitchensEditTitle;
+
+  /// No description provided for @kitchensName.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen name'**
+  String get kitchensName;
+
+  /// No description provided for @kitchensCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories it makes'**
+  String get kitchensCategories;
+
+  /// No description provided for @kitchensNowIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Now in {kitchen}; ticking moves it here'**
+  String kitchensNowIn(String kitchen);
+
+  /// No description provided for @kitchensPrinter.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer on this till'**
+  String get kitchensPrinter;
+
+  /// No description provided for @kitchensPrinterMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main kitchen printer'**
+  String get kitchensPrinterMain;
+
+  /// No description provided for @kitchensPrintsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Prints on: {printer}'**
+  String kitchensPrintsOn(String printer);
+
+  /// No description provided for @kitchensFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (first: gets unticked categories)'**
+  String kitchensFirst(String name);
+
+  /// No description provided for @kitchensNoCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories ticked'**
+  String get kitchensNoCategories;
+
+  /// No description provided for @kitchensSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get kitchensSave;
+
+  /// No description provided for @kitchensDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String kitchensDeleteTitle(String name);
+
+  /// No description provided for @kitchensDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Its categories go to the first kitchen. Tickets already printed are not changed.'**
+  String get kitchensDeleteMessage;
+
   /// No description provided for @printersTitle.
   ///
   /// In en, this message translates to:
