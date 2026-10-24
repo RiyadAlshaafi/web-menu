@@ -2414,6 +2414,30 @@ abstract class AppLocalizations {
   /// **'Net'**
   String get summaryNet;
 
+  /// No description provided for @expenseAllEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'All employees'**
+  String get expenseAllEmployees;
+
+  /// No description provided for @expenseNoEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee'**
+  String get expenseNoEmployee;
+
+  /// No description provided for @summaryWholeCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'whole cafe'**
+  String get summaryWholeCafe;
+
+  /// No description provided for @expenseFilterEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee: {name}'**
+  String expenseFilterEmployee(String name);
+
   /// No description provided for @dashboardRecentSales.
   ///
   /// In en, this message translates to:

@@ -1285,6 +1285,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get summaryNet => 'الصافي';
 
   @override
+  String get expenseAllEmployees => 'كل الموظفين';
+
+  @override
+  String get expenseNoEmployee => 'بدون موظف';
+
+  @override
+  String get summaryWholeCafe => 'المقهى كله';
+
+  @override
+  String expenseFilterEmployee(String name) {
+    return 'الموظف: $name';
+  }
+
+  @override
   String get dashboardRecentSales => 'آخر المبيعات';
 
   @override

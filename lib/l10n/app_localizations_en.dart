@@ -1291,6 +1291,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get summaryNet => 'Net';
 
   @override
+  String get expenseAllEmployees => 'All employees';
+
+  @override
+  String get expenseNoEmployee => 'No employee';
+
+  @override
+  String get summaryWholeCafe => 'whole cafe';
+
+  @override
+  String expenseFilterEmployee(String name) {
+    return 'Employee: $name';
+  }
+
+  @override
   String get dashboardRecentSales => 'Recent Sales';
 
   @override

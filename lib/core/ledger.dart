@@ -107,10 +107,89 @@ String expenseCashierName(CafeStore store, ShiftExpense expense) {
   return match.isEmpty ? '' : match.first.name;
 }
 
+/// The employee an expense is for: whom a cash withdrawal paid, else the employee it is tagged
+/// with. Null when it has neither.
+String? expenseEmployeeId(ShiftExpense expense) {
+  final paid = expense.paidToCashierId;
+  if (paid != null && paid.isNotEmpty) return paid;
+  final staff = expense.staffId;
+  return staff != null && staff.isNotEmpty ? staff : null;
+}
+
+/// Which expenses the employee filter keeps.
+sealed class EmployeeFilter {
+  const EmployeeFilter();
+
+  bool matches(ShiftExpense expense);
+}
+
+/// Every expense.
+final class AllEmployees extends EmployeeFilter {
+  const AllEmployees();
+
+  @override
+  bool matches(ShiftExpense expense) => true;
+
+  @override
+  bool operator ==(Object other) => other is AllEmployees;
+
+  @override
+  int get hashCode => (AllEmployees).hashCode;
+}
+
+/// Expenses paid to no one and tagged with no one.
+final class NoEmployee extends EmployeeFilter {
+  const NoEmployee();
+
+  @override
+  bool matches(ShiftExpense expense) => expenseEmployeeId(expense) == null;
+
+  @override
+  bool operator ==(Object other) => other is NoEmployee;
+
+  @override
+  int get hashCode => (NoEmployee).hashCode;
+}
+
+/// Expenses paid to or tagged with one employee.
+final class OneEmployee extends EmployeeFilter {
+  const OneEmployee(this.id);
+
+  final String id;
+
+  @override
+  bool matches(ShiftExpense expense) => expenseEmployeeId(expense) == id;
+
+  @override
+  bool operator ==(Object other) => other is OneEmployee && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Everyone the employee filter offers, by name: every staff member (cashiers, chefs, servers,
+/// cleaners, also inactive ones), then anyone removed since who still has expenses, under the
+/// name saved with those expenses.
+List<({String id, String name})> expenseEmployees(CafeStore store) {
+  final names = <String, String>{for (final member in store.cashiers) member.id: member.name};
+  for (final expense in store.expenses) {
+    final id = expenseEmployeeId(expense);
+    if (id == null || names.containsKey(id)) continue;
+    final saved = expense.employeeName.trim();
+    if (saved.isNotEmpty) names[id] = saved;
+  }
+  final list = [for (final entry in names.entries) (id: entry.key, name: entry.value)];
+  list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  return list;
+}
+
+/// Expenses that count, newest first: voided ones never do, and an edited expense counts once
+/// (editing voids the old copy).
 List<ShiftExpense> expenseLedgerRows(
   CafeStore store, {
   String query = '',
   String? cashierName,
+  EmployeeFilter employee = const AllEmployees(),
   String? categoryId,
   DateTime? from,
   DateTime? to,
@@ -119,6 +198,7 @@ List<ShiftExpense> expenseLedgerRows(
   final list = store.expenses.where((expense) {
     if (expense.voided) return false;
     if (cashierName != null && expenseCashierName(store, expense) != cashierName) return false;
+    if (!employee.matches(expense)) return false;
     if (categoryId != null && !_expenseMatchesCategory(store, expense, categoryId)) {
       return false;
     }

@@ -31,7 +31,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   final search = TextEditingController();
   DateTime? from;
   DateTime? to;
-  String? cashierName;
+  EmployeeFilter employee = const AllEmployees();
   String? categoryId;
 
   @override
@@ -48,13 +48,16 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     final expensesTotal = expenseLedgerRows(
       store,
       query: search.text,
-      cashierName: cashierName,
+      employee: employee,
       categoryId: categoryId,
       from: window.from,
       to: window.to,
     ).fold<double>(0, (sum, row) => sum + row.amount);
     final salesTotal = saleLedgerRows(store, from: window.from, to: window.to).fold<double>(0, (sum, row) => sum + row.total);
     final period = window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange;
+    final employees = expenseEmployees(store);
+    // One person's expenses next to the whole cafe's sales make no net figure, so Net hides then.
+    final oneEmployee = employee is! AllEmployees;
     final categories = store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
@@ -66,20 +69,28 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
           LayoutBuilder(
             builder: (context, constraints) {
               final cards = [
-                _figure(context, '${context.l10n.summarySales} · $period', store.currency.format(salesTotal)),
-                _figure(context, '${context.l10n.summaryExpenses} · $period', store.currency.format(expensesTotal), color: CafeColors.terracottaDark),
-                _figure(context, '${context.l10n.summaryNet} · $period', store.currency.format(salesTotal - expensesTotal), dark: true),
+                _figure(
+                  context,
+                  oneEmployee ? '${context.l10n.summarySales} · $period · ${context.l10n.summaryWholeCafe}' : '${context.l10n.summarySales} · $period',
+                  store.currency.format(salesTotal),
+                ),
+                _figure(
+                  context,
+                  oneEmployee ? '${context.l10n.summaryExpenses} · $period · ${_employeeLabel(context, employees)}' : '${context.l10n.summaryExpenses} · $period',
+                  store.currency.format(expensesTotal),
+                  color: CafeColors.terracottaDark,
+                ),
+                if (!oneEmployee) _figure(context, '${context.l10n.summaryNet} · $period', store.currency.format(salesTotal - expensesTotal), dark: true),
               ];
               if (constraints.maxWidth < 720) {
                 return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 12), child: card)]);
               }
               return Row(
                 children: [
-                  Expanded(child: cards[0]),
-                  const SizedBox(width: 14),
-                  Expanded(child: cards[1]),
-                  const SizedBox(width: 14),
-                  Expanded(child: cards[2]),
+                  for (final (index, card) in cards.indexed) ...[
+                    if (index > 0) const SizedBox(width: 14),
+                    Expanded(child: card),
+                  ],
                 ],
               );
             },
@@ -99,7 +110,12 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 onSelected: (value) => setState(() => categoryId = value),
               ),
               OutlineAction(label: context.l10n.salesExportCsv, icon: Icons.file_download_outlined, height: 44, onPressed: () => _exportCsv(store, rows)),
-              OutlineAction(label: context.l10n.salesExportPdf, icon: Icons.picture_as_pdf_outlined, height: 44, onPressed: () => _exportPdf(store, rows)),
+              OutlineAction(
+                label: context.l10n.salesExportPdf,
+                icon: Icons.picture_as_pdf_outlined,
+                height: 44,
+                onPressed: () => _exportPdf(store, rows, oneEmployee ? _employeeLabel(context, employees) : null),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -114,16 +130,18 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               ),
               DateBox(label: context.l10n.salesDateFrom, value: from, onPicked: (value) => setState(() => from = value)),
               DateBox(label: context.l10n.salesDateTo, value: to, onPicked: (value) => setState(() => to = value)),
-              SelectBox<String?>(
-                value: cashierName,
+              SelectBox<EmployeeFilter>(
+                value: employee,
                 height: 48,
                 items: [
-                  DropdownMenuItem(value: null, child: Text(context.l10n.salesAllCashiers)),
-                  // One entry per name, taken from the expenses themselves, so removed cashiers never repeat.
-                  for (final name in (store.expenses.map((e) => expenseCashierName(store, e)).where((n) => n.isNotEmpty).toSet().toList()..sort()))
-                    DropdownMenuItem(value: name, child: Text(name)),
+                  DropdownMenuItem(value: const AllEmployees(), child: Text(context.l10n.expenseAllEmployees)),
+                  DropdownMenuItem(value: const NoEmployee(), child: Text(context.l10n.expenseNoEmployee)),
+                  for (final person in employees) DropdownMenuItem(value: OneEmployee(person.id), child: Text(person.name)),
+                  // A picked person whose expenses have since left the loaded list stays pickable.
+                  if (employee case OneEmployee(:final id) when !employees.any((person) => person.id == id))
+                    DropdownMenuItem(value: employee, child: Text(_employeeLabel(context, employees))),
                 ],
-                onChanged: (value) => setState(() => cashierName = value),
+                onChanged: (value) => setState(() => employee = value ?? const AllEmployees()),
               ),
             ],
           ),
@@ -174,10 +192,17 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     );
   }
 
+  /// What the employee filter shows now, for card labels and the PDF.
+  String _employeeLabel(BuildContext context, List<({String id, String name})> employees) => switch (employee) {
+        AllEmployees() => context.l10n.expenseAllEmployees,
+        NoEmployee() => context.l10n.expenseNoEmployee,
+        OneEmployee(:final id) => employees.where((person) => person.id == id).firstOrNull?.name ?? '?',
+      };
+
   List<ShiftExpense> _rows(CafeStore store) => expenseLedgerRows(
         store,
         query: search.text,
-        cashierName: cashierName,
+        employee: employee,
         categoryId: categoryId,
         from: from,
         to: to,
@@ -301,7 +326,9 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
     }
   }
 
-  Future<void> _exportPdf(CafeStore store, List<ShiftExpense> rows) async {
+  /// [employee] names the employee filter when one is picked, so the printout says whose
+  /// expenses these are.
+  Future<void> _exportPdf(CafeStore store, List<ShiftExpense> rows, String? employee) async {
     await Printing.layoutPdf(
       name: 'wages',
       onLayout: (PdfPageFormat format) async {
@@ -312,6 +339,10 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
             pageFormat: PdfPageFormat.a4.landscape,
             theme: theme,
             build: (context) => [
+              if (employee != null) ...[
+                pdfText(store.l10n.expenseFilterEmployee(employee), size: 13, bold: true),
+                pw.SizedBox(height: 8),
+              ],
               pw.TableHelper.fromTextArray(
                 cellBuilder: (index, data, rowNum) => pdfText('$data'),
                 headers: [
