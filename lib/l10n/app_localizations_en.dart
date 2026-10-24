@@ -739,7 +739,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogCashierStaffAccess => 'Cashier & Staff Access';
 
   @override
-  String get catalogCashierNameHint => 'e.g. Luca Neri';
+  String get catalogCashierNameHint => 'Enter name';
 
   @override
   String get catalogCashierName => 'Name';

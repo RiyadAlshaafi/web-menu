@@ -738,7 +738,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogCashierStaffAccess => 'صلاحيات الكاشير والموظفين';
 
   @override
-  String get catalogCashierNameHint => 'مثال: لوكا نيري';
+  String get catalogCashierNameHint => 'أدخل الاسم';
 
   @override
   String get catalogCashierName => 'الاسم';

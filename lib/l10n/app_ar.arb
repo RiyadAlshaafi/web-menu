@@ -234,7 +234,7 @@
   "catalogPasswordUpdated": "تم تحديث كلمة المرور.",
   "catalogUpdatePassword": "تحديث كلمة المرور",
   "catalogCashierStaffAccess": "صلاحيات الكاشير والموظفين",
-  "catalogCashierNameHint": "مثال: لوكا نيري",
+  "catalogCashierNameHint": "أدخل الاسم",
   "catalogCashierName": "الاسم",
   "catalogStaffRoleLabel": "الوظيفة",
   "expensePaidTo": "المدفوع إلى",

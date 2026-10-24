@@ -345,7 +345,7 @@
   "catalogPasswordUpdated": "Password updated.",
   "catalogUpdatePassword": "Update Password",
   "catalogCashierStaffAccess": "Cashier & Staff Access",
-  "catalogCashierNameHint": "e.g. Luca Neri",
+  "catalogCashierNameHint": "Enter name",
   "catalogCashierName": "Name",
   "catalogStaffRoleLabel": "Job",
   "expensePaidTo": "Paid to",

@@ -1463,7 +1463,7 @@ abstract class AppLocalizations {
   /// No description provided for @catalogCashierNameHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Luca Neri'**
+  /// **'Enter name'**
   String get catalogCashierNameHint;
 
   /// No description provided for @catalogCashierName.
