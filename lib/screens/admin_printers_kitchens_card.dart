@@ -141,6 +141,8 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
             hint: context.l10n.adminAutoPrintReceiptHint,
             value: store.autoPrintReceipt,
             onChanged: (value) => store.setAutoPrintReceipt(value),
+            // The kitchens part below starts with its own line.
+            divider: false,
           ),
           if (kitchenOn) ...[
             const SizedBox(height: 18),

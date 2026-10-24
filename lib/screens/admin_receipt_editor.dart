@@ -18,6 +18,7 @@ import '../printing/receipt_settings.dart';
 import '../printing/report_print.dart';
 import '../printing/slip.dart';
 import '../state/cafe_store.dart';
+import '../theme/cafe_theme.dart';
 import '../widgets/tawla_ui.dart';
 
 /// Shows one printout's PDF. The app shows the real page ([pdfPagePreview]); tests swap in a
@@ -293,7 +294,11 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
         runSpacing: 8,
         children: [
           for (final (label, on, change) in lines)
-            FilterChip(label: Text(label), selected: on, onSelected: (value) => set(change(value))),
+            FilterChip(
+              label: Text(label, style: TextStyle(color: on ? CafeSurfaces.of(context).onButton : CafeColors.ink)),
+              selected: on,
+              onSelected: (value) => set(change(value)),
+            ),
         ],
       ),
       const SizedBox(height: 14),

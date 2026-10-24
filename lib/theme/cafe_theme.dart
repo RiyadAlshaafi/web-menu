@@ -231,8 +231,9 @@ class CafeTheme {
         backgroundColor: Colors.white,
         selectedColor: surfaces.button,
         disabledColor: CafeColors.line,
-        labelStyle: TextStyle(color: CafeColors.ink, fontWeight: FontWeight.w700),
-        secondaryLabelStyle: TextStyle(color: onButton, fontWeight: FontWeight.w700),
+        // The app font, as everywhere else; without it chips fell back to the system font.
+        labelStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontFamilyFallback: arabicFallback, color: CafeColors.ink, fontWeight: FontWeight.w700),
+        secondaryLabelStyle: TextStyle(fontFamily: 'PlusJakartaSans', fontFamilyFallback: arabicFallback, color: onButton, fontWeight: FontWeight.w700),
         checkmarkColor: onButton,
         showCheckmark: false,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
