@@ -2031,6 +2031,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى.';
 
   @override
+  String get expenseEmployee => 'الموظف (اختياري)';
+
+  @override
+  String get expenseEmployeeNone => 'بدون موظف';
+
+  @override
   String get takeoutScreenTitle => 'شاشة السفري';
 
   @override

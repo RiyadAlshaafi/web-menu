@@ -1908,6 +1908,8 @@ class AppDatabase {
     cashierName: row['cashier_name'] as String? ?? '',
     paidToCashierName: row['paid_to_cashier_name'] as String? ?? '',
     paidToCashierId: row['paid_to_cashier_id'] as String?,
+    staffId: row['staff_id'] as String?,
+    staffName: row['staff_name'] as String? ?? '',
     paidToCafe: row['paid_to_cafe'] as bool? ?? false,
     amount: _asDouble(row['amount']) ?? 0,
     description: row['description'] as String? ?? '',
@@ -1929,6 +1931,8 @@ class AppDatabase {
     required String? paidToCashierId,
     required double amount,
     required String description,
+    String? staffId,
+    String staffName = '',
   }) async {
     if (isLocal) {
       return _localAddExpense(
@@ -1939,6 +1943,8 @@ class AppDatabase {
         paidToCashierId: paidToCashierId,
         amount: amount,
         description: description,
+        staffId: staffId,
+        staffName: staffName,
       );
     }
     final category = _expenseCategories.where((item) => item.id == categoryId);
@@ -1948,6 +1954,8 @@ class AppDatabase {
       cashierId: cashierId,
       paidToCafe: paidToCafe,
       paidToCashierId: paidToCafe ? null : paidToCashierId,
+      staffId: paidToCafe ? staffId : null,
+      staffName: paidToCafe ? staffName : '',
       amount: amount,
       description: description,
       createdAt: DateTime.now(),
@@ -1969,6 +1977,7 @@ class AppDatabase {
           'p_amount': amount,
           'p_description': description,
           if (!paidToCafe && paidToCashierId != null && paidToCashierId != cashierId) 'p_paid_to': paidToCashierId,
+          if (paidToCafe && staffId != null) 'p_paid_to': staffId,
         },
       );
       final result = Map<String, dynamic>.from(raw as Map);

@@ -771,6 +771,8 @@ class ShiftExpense {
     this.categoryNameAr,
     this.cashierName = '',
     this.paidToCashierName = '',
+    this.staffId,
+    this.staffName = '',
   });
 
   final String id;
@@ -781,6 +783,10 @@ class ShiftExpense {
   final String paidToCashierName;
   final bool paidToCafe;
   final String? paidToCashierId;
+
+  /// The employee this expense is for (a tag; the cash totals do not change), with the name saved with it.
+  final String? staffId;
+  final String staffName;
   final double amount;
   final String description;
   final DateTime createdAt;
@@ -794,6 +800,9 @@ class ShiftExpense {
 
   String get shortId =>
       (displayNumber == null || displayNumber!.isEmpty) ? id : displayNumber!;
+
+  /// Who the money went to or who it is for: the withdrawal's payee, else the tagged employee.
+  String get employeeName => paidToCashierName.isNotEmpty ? paidToCashierName : staffName;
 
 }
 

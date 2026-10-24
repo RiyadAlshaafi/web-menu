@@ -2043,6 +2043,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t send your message. Check the connection and try again.';
 
   @override
+  String get expenseEmployee => 'Employee (optional)';
+
+  @override
+  String get expenseEmployeeNone => 'No employee';
+
+  @override
   String get takeoutScreenTitle => 'Takeout screen';
 
   @override

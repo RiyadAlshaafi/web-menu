@@ -641,6 +641,8 @@
   "feedbackEmpty": "اكتب رسالة أولاً.",
   "feedbackTooMany": "وصلت إلى الحد الأقصى للرسائل اليوم. حاول مرة أخرى غداً.",
   "feedbackFailed": "تعذر إرسال رسالتك. تحقق من الاتصال وحاول مرة أخرى.",
+  "expenseEmployee": "الموظف (اختياري)",
+  "expenseEmployeeNone": "بدون موظف",
   "takeoutScreenTitle": "شاشة السفري",
   "takeoutLayoutSave": "حفظ",
   "takeoutLayoutSaved": "تم حفظ شاشة السفري.",

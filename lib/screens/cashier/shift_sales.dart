@@ -302,7 +302,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       background: CafeColors.card,
       first: _twoLines(
         store.expenseCategoryLabel(expense),
-        [expense.shortId, if (expense.description.isNotEmpty) expense.description].join('  ·  '),
+        [expense.shortId, if (expense.description.isNotEmpty) expense.description, if (expense.staffName.isNotEmpty) expense.staffName].join('  ·  '),
       ),
       time: Text(formatTripoliTime(expense.createdAt), style: const TextStyle(fontSize: 14)),
       method: StatusBadge(context.l10n.cashierCashOut, tone: BadgeTone.terracotta),
@@ -524,7 +524,7 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
             categoryId: categoryId!,
             amount: parsed,
             description: description.text,
-            paidToId: _isWithdrawal ? paidToId : null,
+            paidToId: paidToId,
           )
         : await widget.store.editShiftExpense(
             expense: editing,
@@ -581,16 +581,23 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
                 ],
                 onChanged: saving
                     ? null
-                    : (value) => setState(() => categoryId = value),
+                    : (value) => setState(() {
+                        categoryId = value;
+                        paidToId = null;
+                      }),
               ),
-              if (widget.editing == null && _isWithdrawal && widget.store.payees.length > 1) ...[
+              if (widget.editing == null && widget.store.payees.isNotEmpty && (_isWithdrawal ? widget.store.payees.length > 1 : true)) ...[
                 const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  initialValue: paidToId ?? widget.store.currentCashier?.id,
-                  decoration: InputDecoration(labelText: context.l10n.expensePaidTo),
+                // A withdrawal is paid to someone (the cashier unless picked); any other expense can be
+                // tagged with an employee, or none.
+                DropdownButtonFormField<String?>(
+                  key: ValueKey(_isWithdrawal),
+                  initialValue: paidToId ?? (_isWithdrawal ? widget.store.currentCashier?.id : null),
+                  decoration: InputDecoration(labelText: _isWithdrawal ? context.l10n.expensePaidTo : context.l10n.expenseEmployee),
                   items: [
+                    if (!_isWithdrawal) DropdownMenuItem<String?>(value: null, child: Text(context.l10n.expenseEmployeeNone)),
                     for (final person in widget.store.payees)
-                      DropdownMenuItem(value: person.id, child: Text(person.name)),
+                      DropdownMenuItem<String?>(value: person.id, child: Text(person.name)),
                   ],
                   onChanged: saving ? null : (value) => setState(() => paidToId = value),
                 ),

@@ -484,6 +484,7 @@ class CafeStore extends ChangeNotifier {
         ..write(expense.description)
         ..write(expense.paidToCafe)
         ..write(expense.paidToCashierId)
+        ..write(expense.staffId)
         ..write(expense.voided)
         ..write(expense.editedFrom)
         ..write(expense.displayNumber)

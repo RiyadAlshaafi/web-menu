@@ -228,6 +228,35 @@ void main() {
   });
 
   group('expenses', () {
+    test('can be tagged with an employee, and an edit keeps the tag', () async {
+      final sara = await _cashier('Sara', '1234');
+      final shift = await _openShift(sara);
+      final cafe = db.expenseCategories.first.id;
+      expect(
+        await db.addShiftExpense(
+          shiftId: shift.id,
+          cashierId: sara,
+          categoryId: cafe,
+          paidToCafe: true,
+          paidToCashierId: null,
+          staffId: 'chef-1',
+          staffName: 'Omar',
+          amount: 20,
+          description: 'advance',
+        ),
+        isNull,
+      );
+      final first = db.expenses.single;
+      expect(first.staffId, 'chef-1');
+      expect(first.employeeName, 'Omar');
+      expect(first.paidToCafe, isTrue, reason: 'a tag never turns the expense into a withdrawal');
+
+      expect(await db.editShiftExpense(id: first.id, categoryId: cafe, amount: 25, description: 'advance x'), isNull);
+      final fixed = db.expenses.firstWhere((e) => !e.voided);
+      expect(fixed.staffId, 'chef-1');
+      expect(fixed.employeeName, 'Omar');
+    });
+
     test('are numbered E-001, E-002 and an edit voids the old one', () async {
       final sara = await _cashier('Sara', '1234');
       final shift = await _openShift(sara);

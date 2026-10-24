@@ -996,6 +996,8 @@
   "feedbackEmpty": "Write a message first.",
   "feedbackTooMany": "You have sent the most messages allowed today. Try again tomorrow.",
   "feedbackFailed": "Couldn't send your message. Check the connection and try again.",
+  "expenseEmployee": "Employee (optional)",
+  "expenseEmployeeNone": "No employee",
   "takeoutScreenTitle": "Takeout screen",
   "takeoutLayoutSave": "Save",
   "takeoutLayoutSaved": "Takeout screen saved.",

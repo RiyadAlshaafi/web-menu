@@ -690,6 +690,8 @@ extension AppDatabaseLocal on AppDatabase {
     required double amount,
     required String description,
     String? editedFrom,
+    String? staffId,
+    String staffName = '',
   }) {
     final shift = _shifts.where((s) => s.id == shiftId && s.isOpen && s.cashierId == cashierId).firstOrNull;
     if (shift == null) return 'not_found';
@@ -706,6 +708,8 @@ extension AppDatabaseLocal on AppDatabase {
         paidToCafe: paidToCafe,
         paidToCashierId: paidToCafe ? null : paidToCashierId,
         paidToCashierName: paidToCafe ? '' : (cashier?.name ?? ''),
+        staffId: paidToCafe ? staffId : null,
+        staffName: paidToCafe ? staffName : '',
         amount: amount,
         description: description.trim(),
         createdAt: DateTime.now().toUtc(),
@@ -746,6 +750,8 @@ extension AppDatabaseLocal on AppDatabase {
         amount: amount,
         description: description,
         editedFrom: original.id,
+        staffId: original.staffId,
+        staffName: original.staffName,
       );
     });
     _expenses = [for (final e in _expenses) e.id == id ? voided : e];
@@ -760,6 +766,8 @@ extension AppDatabaseLocal on AppDatabase {
     paidToCafe: e.paidToCafe,
     paidToCashierId: e.paidToCashierId,
     paidToCashierName: e.paidToCashierName,
+    staffId: e.staffId,
+    staffName: e.staffName,
     amount: e.amount,
     description: e.description,
     createdAt: e.createdAt,
@@ -864,6 +872,8 @@ Map<String, dynamic> _expenseToLocal(ShiftExpense e) => {
   'paidToCafe': e.paidToCafe,
   'paidToCashierId': e.paidToCashierId,
   'paidToCashierName': e.paidToCashierName,
+  'staffId': e.staffId,
+  'staffName': e.staffName,
   'amount': e.amount,
   'description': e.description,
   'createdAt': e.createdAt.toIso8601String(),
@@ -884,6 +894,8 @@ ShiftExpense _expenseFromLocal(Map<String, dynamic> j) => ShiftExpense(
   paidToCafe: j['paidToCafe'] as bool,
   paidToCashierId: j['paidToCashierId'] as String?,
   paidToCashierName: j['paidToCashierName'] as String? ?? '',
+  staffId: j['staffId'] as String?,
+  staffName: j['staffName'] as String? ?? '',
   amount: (j['amount'] as num).toDouble(),
   description: j['description'] as String,
   createdAt: DateTime.parse(j['createdAt'] as String),

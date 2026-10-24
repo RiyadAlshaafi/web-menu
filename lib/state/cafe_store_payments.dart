@@ -225,6 +225,8 @@ extension CafeStorePayments on CafeStore {
       categoryId: categoryId,
       paidToCafe: !withdrawal,
       paidToCashierId: withdrawal ? (paidTo?.id ?? cashier.id) : null,
+      staffId: withdrawal ? null : paidTo?.id,
+      staffName: withdrawal ? '' : (paidTo?.name ?? ''),
       amount: amount,
       description: description.trim(),
     );

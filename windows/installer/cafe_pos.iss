@@ -60,7 +60,7 @@ Type: files; Name: "{app}\admin_reset.json"
 [Code]
 // Pages: update choice (only when Cafe POS is already installed) -> password (checked online) ->
 // Online/Offline -> cafe slot (online only) -> admin reset (offline only) -> feature checkboxes.
-// Updating with "keep settings" skips the rest like a silent update: no password, nothing rewritten. The answers are written to {app}\features.json, which
+// Updating with "keep settings" asks the password, then skips the rest like a silent update: nothing rewritten. The answers are written to {app}\features.json, which
 // lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages
 // and leave features.json as it is.
 // The admin reset writes {app}\admin_reset.json, a one-time ticket signed by the server
@@ -256,7 +256,7 @@ begin
   end;
 end;
 
-// An update that keeps this till's mode, slot and features: no password needed.
+// An update that keeps this till's mode, slot and features (the password is still asked).
 function KeepSettings: Boolean;
 begin
   Result := Installed and (UpdatePage.SelectedValueIndex = 0);
@@ -432,10 +432,14 @@ begin
   FeatureKeys[10] := 'kitchen_printer';
   FeatureKeys[11] := 'dish_choices';
 
-  Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe');
+  // Already installed when the exe is in the install folder, or when Windows has this app's
+  // uninstall entry (a till installed to another folder, or whose exe was moved).
+  Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe') or
+    RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1') or
+    RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1');
   UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',
     'Cafe POS is already on this PC.',
-    'Updating keeps this till''s mode, cafe slot, features, sales and settings. No password is needed.',
+    'Updating keeps this till''s mode, cafe slot, features, sales and settings. The setup password is still asked.',
     True, False);
   UpdatePage.Add('Update and keep this till''s settings');
   UpdatePage.Add('Change the settings or reset the offline admin password (needs the setup password)');
@@ -484,7 +488,7 @@ begin
   if PageID = UpdatePage.ID then
     Result := not Installed
   else if KeepSettings then
-    Result := (PageID = PasswordPage.ID) or (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
+    Result := (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
       (PageID = ResetPage.ID) or (PageID = FeaturePage.ID)
   else
     Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);

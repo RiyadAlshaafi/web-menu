@@ -3692,6 +3692,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t send your message. Check the connection and try again.'**
   String get feedbackFailed;
 
+  /// No description provided for @expenseEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee (optional)'**
+  String get expenseEmployee;
+
+  /// No description provided for @expenseEmployeeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee'**
+  String get expenseEmployeeNone;
+
   /// No description provided for @takeoutScreenTitle.
   ///
   /// In en, this message translates to:
