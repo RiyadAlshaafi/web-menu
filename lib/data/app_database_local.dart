@@ -23,6 +23,7 @@ extension AppDatabaseLocal on AppDatabase {
     ];
     _tables = [for (final row in _docRows('tables')) CafeTable.fromJson(row)];
     _categories = [for (final row in _docRows('categories')) MenuCategory.fromJson(row)];
+    _kitchens = [for (final row in _docRows('kitchens')) Kitchen.fromJson(row)];
     _menuItems = [for (final row in _docRows('menuItems')) MenuItem.fromJson(row)];
     _paymentTypes = [for (final row in _docRows('paymentTypes')) _paymentTypeFromLocal(row)];
     _expenseCategories = [for (final row in _docRows('expenseCategories')) _expenseCategoryFromLocal(row)];
@@ -77,6 +78,7 @@ extension AppDatabaseLocal on AppDatabase {
       _store.writeDoc('locale', _locale);
       _store.writeDoc('tables', [for (final t in _tables) {...t.toJson(), 'archived': t.archived}]);
       _store.writeDoc('categories', [for (final c in _categories) c.toJson()]);
+      _store.writeDoc('kitchens', [for (final k in _kitchens) k.toJson()]);
       _store.writeDoc('menuItems', [for (final m in _menuItems) m.toJson()]);
       _store.writeDoc('paymentTypes', [for (final p in _paymentTypes) _paymentTypeToLocal(p)]);
       _store.writeDoc('expenseCategories', [for (final e in _expenseCategories) _expenseCategoryToLocal(e)]);

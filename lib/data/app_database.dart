@@ -141,6 +141,7 @@ class AppDatabase {
   List<Cashier> _cashiers = [];
   List<CafeTable> _tables = [];
   List<MenuCategory> _categories = [];
+  List<Kitchen> _kitchens = [];
   List<MenuItem> _menuItems = [];
   List<CafeOrder> _orders = [];
   Map<String, CartState> _carts = {};
@@ -161,6 +162,7 @@ class AppDatabase {
   List<Cashier> get cashiers => List<Cashier>.from(_cashiers);
   List<CafeTable> get tables => List<CafeTable>.from(_tables);
   List<MenuCategory> get categories => List<MenuCategory>.from(_categories);
+  List<Kitchen> get kitchens => List<Kitchen>.unmodifiable(_kitchens);
   List<MenuItem> get menuItems => List<MenuItem>.from(_menuItems);
   List<CafeOrder> get orders => List<CafeOrder>.from(_orders);
   Map<String, CartState> get carts => Map<String, CartState>.from(_carts);
@@ -309,6 +311,7 @@ class AppDatabase {
     _cashiers = [];
     _tables = [];
     _categories = [];
+    _kitchens = [];
     _menuItems = [];
     _orders = [];
     _carts = {};
@@ -379,6 +382,7 @@ class AppDatabase {
     'staff_calls',
     'menu_items',
     'menu_categories',
+    'kitchens',
     'dining_tables',
     'shift_expenses',
     'shifts',
@@ -711,6 +715,7 @@ class AppDatabase {
     if (restaurantId == null) {
       _tables = [];
       _categories = [];
+      _kitchens = [];
       _menuItems = [];
       _orders = [];
       _carts = {};
@@ -776,6 +781,10 @@ class AppDatabase {
           ? client!.rpc('list_pos_cashiers', params: {'p_restaurant_id': restaurantId})
           : Future<dynamic>.value(null),
       staffed ? _selectPayments(historyFrom, _salesTo, _salesLimit) : Future<dynamic>.value(null),
+      // Empty, not an error, for a cafe whose database has no kitchens table yet.
+      liveOnly
+          ? Future<dynamic>.value(null)
+          : _selectOrEmpty(client!.from('kitchens').select().order('sort_order', ascending: true), 'kitchens'),
     ]);
     if (epoch != _epoch) return false;
     if (!liveOnly) {
@@ -789,9 +798,18 @@ class AppDatabase {
               sortOrder: row['sort_order'] as int? ?? 0,
               spotlight: row['spotlight'] as bool? ?? false,
               visible: row['visible'] as bool? ?? true,
+              kitchenId: row['kitchen_id'] as String?,
             ),
           )
           .toList();
+      _kitchens = [
+        for (final row in (batch[12] as List?) ?? const [])
+          Kitchen(
+            id: row['id'] as String,
+            name: row['name'] as String? ?? '',
+            sortOrder: row['sort_order'] as int? ?? 0,
+          ),
+      ];
       final staffRaw = batch[10];
       final staff = staffRaw is List ? staffRaw : <dynamic>[];
       _cashiers = staff.map((row) {
@@ -1515,11 +1533,35 @@ class AppDatabase {
           'sort_order': item.sortOrder,
           'spotlight': item.spotlight,
           'visible': item.visible,
+          // Left out for a cafe with no kitchens, whose database may not have the column yet.
+          if (_kitchens.isNotEmpty || item.kitchenId != null) 'kitchen_id': item.kitchenId,
         },
     ];
     if (rows.isNotEmpty) await client!.from('menu_categories').upsert(rows);
     final ids = deleted.toList();
     if (ids.isNotEmpty) await client!.from('menu_categories').delete().inFilter('id', ids);
+  }
+
+  /// Saves [changed] kitchens and deletes [deleted] ones, by id. The database then clears the
+  /// kitchen from its categories; this device's copy is cleared here to match.
+  Future<void> writeKitchens(
+    List<Kitchen> all, {
+    Iterable<Kitchen> changed = const [],
+    Iterable<String> deleted = const [],
+  }) async {
+    _kitchens = List<Kitchen>.of(all);
+    final gone = deleted.toSet();
+    for (final category in _categories) {
+      if (gone.contains(category.kitchenId)) category.kitchenId = null;
+    }
+    _saveLocalSettingsIfLocal();
+    if (client == null || restaurantId == null) return;
+    final rows = [
+      for (final kitchen in changed)
+        {'id': kitchen.id, 'restaurant_id': restaurantId, 'name': kitchen.name, 'sort_order': kitchen.sortOrder},
+    ];
+    if (rows.isNotEmpty) await client!.from('kitchens').upsert(rows);
+    if (gone.isNotEmpty) await client!.from('kitchens').delete().inFilter('id', gone.toList());
   }
 
   /// Saves [changed] dishes and deletes [deleted] ones, by id. Never deletes
@@ -2001,6 +2043,7 @@ class AppDatabase {
     'locale': _locale,
     'tables': [for (final t in _tables) {...t.toJson(), 'archived': t.archived}],
     'categories': [for (final c in _categories) c.toJson()],
+    'kitchens': [for (final k in _kitchens) k.toJson()],
     'menuItems': [for (final m in _menuItems) m.toJson()],
     'paymentTypes': [
       for (final p in _paymentTypes)
@@ -2027,6 +2070,7 @@ class AppDatabase {
     _locale = s['locale'] as String? ?? 'en';
     _tables = [for (final r in rows('tables')) CafeTable.fromJson(r)];
     _categories = [for (final r in rows('categories')) MenuCategory.fromJson(r)];
+    _kitchens = [for (final r in rows('kitchens')) Kitchen.fromJson(r)];
     _menuItems = [for (final r in rows('menuItems')) MenuItem.fromJson(r)];
     _paymentTypes = [
       for (final r in rows('paymentTypes'))

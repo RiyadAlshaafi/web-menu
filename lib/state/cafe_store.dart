@@ -53,6 +53,7 @@ class CafeStore extends ChangeNotifier {
   List<Cashier> cashiers = [];
   List<CafeTable> tables = [];
   List<MenuCategory> categories = [];
+  List<Kitchen> kitchens = [];
   List<MenuItem> menuItems = [];
   List<CafeOrder> orders = [];
   Map<String, CartState> carts = {};
@@ -181,6 +182,7 @@ class CafeStore extends ChangeNotifier {
     cashiers = db.cashiers;
     tables = db.tables;
     categories = db.categories;
+    kitchens = db.kitchens;
     menuItems = db.menuItems;
     orders = db.orders;
     carts = db.carts;
@@ -268,6 +270,7 @@ class CafeStore extends ChangeNotifier {
     carts: carts,
     menu: menuItems,
     categories: categories,
+    kitchens: kitchens,
     calls: calls,
     payments: payments,
     paymentTypes: paymentTypes,
@@ -354,6 +357,7 @@ class CafeStore extends ChangeNotifier {
     carts: db.carts,
     menu: db.menuItems,
     categories: db.categories,
+    kitchens: db.kitchens,
     calls: db.calls,
     payments: db.payments,
     paymentTypes: db.paymentTypes,
@@ -370,6 +374,7 @@ class CafeStore extends ChangeNotifier {
     required Map<String, CartState> carts,
     required List<MenuItem> menu,
     required List<MenuCategory> categories,
+    required List<Kitchen> kitchens,
     required List<StaffCall> calls,
     required List<Payment> payments,
     required List<PaymentType> paymentTypes,
@@ -387,7 +392,14 @@ class CafeStore extends ChangeNotifier {
         ..write(category.visible)
         ..write(category.sortOrder)
         ..write(category.nameEn)
-        ..write(category.nameAr);
+        ..write(category.nameAr)
+        ..write(category.kitchenId);
+    }
+    for (final kitchen in kitchens) {
+      buffer
+        ..write(kitchen.id)
+        ..write(kitchen.name)
+        ..write(kitchen.sortOrder);
     }
     for (final table in tables) {
       buffer
@@ -489,6 +501,7 @@ class CafeStore extends ChangeNotifier {
     cashiers = db.cashiers;
     tables = db.tables;
     categories = db.categories;
+    kitchens = db.kitchens;
     menuItems = db.menuItems;
     orders = db.orders;
     carts = db.carts;

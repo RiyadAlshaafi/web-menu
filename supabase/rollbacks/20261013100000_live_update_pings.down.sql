@@ -8,8 +8,10 @@ begin
   foreach t in array array[
     'orders', 'order_lines', 'carts', 'cart_lines', 'staff_calls', 'payments', 'dining_tables',
     'menu_items', 'menu_categories', 'shifts', 'shift_expenses', 'payment_types', 'expense_categories',
-    'restaurants'
+    'restaurants', 'kitchens'
   ] loop
+    -- Later tables (kitchens) may not exist yet.
+    continue when to_regclass(format('public.%I', t)) is null;
     execute format('drop trigger if exists zz_live_ping on public.%I', t);
   end loop;
 end $$;

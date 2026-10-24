@@ -123,6 +123,57 @@ extension CafeStoreCatalog on CafeStore {
     notifyListeners();
   }
 
+  // ------------------------------------------------------------------ kitchens
+
+  List<Kitchen> get orderedKitchens => [...kitchens]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+  /// The kitchen that makes [menuItemId]: its category's kitchen, else the first kitchen. Null
+  /// when the cafe has no kitchens (every dish goes to the till's one kitchen printer) or the
+  /// dish is not on the menu (a typed-in line), which then also goes to the first kitchen.
+  Kitchen? kitchenFor(String menuItemId) {
+    final ordered = orderedKitchens;
+    if (ordered.isEmpty) return null;
+    final categoryId = menuItems.where((item) => item.id == menuItemId).firstOrNull?.categoryId;
+    final kitchenId = categories.where((item) => item.id == categoryId).firstOrNull?.kitchenId;
+    return ordered.where((item) => item.id == kitchenId).firstOrNull ?? ordered.first;
+  }
+
+  /// The categories [kitchenId] makes.
+  Set<String> categoryIdsOf(String kitchenId) => {
+    for (final category in categories)
+      if (category.kitchenId == kitchenId) category.id,
+  };
+
+  /// Adds a kitchen, or renames [kitchenId], and gives it exactly [categoryIds]: a ticked category
+  /// moves here from any other kitchen, an unticked one that was here goes back to the first one.
+  Future<void> saveKitchen({String? kitchenId, required String name, required Set<String> categoryIds}) async {
+    final existing = kitchens.where((item) => item.id == kitchenId).firstOrNull;
+    final kitchen = existing?.copyWith(name: name.trim()) ??
+        Kitchen(
+          id: Secrets.id('kitchen'),
+          name: name.trim(),
+          sortOrder: kitchens.isEmpty ? 0 : kitchens.map((item) => item.sortOrder).reduce((a, b) => a > b ? a : b) + 1,
+        );
+    kitchens = [for (final item in kitchens) if (item.id != kitchen.id) item, kitchen];
+    await db.writeKitchens(kitchens, changed: [kitchen]);
+    final changed = <MenuCategory>[];
+    for (final category in categories) {
+      final want = categoryIds.contains(category.id) ? kitchen.id : (category.kitchenId == kitchen.id ? null : category.kitchenId);
+      if (want == category.kitchenId) continue;
+      category.kitchenId = want;
+      changed.add(category);
+    }
+    if (changed.isNotEmpty) await db.writeCategories(categories, changed: changed);
+    notifyListeners();
+  }
+
+  /// Removes a kitchen; its categories go back to the first kitchen.
+  Future<void> deleteKitchen(String kitchenId) async {
+    kitchens = [for (final item in kitchens) if (item.id != kitchenId) item];
+    await db.writeKitchens(kitchens, deleted: [kitchenId]);
+    notifyListeners();
+  }
+
   Future<void> saveMenuItem(MenuItem item) async {
     final index = menuItems.indexWhere((entry) => entry.id == item.id);
     if (index >= 0) {

@@ -97,6 +97,7 @@ class MenuCategory {
     this.sortOrder = 0,
     this.spotlight = false,
     this.visible = true,
+    this.kitchenId,
   });
 
   final String id;
@@ -105,6 +106,9 @@ class MenuCategory {
   int sortOrder;
   bool spotlight;
   bool visible;
+
+  /// The kitchen that makes this category's dishes; null means the cafe's first kitchen.
+  String? kitchenId;
 
   String label(String locale) => locale == 'ar' ? nameAr : nameEn;
 
@@ -115,6 +119,7 @@ class MenuCategory {
     sortOrder: json['sortOrder'] as int? ?? 0,
     spotlight: json['spotlight'] as bool? ?? false,
     visible: json['visible'] as bool? ?? true,
+    kitchenId: json['kitchenId'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -124,7 +129,28 @@ class MenuCategory {
     'sortOrder': sortOrder,
     'spotlight': spotlight,
     'visible': visible,
+    'kitchenId': kitchenId,
   };
+}
+
+/// A place in the cafe that cooks (pizza oven, grill, bar). Each till picks its printer.
+class Kitchen {
+  const Kitchen({required this.id, required this.name, this.sortOrder = 0});
+
+  final String id;
+  final String name;
+  final int sortOrder;
+
+  Kitchen copyWith({String? name, int? sortOrder}) =>
+      Kitchen(id: id, name: name ?? this.name, sortOrder: sortOrder ?? this.sortOrder);
+
+  factory Kitchen.fromJson(Map<String, dynamic> json) => Kitchen(
+    id: json['id'] as String,
+    name: json['name'] as String? ?? '',
+    sortOrder: json['sortOrder'] as int? ?? 0,
+  );
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'sortOrder': sortOrder};
 }
 
 class MenuItem {

@@ -7,6 +7,8 @@ drop trigger if exists zz_same_cafe on public.shifts;
 drop trigger if exists zz_same_cafe on public.staff_calls;
 drop trigger if exists zz_same_cafe on public.payments;
 drop trigger if exists zz_same_cafe on public.shift_expenses;
+-- Added by 20261025100000_kitchens.sql; it uses the same check.
+drop trigger if exists zz_same_cafe on public.menu_categories;
 drop trigger if exists freeze_paid_order on public.order_lines;
 drop trigger if exists freeze_paid_order on public.orders;
 drop function if exists private.check_same_cafe();
