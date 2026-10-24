@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/features/app_feature.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
-import 'package:menu_web_v1/screens/admin_kitchens_card.dart';
+import 'package:menu_web_v1/screens/admin_printers_kitchens_card.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,7 +40,7 @@ void main() {
 
   testWidgets('adding a kitchen with ticked categories lists it with them', (tester) async {
     final store = _store();
-    await pumpAdminScreen(tester, const KitchensCard(), store);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
 
     await _add(tester, 'Pizza oven', ['Pizza']);
 
@@ -51,7 +52,7 @@ void main() {
 
   testWidgets('a kitchen needs a name before it can be saved', (tester) async {
     final store = _store();
-    await pumpAdminScreen(tester, const KitchensCard(), store);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
 
     await tapVisible(tester, find.text('+ ${l10n.kitchensAdd}'));
     final save = tester.widget<FilledButton>(_inDialog(find.widgetWithText(FilledButton, l10n.kitchensSave)));
@@ -60,7 +61,7 @@ void main() {
 
   testWidgets('a category in another kitchen says so, and ticking it moves it', (tester) async {
     final store = _store();
-    await pumpAdminScreen(tester, const KitchensCard(), store);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
     await _add(tester, 'Main', ['Pizza', 'Drinks']);
 
     await tapVisible(tester, find.text('+ ${l10n.kitchensAdd}'));
@@ -78,7 +79,7 @@ void main() {
 
   testWidgets('deleting a kitchen asks first, then frees its categories', (tester) async {
     final store = _store();
-    await pumpAdminScreen(tester, const KitchensCard(), store);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
     await _add(tester, 'Bar', ['Drinks']);
 
     await tapVisible(tester, find.byTooltip(l10n.commonDelete));
@@ -91,7 +92,7 @@ void main() {
 
   testWidgets('editing renames a kitchen and keeps its categories', (tester) async {
     final store = _store();
-    await pumpAdminScreen(tester, const KitchensCard(), store);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
     await _add(tester, 'Pizza', ['Pizza']);
 
     await tapVisible(tester, find.byTooltip(l10n.commonEdit));
@@ -102,5 +103,30 @@ void main() {
 
     expect(store.kitchens.single.name, 'Pizza oven');
     expect(store.categoryIdsOf(store.kitchens.single.id), {'pizza'});
+  });
+
+  testWidgets('one card shows this till printers on top and the kitchens below', (tester) async {
+    final store = _store();
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
+    await tester.pump();
+
+    expect(find.text(l10n.printersKitchensTitle), findsOneWidget);
+    expect(find.text(l10n.settingsScopeThisTill.toUpperCase()), findsOneWidget);
+    // Tests run off Windows, so the pickers give way to the note.
+    expect(find.text(l10n.printersWindowsOnly), findsOneWidget);
+    expect(find.text(l10n.kitchensTitle), findsOneWidget);
+    final printers = tester.getTopLeft(find.text(l10n.printersWindowsOnly)).dy;
+    expect(tester.getTopLeft(find.text(l10n.kitchensTitle)).dy, greaterThan(printers));
+  });
+
+  testWidgets('with the kitchen feature off the card still shows, without the kitchens', (tester) async {
+    final store = _store()..features = FeatureSet.fromKeys(const ['tables']);
+    await pumpAdminScreen(tester, const PrintersKitchensCard(), store);
+    await tester.pump();
+
+    expect(find.text(l10n.printersKitchensTitle), findsOneWidget);
+    expect(find.text(l10n.printersWindowsOnly), findsOneWidget);
+    expect(find.text(l10n.kitchensTitle), findsNothing);
+    expect(find.text('+ ${l10n.kitchensAdd}'), findsNothing);
   });
 }

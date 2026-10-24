@@ -3,6 +3,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n_ext.dart';
+import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../printing/kitchen_ticket.dart';
 import '../state/cafe_store.dart';
@@ -10,44 +11,69 @@ import '../theme/cafe_theme.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/tawla_ui.dart';
 
-/// The cafe's kitchens (pizza oven, grill, bar): each one makes the categories ticked for it and
-/// prints on the printer picked for it on this till. Dishes of unticked categories go to the
-/// first kitchen.
-class KitchensCard extends StatefulWidget {
-  const KitchensCard({super.key});
+/// One card for printing. On top, this till's printers from the ones Windows finds (the kitchen
+/// printer for kitchen tickets, the cashier printer for receipts), saved on this device only.
+/// Below, when the kitchen feature is on, the cafe's kitchens (pizza oven, grill, bar): each one
+/// makes the categories ticked for it and prints on the printer picked for it on this till.
+/// Dishes of unticked categories go to the first kitchen. The card always shows, also on the
+/// web, so its cafe-wide settings can be changed anywhere.
+class PrintersKitchensCard extends StatefulWidget {
+  const PrintersKitchensCard({super.key});
 
   @override
-  State<KitchensCard> createState() => _KitchensCardState();
+  State<PrintersKitchensCard> createState() => _PrintersKitchensCardState();
 }
 
-class _KitchensCardState extends State<KitchensCard> {
-  bool printing = false;
+class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
+  bool loading = true;
+  bool supported = false;
+  bool testing = false;
   List<Printer> printers = const [];
+  String? kitchen;
+  String? receipt;
+
+  /// The printer picked for each kitchen on this till, by kitchen id.
   Map<String, String> picked = const {};
 
   @override
   void initState() {
     super.initState();
-    _loadPrinters();
+    _load();
   }
 
-  Future<void> _loadPrinters() async {
+  Future<void> _load() async {
+    setState(() => loading = true);
     final ok = await TillPrinters.supported();
     var found = const <Printer>[];
+    var saved = (kitchen: null as String?, receipt: null as String?);
     if (ok) {
       try {
         found = await TillPrinters.printers();
       } on Exception {
         found = const [];
       }
+      saved = await TillPrinters.settings();
     }
-    final saved = await TillPrinters.kitchenPrinters();
+    final perKitchen = await TillPrinters.kitchenPrinters();
     if (!mounted) return;
     setState(() {
-      printing = ok;
+      loading = false;
+      supported = ok;
       printers = found;
-      picked = saved;
+      kitchen = saved.kitchen;
+      receipt = saved.receipt;
+      picked = perKitchen;
     });
+  }
+
+  Future<void> _test() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    setState(() => testing = true);
+    final result = await TillPrinters.printTest(kitchen, l10n);
+    if (!mounted) return;
+    setState(() => testing = false);
+    messenger.showSnackBar(SnackBar(content: Text(result == KitchenPrintResult.printed ? l10n.printersTestSent : l10n.kitchenPrintFailed)));
   }
 
   String _printerName(String? url) {
@@ -55,60 +81,157 @@ class _KitchensCardState extends State<KitchensCard> {
     return printers.where((printer) => printer.url == url).firstOrNull?.name ?? context.l10n.printersMissing(url);
   }
 
-  Future<void> _edit(CafeStore store, [Kitchen? kitchen]) async {
+  Future<void> _editKitchen(CafeStore store, [Kitchen? item]) async {
     final saved = await showDialog<_KitchenDraft>(
       context: context,
       builder: (context) => _KitchenDialog(
         store: store,
-        kitchen: kitchen,
-        printers: printing ? printers : null,
-        printer: kitchen == null ? null : picked[kitchen.id],
+        kitchen: item,
+        printers: supported ? printers : null,
+        printer: item == null ? null : picked[item.id],
       ),
     );
     if (saved == null || !mounted) return;
-    final id = await store.saveKitchen(kitchenId: kitchen?.id, name: saved.name, categoryIds: saved.categoryIds);
-    if (printing) await TillPrinters.saveKitchenPrinter(id, saved.printer);
-    await _loadPrinters();
+    final id = await store.saveKitchen(kitchenId: item?.id, name: saved.name, categoryIds: saved.categoryIds);
+    if (supported) await TillPrinters.saveKitchenPrinter(id, saved.printer);
+    await _load();
   }
 
-  Future<void> _delete(CafeStore store, Kitchen kitchen) async {
+  Future<void> _deleteKitchen(CafeStore store, Kitchen item) async {
     final ok = await showCafeConfirmDialog(
       context,
-      title: context.l10n.kitchensDeleteTitle(kitchen.name),
+      title: context.l10n.kitchensDeleteTitle(item.name),
       message: context.l10n.kitchensDeleteMessage,
     );
     if (!ok || !mounted) return;
-    await store.deleteKitchen(kitchen.id);
-    await TillPrinters.saveKitchenPrinter(kitchen.id, null);
-    await _loadPrinters();
+    await store.deleteKitchen(item.id);
+    await TillPrinters.saveKitchenPrinter(item.id, null);
+    await _load();
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final kitchens = store.orderedKitchens;
+    final kitchenOn = store.allows(AppFeature.kitchenPrinter);
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PanelTitle(context.l10n.kitchensTitle, size: 18),
-          const SizedBox(height: 2),
-          Text(context.l10n.kitchensHint, style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
-          const SizedBox(height: 6),
-          for (final (index, kitchen) in kitchens.indexed)
-            _KitchenRow(
-              title: index == 0 ? context.l10n.kitchensFirst(kitchen.name) : kitchen.name,
-              categories: [
-                for (final category in store.orderedCategories)
-                  if (store.categoryIdsOf(kitchen.id).contains(category.id)) category.label(store.locale),
-              ],
-              printer: printing ? _printerName(picked[kitchen.id]) : null,
-              onEdit: () => _edit(store, kitchen),
-              onDelete: () => _delete(store, kitchen),
-            ),
-          const SizedBox(height: 14),
-          OutlineAction(label: '+ ${context.l10n.kitchensAdd}', height: 44, onPressed: () => _edit(store)),
+          Row(
+            children: [
+              Expanded(child: PanelTitle(context.l10n.printersKitchensTitle, size: 18)),
+              if (supported)
+                IconButton(
+                  tooltip: context.l10n.printersRefresh,
+                  onPressed: loading ? null : _load,
+                  icon: const Icon(Icons.refresh),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          EyebrowLabel(context.l10n.settingsScopeThisTill),
+          const SizedBox(height: 4),
+          ..._tillPrinters(store, kitchenOn),
+          if (kitchenOn) ...[
+            const SizedBox(height: 18),
+            const Divider(height: 1, color: TawlaTokens.border),
+            const SizedBox(height: 14),
+            ..._kitchens(store),
+          ],
         ],
+      ),
+    );
+  }
+
+  List<Widget> _tillPrinters(CafeStore store, bool kitchenOn) {
+    return [
+      Text(
+        !supported
+            ? context.l10n.printersWindowsOnly
+            : kitchenOn
+                ? context.l10n.printersHint
+                : context.l10n.printersReceiptHint,
+        style: const TextStyle(color: TawlaTokens.muted, fontSize: 13),
+      ),
+      if (loading)
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(context.l10n.printersLooking, style: const TextStyle(fontWeight: FontWeight.w600)),
+        )
+      else if (supported) ...[
+        if (kitchenOn) ...[
+          const SizedBox(height: 14),
+          _picker(
+            // With kitchens, this one prints for every kitchen that has no printer of its own.
+            label: store.kitchens.isEmpty ? context.l10n.printersKitchen : context.l10n.kitchensPrinterMain,
+            none: context.l10n.printersKitchenNone,
+            value: kitchen,
+            onChanged: (value) {
+              setState(() => kitchen = value);
+              TillPrinters.saveKitchen(value);
+            },
+          ),
+        ],
+        const SizedBox(height: 12),
+        _picker(
+          label: context.l10n.printersReceipt,
+          none: context.l10n.printersReceiptNone,
+          value: receipt,
+          onChanged: (value) {
+            setState(() => receipt = value);
+            TillPrinters.saveReceipt(value);
+          },
+        ),
+        if (kitchenOn && kitchen != null) ...[
+          const SizedBox(height: 12),
+          OutlineAction(
+            label: context.l10n.printersTestKitchen,
+            icon: Icons.print_outlined,
+            onPressed: testing ? null : _test,
+          ),
+        ],
+      ],
+    ];
+  }
+
+  List<Widget> _kitchens(CafeStore store) {
+    return [
+      PanelTitle(context.l10n.kitchensTitle, size: 16),
+      const SizedBox(height: 2),
+      Text(context.l10n.kitchensHint, style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
+      const SizedBox(height: 6),
+      for (final (index, item) in store.orderedKitchens.indexed)
+        _KitchenRow(
+          title: index == 0 ? context.l10n.kitchensFirst(item.name) : item.name,
+          categories: [
+            for (final category in store.orderedCategories)
+              if (store.categoryIdsOf(item.id).contains(category.id)) category.label(store.locale),
+          ],
+          printer: supported ? _printerName(picked[item.id]) : null,
+          onEdit: () => _editKitchen(store, item),
+          onDelete: () => _deleteKitchen(store, item),
+        ),
+      const SizedBox(height: 14),
+      OutlineAction(label: '+ ${context.l10n.kitchensAdd}', height: 44, onPressed: () => _editKitchen(store)),
+    ];
+  }
+
+  /// A printer that was picked but is not connected now still shows, marked as missing.
+  Widget _picker({required String label, required String none, required String? value, required ValueChanged<String?> onChanged}) {
+    final missing = value != null && !printers.any((printer) => printer.url == value);
+    return LabeledField(
+      label: label,
+      child: DropdownButtonFormField<String?>(
+        // A new key when the list reloads, so the field shows the saved choice again.
+        key: ValueKey('$label|$value|${printers.length}'),
+        initialValue: value,
+        isExpanded: true,
+        items: [
+          DropdownMenuItem(value: null, child: Text(none)),
+          for (final printer in printers) DropdownMenuItem(value: printer.url, child: Text(printer.name, overflow: TextOverflow.ellipsis)),
+          if (missing) DropdownMenuItem(value: value, child: Text(context.l10n.printersMissing(value), overflow: TextOverflow.ellipsis)),
+        ],
+        onChanged: onChanged,
       ),
     );
   }

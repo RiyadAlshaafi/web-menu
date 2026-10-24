@@ -3512,6 +3512,18 @@ abstract class AppLocalizations {
   /// **'Its categories go to the first kitchen. Tickets already printed are not changed.'**
   String get kitchensDeleteMessage;
 
+  /// No description provided for @printersKitchensTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Printers & kitchens'**
+  String get printersKitchensTitle;
+
+  /// No description provided for @settingsScopeThisTill.
+  ///
+  /// In en, this message translates to:
+  /// **'This till · saved on this device only'**
+  String get settingsScopeThisTill;
+
   /// No description provided for @printersTitle.
   ///
   /// In en, this message translates to:

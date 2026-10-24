@@ -1931,6 +1931,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'تنتقل أقسامه إلى المطبخ الأول. التذاكر المطبوعة لا تتغير.';
 
   @override
+  String get printersKitchensTitle => 'الطابعات والمطابخ';
+
+  @override
+  String get settingsScopeThisTill => 'هذا الجهاز · يُحفظ على هذا الجهاز فقط';
+
+  @override
   String get printersTitle => 'الطابعات';
 
   @override

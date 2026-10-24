@@ -1942,6 +1942,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Its categories go to the first kitchen. Tickets already printed are not changed.';
 
   @override
+  String get printersKitchensTitle => 'Printers & kitchens';
+
+  @override
+  String get settingsScopeThisTill => 'This till · saved on this device only';
+
+  @override
   String get printersTitle => 'Printers';
 
   @override

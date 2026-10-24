@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/features/app_feature.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/screens/admin_catalog_screens.dart';
@@ -126,5 +127,14 @@ void main() {
     expect(find.text(l10n.catalogPasswordUpdated), findsOneWidget);
     expect(tester.widget<TextField>(_field(l10n.catalogCurrentPassword)).controller!.text, isEmpty);
     expect(tester.widget<TextField>(_field(l10n.catalogNewPassword)).controller!.text, isEmpty);
+  });
+
+  testWidgets('the printers & kitchens card shows even with the kitchen feature off', (tester) async {
+    final store = _SettingsStore()..features = FeatureSet.fromKeys(const ['tables']);
+    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: const Size(1600, 2200));
+    await tester.pump();
+
+    expect(find.text(l10n.printersKitchensTitle), findsOneWidget);
+    expect(find.text(l10n.kitchensTitle), findsNothing);
   });
 }

@@ -964,6 +964,8 @@
   "kitchensDeleteTitle": "Delete {name}?",
   "@kitchensDeleteTitle": {"placeholders": {"name": {"type": "String"}}},
   "kitchensDeleteMessage": "Its categories go to the first kitchen. Tickets already printed are not changed.",
+  "printersKitchensTitle": "Printers & kitchens",
+  "settingsScopeThisTill": "This till · saved on this device only",
   "printersTitle": "Printers",
   "printersHint": "Pick this till's printers. The kitchen printer prints each new order for the kitchen: order number, dishes, how many and toppings, no prices. The cashier printer prints receipts without asking.",
   "printersWindowsOnly": "Printers are picked on the Windows till. Open these settings there.",
