@@ -58,6 +58,9 @@ class CafeStore extends ChangeNotifier {
   List<Kitchen> kitchens = [];
   List<MenuItem> menuItems = [];
   List<CafeOrder> orders = [];
+
+  /// The quick takeout ticket being built; kept here so leaving the screen does not lose it.
+  final takeoutTicket = <OrderLine>[];
   Map<String, CartState> carts = {};
   List<Payment> payments = [];
   List<PaymentType> paymentTypes = [];
@@ -908,6 +911,7 @@ class CafeStore extends ChangeNotifier {
     currentCashier = null;
     currentShift = null;
     pinBuffer = '';
+    takeoutTicket.clear();
     db.cashierToken = null;
     if (db.isLocal) {
       db.localCashierId = null;

@@ -9,7 +9,7 @@ class QuickTakeoutScreen extends StatefulWidget {
 
 class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
   final search = TextEditingController();
-  final lines = <OrderLine>[];
+  late final lines = context.read<CafeStore>().takeoutTicket;
   String? categoryId;
   String? paymentTypeId;
   var paying = false;
