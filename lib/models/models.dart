@@ -583,6 +583,73 @@ class PaymentMethodChange {
   };
 }
 
+/// Part of a paid sale given back: [qty] of one dish, worth [amount]. [lineKey] is the order line
+/// (its database id, or `#index` on an offline till).
+class PaymentRefund {
+  const PaymentRefund({
+    required this.lineKey,
+    required this.menuItemId,
+    required this.name,
+    required this.qty,
+    required this.amount,
+    required this.reason,
+    required this.at,
+  });
+
+  final String lineKey;
+  final String? menuItemId;
+  final String name;
+  final int qty;
+  final double amount;
+  final String reason;
+  final DateTime at;
+
+  /// Read from the server's payments.refunds and from the offline till's copy (same keys).
+  factory PaymentRefund.fromJson(Map<String, dynamic> json) => PaymentRefund(
+        lineKey: json['line_id'] as String? ?? '',
+        menuItemId: json['menu_item_id'] as String?,
+        name: json['name'] as String? ?? '',
+        qty: (json['qty'] as num?)?.toInt() ?? 0,
+        amount: (json['amount'] as num?)?.toDouble() ?? 0,
+        reason: json['reason'] as String? ?? '',
+        at: DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'line_id': lineKey,
+        'menu_item_id': menuItemId,
+        'name': name,
+        'qty': qty,
+        'amount': amount,
+        'reason': reason,
+        'at': at.toIso8601String(),
+      };
+
+  static List<PaymentRefund> listFrom(Object? value) => [
+        if (value is List)
+          for (final row in value)
+            if (row is Map) PaymentRefund.fromJson(Map<String, dynamic>.from(row)),
+      ];
+}
+
+/// The key a refund names an order line by: its database id, or `#index` on an offline till.
+String refundLineKey(OrderLine line, int index) => line.id ?? '#$index';
+
+/// What giving back [qty] of [line] (one of the sale's [lines]) returns, as refund_payment_line
+/// works it out: the dish's share of what was paid, so a service charge is shared fairly, and
+/// the last dish refunded gets whatever is left, so the refunds never pass the total.
+double refundAmount(Payment payment, List<OrderLine> lines, OrderLine line, int qty) {
+  double cents(double value) => (value * 100).roundToDouble() / 100;
+  final linesQty = lines.fold<int>(0, (sum, item) => sum + item.qty);
+  final linesTotal = lines.fold<double>(0, (sum, item) => sum + item.total);
+  final doneAll = payment.refunds.fold<int>(0, (sum, refund) => sum + refund.qty);
+  final left = cents(payment.netTotal);
+  if (doneAll + qty >= linesQty) return left;
+  if (linesTotal == 0) return 0;
+  final share = cents(line.unitPrice * qty * payment.totalDue / linesTotal);
+  return share < left ? share : left;
+}
+
 class Payment {
   Payment({
     required this.id,
@@ -608,7 +675,9 @@ class Payment {
     this.voidedAt,
     this.voidReason,
     List<PaymentMethodChange>? changes,
-  }) : changes = changes ?? [];
+    List<PaymentRefund>? refunds,
+  })  : changes = changes ?? [],
+        refunds = refunds ?? [];
 
   final String id;
   final String orderId;
@@ -636,7 +705,18 @@ class Payment {
   String? voidReason;
   final List<PaymentMethodChange> changes;
 
+  /// Dishes given back after the sale, oldest first.
+  final List<PaymentRefund> refunds;
+
   bool get isVoided => voidedAt != null;
+
+  double get refundedTotal => refunds.fold(0, (sum, refund) => sum + refund.amount);
+
+  /// What the sale is worth after its refunds.
+  double get netTotal => totalDue - refundedTotal;
+
+  /// How many of the order line [lineKey] were already given back.
+  int refundedQty(String lineKey) => refunds.where((refund) => refund.lineKey == lineKey).fold(0, (sum, refund) => sum + refund.qty);
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
     id: json['id'] as String,
@@ -661,6 +741,7 @@ class Payment {
     paymentTypeNameAr: json['paymentTypeNameAr'] as String?,
     voidedAt: DateTime.tryParse(json['voidedAt'] as String? ?? ''),
     voidReason: json['voidReason'] as String?,
+    refunds: PaymentRefund.listFrom(json['refunds']),
   );
 
   Map<String, dynamic> toJson() => {
@@ -687,6 +768,7 @@ class Payment {
     'voidedAt': voidedAt?.toIso8601String(),
     'voidReason': voidReason,
     'changes': changes.map((change) => change.toJson()).toList(),
+    'refunds': refunds.map((refund) => refund.toJson()).toList(),
   };
 }
 

@@ -94,6 +94,26 @@ void main() {
     expect(lines, containsAllInOrder([l10n.reportBestSellers, '  ${l10n.reportDishLine(5, 'tea')} | 10.00', l10n.reportSlowSellers]));
   });
 
+  test('dishes given back do not count as sold, and the sales total is net of refunds', () {
+    final day = DateTime(2026, 10, 24);
+    final sale = _sale('o1')
+      ..refunds.add(PaymentRefund(lineKey: '#0', menuItemId: 'tea', name: 'Tea', qty: 1, amount: 0.25, reason: 'cold', at: DateTime.utc(2026)));
+    final report = SalesReport.fromRows(
+      from: day,
+      to: day,
+      payments: [sale],
+      expenses: const [],
+      paymentTypes: const [],
+      expenseCategories: const [],
+      staff: const [],
+      orders: [_order('o1', [_line('tea', 3, 2)])],
+    );
+
+    expect(report.dishes!.single.qty, 2);
+    expect(report.salesTotal, 0.75);
+    expect((report.refundCount, report.refundTotal), (1, 0.25));
+  });
+
   test('the server dish list reads back', () {
     final dishes = SalesReport.dishesFromJson([
       {'id': 'tea', 'name': 'Tea', 'qty': 5, 'total': 10},

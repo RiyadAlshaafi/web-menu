@@ -455,6 +455,7 @@ extension AppDatabaseLocal on AppDatabase {
       monthlyDisplayNumber: payment.monthlyDisplayNumber,
       voidedAt: payment.voidedAt,
       voidReason: payment.voidReason,
+      refunds: payment.refunds,
       changes: [
         ...payment.changes,
         PaymentMethodChange(
@@ -487,12 +488,68 @@ extension AppDatabaseLocal on AppDatabase {
       payment
         ..voidedAt = DateTime.now().toUtc()
         ..voidReason = trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed;
+      // What was already refunded left the sales and, for cash, the drawer; the void takes the rest.
       shift
-        ..cashSales = max(0.0, _round2(shift.cashSales - payment.totalDue))
+        ..cashSales = max(0.0, _round2(shift.cashSales - payment.netTotal))
+        ..cashRefunds = max(0.0, _round2(shift.cashRefunds - (_localIsCash(payment) ? payment.refundedTotal : 0)))
         ..transactionCount = max(0, shift.transactionCount - 1);
       _store.putRecords('payments', [_paymentToLocal(payment)]);
       _store.putRecords('shifts', [shift.toJson()]);
     });
+    return null;
+  }
+
+  /// A sale paid in cash: no payment type, or a type named Cash (as refund_payment_line decides).
+  bool _localIsCash(Payment payment) {
+    final id = payment.paymentTypeId;
+    if (id == null || id.isEmpty) return true;
+    return _paymentTypes.where((type) => type.id == id).firstOrNull?.nameEn.trim().toLowerCase() == 'cash';
+  }
+
+  /// Gives back [qty] of the order line [lineKey] of the cashier's own sale on their open shift,
+  /// with the server's rules (refund_payment_line): the dish's share of what was paid, the last
+  /// refund takes what is left, the shift's sales drop and a cash refund leaves the drawer.
+  String? _localRefundLine(String paymentId, String lineKey, int qty, String reason) {
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) return 'reason required';
+    if (qty < 1) return 'too many';
+    final index = _payments.indexWhere((p) => p.id == paymentId && p.cashierId == localCashierId);
+    if (index < 0) return 'not_found';
+    final payment = _payments[index];
+    if (payment.isVoided) return 'already voided';
+    final shift = _shifts.where((s) => s.id == payment.shiftId && s.isOpen).firstOrNull;
+    if (shift == null) return 'shift closed';
+    final order = _orders.where((o) => o.id == payment.orderId).firstOrNull;
+    final lines = order?.lines ?? const <OrderLine>[];
+    final at = lines.indexed.where((entry) => refundLineKey(entry.$2, entry.$1) == lineKey).firstOrNull;
+    if (at == null) return 'not_found';
+    final line = at.$2;
+    if (payment.refundedQty(lineKey) + qty > line.qty) return 'too many';
+    final amount = refundAmount(payment, lines, line, qty);
+    final changed = Payment.fromJson({
+      ..._paymentToLocal(payment),
+      'refunds': [
+        for (final refund in payment.refunds) refund.toJson(),
+        PaymentRefund(
+          lineKey: lineKey,
+          menuItemId: line.menuItemId.isEmpty ? null : line.menuItemId,
+          name: line.name,
+          qty: qty,
+          amount: amount,
+          reason: trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed,
+          at: DateTime.now().toUtc(),
+        ).toJson(),
+      ],
+    })
+      ..changes.addAll(payment.changes);
+    _store.transaction(() {
+      shift
+        ..cashSales = max(0.0, _round2(shift.cashSales - amount))
+        ..cashRefunds = _round2(shift.cashRefunds + (_localIsCash(payment) ? amount : 0));
+      _store.putRecords('payments', [_paymentToLocal(changed)]);
+      _store.putRecords('shifts', [shift.toJson()]);
+    });
+    _payments = [for (final p in _payments) p.id == paymentId ? changed : p];
     return null;
   }
 

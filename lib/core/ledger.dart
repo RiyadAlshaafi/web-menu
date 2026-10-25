@@ -49,7 +49,7 @@ SaleLedgerRow saleLedgerRow(CafeStore store, Payment payment) {
     lines: lines,
     subtotal: charged + discount,
     discount: discount,
-    total: payment.totalDue,
+    total: payment.netTotal,
   );
 }
 

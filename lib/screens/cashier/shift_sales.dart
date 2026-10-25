@@ -246,7 +246,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
             )
           : StatusBadge(context.l10n.cashierSettled, tone: BadgeTone.success, dot: true),
       amount: Text(
-        store.currency.format(payment.totalDue),
+        store.currency.format(payment.isVoided ? payment.totalDue : payment.netTotal),
         textAlign: TextAlign.end,
         style: TextStyle(
           fontWeight: FontWeight.w800,
@@ -271,6 +271,17 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
               icon: const Icon(Icons.print_outlined, size: 16),
               label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             ),
+          if (store.canRefund(payment)) ...[
+            const SizedBox(width: 6),
+            Tooltip(
+              message: context.l10n.refundItem,
+              child: OutlinedButton(
+                style: _rowActionStyle,
+                onPressed: () => showRefundLineDialog(context, store, payment),
+                child: Semantics(label: context.l10n.refundItem, child: const Icon(Icons.undo, size: 18)),
+              ),
+            ),
+          ],
           if (store.canVoid(payment)) ...[
             const SizedBox(width: 6),
             Tooltip(

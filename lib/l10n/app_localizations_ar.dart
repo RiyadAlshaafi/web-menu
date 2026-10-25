@@ -1872,6 +1872,53 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم ألغه.';
 
   @override
+  String get refundItem => 'استرجاع صنف';
+
+  @override
+  String get refundTitle => 'استرجاع صنف؟';
+
+  @override
+  String get refundMessage =>
+      'اختر الصنف وعدد ما أُعيد. هذا الجزء فقط لا يُحسب في المبيعات، ويخرج من الدرج إن كان البيع نقداً. أعد المال بنفسك.';
+
+  @override
+  String refundLeft(int qty) {
+    return 'يمكن استرجاع $qty';
+  }
+
+  @override
+  String refundAmount(String amount) {
+    return 'المبلغ المسترجع: $amount';
+  }
+
+  @override
+  String get refundConfirm => 'استرجاع';
+
+  @override
+  String get refundDone => 'تم الاسترجاع';
+
+  @override
+  String get refundNotAllowed =>
+      'فقط الكاشير الذي أخذ هذا البيع يمكنه الاسترجاع، أثناء فتح ورديته.';
+
+  @override
+  String get refundTooMany => 'هذا أكثر مما تبقى للاسترجاع من هذا الصنف.';
+
+  @override
+  String get refundWaitForSync =>
+      'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم استرجعه.';
+
+  @override
+  String refundedLine(int qty, String name, String amount, String reason) {
+    return 'مسترجع $qty× $name: $amount ($reason)';
+  }
+
+  @override
+  String reportRefunds(int count) {
+    return 'المسترجعات ($count)';
+  }
+
+  @override
   String get navStock => 'المخزون';
 
   @override

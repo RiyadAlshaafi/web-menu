@@ -1883,6 +1883,54 @@ class AppLocalizationsEn extends AppLocalizations {
       'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.';
 
   @override
+  String get refundItem => 'Refund a dish';
+
+  @override
+  String get refundTitle => 'Refund a dish?';
+
+  @override
+  String get refundMessage =>
+      'Pick the dish and how many came back. Only that part stops counting in sales; for a cash sale it also leaves the drawer. Give the money back yourself.';
+
+  @override
+  String refundLeft(int qty) {
+    return '$qty can be refunded';
+  }
+
+  @override
+  String refundAmount(String amount) {
+    return 'Refund: $amount';
+  }
+
+  @override
+  String get refundConfirm => 'Refund';
+
+  @override
+  String get refundDone => 'Refunded';
+
+  @override
+  String get refundNotAllowed =>
+      'Only the cashier who took this sale can refund it, while their shift is open.';
+
+  @override
+  String get refundTooMany =>
+      'That is more than is left to refund of this dish.';
+
+  @override
+  String get refundWaitForSync =>
+      'This sale hasn\'t reached the server yet. Wait until it syncs, then refund it.';
+
+  @override
+  String refundedLine(int qty, String name, String amount, String reason) {
+    return 'Refunded $qty× $name: $amount ($reason)';
+  }
+
+  @override
+  String reportRefunds(int count) {
+    return 'Refunds ($count)';
+  }
+
+  @override
   String get navStock => 'Stock';
 
   @override

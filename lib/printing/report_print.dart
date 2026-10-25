@@ -45,6 +45,7 @@ List<SlipLine> reportSlip({
       SlipPair('  ${l10n.reportCountOf(method.label(locale).isEmpty ? l10n.reportNoMethod : method.label(locale), method.count)}', money(method.total)),
     const SlipGap(4),
     SlipPair(l10n.reportVoids(report.voidCount), money(report.voidTotal)),
+    if (report.refundCount > 0) SlipPair(l10n.reportRefunds(report.refundCount), money(report.refundTotal)),
     const SlipDivider(),
     SlipPair(l10n.reportExpenses, money(report.expensesTotal), bold: true),
     if (report.expenses.isNotEmpty) ...[

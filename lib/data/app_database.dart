@@ -1084,6 +1084,7 @@ class AppDatabase {
       voidedAt: DateTime.tryParse(row['voided_at'] as String? ?? ''),
       voidReason: row['void_reason'] as String?,
       changes: history,
+      refunds: PaymentRefund.listFrom(row['refunds']),
     );
   }
 
@@ -2060,6 +2061,29 @@ class AppDatabase {
       return result['error'] as String? ?? 'not_found';
     } catch (error, stackTrace) {
       reportError('void payment', error, stackTrace);
+      return _errorCode(error);
+    }
+  }
+
+  /// Gives back [qty] of one dish of the signed-in cashier's own sale on their open shift. Null on
+  /// success. [lineKey] comes from [refundLineKey].
+  Future<String?> refundLine(String paymentId, String lineKey, int qty, String reason) async {
+    if (isLocal) return _localRefundLine(paymentId, lineKey, qty, reason);
+    if (client == null) return ErrorCodes.notConfigured;
+    _applyHeaders();
+    try {
+      final raw = await client!.rpc(
+        'refund_payment_line',
+        params: {'p_payment_id': paymentId, 'p_line_id': lineKey, 'p_qty': qty, 'p_reason': reason},
+      );
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk(liveOnly: true);
+        return null;
+      }
+      return result['error'] as String? ?? 'not_found';
+    } catch (error, stackTrace) {
+      reportError('refund line', error, stackTrace);
       return _errorCode(error);
     }
   }

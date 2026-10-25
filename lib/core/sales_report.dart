@@ -92,6 +92,8 @@ class SalesReport {
     required this.methods,
     required this.expenses,
     this.dishes,
+    this.refundCount = 0,
+    this.refundTotal = 0,
   });
 
   final DateTime from;
@@ -102,6 +104,10 @@ class SalesReport {
   final double voidTotal;
   final List<ReportMethod> methods;
   final List<ReportExpenseGroup> expenses;
+
+  /// Kept sales with dishes given back, and how much went back; [salesTotal] is already net of it.
+  final int refundCount;
+  final double refundTotal;
 
   /// Dishes sold, the most sold first; null when the server could not say (older server), so
   /// the report leaves best and slow sellers out instead of calling every dish unsold.
@@ -118,6 +124,8 @@ class SalesReport {
         methods: methods,
         expenses: expenses,
         dishes: dishes,
+        refundCount: refundCount,
+        refundTotal: refundTotal,
       );
 
   /// The [count] most sold dishes.
@@ -186,6 +194,8 @@ class SalesReport {
       salesTotal: money(json['sales_total']),
       voidCount: count(json['void_count']),
       voidTotal: money(json['void_total']),
+      refundCount: count(json['refund_count']),
+      refundTotal: money(json['refund_total']),
       methods: [
         for (final row in rows(json['by_method']))
           ReportMethod(
@@ -251,7 +261,7 @@ class SalesReport {
         nameEn: seen?.nameEn ?? type?.nameEn ?? payment.paymentTypeNameEn ?? '',
         nameAr: seen?.nameAr ?? type?.nameAr ?? payment.paymentTypeNameAr ?? '',
         count: (seen?.count ?? 0) + 1,
-        total: (seen?.total ?? 0) + payment.totalDue,
+        total: (seen?.total ?? 0) + payment.netTotal,
       );
     }
 
@@ -282,7 +292,9 @@ class SalesReport {
       from: from,
       to: to,
       salesCount: kept.length,
-      salesTotal: kept.fold(0, (sum, payment) => sum + payment.totalDue),
+      salesTotal: kept.fold(0, (sum, payment) => sum + payment.netTotal),
+      refundCount: kept.where((payment) => payment.refunds.isNotEmpty).length,
+      refundTotal: kept.fold(0, (sum, payment) => sum + payment.refundedTotal),
       voidCount: voided.length,
       voidTotal: voided.fold(0, (sum, payment) => sum + payment.totalDue),
       methods: methods.values.toList()..sort((a, b) => b.total.compareTo(a.total)),
@@ -291,25 +303,30 @@ class SalesReport {
     );
   }
 
-  /// Dishes on the orders of the [kept] sales, each order once, most sold first: the same
-  /// rules as admin_dish_sales.
+  /// Dishes on the orders of the [kept] sales, each order once, less the dishes given back, most
+  /// sold first: the same rules as admin_dish_sales.
   static List<ReportDish> dishesSold(Iterable<CafeOrder> orders, Iterable<Payment> kept) {
     final paid = {for (final payment in kept) payment.orderId};
     final dishes = <String, ReportDish>{};
+    void add(String? menuItemId, String name, int qty, double total) {
+      final id = menuItemId == null || menuItemId.isEmpty ? null : menuItemId;
+      final key = id ?? '#$name';
+      final seen = dishes[key];
+      dishes[key] = ReportDish(id: id, name: seen?.name ?? name, qty: (seen?.qty ?? 0) + qty, total: (seen?.total ?? 0) + total);
+    }
+
     for (final order in orders) {
       if (!paid.contains(order.id)) continue;
       for (final line in order.lines) {
-        final id = line.menuItemId.isEmpty ? null : line.menuItemId;
-        final key = id ?? '#${line.name}';
-        final seen = dishes[key];
-        dishes[key] = ReportDish(
-          id: id,
-          name: seen?.name ?? line.name,
-          qty: (seen?.qty ?? 0) + line.qty,
-          total: (seen?.total ?? 0) + line.total,
-        );
+        add(line.menuItemId, line.name, line.qty, line.total);
       }
     }
+    for (final payment in kept) {
+      for (final refund in payment.refunds) {
+        add(refund.menuItemId, refund.name, -refund.qty, -refund.amount);
+      }
+    }
+    dishes.removeWhere((_, dish) => dish.qty <= 0);
     return dishes.values.toList()..sort((a, b) => a.qty != b.qty ? b.qty.compareTo(a.qty) : b.total.compareTo(a.total));
   }
 }

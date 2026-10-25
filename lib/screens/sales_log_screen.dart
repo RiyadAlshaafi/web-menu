@@ -441,6 +441,13 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                             style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12),
                           ),
                         )),
+                    ...current.refunds.map((refund) => Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            context.l10n.refundedLine(refund.qty, refund.name, live.currency.format(refund.amount), refund.reason),
+                            style: const TextStyle(color: CafeColors.alert, fontSize: 13),
+                          ),
+                        )),
                     Text('${context.l10n.salesColStatus}: ${current.isVoided ? context.l10n.voidStatus : context.l10n.salesPaid}'),
                     if (current.isVoided)
                       Text(

@@ -102,7 +102,7 @@ class _VoidSaleDialogState extends State<_VoidSaleDialog> {
               const SizedBox(height: 4),
               Text(
                 '${l10n.salesReceiptLine(store.receiptNumber(widget.payment))}  ·  '
-                '${store.currency.format(widget.payment.totalDue)}',
+                '${store.currency.format(widget.payment.netTotal)}',
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 12),

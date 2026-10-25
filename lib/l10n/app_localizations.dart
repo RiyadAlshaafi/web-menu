@@ -3410,6 +3410,78 @@ abstract class AppLocalizations {
   /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.'**
   String get voidWaitForSync;
 
+  /// No description provided for @refundItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund a dish'**
+  String get refundItem;
+
+  /// No description provided for @refundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund a dish?'**
+  String get refundTitle;
+
+  /// No description provided for @refundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the dish and how many came back. Only that part stops counting in sales; for a cash sale it also leaves the drawer. Give the money back yourself.'**
+  String get refundMessage;
+
+  /// No description provided for @refundLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{qty} can be refunded'**
+  String refundLeft(int qty);
+
+  /// No description provided for @refundAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund: {amount}'**
+  String refundAmount(String amount);
+
+  /// No description provided for @refundConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get refundConfirm;
+
+  /// No description provided for @refundDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get refundDone;
+
+  /// No description provided for @refundNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the cashier who took this sale can refund it, while their shift is open.'**
+  String get refundNotAllowed;
+
+  /// No description provided for @refundTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'That is more than is left to refund of this dish.'**
+  String get refundTooMany;
+
+  /// No description provided for @refundWaitForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then refund it.'**
+  String get refundWaitForSync;
+
+  /// No description provided for @refundedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded {qty}× {name}: {amount} ({reason})'**
+  String refundedLine(int qty, String name, String amount, String reason);
+
+  /// No description provided for @reportRefunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds ({count})'**
+  String reportRefunds(int count);
+
   /// No description provided for @navStock.
   ///
   /// In en, this message translates to:

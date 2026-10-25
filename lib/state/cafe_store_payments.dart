@@ -280,6 +280,38 @@ extension CafeStorePayments on CafeStore {
     return null;
   }
 
+  /// The dishes of [payment]'s order, for refunding; empty when the order is not loaded.
+  List<OrderLine> saleLines(Payment payment) =>
+      orders.where((order) => order.id == payment.orderId).firstOrNull?.lines ?? const [];
+
+  /// A sale the signed-in cashier can still refund a dish of: the same rule as voiding, and
+  /// something left to give back.
+  bool canRefund(Payment payment) => canVoid(payment) && payment.netTotal > 0 && saleLines(payment).isNotEmpty;
+
+  /// Gives back [qty] of the sale's line [lineKey] (see [refundLineKey]). Null on success, else
+  /// a message for the cashier.
+  Future<String?> refundLine(Payment payment, String lineKey, int qty, String reason) async {
+    if (!canRefund(payment)) return l10n.refundNotAllowed;
+    if (reason.trim().isEmpty) return l10n.voidReasonRequired;
+    if (_localItems.any((item) => item.kind == 'takeout' && item.id == payment.id)) {
+      return l10n.refundWaitForSync;
+    }
+    final failure = await db.refundLine(payment.id, lineKey, qty, reason.trim());
+    if (failure != null) {
+      if (_sessionExpired(failure)) return failure;
+      return switch (failure) {
+        'reason required' => l10n.voidReasonRequired,
+        'too many' => l10n.refundTooMany,
+        'already voided' => l10n.voidAlreadyDone,
+        'not_found' || 'shift closed' => l10n.refundNotAllowed,
+        _ => failure,
+      };
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return null;
+  }
+
   Future<String?> editShiftExpense({
     required ShiftExpense expense,
     required String categoryId,

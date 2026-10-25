@@ -228,6 +228,73 @@ void main() {
     });
   });
 
+  group('refunds', () {
+    test('a cash refund takes the dish share off the sale, the shift and the drawer', () async {
+      final dish = await _dish();
+      final shift = await _openShift(await _cashier('Sara', '1234'));
+      await db.quickTakeoutReceipt(_ticket(dish, 3), db.paymentTypes.first.id);
+      final sale = db.payments.single;
+
+      expect(await db.refundLine(sale.id, '#0', 1, '  cold  '), isNull);
+
+      final refunded = db.payments.single;
+      expect(refunded.refundedTotal, 7.5);
+      expect(refunded.netTotal, 15);
+      expect(refunded.refunds.single.reason, 'cold');
+      final saved = db.shifts.firstWhere((s) => s.id == shift.id);
+      expect(saved.cashSales, 15);
+      expect(saved.cashRefunds, 7.5);
+    });
+
+    test('more than is left is refused; the last refund takes what is left', () async {
+      final dish = await _dish();
+      await _openShift(await _cashier('Sara', '1234'));
+      await db.quickTakeoutReceipt(_ticket(dish, 3), null);
+      final sale = db.payments.single;
+      expect(await db.refundLine(sale.id, '#0', 1, 'cold'), isNull);
+
+      expect(await db.refundLine(sale.id, '#0', 3, 'more'), 'too many');
+      expect(await db.refundLine(sale.id, '#9', 1, 'more'), 'not_found');
+      expect(await db.refundLine(sale.id, '#0', 1, ' '), 'reason required');
+      expect(await db.refundLine(sale.id, '#0', 2, 'rest'), isNull);
+      expect(db.payments.single.netTotal, 0);
+    });
+
+    test('a card refund leaves the drawer alone; a later void takes only the rest', () async {
+      final dish = await _dish();
+      final shift = await _openShift(await _cashier('Sara', '1234'));
+      final card = db.paymentTypes.firstWhere((type) => type.nameEn == 'Card');
+      await db.quickTakeoutReceipt(_ticket(dish, 2), card.id);
+      await db.quickTakeoutReceipt(_ticket(dish, 2), null);
+      final cardSale = db.payments.firstWhere((p) => p.paymentTypeId == card.id);
+      final cashSale = db.payments.firstWhere((p) => p.id != cardSale.id);
+
+      expect(await db.refundLine(cardSale.id, '#0', 1, 'spilt'), isNull);
+      expect(db.shifts.firstWhere((s) => s.id == shift.id).cashRefunds, 0);
+
+      expect(await db.refundLine(cashSale.id, '#0', 1, 'cold'), isNull);
+      expect(await db.voidPayment(cashSale.id, 'left'), isNull);
+      final saved = db.shifts.firstWhere((s) => s.id == shift.id);
+      expect(saved.cashSales, 7.5, reason: 'only what is left of the card sale');
+      expect(saved.cashRefunds, 0, reason: 'the voided sale no longer counts in the drawer at all');
+      expect(await db.refundLine(cashSale.id, '#0', 1, 'again'), 'already voided');
+    });
+
+    test('the share of a service charge is refunded too', () {
+      final lines = [
+        OrderLine(menuItemId: 'tea', name: 'Tea', qty: 3, unitPrice: 2),
+        OrderLine(menuItemId: 'cake', name: 'Cake', qty: 1, unitPrice: 5),
+      ];
+      final sale = Payment(
+        id: 'p', orderId: 'o', tableId: 't', totalDue: 12.1, cashReceived: 12.1, changeDue: 0,
+        cashierId: 'c', shiftId: 's', paidAt: DateTime.utc(2026),
+      );
+
+      expect(refundAmount(sale, lines, lines[0], 1), 2.2, reason: '2 of 11 plus its 10% service');
+      expect(refundAmount(sale, lines, lines[1], 1), 5.5);
+    });
+  });
+
   group('expenses', () {
     test('can be tagged with an employee, and an edit keeps the tag', () async {
       final sara = await _cashier('Sara', '1234');
