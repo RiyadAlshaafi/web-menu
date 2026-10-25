@@ -574,6 +574,42 @@ void main() {
       expect(await db.settleCash('t4', 30), 'no open bill');
     });
 
+    test('split bill: a part is paid on its own, the rest stays open, the last part frees the table', () async {
+      await cart(3);
+      expect(await db.sendTableCart('t4'), isNull);
+      final number = openTab().shiftOrderNumber;
+      final key = orderLineKey(openTab().lines.single, 0);
+
+      expect(await db.settlePart('t4', {key: 1}, 100, paymentTypeId: db.paymentTypes[1].id), isNull);
+
+      final part = db.payments.single;
+      expect(part.totalDue, 8.25, reason: 'one latte 7.5 + 10%');
+      expect(part.paymentTypeNameEn, 'Card');
+      expect(part.shiftOrderNumber, number, reason: 'the part keeps the tab\'s order number');
+      expect(openTab().itemCount, 2);
+      expect(db.tables.single.status, TableStatus.dining);
+      expect(db.shifts.firstWhere((s) => s.id == shift.id).cashSales, 8.25);
+
+      expect(await db.settleCash('t4', 100), isNull);
+      expect(db.payments, hasLength(2));
+      expect(db.payments.first.totalDue, 16.5);
+      expect(db.tables.single.status, TableStatus.free);
+    });
+
+    test('split bill: the whole bill, too many or too little cash is refused', () async {
+      await cart(2);
+      expect(await db.sendTableCart('t4'), isNull);
+
+      final key = orderLineKey(openTab().lines.single, 0);
+
+      expect(await db.settlePart('t4', {key: 2}, 100), 'whole bill');
+      expect(await db.settlePart('t4', {key: 3}, 100), 'pick dishes');
+      expect(await db.settlePart('t4', {'#7': 1}, 100), 'pick dishes');
+      expect(await db.settlePart('t4', {key: 1}, 1), 'insufficient cash');
+      expect(db.payments, isEmpty);
+      expect(openTab().itemCount, 2);
+    });
+
     test('settling without service charges only the dishes', () async {
       await cart(2);
       await db.sendTableCart('t4');

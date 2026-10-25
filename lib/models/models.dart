@@ -632,8 +632,16 @@ class PaymentRefund {
       ];
 }
 
-/// The key a refund names an order line by: its database id, or `#index` on an offline till.
-String refundLineKey(OrderLine line, int index) => line.id ?? '#$index';
+/// The key a refund or a split names an order line by: its database id, or `#index` on an
+/// offline till.
+String orderLineKey(OrderLine line, int index) => line.id ?? '#$index';
+
+/// The picked part of [lines]: each line with the quantity [picks] gives its key (see
+/// [orderLineKey]), lines picked 0 left out.
+List<OrderLine> splitLines(List<OrderLine> lines, Map<String, int> picks) => [
+      for (final (index, line) in lines.indexed)
+        if ((picks[orderLineKey(line, index)] ?? 0) > 0) line.withQty(picks[orderLineKey(line, index)]!.clamp(0, line.qty)),
+    ];
 
 /// What giving back [qty] of [line] (one of the sale's [lines]) returns, as refund_payment_line
 /// works it out: the dish's share of what was paid, so a service charge is shared fairly, and

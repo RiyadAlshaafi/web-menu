@@ -521,7 +521,7 @@ extension AppDatabaseLocal on AppDatabase {
     if (shift == null) return 'shift closed';
     final order = _orders.where((o) => o.id == payment.orderId).firstOrNull;
     final lines = order?.lines ?? const <OrderLine>[];
-    final at = lines.indexed.where((entry) => refundLineKey(entry.$2, entry.$1) == lineKey).firstOrNull;
+    final at = lines.indexed.where((entry) => orderLineKey(entry.$2, entry.$1) == lineKey).firstOrNull;
     if (at == null) return 'not_found';
     final line = at.$2;
     if (payment.refundedQty(lineKey) + qty > line.qty) return 'too many';
@@ -641,58 +641,115 @@ extension AppDatabaseLocal on AppDatabase {
     final order = _localOpenOrder(tableId);
     if (order == null) return 'no open bill';
     if (order.status != OrderStatus.served) return 'order is not served';
-    final rate = (_cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
-    final subtotal = order.lines.fold<double>(0, (sum, line) => sum + line.total);
-    final due = _round2(applyService ? subtotal * (1 + rate) : subtotal);
+    final due = _localDue(order.lines, applyService);
     if (cashReceived < due) return 'insufficient cash';
+    _store.transaction(() {
+      _localPayOrder(order, tableId, due, cashReceived, paymentTypeId, freeTable: true);
+    });
+    return null;
+  }
+
+  double _localDue(List<OrderLine> lines, bool applyService) {
+    final rate = (_cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
+    final subtotal = lines.fold<double>(0, (sum, line) => sum + line.total);
+    return _round2(applyService ? subtotal * (1 + rate) : subtotal);
+  }
+
+  /// Splits the picked dishes ([picks]: line key to quantity) off the table's served tab into
+  /// their own paid order with the tab's number, as settle_part does; the rest stays open.
+  String? _localSettlePart(String tableId, Map<String, int> picks, double cashReceived,
+      {required bool applyService, String? paymentTypeId}) {
+    final cashierId = localCashierId;
+    final shift = _localOpenShift;
+    if (cashierId == null || shift == null) return 'sign in as a cashier first';
+    final order = _localOpenOrder(tableId);
+    if (order == null) return 'no open bill';
+    if (order.status != OrderStatus.served) return 'order is not served';
+    final keys = [for (final (index, line) in order.lines.indexed) orderLineKey(line, index)];
+    if (picks.isEmpty || picks.entries.any((pick) => pick.value < 1 || !keys.contains(pick.key))) return 'pick dishes';
+    final picked = <OrderLine>[];
+    final kept = <OrderLine>[];
+    for (final (index, line) in order.lines.indexed) {
+      final qty = picks[keys[index]] ?? 0;
+      if (qty > line.qty) return 'pick dishes';
+      if (qty > 0) picked.add(line.withQty(qty));
+      if (line.qty - qty > 0) kept.add(line.withQty(line.qty - qty));
+    }
+    if (kept.isEmpty) return 'whole bill';
+    final due = _localDue(picked, applyService);
+    if (cashReceived < due) return 'insufficient cash';
+    _store.transaction(() {
+      final day = order.shiftOrderNumber ?? _nextLocalNumber('day:${_tripoliKey(DateTime.now().toUtc(), withDay: true)}');
+      order
+        ..shiftOrderNumber = day
+        ..lines.clear()
+        ..lines.addAll(kept);
+      final part = CafeOrder.fromJson({
+        ...order.toJson(),
+        'id': Secrets.id(),
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+        'lines': [for (final line in picked) line.toJson()],
+      });
+      _orders = [..._orders, part];
+      _store.putRecords('orders', [order.toJson()]);
+      _localPayOrder(part, tableId, due, cashReceived, paymentTypeId, freeTable: false);
+    });
+    return null;
+  }
+
+  /// Records the payment of [order] (its numbers, the shift totals) and marks it paid; frees the
+  /// table when [freeTable]. Runs inside a transaction.
+  void _localPayOrder(CafeOrder order, String tableId, double due, double cashReceived, String? paymentTypeId,
+      {required bool freeTable}) {
+    final cashierId = localCashierId!;
+    final shift = _localOpenShift!;
     final wanted = paymentTypeId ?? order.paymentTypeId;
     final type = _paymentTypes.where((t) => t.id == wanted).firstOrNull;
     final table = _tables.where((t) => t.id == tableId).firstOrNull;
     final cashier = _cashiers.where((c) => c.id == cashierId).firstOrNull;
     final paidAt = DateTime.now().toUtc();
     final yymm = _tripoliKey(paidAt, withDay: false);
-    _store.transaction(() {
-      final day = order.shiftOrderNumber ?? _nextLocalNumber('day:${_tripoliKey(paidAt, withDay: true)}');
-      final month = _nextLocalNumber('month:$yymm');
-      final payment = Payment(
-        id: Secrets.id(),
-        orderId: order.id,
-        tableId: tableId,
-        tableNumber: table?.number ?? order.tableNumber,
-        cashierName: cashier?.name ?? '',
-        paymentTypeNameEn: type?.nameEn,
-        paymentTypeNameAr: type?.nameAr,
-        totalDue: due,
-        cashReceived: cashReceived,
-        changeDue: _round2(cashReceived - due),
-        cashierId: cashierId,
-        shiftId: shift.id,
-        paidAt: paidAt,
-        paymentTypeId: type?.id,
-        yearMonth: yymm,
-        shiftOrderNumber: day,
-        monthlyOrderNumber: month,
-        shiftDisplayNumber: formatSaleNumber(order.yearMonth ?? yymm, day),
-        monthlyDisplayNumber: formatSaleNumber(yymm, month),
-      );
-      order
-        ..status = OrderStatus.paid
-        ..paymentTypeId = type?.id
-        ..shiftOrderNumber = day
-        ..cashierId ??= cashierId;
+    final day = order.shiftOrderNumber ?? _nextLocalNumber('day:${_tripoliKey(paidAt, withDay: true)}');
+    final month = _nextLocalNumber('month:$yymm');
+    final payment = Payment(
+      id: Secrets.id(),
+      orderId: order.id,
+      tableId: tableId,
+      tableNumber: table?.number ?? order.tableNumber,
+      cashierName: cashier?.name ?? '',
+      paymentTypeNameEn: type?.nameEn,
+      paymentTypeNameAr: type?.nameAr,
+      totalDue: due,
+      cashReceived: cashReceived,
+      changeDue: _round2(cashReceived - due),
+      cashierId: cashierId,
+      shiftId: shift.id,
+      paidAt: paidAt,
+      paymentTypeId: type?.id,
+      yearMonth: yymm,
+      shiftOrderNumber: day,
+      monthlyOrderNumber: month,
+      shiftDisplayNumber: formatSaleNumber(order.yearMonth ?? yymm, day),
+      monthlyDisplayNumber: formatSaleNumber(yymm, month),
+    );
+    order
+      ..status = OrderStatus.paid
+      ..paymentTypeId = type?.id
+      ..shiftOrderNumber = day
+      ..cashierId ??= cashierId;
+    if (freeTable) {
       table
         ?..status = TableStatus.free
         ..guests = 0;
-      shift
-        ..cashSales += due
-        ..transactionCount += 1;
-      _store.putRecords('orders', [order.toJson()]);
-      _store.putRecords('payments', [_paymentToLocal(payment)]);
-      _store.putRecords('shifts', [shift.toJson()]);
-      _saveLocalTables();
-      _payments = [payment, ..._payments];
-    });
-    return null;
+    }
+    shift
+      ..cashSales += due
+      ..transactionCount += 1;
+    _store.putRecords('orders', [order.toJson()]);
+    _store.putRecords('payments', [_paymentToLocal(payment)]);
+    _store.putRecords('shifts', [shift.toJson()]);
+    _saveLocalTables();
+    _payments = [payment, ..._payments];
   }
 
   /// Takes one sent dish off an unpaid tab (a cashier's correction). A tab left with no dishes

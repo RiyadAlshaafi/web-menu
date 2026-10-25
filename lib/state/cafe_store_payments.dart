@@ -137,6 +137,47 @@ extension CafeStorePayments on CafeStore {
     return null;
   }
 
+  /// Pays the picked dishes ([picks]: line key to quantity) of the table's tab on their own; the
+  /// rest stays open. Picking every dish settles the whole bill. Returns the error, or the new
+  /// payment.
+  Future<({String? error, Payment? payment})> settlePart({
+    required String tableId,
+    required Map<String, int> picks,
+    bool applyService = true,
+    String? paymentTypeId,
+  }) async {
+    final cashier = currentCashier;
+    final shift = currentShift ?? openShift;
+    if (cashier == null || shift == null) return (error: l10n.errCashierSignInFirst, payment: null);
+    final order = openOrderFor(tableId);
+    if (order == null) return (error: l10n.errNoOpenBill, payment: null);
+    if (order.status != OrderStatus.served) return (error: l10n.cashierWaitingServed, payment: null);
+    final picked = splitLines(order.lines, picks);
+    if (picked.isEmpty) return (error: l10n.splitPickDishes, payment: null);
+    final known = {for (final payment in payments) payment.id};
+    final type = paymentTypeId ?? order.paymentTypeId;
+    final whole = picked.fold<int>(0, (sum, line) => sum + line.qty) >= order.itemCount;
+    final due = chargeTotal(picked.fold<double>(0, (sum, line) => sum + line.total), applyService: applyService);
+    final failure = whole
+        ? await db.settleCash(tableId, due, applyService: applyService, paymentTypeId: type)
+        : await db.settlePart(tableId, picks, due, applyService: applyService, paymentTypeId: type);
+    if (failure != null) {
+      if (_sessionExpired(failure)) return (error: failure, payment: null);
+      return (
+        error: switch (failure) {
+          'insufficient cash' => l10n.insufficientCash,
+          'order is not served' => l10n.cashierWaitingServed,
+          'pick dishes' || 'whole bill' => l10n.splitPickDishes,
+          _ => failure,
+        },
+        payment: null,
+      );
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return (error: null, payment: payments.where((payment) => !known.contains(payment.id)).firstOrNull);
+  }
+
   double expectedDrawer(CashShift shift) {
     final cashIds = paymentTypes
         .where((type) => type.nameEn.toLowerCase() == 'cash')
@@ -288,7 +329,7 @@ extension CafeStorePayments on CafeStore {
   /// something left to give back.
   bool canRefund(Payment payment) => canVoid(payment) && payment.netTotal > 0 && saleLines(payment).isNotEmpty;
 
-  /// Gives back [qty] of the sale's line [lineKey] (see [refundLineKey]). Null on success, else
+  /// Gives back [qty] of the sale's line [lineKey] (see [orderLineKey]). Null on success, else
   /// a message for the cashier.
   Future<String?> refundLine(Payment payment, String lineKey, int qty, String reason) async {
     if (!canRefund(payment)) return l10n.refundNotAllowed;

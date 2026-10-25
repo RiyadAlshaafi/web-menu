@@ -1279,6 +1279,38 @@ class AppDatabase {
     }
   }
 
+  /// Pays the picked dishes ([picks]: line key to quantity, see [orderLineKey]) of a table's served
+  /// tab on their own and keeps the rest open. Null on success. See settle_part.
+  Future<String?> settlePart(
+    String tableId,
+    Map<String, int> picks,
+    double cashReceived, {
+    bool applyService = true,
+    String? paymentTypeId,
+  }) async {
+    if (isLocal) return _localSettlePart(tableId, picks, cashReceived, applyService: applyService, paymentTypeId: paymentTypeId);
+    if (client == null) return ErrorCodes.notConfigured;
+    try {
+      _applyHeaders();
+      final raw = await client!.rpc('settle_part', params: {
+        'p_table_id': tableId,
+        'p_lines': [for (final pick in picks.entries) {'line_id': pick.key, 'qty': pick.value}],
+        'p_cash_received': cashReceived,
+        'p_apply_service': applyService,
+        'p_payment_type_id': paymentTypeId,
+      });
+      final result = Map<String, dynamic>.from(raw as Map);
+      if (result['ok'] == true) {
+        await refreshFromDisk();
+        return null;
+      }
+      return result['error'] as String? ?? 'Payment failed.';
+    } catch (error, stackTrace) {
+      reportError('settle part', error, stackTrace);
+      return _errorCode(error);
+    }
+  }
+
   Future<String?> settleCash(
     String tableId,
     double cashReceived, {
@@ -2066,7 +2098,7 @@ class AppDatabase {
   }
 
   /// Gives back [qty] of one dish of the signed-in cashier's own sale on their open shift. Null on
-  /// success. [lineKey] comes from [refundLineKey].
+  /// success. [lineKey] comes from [orderLineKey].
   Future<String?> refundLine(String paymentId, String lineKey, int qty, String reason) async {
     if (isLocal) return _localRefundLine(paymentId, lineKey, qty, reason);
     if (client == null) return ErrorCodes.notConfigured;

@@ -874,6 +874,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierClearTableConfirm => 'Yes, clear table';
 
   @override
+  String get splitBill => 'Split bill';
+
+  @override
+  String get splitHint =>
+      'Pick what this guest pays now. The rest stays open on the table.';
+
+  @override
+  String get splitPaid => 'Part paid. The rest stays open on the table.';
+
+  @override
+  String get splitPickDishes => 'Pick at least one dish to pay now.';
+
+  @override
   String get moveTable => 'Move or merge table';
 
   @override

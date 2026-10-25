@@ -1688,6 +1688,30 @@ abstract class AppLocalizations {
   /// **'Yes, clear table'**
   String get cashierClearTableConfirm;
 
+  /// No description provided for @splitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Split bill'**
+  String get splitBill;
+
+  /// No description provided for @splitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick what this guest pays now. The rest stays open on the table.'**
+  String get splitHint;
+
+  /// No description provided for @splitPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Part paid. The rest stays open on the table.'**
+  String get splitPaid;
+
+  /// No description provided for @splitPickDishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one dish to pay now.'**
+  String get splitPickDishes;
+
   /// No description provided for @moveTable.
   ///
   /// In en, this message translates to:

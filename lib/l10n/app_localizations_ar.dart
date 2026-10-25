@@ -873,6 +873,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierClearTableConfirm => 'نعم، أفرغ الطاولة';
 
   @override
+  String get splitBill => 'تقسيم الفاتورة';
+
+  @override
+  String get splitHint =>
+      'اختر ما يدفعه هذا الضيف الآن. يبقى الباقي مفتوحاً على الطاولة.';
+
+  @override
+  String get splitPaid => 'تم دفع جزء. يبقى الباقي مفتوحاً على الطاولة.';
+
+  @override
+  String get splitPickDishes => 'اختر صنفاً واحداً على الأقل للدفع الآن.';
+
+  @override
   String get moveTable => 'نقل أو دمج الطاولة';
 
   @override

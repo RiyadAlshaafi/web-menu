@@ -19,6 +19,9 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
   var changing = false;
   var busy = false;
   String? failure;
+  // Split bill: how many of each dish (by line key) this guest pays now; the rest stays open.
+  var splitting = false;
+  final picks = <String, int>{};
   await showDialog<void>(
     context: context,
     barrierDismissible: true,
@@ -30,7 +33,8 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
           // Only what was sent to the kitchen is charged; unsent cart dishes
           // are cleared at settlement without being billed.
           final lines = <OrderLine>[...?order?.lines];
-          final subtotal = store.tabSubtotal(tableId);
+          final picked = splitLines(lines, picks);
+          final subtotal = splitting ? picked.fold<double>(0, (sum, line) => sum + line.total) : store.tabSubtotal(tableId);
           final due = store.chargeTotal(subtotal, applyService: applyService);
           final minutes = order == null ? 0 : DateTime.now().difference(order.createdAt).inMinutes;
           return Dialog(
@@ -69,6 +73,21 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                         Text(context.l10n.cashierAmount, style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.inkMuted)),
                       ],
                     ),
+                    if (lines.fold<int>(0, (sum, line) => sum + line.qty) > 1)
+                      SwitchListTile(
+                        key: const Key('split-bill'),
+                        contentPadding: EdgeInsets.zero,
+                        value: splitting,
+                        title: Text(context.l10n.splitBill, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        subtitle: Text(context.l10n.splitHint),
+                        onChanged: busy
+                            ? null
+                            : (value) => setState(() {
+                                  splitting = value;
+                                  picks.clear();
+                                  failure = null;
+                                }),
+                      ),
                     const SizedBox(height: 8),
                     Flexible(
                       child: ListView(
@@ -79,11 +98,18 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
-                                      child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
-                                    ),
+                                    if (splitting)
+                                      _SplitStepper(
+                                        qty: picks[orderLineKey(line, lines.indexOf(line))] ?? 0,
+                                        max: line.qty,
+                                        onChanged: busy ? null : (value) => setState(() => picks[orderLineKey(line, lines.indexOf(line))] = value),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(8)),
+                                        child: Text('${line.qty}×', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                      ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
@@ -168,10 +194,40 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                       width: double.infinity,
                       child: FilledButton(
                         style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        onPressed: busy
+                        onPressed: busy || (splitting && picked.isEmpty)
                             ? null
                             : () async {
                                 setState(() => busy = true);
+                                if (splitting) {
+                                  final result = await store.settlePart(
+                                    tableId: tableId,
+                                    picks: Map.of(picks),
+                                    applyService: applyService,
+                                    paymentTypeId: chosenType,
+                                  );
+                                  final error = result.error;
+                                  if (error != null) {
+                                    if (error == 'session expired, sign in again') {
+                                      navigator.pop();
+                                      return;
+                                    }
+                                    failure = error;
+                                    busy = false;
+                                    if (context.mounted) setState(() {});
+                                    return;
+                                  }
+                                  navigator.pop();
+                                  final payment = result.payment;
+                                  if (payment == null || !host.mounted) return;
+                                  openDrawerAfterSale(host, store, payment);
+                                  ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.splitPaid)));
+                                  if (!store.autoPrintReceipt) return;
+                                  unawaited(showReceiptPrint(store, payment, host.l10n).catchError((_) {
+                                    if (!host.mounted) return;
+                                    ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
+                                  }));
+                                  return;
+                                }
                                 final orderId = store.openOrderFor(tableId)?.id;
                                 final error = await store.settleCash(
                                   tableId: tableId,
@@ -304,6 +360,38 @@ class _CustomerPaymentBox extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// How many of one dish the guest pays now, 0 to [max].
+class _SplitStepper extends StatelessWidget {
+  const _SplitStepper({required this.qty, required this.max, required this.onChanged});
+
+  final int qty;
+  final int max;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final change = onChanged;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: '−',
+          visualDensity: VisualDensity.compact,
+          onPressed: change == null || qty <= 0 ? null : () => change(qty - 1),
+          icon: const Icon(Icons.remove_circle_outline, size: 22),
+        ),
+        SizedBox(width: 22, child: Text('$qty', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800))),
+        IconButton(
+          tooltip: '+',
+          visualDensity: VisualDensity.compact,
+          onPressed: change == null || qty >= max ? null : () => change(qty + 1),
+          icon: const Icon(Icons.add_circle_outline, size: 22),
         ),
       ],
     );

@@ -49,7 +49,7 @@ class _RefundLineDialogState extends State<_RefundLineDialog> {
     super.dispose();
   }
 
-  int _left(int index) => lines[index].qty - widget.payment.refundedQty(refundLineKey(lines[index], index));
+  int _left(int index) => lines[index].qty - widget.payment.refundedQty(orderLineKey(lines[index], index));
 
   Future<void> _submit() async {
     final index = picked;
@@ -62,7 +62,7 @@ class _RefundLineDialogState extends State<_RefundLineDialog> {
       busy = true;
       error = null;
     });
-    final failure = await widget.store.refundLine(widget.payment, refundLineKey(lines[index], index), qty, reason.text);
+    final failure = await widget.store.refundLine(widget.payment, orderLineKey(lines[index], index), qty, reason.text);
     if (!mounted) return;
     if (failure == null) {
       Navigator.pop(context, true);
