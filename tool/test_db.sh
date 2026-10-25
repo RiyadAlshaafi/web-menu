@@ -77,6 +77,7 @@ loud -d "$DB" -f supabase/tests/expense_employee_test.sql
 loud -d "$DB" -f supabase/tests/guest_menu_url_dev_only_test.sql
 loud -d "$DB" -f supabase/tests/receipt_settings_test.sql
 loud -d "$DB" -f supabase/tests/sales_report_test.sql
+loud -d "$DB" -f supabase/tests/dish_sales_test.sql
 
 echo "== Rollbacks undo their migration, and the migration applies again afterwards"
 for down in supabase/rollbacks/*.down.sql; do
@@ -100,6 +101,7 @@ loud -d "$DB" -f supabase/tests/expense_employee_test.sql
 loud -d "$DB" -f supabase/tests/guest_menu_url_dev_only_test.sql
 loud -d "$DB" -f supabase/tests/receipt_settings_test.sql
 loud -d "$DB" -f supabase/tests/sales_report_test.sql
+loud -d "$DB" -f supabase/tests/dish_sales_test.sql
 
 quiet -d postgres -c "drop database if exists $DB"
 echo "== All database checks passed"

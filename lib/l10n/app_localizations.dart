@@ -4130,6 +4130,24 @@ abstract class AppLocalizations {
   /// **'Net'**
   String get reportNet;
 
+  /// No description provided for @reportBestSellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Best sellers'**
+  String get reportBestSellers;
+
+  /// No description provided for @reportSlowSellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow sellers'**
+  String get reportSlowSellers;
+
+  /// No description provided for @reportDishLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{qty}× {name}'**
+  String reportDishLine(int qty, String name);
+
   /// No description provided for @reportToday.
   ///
   /// In en, this message translates to:

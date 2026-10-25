@@ -18,6 +18,7 @@ extension AppDatabaseLocal on AppDatabase {
         paymentTypes: _paymentTypes,
         expenseCategories: _expenseCategories,
         staff: [for (final row in _docRows('cashiers')) Cashier.fromJson(row)],
+        orders: [for (final row in _store.readRecords('orders')) CafeOrder.fromJson(row)],
       );
 
   // ------------------------------------------------------------------ load

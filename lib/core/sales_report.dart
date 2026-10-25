@@ -57,6 +57,21 @@ class ReportExpenseGroup {
   final double total;
 }
 
+/// One dish sold in a report's range: [id] null when the dish was deleted from the menu.
+class ReportDish {
+  const ReportDish({required this.id, required this.name, required this.qty, required this.total});
+
+  final String? id;
+
+  /// The name saved on the sale; screens show the dish's current name when it is still on the menu.
+  final String name;
+  final int qty;
+  final double total;
+}
+
+/// How many best and slow sellers the report lists.
+const reportTopDishes = 5;
+
 /// A summary line: what it is, how many and how much.
 typedef ReportLine = ({String? id, String nameEn, String nameAr, int count, double total});
 
@@ -76,6 +91,7 @@ class SalesReport {
     required this.voidTotal,
     required this.methods,
     required this.expenses,
+    this.dishes,
   });
 
   final DateTime from;
@@ -86,6 +102,40 @@ class SalesReport {
   final double voidTotal;
   final List<ReportMethod> methods;
   final List<ReportExpenseGroup> expenses;
+
+  /// Dishes sold, the most sold first; null when the server could not say (older server), so
+  /// the report leaves best and slow sellers out instead of calling every dish unsold.
+  final List<ReportDish>? dishes;
+
+  /// The same report with [dishes].
+  SalesReport withDishes(List<ReportDish>? dishes) => SalesReport(
+        from: from,
+        to: to,
+        salesCount: salesCount,
+        salesTotal: salesTotal,
+        voidCount: voidCount,
+        voidTotal: voidTotal,
+        methods: methods,
+        expenses: expenses,
+        dishes: dishes,
+      );
+
+  /// The [count] most sold dishes.
+  List<ReportDish> bestSellers({int count = reportTopDishes}) => (dishes ?? const <ReportDish>[]).take(count).toList();
+
+  /// The [count] least sold dishes of [menu] (unsold ones first, as 0), leaving out the best
+  /// sellers so a short menu does not list a dish twice. Empty when [dishes] is unknown.
+  List<ReportDish> slowSellers(List<MenuItem> menu, String locale, {int count = reportTopDishes}) {
+    final sold = dishes;
+    if (sold == null) return const [];
+    final best = {for (final dish in bestSellers()) dish.id};
+    final byId = {for (final dish in sold) dish.id: dish};
+    final rows = [
+      for (final item in menu)
+        if (!best.contains(item.id)) byId[item.id] ?? ReportDish(id: item.id, name: item.displayName(locale), qty: 0, total: 0),
+    ]..sort((a, b) => a.qty != b.qty ? a.qty.compareTo(b.qty) : a.total.compareTo(b.total));
+    return rows.take(count).toList();
+  }
 
   double get expensesTotal => expenses.fold(0, (sum, group) => sum + group.total);
 
@@ -162,6 +212,19 @@ class SalesReport {
     );
   }
 
+  /// The dishes in an admin_dish_sales answer.
+  static List<ReportDish> dishesFromJson(Object? value) => [
+        if (value is List)
+          for (final row in value)
+            if (row is Map)
+              ReportDish(
+                id: row['id'] as String?,
+                name: row['name'] as String? ?? '',
+                qty: (row['qty'] as num?)?.toInt() ?? 0,
+                total: (row['total'] as num?)?.toDouble() ?? 0,
+              ),
+      ];
+
   /// The same report worked out on an offline till from every sale and expense saved on it, with
   /// the server's rules (see the class comment and admin_sales_report).
   factory SalesReport.fromRows({
@@ -172,6 +235,7 @@ class SalesReport {
     required List<PaymentType> paymentTypes,
     required List<ExpenseCategory> expenseCategories,
     required List<Cashier> staff,
+    Iterable<CafeOrder>? orders,
   }) {
     bool inRange(DateTime instant) => inTripoliDateRange(instant, from: from, to: to);
     final sales = payments.where((payment) => inRange(payment.paidAt)).toList();
@@ -223,6 +287,29 @@ class SalesReport {
       voidTotal: voided.fold(0, (sum, payment) => sum + payment.totalDue),
       methods: methods.values.toList()..sort((a, b) => b.total.compareTo(a.total)),
       expenses: groups.values.toList()..sort((a, b) => b.total.compareTo(a.total)),
+      dishes: orders == null ? null : dishesSold(orders, kept),
     );
+  }
+
+  /// Dishes on the orders of the [kept] sales, each order once, most sold first: the same
+  /// rules as admin_dish_sales.
+  static List<ReportDish> dishesSold(Iterable<CafeOrder> orders, Iterable<Payment> kept) {
+    final paid = {for (final payment in kept) payment.orderId};
+    final dishes = <String, ReportDish>{};
+    for (final order in orders) {
+      if (!paid.contains(order.id)) continue;
+      for (final line in order.lines) {
+        final id = line.menuItemId.isEmpty ? null : line.menuItemId;
+        final key = id ?? '#${line.name}';
+        final seen = dishes[key];
+        dishes[key] = ReportDish(
+          id: id,
+          name: seen?.name ?? line.name,
+          qty: (seen?.qty ?? 0) + line.qty,
+          total: (seen?.total ?? 0) + line.total,
+        );
+      }
+    }
+    return dishes.values.toList()..sort((a, b) => a.qty != b.qty ? b.qty.compareTo(a.qty) : b.total.compareTo(a.total));
   }
 }

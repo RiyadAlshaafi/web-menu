@@ -2289,6 +2289,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportNet => 'الصافي';
 
   @override
+  String get reportBestSellers => 'الأكثر مبيعاً';
+
+  @override
+  String get reportSlowSellers => 'الأقل مبيعاً';
+
+  @override
+  String reportDishLine(int qty, String name) {
+    return '$qty× $name';
+  }
+
+  @override
   String reportToday(String day) {
     return 'اليوم، $day';
   }

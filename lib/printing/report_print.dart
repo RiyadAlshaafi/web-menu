@@ -4,6 +4,7 @@ import 'package:printing/printing.dart';
 
 import '../core/sales_report.dart';
 import '../core/time_format.dart';
+import '../models/models.dart';
 import '../state/cafe_store.dart';
 import 'kitchen_ticket.dart';
 import 'slip.dart';
@@ -12,7 +13,8 @@ import 'slip.dart';
 enum ReportOutput { printer, preview }
 
 /// The summary report as slip lines: cafe and range on top, then sales and their payment types,
-/// voids, expenses by type and by employee, and net. A summary, not every receipt.
+/// voids, expenses by type and by employee, net, then the best and slow sellers of [menu] when
+/// the report knows its dishes. A summary, not every receipt.
 List<SlipLine> reportSlip({
   required SalesReport report,
   required String cafeName,
@@ -20,9 +22,14 @@ List<SlipLine> reportSlip({
   required DateTime printedAt,
   required AppLocalizations l10n,
   required String Function(double) money,
+  List<MenuItem> menu = const [],
 }) {
   final locale = l10n.localeName;
   String name(String en, String ar) => locale == 'ar' && ar.isNotEmpty ? ar : en;
+  final dishNames = {for (final item in menu) item.id: item.displayName(locale)};
+  SlipLine dish(ReportDish dish) => SlipPair('  ${l10n.reportDishLine(dish.qty, dishNames[dish.id] ?? dish.name)}', money(dish.total));
+  final best = report.bestSellers();
+  final slow = report.slowSellers(menu, locale);
   return [
     SlipText(cafeName, center: true, size: 14, bold: true),
     SlipText(l10n.reportTitle, center: true, size: 13, bold: true),
@@ -49,6 +56,16 @@ List<SlipLine> reportSlip({
     ],
     const SlipDivider(),
     SlipPair(l10n.reportNet, money(report.net), bold: true),
+    if (best.isNotEmpty) ...[
+      const SlipDivider(),
+      SlipText(l10n.reportBestSellers, size: 9, bold: true),
+      for (final line in best) dish(line),
+    ],
+    if (slow.isNotEmpty) ...[
+      const SlipGap(4),
+      SlipText(l10n.reportSlowSellers, size: 9, bold: true),
+      for (final line in slow) dish(line),
+    ],
   ];
 }
 
@@ -80,6 +97,7 @@ class ReportPrinter {
       printedAt: DateTime.now(),
       l10n: l10n,
       money: store.currency.format,
+      menu: store.menuItems,
     );
     return send(lines, 'report-${formatTripoliDate(report.from)}-${formatTripoliDate(report.to)}');
   }

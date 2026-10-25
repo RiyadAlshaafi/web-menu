@@ -2300,6 +2300,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNet => 'Net';
 
   @override
+  String get reportBestSellers => 'Best sellers';
+
+  @override
+  String get reportSlowSellers => 'Slow sellers';
+
+  @override
+  String reportDishLine(int qty, String name) {
+    return '$qty× $name';
+  }
+
+  @override
   String reportToday(String day) {
     return 'Today, $day';
   }

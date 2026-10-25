@@ -1815,12 +1815,29 @@ class AppDatabase {
     if (offlineMode) return (report: null, error: ErrorCodes.network);
     String day(DateTime value) => '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
     try {
-      final raw = await client!.rpc('admin_sales_report', params: {'p_from': day(from), 'p_to': day(to)});
-      if (raw is Map && raw['ok'] == true) return (report: SalesReport.fromJson(Map<String, dynamic>.from(raw)), error: null);
+      final params = {'p_from': day(from), 'p_to': day(to)};
+      final raw = await client!.rpc('admin_sales_report', params: params);
+      if (raw is Map && raw['ok'] == true) {
+        final report = SalesReport.fromJson(Map<String, dynamic>.from(raw));
+        return (report: report.withDishes(await _dishSales(params)), error: null);
+      }
       return (report: null, error: ErrorCodes.failed);
     } catch (error, stackTrace) {
       reportError('admin_sales_report', error, stackTrace);
       return (report: null, error: _errorCode(error));
+    }
+  }
+
+  /// Dishes sold for the report; null when the server can't say (admin_dish_sales not applied
+  /// yet), so the report still prints, without best and slow sellers.
+  Future<List<ReportDish>?> _dishSales(Map<String, String> params) async {
+    try {
+      final raw = await client!.rpc('admin_dish_sales', params: params);
+      if (raw is Map && raw['ok'] == true) return SalesReport.dishesFromJson(raw['dishes']);
+      return null;
+    } catch (error, stackTrace) {
+      reportError('admin_dish_sales', error, stackTrace);
+      return null;
     }
   }
 
