@@ -34,6 +34,8 @@ export function errorText(
       return t(lang, "noOrders");
     case "not_served":
       return t(lang, "guestBillAfterServed");
+    case "payment_type_required":
+      return t(lang, "payChoose");
     case "not_table_owner":
       return t(lang, "guestViewOnly");
     case "network":

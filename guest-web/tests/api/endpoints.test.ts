@@ -396,6 +396,15 @@ describe("POST /api/guest/bill", () => {
     mockSupabase(() => CASHIER_OFFLINE);
     expect((await json(await bill.POST(post("/api/guest/bill", { slug: SLUG })))).error?.code).toBe("cashier_offline");
   });
+
+  it("answers not_served and payment_type_required", async () => {
+    mockSupabase(() => ({ body: { ok: false, error: "not served" } }));
+    expect((await json(await bill.POST(post("/api/guest/bill", { slug: SLUG })))).error?.code).toBe("not_served");
+    mockSupabase(() => ({ body: { ok: false, error: "payment type required" } }));
+    expect((await json(await bill.POST(post("/api/guest/bill", { slug: SLUG })))).error?.code).toBe(
+      "payment_type_required",
+    );
+  });
 });
 
 describe("POST /api/guest/payment-type", () => {

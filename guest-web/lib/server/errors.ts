@@ -12,6 +12,7 @@ export const ERROR_CODES = [
   "cart_empty",
   "no_open_bill",
   "not_served",
+  "payment_type_required",
   "not_table_owner",
   "server_error",
 ] as const;
@@ -30,6 +31,7 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   cart_empty: 400,
   no_open_bill: 409,
   not_served: 409,
+  payment_type_required: 409,
   not_table_owner: 403,
   server_error: 500,
 };
@@ -47,6 +49,7 @@ export const ERROR_MESSAGE: Record<ErrorCode, string> = {
   cart_empty: "The order is empty.",
   no_open_bill: "There is no open bill for this table.",
   not_served: "The bill can be requested once the order is served.",
+  payment_type_required: "Choose how you will pay before asking for the bill.",
   not_table_owner: "Another guest at this table is ordering.",
   server_error: "Something went wrong.",
 };
@@ -62,6 +65,8 @@ const DB_ERRORS: Record<string, ErrorCode> = {
   too_many_lines: "bad_request",
   "cart is empty": "cart_empty",
   "no open bill": "no_open_bill",
+  "not served": "not_served",
+  "payment type required": "payment_type_required",
   not_table_owner: "not_table_owner",
   "unknown payment type": "bad_request",
 };

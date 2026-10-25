@@ -56,9 +56,19 @@ begin
   r := public.set_order_status(oid, 'preparing');
   assert not (r->>'ok')::boolean, 'a guest must not change the kitchen status';
 
+  -- A guest's bill needs a served order and a payment type when the cafe has any.
+  execute 'reset role';
+  update public.orders set status = 'served',
+    payment_type_id = (select p.id from public.payment_types p where p.restaurant_id = orders.restaurant_id and p.enabled and not p.archived limit 1)
+    where table_id = tid and status <> 'paid';
+  execute 'set local role anon';
   r := public.request_bill('test-slug-1');
   r2 := public.request_bill('test-slug-1');
   assert (r->>'ok')::boolean and (r2->>'ok')::boolean, 'bill request failed: ' || r::text;
+  -- Back to received: the cashier checks below walk the kitchen steps.
+  execute 'reset role';
+  update public.orders set status = 'received' where id = oid;
+  execute 'set local role anon';
 
   update public.dining_tables set number = 'hacked' where id = tid;
   get diagnostics n = row_count;

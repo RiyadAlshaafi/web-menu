@@ -77,6 +77,12 @@ begin
   assert r->'order'->>'status' = 'received', 'tab through the function: ' || r::text;
   r := public.send_table_cart('lock-slug-1', jsonb_build_array(jsonb_build_object('menu_item_id', ia, 'qty', 1)));
   assert (r->>'ok')::boolean, 'ordering through the function: ' || r::text;
+  -- A guest's bill needs a served order and a payment type when the cafe has any.
+  execute 'reset role';
+  update public.orders set status = 'served',
+    payment_type_id = (select p.id from public.payment_types p where p.restaurant_id = orders.restaurant_id and p.enabled and not p.archived limit 1)
+    where table_id = tid and status <> 'paid';
+  execute 'set local role anon';
   r := public.request_bill('lock-slug-1');
   assert (r->>'ok')::boolean, 'bill through the function: ' || r::text;
 
