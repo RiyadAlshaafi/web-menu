@@ -2286,6 +2286,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get receiptSaved => 'تم حفظ إعدادات الإيصال.';
 
   @override
+  String get receiptEditOpen => 'تعديل الإيصالات والمطبوعات';
+
+  @override
+  String get receiptPreviewYours => 'إيصالاتك (تتغير بالإعدادات)';
+
+  @override
+  String get receiptPreviewOthers => 'مطبوعات أخرى (تصميم ثابت)';
+
+  @override
+  String get receiptUnsaved => 'تغييرات غير محفوظة';
+
+  @override
+  String get receiptDiscardTitle => 'الإغلاق دون حفظ التغييرات؟';
+
+  @override
+  String get receiptKeepEditing => 'متابعة التعديل';
+
+  @override
+  String get receiptDiscard => 'إغلاق دون حفظ';
+
+  @override
+  String get commonClose => 'إغلاق';
+
+  @override
   String get receiptPaperTitle => 'عرض الورق لكل طابعة';
 
   @override
@@ -2349,7 +2373,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get receiptKitchenFixed =>
-      'تذاكر المطبخ تعرض الأطباق والخيارات فقط، بدون أسعار. إعدادات الإيصال أعلاه لا تغيّرها.';
+      'تذاكر المطبخ تعرض الأطباق والخيارات فقط، بدون أسعار. إعدادات الإيصال لا تغيّرها.';
 
   @override
   String get reportButton => 'طباعة تقرير';

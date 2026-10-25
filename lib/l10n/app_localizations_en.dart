@@ -2299,6 +2299,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receiptSaved => 'Receipt settings saved.';
 
   @override
+  String get receiptEditOpen => 'Edit receipts & printouts';
+
+  @override
+  String get receiptPreviewYours => 'Your receipts (the settings change these)';
+
+  @override
+  String get receiptPreviewOthers => 'Other printouts (fixed layout)';
+
+  @override
+  String get receiptUnsaved => 'Unsaved changes';
+
+  @override
+  String get receiptDiscardTitle => 'Close without saving your changes?';
+
+  @override
+  String get receiptKeepEditing => 'Keep editing';
+
+  @override
+  String get receiptDiscard => 'Close without saving';
+
+  @override
+  String get commonClose => 'Close';
+
+  @override
   String get receiptPaperTitle => 'Paper width of each printer';
 
   @override
@@ -2362,7 +2386,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receiptKitchenFixed =>
-      'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.';
+      'Kitchen tickets show dishes and choices only, no prices. The receipt settings do not change them.';
 
   @override
   String get reportButton => 'Print report';

@@ -19,7 +19,7 @@ CafeStore _store() => CafeStore(AppDatabase.instance)
   ..kitchens = [Kitchen(id: 'k1', name: 'Pizza oven', sortOrder: 0), Kitchen(id: 'k2', name: 'Bar', sortOrder: 1)];
 
 Future<void> _pump(WidgetTester tester, CafeStore store) async {
-  await pumpAdminScreen(tester, const SingleChildScrollView(child: ReceiptEditorCard()), store, size: const Size(1200, 2600));
+  await pumpAdminScreen(tester, const SizedBox(height: 2400, child: ReceiptEditor()), store, size: const Size(1200, 2600));
   await tester.pumpAndSettle();
 }
 
@@ -96,5 +96,29 @@ void main() {
     expect(find.text(l10n.receiptPreviewBothWidths), findsOneWidget, reason: 'no cashier printer in tests');
     expect(find.text('preview slip-58 57mm'), findsOneWidget);
     expect(find.text('preview slip-80 80mm'), findsOneWidget);
+  });
+
+  testWidgets('the settings card opens the editor in its own window, and Close asks before dropping changes', (tester) async {
+    final store = _store();
+    await pumpAdminScreen(tester, const SingleChildScrollView(child: ReceiptEditorCard()), store, size: const Size(1400, 1000));
+    await tester.pumpAndSettle();
+    expect(find.byType(ReceiptEditor), findsNothing);
+
+    await tapVisible(tester, find.byKey(const Key('open-receipt-editor')));
+    expect(find.byType(ReceiptEditor), findsOneWidget);
+    expect(find.text(l10n.receiptPreviewYours), findsOneWidget);
+    expect(find.text(l10n.receiptPreviewOthers), findsOneWidget);
+
+    await tapVisible(tester, find.widgetWithText(FilterChip, l10n.receiptLineCashier));
+    expect(find.text(l10n.receiptUnsaved), findsOneWidget);
+    await tapVisible(tester, find.widgetWithText(OutlinedButton, l10n.commonClose));
+    expect(find.text(l10n.receiptDiscardTitle), findsOneWidget);
+    await tapVisible(tester, find.text(l10n.receiptKeepEditing));
+    expect(find.byType(ReceiptEditor), findsOneWidget, reason: 'still editing');
+
+    await tapVisible(tester, find.widgetWithText(OutlinedButton, l10n.commonClose));
+    await tapVisible(tester, find.text(l10n.receiptDiscard));
+    expect(find.byType(ReceiptEditor), findsNothing);
+    expect(store.receiptSettings.showCashier, isFalse, reason: 'nothing was saved');
   });
 }

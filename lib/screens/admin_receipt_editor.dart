@@ -106,22 +106,73 @@ final class _Expenses extends _Printout {
   int get hashCode => 2;
 }
 
-/// Settings → Receipts & printouts. On top, what every till prints (saved with the cafe): cafe
-/// name and logo, header and footer, which lines show. Then this till's paper width for each of
-/// its printers (saved on this device). Below, a live preview of each printout, drawn by the
-/// same builder the printer gets, at this till's paper width (both widths when the printout has
-/// no printer here).
-class ReceiptEditorCard extends StatefulWidget {
+/// Settings → Receipts & printouts: a short card whose button opens [ReceiptEditor] in its own
+/// window, so the settings and their preview fit on one screen.
+class ReceiptEditorCard extends StatelessWidget {
   const ReceiptEditorCard({super.key});
 
   @visibleForTesting
   static PrintPreviewBuilder preview = pdfPagePreview;
 
   @override
-  State<ReceiptEditorCard> createState() => _ReceiptEditorCardState();
+  Widget build(BuildContext context) {
+    return TawlaPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PanelTitle(context.l10n.receiptEditorTitle, size: 18),
+          const SizedBox(height: 4),
+          Text(context.l10n.receiptEditorHint, style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
+          const SizedBox(height: 14),
+          NavyButton(
+            key: const Key('open-receipt-editor'),
+            label: context.l10n.receiptEditOpen,
+            icon: Icons.receipt_long_outlined,
+            onPressed: () => showReceiptEditor(context),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
+/// Opens [ReceiptEditor] in a large window over the settings.
+Future<void> showReceiptEditor(BuildContext context) {
+  final store = context.read<CafeStore>();
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      final size = MediaQuery.sizeOf(dialogContext);
+      return ChangeNotifierProvider<CafeStore>.value(
+        value: store,
+        child: Dialog(
+          insetPadding: const EdgeInsets.all(24),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(width: 1240, height: size.height - 48, child: const ReceiptEditor()),
+        ),
+      );
+    },
+  );
+}
+
+/// The receipt editor window. Left: what every till prints (saved with the cafe): cafe name and
+/// logo, header and footer, which lines show; then this till's paper width for each of its
+/// printers (saved on this device). Right: a live preview of each printout, drawn by the same
+/// builder the printer gets, at this till's paper width (both widths when the printout has no
+/// printer here). A narrow window stacks them. Save and Close stay at the bottom.
+class ReceiptEditor extends StatefulWidget {
+  const ReceiptEditor({super.key});
+
+  /// Wider than this, the settings and the preview sit side by side.
+  static const sideBySideWidth = 860.0;
+
+  @override
+  State<ReceiptEditor> createState() => _ReceiptEditorState();
+}
+
+class _ReceiptEditorState extends State<ReceiptEditor> {
   late ReceiptSettings saved;
   late ReceiptSettings draft;
   late final header = TextEditingController();
@@ -212,33 +263,108 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
       saved = latest;
       _startDraft(latest);
     }
-    return TawlaPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PanelTitle(context.l10n.receiptEditorTitle, size: 18),
-          const SizedBox(height: 4),
-          Text(context.l10n.receiptEditorHint, style: const TextStyle(color: TawlaTokens.muted, fontSize: 13)),
-          const SizedBox(height: 14),
-          EyebrowLabel(context.l10n.settingsScopeWholeCafe),
-          ..._cafeWide(store),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: TawlaTokens.border),
-          const SizedBox(height: 14),
-          EyebrowLabel(context.l10n.settingsScopeThisTill),
-          const SizedBox(height: 6),
-          ..._paperWidths(store),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: TawlaTokens.border),
-          const SizedBox(height: 14),
-          PanelTitle(context.l10n.receiptPreviewTitle, size: 16),
-          const SizedBox(height: 8),
-          _printoutPicker(store),
-          const SizedBox(height: 12),
-          _preview(store),
-        ],
-      ),
+    final settings = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        EyebrowLabel(context.l10n.settingsScopeWholeCafe),
+        ..._cafeWide(store),
+        const SizedBox(height: 18),
+        const Divider(height: 1, color: TawlaTokens.border),
+        const SizedBox(height: 14),
+        EyebrowLabel(context.l10n.settingsScopeThisTill),
+        const SizedBox(height: 6),
+        ..._paperWidths(store),
+      ],
     );
+    final preview = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PanelTitle(context.l10n.receiptPreviewTitle, size: 16),
+        const SizedBox(height: 8),
+        _printoutPicker(store),
+        const SizedBox(height: 12),
+        _preview(store),
+      ],
+    );
+    const pad = EdgeInsets.all(20);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 8, 10),
+          child: Row(
+            children: [
+              Expanded(child: PanelTitle(context.l10n.receiptEditorTitle, size: 20)),
+              IconButton(tooltip: context.l10n.commonClose, onPressed: _close, icon: const Icon(Icons.close)),
+            ],
+          ),
+        ),
+        const Divider(height: 1, color: TawlaTokens.border),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => constraints.maxWidth >= ReceiptEditor.sideBySideWidth
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(flex: 5, child: SingleChildScrollView(padding: pad, child: settings)),
+                      const VerticalDivider(width: 1, color: TawlaTokens.border),
+                      Expanded(
+                        flex: 6,
+                        child: ColoredBox(
+                          color: CafeSurfaces.of(context).background,
+                          child: SingleChildScrollView(padding: pad, child: preview),
+                        ),
+                      ),
+                    ],
+                  )
+                : SingleChildScrollView(
+                    padding: pad,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [settings, const SizedBox(height: 24), preview],
+                    ),
+                  ),
+          ),
+        ),
+        const Divider(height: 1, color: TawlaTokens.border),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Row(
+            children: [
+              if (draft != saved)
+                Text(context.l10n.receiptUnsaved, style: const TextStyle(color: CafeColors.terracotta, fontWeight: FontWeight.w700)),
+              const Spacer(),
+              OutlineAction(label: context.l10n.commonClose, height: 44, onPressed: saving ? null : _close),
+              const SizedBox(width: 10),
+              NavyButton(label: context.l10n.receiptSave, onPressed: saving || draft == saved ? null : () => _save(store)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Closes the window; with unsaved changes, asks first.
+  Future<void> _close() async {
+    final navigator = Navigator.of(context);
+    if (draft != saved) {
+      final discard = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(dialogContext.l10n.receiptDiscardTitle),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(dialogContext.l10n.receiptKeepEditing)),
+            FilledButton(
+              style: CafeButtons.destructiveFilled,
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(dialogContext.l10n.receiptDiscard),
+            ),
+          ],
+        ),
+      );
+      if (discard != true) return;
+    }
+    navigator.pop();
   }
 
   List<Widget> _cafeWide(CafeStore store) {
@@ -301,8 +427,6 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
             ),
         ],
       ),
-      const SizedBox(height: 14),
-      NavyButton(label: context.l10n.receiptSave, onPressed: saving || draft == saved ? null : () => _save(store)),
     ];
   }
 
@@ -345,10 +469,13 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
     ];
   }
 
+  /// The receipts the settings change first, then the printouts with a fixed layout.
   Widget _printoutPicker(CafeStore store) {
-    final options = <(_Printout, String)>[
+    final yours = <(_Printout, String)>[
       (const _Receipt(takeout: false), context.l10n.receiptPreviewReceipt),
       (const _Receipt(takeout: true), context.l10n.receiptPreviewTakeout),
+    ];
+    final others = <(_Printout, String)>[
       if (store.allows(AppFeature.kitchenPrinter)) ...[
         if (store.kitchens.isEmpty) (const _KitchenTicket(null), context.l10n.receiptPreviewKitchen),
         for (final kitchen in store.orderedKitchens) (_KitchenTicket(kitchen), context.l10n.receiptPreviewKitchenOf(kitchen.name)),
@@ -358,13 +485,25 @@ class _ReceiptEditorCardState extends State<ReceiptEditorCard> {
       if (store.allows(AppFeature.expenses)) (const _Expenses(), context.l10n.receiptPreviewExpenses),
     ];
     // A kitchen deleted (or a feature turned off) while its preview was showing.
-    if (!options.any((option) => option.$1 == showing)) showing = options.first.$1;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    if (![...yours, ...others].any((option) => option.$1 == showing)) showing = yours.first.$1;
+    Widget chips(List<(_Printout, String)> options) => Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (printout, label) in options)
+              ChoiceChip(label: Text(label), selected: printout == showing, onSelected: (_) => setState(() => showing = printout)),
+          ],
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (printout, label) in options)
-          ChoiceChip(label: Text(label), selected: printout == showing, onSelected: (_) => setState(() => showing = printout)),
+        Text(context.l10n.receiptPreviewYours, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        chips(yours),
+        const SizedBox(height: 12),
+        Text(context.l10n.receiptPreviewOthers, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        chips(others),
       ],
     );
   }

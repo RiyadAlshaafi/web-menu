@@ -4130,6 +4130,54 @@ abstract class AppLocalizations {
   /// **'Receipt settings saved.'**
   String get receiptSaved;
 
+  /// No description provided for @receiptEditOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit receipts & printouts'**
+  String get receiptEditOpen;
+
+  /// No description provided for @receiptPreviewYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Your receipts (the settings change these)'**
+  String get receiptPreviewYours;
+
+  /// No description provided for @receiptPreviewOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Other printouts (fixed layout)'**
+  String get receiptPreviewOthers;
+
+  /// No description provided for @receiptUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get receiptUnsaved;
+
+  /// No description provided for @receiptDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close without saving your changes?'**
+  String get receiptDiscardTitle;
+
+  /// No description provided for @receiptKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get receiptKeepEditing;
+
+  /// No description provided for @receiptDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Close without saving'**
+  String get receiptDiscard;
+
+  /// No description provided for @commonClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get commonClose;
+
   /// No description provided for @receiptPaperTitle.
   ///
   /// In en, this message translates to:
@@ -4229,7 +4277,7 @@ abstract class AppLocalizations {
   /// No description provided for @receiptKitchenFixed.
   ///
   /// In en, this message translates to:
-  /// **'Kitchen tickets show dishes and choices only, no prices. The receipt settings above do not change them.'**
+  /// **'Kitchen tickets show dishes and choices only, no prices. The receipt settings do not change them.'**
   String get receiptKitchenFixed;
 
   /// No description provided for @reportButton.
