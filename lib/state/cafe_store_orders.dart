@@ -314,6 +314,24 @@ extension CafeStoreOrders on CafeStore {
     return null;
   }
 
+  /// Moves the tab and cart of [fromId] to [toId], or merges them into its tab. Needs the server
+  /// (or this PC's own database); returns the error, if any.
+  Future<String?> moveTable(String fromId, String toId) async {
+    if (db.offlineMode) return ErrorCodes.network;
+    final failure = await db.moveTable(fromId, toId);
+    if (failure != null) {
+      _sessionExpired(failure);
+      return switch (failure) {
+        'nothing to move' => l10n.moveTableNothing,
+        'pick another table' || 'table not found' => l10n.moveTablePickOther,
+        _ => failure,
+      };
+    }
+    await syncFromDisk();
+    notifyListeners();
+    return null;
+  }
+
   Future<void> callStaff(String tableId, {String kind = 'assistance'}) async {
     calls.add(
       StaffCall(

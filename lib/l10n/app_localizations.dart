@@ -1688,6 +1688,54 @@ abstract class AppLocalizations {
   /// **'Yes, clear table'**
   String get cashierClearTableConfirm;
 
+  /// No description provided for @moveTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Move or merge table'**
+  String get moveTable;
+
+  /// No description provided for @moveTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move table {number} to…'**
+  String moveTableTitle(String number);
+
+  /// No description provided for @moveTableFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free: the tab moves here'**
+  String get moveTableFree;
+
+  /// No description provided for @moveTableMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a tab: the dishes join it'**
+  String get moveTableMerge;
+
+  /// No description provided for @moveTableMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {from} moved to table {to}'**
+  String moveTableMoved(String from, String to);
+
+  /// No description provided for @moveTableMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {from} merged into table {to}'**
+  String moveTableMerged(String from, String to);
+
+  /// No description provided for @moveTableNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'This table has nothing to move.'**
+  String get moveTableNothing;
+
+  /// No description provided for @moveTablePickOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another table of this cafe.'**
+  String get moveTablePickOther;
+
   /// No description provided for @cashierClearTableDone.
   ///
   /// In en, this message translates to:

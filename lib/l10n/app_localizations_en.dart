@@ -874,6 +874,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierClearTableConfirm => 'Yes, clear table';
 
   @override
+  String get moveTable => 'Move or merge table';
+
+  @override
+  String moveTableTitle(String number) {
+    return 'Move table $number to…';
+  }
+
+  @override
+  String get moveTableFree => 'Free: the tab moves here';
+
+  @override
+  String get moveTableMerge => 'Has a tab: the dishes join it';
+
+  @override
+  String moveTableMoved(String from, String to) {
+    return 'Table $from moved to table $to';
+  }
+
+  @override
+  String moveTableMerged(String from, String to) {
+    return 'Table $from merged into table $to';
+  }
+
+  @override
+  String get moveTableNothing => 'This table has nothing to move.';
+
+  @override
+  String get moveTablePickOther => 'Pick another table of this cafe.';
+
+  @override
   String cashierClearTableDone(String number) {
     return 'Table $number is clear';
   }

@@ -178,6 +178,16 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                 ),
               if (!free)
                 IconButton(
+                  key: Key('move-table-${item.id}'),
+                  tooltip: context.l10n.moveTable,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _pickMoveTarget(context, store, item),
+                  icon: const Icon(Icons.swap_horiz, size: 20, color: TawlaTokens.muted),
+                ),
+              if (!free)
+                IconButton(
                   key: Key('clear-table-${item.id}'),
                   tooltip: context.l10n.cashierClearTable,
                   visualDensity: VisualDensity.compact,
@@ -211,6 +221,59 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
           ],
           action,
         ],
+      ),
+    );
+  }
+
+  /// Picks where [table]'s tab goes: a free table takes it as it is, a busy one merges it into its
+  /// own tab.
+  Future<void> _pickMoveTarget(BuildContext context, CafeStore store, CafeTable table) async {
+    final l10n = context.l10n;
+    final targets = store.activeTables.where((other) => other.id != table.id).toList();
+    final target = await showDialog<CafeTable>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.moveTableTitle(table.number)),
+        content: SizedBox(
+          width: 380,
+          child: targets.isEmpty
+              ? Text(l10n.moveTablePickOther)
+              : ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final other in targets)
+                      ListTile(
+                        key: Key('move-to-${other.id}'),
+                        leading: Icon(store.openOrderFor(other.id) == null ? Icons.table_restaurant_outlined : Icons.merge_type),
+                        title: Text(l10n.cashierTableNumber(other.number)),
+                        subtitle: Text(store.openOrderFor(other.id) == null ? l10n.moveTableFree : l10n.moveTableMerge),
+                        onTap: () => Navigator.of(dialogContext).pop(other),
+                      ),
+                  ],
+                ),
+        ),
+        actions: [
+          OutlineAction(
+            label: MaterialLocalizations.of(dialogContext).cancelButtonLabel,
+            height: 44,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+        ],
+      ),
+    );
+    if (target == null || !context.mounted) return;
+    final merging = store.openOrderFor(target.id) != null;
+    final error = await store.moveTable(table.id, target.id);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error != null
+              ? l10n.errorText(error)
+              : merging
+                  ? l10n.moveTableMerged(table.number, target.number)
+                  : l10n.moveTableMoved(table.number, target.number),
+        ),
       ),
     );
   }

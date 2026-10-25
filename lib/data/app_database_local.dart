@@ -741,6 +741,57 @@ extension AppDatabaseLocal on AppDatabase {
     return null;
   }
 
+  /// Moves a table's unpaid tab and cart to [toId], or merges them into its tab, with the
+  /// server's rules (cashier_move_table): merged rounds are capped at the other tab's last round
+  /// so the kitchen does not print them again, guests add up and the first table is freed.
+  String? _localMoveTable(String fromId, String toId) {
+    if (fromId == toId) return 'pick another table';
+    final src = _tables.where((t) => t.id == fromId && !t.archived).firstOrNull;
+    final dst = _tables.where((t) => t.id == toId && !t.archived).firstOrNull;
+    if (src == null || dst == null) return 'table not found';
+    final srcOrder = _localOpenOrder(fromId);
+    final cart = _carts[fromId]?.lines ?? const <OrderLine>[];
+    if (srcOrder == null && cart.isEmpty) return 'nothing to move';
+    final dstOrder = _localOpenOrder(toId);
+    _store.transaction(() {
+      if (srcOrder != null && dstOrder == null) {
+        final moved = CafeOrder.fromJson({...srcOrder.toJson(), 'tableId': toId, 'tableNumber': dst.number});
+        _orders = [for (final o in _orders) o.id == srcOrder.id ? moved : o];
+        _store.putRecords('orders', [moved.toJson()]);
+      } else if (srcOrder != null && dstOrder != null) {
+        final last = dstOrder.latestRound;
+        final joined = CafeOrder.fromJson({
+          ...dstOrder.toJson(),
+          'lines': [
+            for (final line in dstOrder.lines) line.toJson(),
+            for (final line in srcOrder.lines) {...line.toJson(), 'round': min(line.round, last)},
+          ],
+        });
+        _orders = [
+          for (final o in _orders)
+            if (o.id != srcOrder.id) o.id == dstOrder.id ? joined : o,
+        ];
+        _store.deleteRecord('orders', srcOrder.id);
+        _store.putRecords('orders', [joined.toJson()]);
+      }
+      if (cart.isNotEmpty) {
+        _carts = {
+          ..._carts,
+          toId: CartState(tableId: toId, lines: [...?_carts[toId]?.lines, ...cart]),
+        }..remove(fromId);
+      }
+      dst
+        ..status = dst.status == TableStatus.free ? src.status : dst.status
+        ..guests = dst.guests + src.guests;
+      src
+        ..status = TableStatus.free
+        ..guests = 0;
+      _saveLocalTables();
+      _saveLocalCarts();
+    });
+    return null;
+  }
+
   /// The payment method picked for a table's tab before it is settled.
   String? _localSetTablePaymentType(String qrSlug, String typeId) {
     final table = _tables.where((t) => t.qrSlug == qrSlug).firstOrNull;

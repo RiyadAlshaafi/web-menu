@@ -468,6 +468,62 @@ void main() {
     });
   });
 
+  group('moving tables', () {
+    late MenuItem dish;
+    final t1 = CafeTable(id: 't1', number: '1', qrSlug: 'slug-1');
+    final t2 = CafeTable(id: 't2', number: '2', qrSlug: 'slug-2');
+    final t3 = CafeTable(id: 't3', number: '3', qrSlug: 'slug-3');
+
+    Future<void> send(String tableId, int qty) async {
+      await db.writeCarts({tableId: CartState(tableId: tableId, lines: _ticket(dish, qty))});
+      expect(await db.sendTableCart(tableId), isNull);
+    }
+
+    CafeOrder? tab(String tableId) => db.orders.where((o) => o.tableId == tableId && o.status != OrderStatus.paid).firstOrNull;
+
+    setUp(() async {
+      dish = await _dish();
+      for (final table in [t1, t2, t3]) {
+        table.status = TableStatus.free;
+      }
+      await db.writeTables([t1, t2, t3], changed: [t1, t2, t3]);
+      await _openShift(await _cashier('Sara', '1234'));
+    });
+
+    test('to a free table the same tab moves and the first table is freed', () async {
+      await send('t1', 2);
+      final before = tab('t1')!;
+
+      expect(await db.moveTable('t1', 't2'), isNull);
+
+      expect(tab('t1'), isNull);
+      expect(tab('t2')!.id, before.id, reason: 'the same order, so the kitchen does not print it again');
+      expect(tab('t2')!.tableNumber, '2');
+      expect(db.tables.firstWhere((t) => t.id == 't1').status, TableStatus.free);
+      expect(db.tables.firstWhere((t) => t.id == 't2').status, TableStatus.dining);
+    });
+
+    test('into a busy table the dishes join its tab within its rounds', () async {
+      await send('t1', 1);
+      await send('t1', 2);
+      await send('t3', 4);
+
+      expect(await db.moveTable('t1', 't3'), isNull);
+
+      expect(tab('t1'), isNull);
+      expect(tab('t3')!.itemCount, 7);
+      expect(tab('t3')!.lines.map((l) => l.round), everyElement(1), reason: 'capped at table 3\'s last round');
+      expect(db.orders.where((o) => o.status != OrderStatus.paid), hasLength(1));
+    });
+
+    test('an empty table, the same table or an unknown table is refused', () async {
+      expect(await db.moveTable('t1', 't2'), 'nothing to move');
+      await send('t1', 1);
+      expect(await db.moveTable('t1', 't1'), 'pick another table');
+      expect(await db.moveTable('t1', 'nope'), 'table not found');
+    });
+  });
+
   group('tables (open tab, pay later)', () {
     late MenuItem dish;
     late CashShift shift;

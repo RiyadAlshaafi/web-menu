@@ -873,6 +873,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierClearTableConfirm => 'نعم، أفرغ الطاولة';
 
   @override
+  String get moveTable => 'نقل أو دمج الطاولة';
+
+  @override
+  String moveTableTitle(String number) {
+    return 'نقل الطاولة $number إلى…';
+  }
+
+  @override
+  String get moveTableFree => 'فارغة: تنتقل الفاتورة إليها';
+
+  @override
+  String get moveTableMerge => 'لديها فاتورة: تنضم الأصناف إليها';
+
+  @override
+  String moveTableMoved(String from, String to) {
+    return 'نُقلت الطاولة $from إلى الطاولة $to';
+  }
+
+  @override
+  String moveTableMerged(String from, String to) {
+    return 'دُمجت الطاولة $from في الطاولة $to';
+  }
+
+  @override
+  String get moveTableNothing => 'لا يوجد ما يُنقل من هذه الطاولة.';
+
+  @override
+  String get moveTablePickOther => 'اختر طاولة أخرى من هذا المقهى.';
+
+  @override
   String cashierClearTableDone(String number) {
     return 'تم إفراغ الطاولة $number';
   }

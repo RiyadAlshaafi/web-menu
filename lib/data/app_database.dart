@@ -2276,6 +2276,16 @@ class AppDatabase {
     return _failure(result, 'The table was not cleared.');
   }
 
+  /// Moves a table's unpaid tab and cart to another table, or merges them into its tab; the first
+  /// table is freed. See cashier_move_table.
+  Future<String?> moveTable(String fromId, String toId) async {
+    if (isLocal) return _localMoveTable(fromId, toId);
+    if (client == null) return null;
+    _epoch++; // a load already running would bring back the moved order on the old table
+    final result = await _rpcResult('cashier_move_table', 'move table', {'p_from': fromId, 'p_to': toId});
+    return _failure(result, 'The table was not moved.');
+  }
+
   /// Asks for the bill: a guest passes the table's QR slug, staff the table id.
   Future<String?> requestBill({String? qrSlug, String? tableId}) async {
     if (client == null) return null;
