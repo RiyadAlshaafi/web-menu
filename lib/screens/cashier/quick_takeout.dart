@@ -203,9 +203,10 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                               },
                             )
                           : GridView.builder(
+                        // Taller cards with larger text are easier to hit on a touch till.
                         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 260,
-                          mainAxisExtent: 124,
+                          maxCrossAxisExtent: 240,
+                          mainAxisExtent: 144,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -288,16 +289,19 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                                 ],
                               ),
                       ),
-                      EyebrowLabel(context.l10n.payTypeLabel),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: paymentTypeId ?? (store.enabledPaymentTypes.isEmpty ? null : store.enabledPaymentTypes.first.id),
-                        items: [
-                          for (final type in store.enabledPaymentTypes)
-                            DropdownMenuItem(value: type.id, child: Text(type.label(store.locale))),
-                        ],
-                        onChanged: paying ? null : (value) => setState(() => paymentTypeId = value),
-                      ),
+                      // With no payment types set up there is nothing to pick, so no empty box is shown.
+                      if (store.enabledPaymentTypes.isNotEmpty) ...[
+                        EyebrowLabel(context.l10n.payTypeLabel),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          initialValue: paymentTypeId ?? store.enabledPaymentTypes.first.id,
+                          items: [
+                            for (final type in store.enabledPaymentTypes)
+                              DropdownMenuItem(value: type.id, child: Text(type.label(store.locale))),
+                          ],
+                          onChanged: paying ? null : (value) => setState(() => paymentTypeId = value),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -314,7 +318,9 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                         child: FilledButton(
                           onPressed: lines.isEmpty || paying ? null : () => _pay(store),
                           style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                          child: Text(context.l10n.quickTakeoutPay, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                          child: Text(
+                              lines.isEmpty ? context.l10n.quickTakeoutPay : context.l10n.quickTakeoutPayAmount(store.currency.format(total)),
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                         ),
                       ),
                     ],
@@ -500,7 +506,7 @@ class _TakeoutDishButton extends StatelessWidget {
                         name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, height: 1.25, color: enabled ? CafeColors.ink : CafeColors.inkMuted),
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, height: 1.25, color: enabled ? CafeColors.ink : CafeColors.inkMuted),
                       ),
                     ),
                     if (description.isNotEmpty) ...[
@@ -508,7 +514,7 @@ class _TakeoutDishButton extends StatelessWidget {
                       Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
                     ],
                     const Spacer(),
-                    Text(price, style: TextStyle(color: surfaces.header, fontWeight: FontWeight.w800, fontSize: 16)),
+                    Text(price, style: TextStyle(color: surfaces.header, fontWeight: FontWeight.w800, fontSize: 18)),
                   ],
                 ),
               ),

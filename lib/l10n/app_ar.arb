@@ -60,6 +60,7 @@
   "quickTakeoutAll": "الكل",
   "quickTakeoutEmpty": "اضغط طبقاً لبدء التذكرة.",
   "quickTakeoutPay": "تحصيل الدفع",
+  "quickTakeoutPayAmount": "تحصيل الدفع · {amount}",
   "quickTakeoutBusy": "هذا الإيصال قيد الحفظ.",
   "quickTakeoutPaid": "تم دفع طلب السفري.",
   "navLiveAlerts": "التنبيهات والطابور المباشر",

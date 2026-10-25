@@ -77,6 +77,22 @@ void main() {
     expect(store.takeoutCards, isTrue);
   });
 
+  testWidgets('the ticket is still there after leaving the takeout screen and coming back', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    store.cafe = {...store.cafe, 'takeoutLayout': 'classic'};
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    await tapAndWait(tester, find.text('Burger').first);
+    expect(find.textContaining('Take payment · 10.000'), findsOneWidget, reason: 'Pay shows the total');
+
+    await pumpAdminScreen(tester, const SizedBox(), store);
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    expect(store.takeoutTicket, hasLength(1));
+    expect(find.textContaining('Take payment · 10.000'), findsOneWidget);
+
+    store.signOut();
+    expect(store.takeoutTicket, isEmpty, reason: 'the next cashier starts with an empty ticket');
+  });
+
   testWidgets('the takeout screen choice is kept only after Save is pressed', (tester) async {
     final store = (await tester.runAsync(storeWithBurger))!;
     await pumpAdminScreen(tester, const TakeoutLayoutCard(), store);

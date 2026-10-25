@@ -175,6 +175,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickTakeoutPay => 'Take payment';
 
   @override
+  String quickTakeoutPayAmount(String amount) {
+    return 'Take payment · $amount';
+  }
+
+  @override
   String get quickTakeoutBusy => 'That receipt is already being saved.';
 
   @override

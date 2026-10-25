@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'Take payment'**
   String get quickTakeoutPay;
 
+  /// No description provided for @quickTakeoutPayAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Take payment · {amount}'**
+  String quickTakeoutPayAmount(String amount);
+
   /// No description provided for @quickTakeoutBusy.
   ///
   /// In en, this message translates to:

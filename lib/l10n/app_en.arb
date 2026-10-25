@@ -77,6 +77,14 @@
   "quickTakeoutAll": "All",
   "quickTakeoutEmpty": "Tap a dish to start the ticket.",
   "quickTakeoutPay": "Take payment",
+  "quickTakeoutPayAmount": "Take payment · {amount}",
+  "@quickTakeoutPayAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "quickTakeoutBusy": "That receipt is already being saved.",
   "quickTakeoutPaid": "Takeout paid.",
   "navLiveAlerts": "Live Alerts & Queue",

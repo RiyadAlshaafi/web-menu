@@ -175,6 +175,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickTakeoutPay => 'تحصيل الدفع';
 
   @override
+  String quickTakeoutPayAmount(String amount) {
+    return 'تحصيل الدفع · $amount';
+  }
+
+  @override
   String get quickTakeoutBusy => 'هذا الإيصال قيد الحفظ.';
 
   @override
