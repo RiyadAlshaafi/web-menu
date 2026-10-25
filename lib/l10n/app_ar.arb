@@ -399,6 +399,7 @@
   "adminAutoPrintReceiptHint": "يطبع عند تسوية طلب داخلي أو سفري: على طابعة الكاشير في هذا الجهاز إن اختيرت، وإلا (على الويب أو بدون طابعة) تفتح نافذة الطباعة.",
   "receiptThankYou": "شكراً لكم",
   "receiptPrintFailed": "تم حفظ البيع، لكن تعذرت طباعة الإيصال.",
+  "receiptReprintFailed": "تعذرت طباعة الإيصال. تحقق من طابعة الكاشير في الإعدادات.",
   "guestLocationRetry": "إعادة المحاولة",
   "cashierAddExpense": "إضافة مصروف / صرف نقدي",
   "cashierExpenseAmount": "المبلغ",

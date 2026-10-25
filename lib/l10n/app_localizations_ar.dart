@@ -1205,6 +1205,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get receiptPrintFailed => 'تم حفظ البيع، لكن تعذرت طباعة الإيصال.';
 
   @override
+  String get receiptReprintFailed =>
+      'تعذرت طباعة الإيصال. تحقق من طابعة الكاشير في الإعدادات.';
+
+  @override
   String get guestLocationRetry => 'إعادة المحاولة';
 
   @override

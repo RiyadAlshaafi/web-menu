@@ -1210,6 +1210,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sale was saved, but the receipt could not be printed.';
 
   @override
+  String get receiptReprintFailed =>
+      'The receipt could not be printed. Check the cashier printer in Settings.';
+
+  @override
   String get guestLocationRetry => 'Retry';
 
   @override

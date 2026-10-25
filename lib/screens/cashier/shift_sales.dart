@@ -258,18 +258,19 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       actions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OutlinedButton.icon(
-            style: _rowActionStyle,
-            onPressed: () {
-              final host = context;
-              showReceiptPrint(store, payment, host.l10n).catchError((error) {
-                if (!host.mounted) return;
-                ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptPrintFailed)));
-              });
-            },
-            icon: const Icon(Icons.print_outlined, size: 16),
-            label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-          ),
+          if (!payment.isVoided)
+            OutlinedButton.icon(
+              style: _rowActionStyle,
+              onPressed: () {
+                final host = context;
+                showReceiptPrint(store, payment, host.l10n).catchError((error) {
+                  if (!host.mounted) return;
+                  ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptReprintFailed)));
+                });
+              },
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+            ),
           if (store.canVoid(payment)) ...[
             const SizedBox(width: 6),
             Tooltip(

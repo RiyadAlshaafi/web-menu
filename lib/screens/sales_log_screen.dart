@@ -10,6 +10,7 @@ import '../core/choice_labels.dart';
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
 import '../printing/export_pdfs.dart';
+import '../printing/receipt_print.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
 import '../core/time_format.dart';
@@ -457,6 +458,18 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                   onPressed: () => showVoidSaleDialog(context, live, current),
                   icon: const Icon(Icons.block, size: 18),
                   label: Text(context.l10n.voidSale),
+                ),
+              if (!current.isVoided)
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final host = context;
+                    showReceiptPrint(live, current, host.l10n).catchError((_) {
+                      if (!host.mounted) return;
+                      ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptReprintFailed)));
+                    });
+                  },
+                  icon: const Icon(Icons.print_outlined, size: 18),
+                  label: Text(context.l10n.cashierPrintReceipt),
                 ),
               TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
             ],

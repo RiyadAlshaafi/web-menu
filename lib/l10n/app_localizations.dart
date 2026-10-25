@@ -2258,6 +2258,12 @@ abstract class AppLocalizations {
   /// **'The sale was saved, but the receipt could not be printed.'**
   String get receiptPrintFailed;
 
+  /// No description provided for @receiptReprintFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The receipt could not be printed. Check the cashier printer in Settings.'**
+  String get receiptReprintFailed;
+
   /// No description provided for @guestLocationRetry.
   ///
   /// In en, this message translates to:

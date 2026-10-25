@@ -681,6 +681,7 @@
   "adminAutoPrintReceiptHint": "Prints when a dine-in or takeout sale is settled: on this till's cashier printer when one is picked, otherwise (web, or no printer) the print dialog opens.",
   "receiptThankYou": "Thank you",
   "receiptPrintFailed": "The sale was saved, but the receipt could not be printed.",
+  "receiptReprintFailed": "The receipt could not be printed. Check the cashier printer in Settings.",
   "guestLocationRetry": "Retry",
   "cashierAddExpense": "Add Expense / Cash Out",
   "cashierExpenseAmount": "Amount",
