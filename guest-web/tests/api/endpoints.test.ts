@@ -420,7 +420,7 @@ describe("POST /api/guest/payment-type", () => {
 });
 
 describe("POST /api/guest/refusal", () => {
-  it("confirms the refusal and asks for the bill in one call", async () => {
+  it("clears the refusal notice in one call", async () => {
     const calls = mockSupabase(() => ({ body: { ok: true } }));
     expect((await refusal.POST(post("/api/guest/refusal", { slug: SLUG }))).status).toBe(200);
     expect(calls.map((c) => c.name)).toEqual(["guest_confirm_refusal"]);

@@ -84,7 +84,7 @@ export function RefusalNotice() {
         onClick={() => void confirmRefusal()}
         className="mt-2 min-h-[44px] rounded-full bg-brand px-5 text-sm font-bold text-on-brand"
       >
-        {text("guestConfirmRequestBill")}
+        {text("guestRefusalOk")}
       </button>
     </div>
   );

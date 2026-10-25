@@ -95,7 +95,10 @@ test("the cashier's status changes show on the tab, and the bill opens once serv
   await expect
     .poll(() => db(`select p.name_en from orders o join payment_types p on p.id = o.payment_type_id join dining_tables t on t.id = o.table_id where t.qr_slug = '${TABLE}' and o.status <> 'paid'`))
     .toBe("Card");
-  expect(db(`select status from dining_tables where qr_slug = '${TABLE}'`)).toBe("billRequested");
+  // Opening the bill page and picking a payment type asks for nothing yet.
+  expect(db(`select status from dining_tables where qr_slug = '${TABLE}'`)).not.toBe("billRequested");
+  await page.getByRole("button", { name: "Confirm and request bill" }).click();
+  await expect.poll(() => db(`select status from dining_tables where qr_slug = '${TABLE}'`)).toBe("billRequested");
 });
 
 test("an item refused by the cashier is confirmed by the guest", async ({ page }) => {
@@ -103,7 +106,7 @@ test("an item refused by the cashier is confirmed by the guest", async ({ page }
   await openMenu(page);
   const alert = page.getByRole("alert").filter({ hasText: "Item removed" });
   await expect(alert).toContainText("Item removed: Mint Tea — currently unavailable.");
-  await alert.getByRole("button", { name: "Confirm and request bill" }).click();
+  await alert.getByRole("button", { name: "OK" }).click();
   await expect(alert).toBeHidden();
   expect(db(`select awaiting_customer_confirmation from orders where table_id = (select id from dining_tables where qr_slug = '${TABLE}') and status <> 'paid'`)).toBe("f");
 });

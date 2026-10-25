@@ -143,21 +143,17 @@ begin
   assert not (r->>'ordering_open')::boolean, 'closed with no cashier online: ' || r::text;
   r := public.guest_call_staff('web-slug-1');
   assert r = '{"ok": true, "reused": true}'::jsonb or r->>'error' = 'cashier_offline', 'call staff offline: ' || r::text;
+  -- OK only clears the notice, so it works with no cashier online.
   r := public.guest_confirm_refusal('web-slug-1');
-  assert r = '{"ok": false, "error": "cashier_offline"}'::jsonb, 'refusal confirm offline: ' || r::text;
-  r := public.guest_tab('web-slug-1');
-  assert (r->'order'->>'awaiting_confirmation')::boolean and r->'order'->>'refusal_notice' = 'Tea removed',
-    'a refused bill request keeps the notice: ' || r::text;
-
-  -- ---------------------------------------------------------------- refusal, cashier back
-  execute 'reset role';
-  update public.cashier_presence set last_seen = now() where session_id = sid;
-  execute 'set local role anon';
-  r := public.guest_confirm_refusal('web-slug-1');
-  assert r = '{"ok": true}'::jsonb, 'refusal confirm asks for the bill: ' || r::text;
+  assert r = '{"ok": true}'::jsonb, 'refusal OK offline: ' || r::text;
   r := public.guest_tab('web-slug-1');
   assert not (r->'order'->>'awaiting_confirmation')::boolean and r->'order'->>'refusal_notice' = ''
-    and r->'table'->>'status' = 'billRequested', 'notice cleared, bill asked: ' || r::text;
+    and r->'table'->>'status' <> 'billRequested', 'notice cleared, no bill asked: ' || r::text;
+  execute 'reset role';
+  select count(*) into n from public.staff_calls where table_id = tid and kind = 'bill' and not resolved;
+  assert n = 0, 'refusal OK opens no bill call, got ' || n;
+  update public.cashier_presence set last_seen = now() where session_id = sid;
+  execute 'set local role anon';
 
   -- ---------------------------------------------------------------- paid orders drop off the tab
   execute 'reset role';

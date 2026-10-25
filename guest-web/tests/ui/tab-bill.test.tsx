@@ -40,12 +40,12 @@ describe("TabScreen", () => {
     expect(calls.some((c) => c.url.includes("/bill"))).toBe(false);
   });
 
-  it("asks for the bill once served and opens the bill page", async () => {
+  it("opens the bill page once served, without asking for the bill before a payment type is picked", async () => {
     const calls = mockApi((url) => (url.includes("/bill") ? ok({ ok: true }) : ok(tabWith("served"))));
     await renderGuest(<TabScreen />, { tab: tabWith("served") });
     fireEvent.click(screen.getByRole("button", { name: "Request Bill" }));
     await waitFor(() => expect(router.push).toHaveBeenCalledWith(`/t/${SLUG}/bill?lang=en`));
-    expect(calls.find((c) => c.url.endsWith("/bill"))!.body).toEqual({ slug: SLUG });
+    expect(calls.some((c) => c.url.endsWith("/bill"))).toBe(false);
   });
 
   it("calls the server, and says so when ordering is paused", async () => {

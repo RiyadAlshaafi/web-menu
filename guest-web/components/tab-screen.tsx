@@ -56,7 +56,7 @@ function StatusSteps({ status }: { status: string }) {
 
 // The live tab (today's /t/<slug>/cart): order status, this phone's unsent dishes, totals.
 export function TabScreen() {
-  const { tab, lines, lang, text, setQty, canPlaceOrder, blockedMessage, showToast, callStaff, requestBill, href, status } = useGuest();
+  const { tab, lines, lang, text, setQty, canPlaceOrder, blockedMessage, showToast, callStaff, href, status } = useGuest();
   const router = useRouter();
   const lineName = useLineName();
   const order = tab?.order ?? null;
@@ -171,7 +171,8 @@ export function TabScreen() {
                       showToast(text("guestBillAfterServed"));
                       return;
                     }
-                    if (await requestBill()) router.push(href("/bill"));
+                    // The bill screen sends the request, once a payment type is picked.
+                    router.push(href("/bill"));
                   }}
                 >
                   {text("guestRequestBill")}
