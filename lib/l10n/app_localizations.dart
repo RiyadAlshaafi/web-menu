@@ -3620,6 +3620,36 @@ abstract class AppLocalizations {
   /// **'Cashier printer (receipts)'**
   String get printersReceipt;
 
+  /// No description provided for @cashDrawerSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the cash drawer after cash sales'**
+  String get cashDrawerSwitch;
+
+  /// No description provided for @cashDrawerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For a drawer plugged into the cashier printer. It opens after each sale paid in cash, on this till only.'**
+  String get cashDrawerHint;
+
+  /// No description provided for @cashDrawerTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the drawer now'**
+  String get cashDrawerTest;
+
+  /// No description provided for @cashDrawerTestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent the open command to the cashier printer.'**
+  String get cashDrawerTestSent;
+
+  /// No description provided for @cashDrawerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The cash drawer did not open. Check the cashier printer, or open it with its key.'**
+  String get cashDrawerFailed;
+
   /// No description provided for @printersReceiptNone.
   ///
   /// In en, this message translates to:

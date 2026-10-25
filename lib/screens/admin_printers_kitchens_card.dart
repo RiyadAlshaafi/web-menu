@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n_ext.dart';
 import '../features/app_feature.dart';
 import '../models/models.dart';
+import '../printing/cash_drawer.dart';
 import '../printing/kitchen_ticket.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
@@ -28,6 +29,7 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
   bool loading = true;
   bool supported = false;
   bool testing = false;
+  bool drawer = false;
   List<Printer> printers = const [];
   String? kitchen;
   String? receipt;
@@ -55,6 +57,7 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
       saved = await TillPrinters.settings();
     }
     final perKitchen = await TillPrinters.kitchenPrinters();
+    final drawerOn = await CashDrawer.enabled();
     if (!mounted) return;
     setState(() {
       loading = false;
@@ -63,7 +66,15 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
       kitchen = saved.kitchen;
       receipt = saved.receipt;
       picked = perKitchen;
+      drawer = drawerOn;
     });
+  }
+
+  Future<void> _openDrawer() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final opened = await CashDrawer.open();
+    messenger.showSnackBar(SnackBar(content: Text(opened ? l10n.cashDrawerTestSent : l10n.cashDrawerFailed)));
   }
 
   Future<void> _test() async {
@@ -194,6 +205,21 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
             TillPrinters.saveReceipt(value);
           },
         ),
+        if (receipt != null) ...[
+          const SizedBox(height: 4),
+          SwitchRow(
+            title: context.l10n.cashDrawerSwitch,
+            hint: context.l10n.cashDrawerHint,
+            value: drawer,
+            onChanged: (value) {
+              setState(() => drawer = value);
+              CashDrawer.setEnabled(value);
+            },
+            divider: false,
+          ),
+          if (drawer)
+            OutlineAction(label: context.l10n.cashDrawerTest, icon: Icons.point_of_sale_outlined, onPressed: _openDrawer),
+        ],
         if (kitchenOn && kitchen != null) ...[
           const SizedBox(height: 12),
           OutlineAction(

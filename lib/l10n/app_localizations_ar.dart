@@ -1995,6 +1995,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get printersReceipt => 'طابعة الكاشير (الإيصالات)';
 
   @override
+  String get cashDrawerSwitch => 'فتح درج النقود بعد البيع النقدي';
+
+  @override
+  String get cashDrawerHint =>
+      'للدرج الموصول بطابعة الكاشير. يُفتح بعد كل بيع مدفوع نقداً، على هذا الجهاز فقط.';
+
+  @override
+  String get cashDrawerTest => 'افتح الدرج الآن';
+
+  @override
+  String get cashDrawerTestSent => 'تم إرسال أمر الفتح إلى طابعة الكاشير.';
+
+  @override
+  String get cashDrawerFailed =>
+      'لم يُفتح درج النقود. تحقق من طابعة الكاشير، أو افتحه بمفتاحه.';
+
+  @override
   String get printersReceiptNone => 'لا شيء (اسأل كل مرة)';
 
   @override

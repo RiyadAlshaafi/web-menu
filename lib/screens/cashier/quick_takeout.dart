@@ -103,7 +103,10 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
     }
     final added = store.payments.where((payment) => !known.contains(payment.id));
     final paid = added.isEmpty ? null : added.first;
-    if (paid != null) printKitchenTakeout(context, store, paid, sold);
+    if (paid != null) {
+      printKitchenTakeout(context, store, paid, sold);
+      openDrawerAfterSale(context, store, paid);
+    }
     if (store.autoPrintReceipt) {
       final payment = paid;
       if (payment != null) {

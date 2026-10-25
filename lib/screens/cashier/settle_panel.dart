@@ -191,6 +191,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                                 }
                                 navigator.pop();
                                 final payment = store.paymentForOrder(orderId);
+                                if (payment != null && host.mounted) openDrawerAfterSale(host, store, payment);
                                 if (!store.autoPrintReceipt || payment == null || !host.mounted) return;
                                 unawaited(showReceiptPrint(store, payment, host.l10n).catchError((_) {
                                   if (!host.mounted) return;

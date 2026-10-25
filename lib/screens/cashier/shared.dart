@@ -198,6 +198,16 @@ void printKitchenTakeout(BuildContext context, CafeStore store, Payment payment,
   unawaited(TillPrinters.printTakeout(store, payment, lines, l10n).then((result) => _reportKitchenPrint(messenger, l10n, result)));
 }
 
+/// Opens the cash drawer after a cash sale when this till has it switched on; says so when it
+/// did not open, so the cashier opens it by key.
+void openDrawerAfterSale(BuildContext context, CafeStore store, Payment payment) {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
+  unawaited(CashDrawer.afterSale(store, payment).then((opened) {
+    if (!opened) messenger.showSnackBar(SnackBar(content: Text(l10n.cashDrawerFailed)));
+  }));
+}
+
 void _reportKitchenPrint(ScaffoldMessengerState messenger, AppLocalizations l10n, KitchenPrintReport report) {
   final names = report.failed.where((name) => name.isNotEmpty).toList();
   if (report.failed.isEmpty) return;

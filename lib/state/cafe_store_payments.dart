@@ -33,6 +33,14 @@ extension CafeStorePayments on CafeStore {
         : match.first.label(locale);
   }
 
+  /// A sale paid in cash: no payment type (the default), or a type named Cash.
+  bool isCashSale(Payment payment) {
+    final id = payment.paymentTypeId;
+    if (id == null || id.isEmpty) return true;
+    final type = paymentTypes.where((item) => item.id == id).firstOrNull;
+    return (type?.nameEn ?? payment.paymentTypeNameEn ?? '').trim().toLowerCase() == 'cash';
+  }
+
   /// Method name of a sale, read from the copy saved with the receipt first.
   String paymentLabel(Payment payment) {
     final saved = locale == 'ar' ? payment.paymentTypeNameAr : payment.paymentTypeNameEn;

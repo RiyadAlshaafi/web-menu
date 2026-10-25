@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../core/choice_labels.dart';
 import '../l10n/l10n_ext.dart';
+import '../printing/cash_drawer.dart';
 import '../printing/kitchen_ticket.dart';
 import '../printing/receipt_print.dart';
 import '../core/time_format.dart';

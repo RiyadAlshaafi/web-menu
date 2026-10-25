@@ -2005,6 +2005,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get printersReceipt => 'Cashier printer (receipts)';
 
   @override
+  String get cashDrawerSwitch => 'Open the cash drawer after cash sales';
+
+  @override
+  String get cashDrawerHint =>
+      'For a drawer plugged into the cashier printer. It opens after each sale paid in cash, on this till only.';
+
+  @override
+  String get cashDrawerTest => 'Open the drawer now';
+
+  @override
+  String get cashDrawerTestSent =>
+      'Sent the open command to the cashier printer.';
+
+  @override
+  String get cashDrawerFailed =>
+      'The cash drawer did not open. Check the cashier printer, or open it with its key.';
+
+  @override
   String get printersReceiptNone => 'None (ask each time)';
 
   @override
