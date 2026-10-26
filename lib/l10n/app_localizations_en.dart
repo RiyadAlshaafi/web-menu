@@ -2533,4 +2533,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get summaryCardsNote =>
       'Cards: server totals for the dates, type and employee picked. The search box only narrows the list.';
+
+  @override
+  String get filtersButton => 'Filters';
+
+  @override
+  String filtersButtonActive(int count) {
+    return 'Filters ($count)';
+  }
+
+  @override
+  String pdfTotalExclVoid(String amount) {
+    return 'Total (excl. void): $amount';
+  }
 }

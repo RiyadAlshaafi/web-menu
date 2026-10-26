@@ -23,6 +23,7 @@ class AdminStockScreen extends StatefulWidget {
 class _AdminStockScreenState extends State<AdminStockScreen> {
   final search = TextEditingController();
   String? categoryId;
+  bool showFilters = false;
 
   @override
   void dispose() {
@@ -42,8 +43,8 @@ class _AdminStockScreenState extends State<AdminStockScreen> {
         children: [
           Text(context.l10n.stockHelp, style: const TextStyle(color: TawlaTokens.muted, fontSize: 14)),
           const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
+          Builder(
+            builder: (context) {
               final field = PageSearchField(controller: search, hint: context.l10n.dishSearchHint, onChanged: (_) => setState(() {}));
               final select = SelectBox<String?>(
                 value: categoryId,
@@ -56,13 +57,19 @@ class _AdminStockScreenState extends State<AdminStockScreen> {
                 ],
                 onChanged: (value) => setState(() => categoryId = value),
               );
-              if (constraints.maxWidth < 600) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [field, const SizedBox(height: 12), select],
-                );
-              }
-              return Row(children: [Expanded(child: field), const SizedBox(width: 12), select]);
+              final button = FiltersButton(
+                open: showFilters,
+                active: categoryId == null ? 0 : 1,
+                height: 52,
+                onPressed: () => setState(() => showFilters = !showFilters),
+              );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [Expanded(child: field), const SizedBox(width: 12), button]),
+                  if (showFilters) ...[const SizedBox(height: 12), select],
+                ],
+              );
             },
           ),
           const SizedBox(height: 18),

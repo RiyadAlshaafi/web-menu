@@ -1,4 +1,6 @@
 import 'package:flutter/services.dart';
 
-/// The system's alert sound (Windows "Asterisk" on the desktop till).
-void playAlert() => SystemSound.play(SystemSoundType.alert);
+import 'alert_sound.dart';
+
+/// The system's alert sound (Windows "Asterisk" on the desktop till), the same for every kind.
+void playAlert(AlertKind kind) => SystemSound.play(SystemSoundType.alert);

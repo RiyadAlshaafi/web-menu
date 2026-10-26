@@ -794,5 +794,22 @@
   "reportPrint": "طباعة",
   "receiptPreviewReport": "تقرير المبيعات",
   "summaryNeedsServer": "هذه المجاميع من الخادم، وتعذّر الوصول إليه. حاول مرة أخرى عند عودة الاتصال.",
-  "summaryCardsNote": "البطاقات: مجاميع الخادم للتواريخ والنوع والموظف المختارة. مربع البحث يضيّق القائمة فقط."
+  "summaryCardsNote": "البطاقات: مجاميع الخادم للتواريخ والنوع والموظف المختارة. مربع البحث يضيّق القائمة فقط.",
+  "filtersButton": "تصفية",
+  "filtersButtonActive": "تصفية ({count})",
+  "@filtersButtonActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfTotalExclVoid": "الإجمالي (بدون الملغاة): {amount}",
+  "@pdfTotalExclVoid": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

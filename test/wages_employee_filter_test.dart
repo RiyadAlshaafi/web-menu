@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/core/ledger.dart';
 import 'package:menu_web_v1/core/sales_report.dart';
 import 'package:menu_web_v1/data/app_database.dart';
+import 'package:menu_web_v1/widgets/tawla_ui.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/screens/admin_wages_screen.dart';
@@ -123,6 +124,12 @@ _ServerStore _store() => _ServerStore()
     _expense('e6b', 45, 'Sara bonus fixed', staff: 'c1', staffName: 'Sara Ali', editedFrom: 'e6a'),
   ];
 
+/// Opens the wages screen with its filter row showing.
+Future<void> _pumpWages(WidgetTester tester, CafeStore store) async {
+  await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+  await tapVisible(tester, find.text(l10n.filtersButton));
+}
+
 Future<void> _pick(WidgetTester tester, String current, String option) async {
   await tapVisible(tester, find.text(current).first);
   await tapVisible(tester, find.text(option).last);
@@ -156,9 +163,21 @@ void main() {
   });
 
   group('the wages screen', () {
+    testWidgets('filters stay hidden until the Filters button, which counts the ones in use', (tester) async {
+      await pumpAdminScreen(tester, const AdminWagesScreen(), _store());
+      expect(find.text(l10n.expenseAllEmployees), findsNothing);
+
+      await tapVisible(tester, find.text(l10n.filtersButton));
+      await _pick(tester, l10n.expenseAllEmployees, 'Sara Ali');
+      await tapVisible(tester, find.text(l10n.filtersButtonActive(1)));
+
+      expect(find.byType(SelectBox<EmployeeFilter>), findsNothing, reason: 'the row is hidden again');
+      expect(find.text('Sara advance'), findsOneWidget, reason: 'the hidden filter still applies');
+    });
+
     testWidgets('all employees: every expense, and Net is sales minus all expenses', (tester) async {
       final store = _store();
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.expenseAllEmployees), findsOneWidget);
@@ -173,7 +192,7 @@ void main() {
     });
 
     testWidgets('the dropdown offers all, none and every employee, also removed ones', (tester) async {
-      await pumpAdminScreen(tester, const AdminWagesScreen(), _store());
+      await _pumpWages(tester, _store());
 
       await tapVisible(tester, find.text(l10n.expenseAllEmployees));
       for (final option in [l10n.expenseNoEmployee, 'Sara Ali', 'Omar', 'Lina', 'Old Hani']) {
@@ -183,7 +202,7 @@ void main() {
 
     testWidgets('one employee: only their expenses, sales stay whole cafe, no Net card', (tester) async {
       final store = _store();
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
 
       await _pick(tester, l10n.expenseAllEmployees, 'Sara Ali');
 
@@ -199,7 +218,7 @@ void main() {
 
     testWidgets('a removed employee is found by the saved name', (tester) async {
       final store = _store();
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
 
       await _pick(tester, l10n.expenseAllEmployees, 'Old Hani');
 
@@ -210,7 +229,7 @@ void main() {
 
     testWidgets('no employee: only expenses paid to and tagged with no one', (tester) async {
       final store = _store();
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
 
       await _pick(tester, l10n.expenseAllEmployees, l10n.expenseNoEmployee);
 
@@ -231,7 +250,7 @@ void main() {
       });
       final file = '${dir.path}${Platform.pathSeparator}out.csv';
       FilePicker.platform = _FakePicker(file);
-      await pumpAdminScreen(tester, const AdminWagesScreen(), _store());
+      await _pumpWages(tester, _store());
 
       await _pick(tester, l10n.expenseAllEmployees, 'Sara Ali');
       await tapVisible(tester, find.text(l10n.salesExportCsv));
@@ -250,7 +269,7 @@ void main() {
           // Earlier this month, no longer in the loaded list.
           _expense('old', 500, 'Rent', staff: 'k1', staffName: 'Lina'),
         ];
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
       await tester.pumpAndSettle();
 
       expect(store.asked, isNotEmpty);
@@ -263,7 +282,7 @@ void main() {
 
     testWidgets('without the server the cards say so instead of showing partial totals', (tester) async {
       final store = _store()..error = 'network';
-      await pumpAdminScreen(tester, const AdminWagesScreen(), store);
+      await _pumpWages(tester, store);
       await tester.pumpAndSettle();
 
       // Three cards, plus the two empty date boxes, which show a dash too.

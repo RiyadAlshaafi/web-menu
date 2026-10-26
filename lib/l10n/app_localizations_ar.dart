@@ -2520,4 +2520,17 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get summaryCardsNote =>
       'البطاقات: مجاميع الخادم للتواريخ والنوع والموظف المختارة. مربع البحث يضيّق القائمة فقط.';
+
+  @override
+  String get filtersButton => 'تصفية';
+
+  @override
+  String filtersButtonActive(int count) {
+    return 'تصفية ($count)';
+  }
+
+  @override
+  String pdfTotalExclVoid(String amount) {
+    return 'الإجمالي (بدون الملغاة): $amount';
+  }
 }

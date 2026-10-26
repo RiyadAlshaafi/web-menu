@@ -1164,5 +1164,22 @@
   "reportPrint": "Print",
   "receiptPreviewReport": "Sales report",
   "summaryNeedsServer": "These totals come from the server, which could not be reached. Try again when the connection is back.",
-  "summaryCardsNote": "Cards: server totals for the dates, type and employee picked. The search box only narrows the list."
+  "summaryCardsNote": "Cards: server totals for the dates, type and employee picked. The search box only narrows the list.",
+  "filtersButton": "Filters",
+  "filtersButtonActive": "Filters ({count})",
+  "@filtersButtonActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfTotalExclVoid": "Total (excl. void): {amount}",
+  "@pdfTotalExclVoid": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

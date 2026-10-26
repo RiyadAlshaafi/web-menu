@@ -41,6 +41,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   String? tableNumber;
   String? methodId;
   String? shiftId;
+  bool showFilters = false;
   _Sort sort = _Sort.when;
   bool ascending = false;
   int page = 0;
@@ -113,6 +114,13 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       ),
     ];
 
+    final filtersButton = FiltersButton(
+      open: showFilters,
+      active: [from, to, shiftId, cashierName, tableNumber, methodId].where((value) => value != null).length,
+      height: 52,
+      onPressed: () => setState(() => showFilters = !showFilters),
+    );
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -126,11 +134,14 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            Wrap(spacing: 12, runSpacing: 12, children: [SizedBox(width: 340, child: search), ...filters]),
+            Wrap(spacing: 12, runSpacing: 12, children: [SizedBox(width: 340, child: search), filtersButton]),
+            if (showFilters) ...[const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: filters)],
           ] else ...[
             Row(
               children: [
                 Expanded(child: search),
+                const SizedBox(width: 12),
+                filtersButton,
                 const SizedBox(width: 12),
                 exportCsv,
                 const SizedBox(width: 12),
@@ -139,8 +150,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
                 const PrintReportButton(height: 52),
               ],
             ),
-            const SizedBox(height: 16),
-            Wrap(spacing: 10, runSpacing: 10, children: filters),
+            if (showFilters) ...[const SizedBox(height: 16), Wrap(spacing: 10, runSpacing: 10, children: filters)],
           ],
           const SizedBox(height: 16),
           Expanded(

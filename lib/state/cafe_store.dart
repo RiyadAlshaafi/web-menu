@@ -220,6 +220,7 @@ class CafeStore extends ChangeNotifier {
   int newOrderAlerts = 0;
   List<CafeOrder> lastNewOrders = const [];
   final NewOrderWatch _newOrderWatch = NewOrderWatch();
+  final NewRequestWatch _newRequestWatch = NewRequestWatch();
   AppLifecycleListener? _lifecycle;
 
   void startLiveSync() {
@@ -228,6 +229,8 @@ class CafeStore extends ChangeNotifier {
     _newOrderWatch
       ..reset()
       ..newOrders(orders);
+    _newRequestWatch.reset();
+    _learnRequests();
     // A tab or window coming back may have missed pings while it slept: catch up at once.
     _lifecycle ??= AppLifecycleListener(
       onResume: () {
@@ -319,20 +322,37 @@ class CafeStore extends ChangeNotifier {
     if (next != _syncStamp) {
       _hydrateOperational();
       _syncStampCache = next;
-      _alertNewOrders();
+      if (!_alertNewOrders()) _alertNewRequests();
       notifyListeners();
     }
     await ensureShiftNumbers();
   }
 
   /// Rings for orders not seen before; [exceptTableId]'s order is the cashier's own and stays quiet.
-  void _alertNewOrders({String? exceptTableId}) {
+  /// Returns whether it rang, so a bill or call in the same batch does not ring over it.
+  bool _alertNewOrders({String? exceptTableId}) {
     final fresh = _newOrderWatch.newOrders(orders).where((order) => order.tableId != exceptTableId).toList();
-    if (fresh.isEmpty || authKind != AuthKind.cashier) return;
+    if (fresh.isEmpty || authKind != AuthKind.cashier) return false;
     lastNewOrders = fresh;
     newOrderAlerts++;
-    playNewOrderSound();
+    playAlertSound(AlertKind.order);
+    return true;
   }
+
+  Iterable<({String kind, String tableId})> get _openRequests => [
+    for (final call in openCalls) (kind: call.kind, tableId: call.tableId),
+    for (final table in billTables) (kind: 'bill', tableId: table.id),
+  ];
+
+  /// Rings for a guest's new bill request or staff call; a bill outranks a call.
+  void _alertNewRequests() {
+    final fresh = _newRequestWatch.newKinds(_openRequests);
+    if (fresh.isEmpty || authKind != AuthKind.cashier) return;
+    playAlertSound(fresh.contains('bill') ? AlertKind.bill : AlertKind.call);
+  }
+
+  /// Learns the requests on screen without ringing: the cashier's own bill or call stays quiet.
+  void _learnRequests() => _newRequestWatch.newKinds(_openRequests);
 
   bool _assigningNumbers = false;
 

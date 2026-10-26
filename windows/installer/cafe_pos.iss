@@ -60,9 +60,11 @@ Type: files; Name: "{app}\admin_reset.json"
 [Code]
 // Pages: update choice (only when Cafe POS is already installed) -> password (checked online) ->
 // Online/Offline -> cafe slot (online only) -> admin reset (offline only) -> feature checkboxes.
-// Updating with "keep settings" asks the password, then skips the rest like a silent update: nothing rewritten. The answers are written to {app}\features.json, which
-// lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages
-// and leave features.json as it is.
+// Updating with "keep settings" on a till that was set up (it has features.json) asks no password and
+// skips the rest like a silent update: nothing rewritten. Without features.json the app would turn every
+// feature on, so there the password is still asked. The answers are written to {app}\features.json, which
+// lib/features/app_feature.dart reads. Keys must match AppFeature.key. Silent updates show no pages,
+// leave features.json as it is, and refuse to run where there is none (see PrepareToInstall).
 // The admin reset writes {app}\admin_reset.json, a one-time ticket signed by the server
 // (supabase/functions/admin-reset-ticket, after the seller password check) that
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
@@ -256,10 +258,16 @@ begin
   end;
 end;
 
-// An update that keeps this till's mode, slot and features (the password is still asked).
+// An update that keeps this till's mode, slot and features.
 function KeepSettings: Boolean;
 begin
   Result := Installed and (UpdatePage.SelectedValueIndex = 0);
+end;
+
+// A till an earlier setup finished (its choices are saved). Only such a till updates with no password.
+function SetUpTill: Boolean;
+begin
+  Result := FileExists(FeaturesFile);
 end;
 
 function OfflineChosen: Boolean;
@@ -417,6 +425,7 @@ end;
 procedure InitializeWizard;
 var
   I: Integer;
+  UpdateNote: String;
 begin
   SetArrayLength(FeatureKeys, FeatureCount);
   FeatureKeys[0] := 'tables';
@@ -437,10 +446,12 @@ begin
   Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe') or
     RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1') or
     RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1');
+  if SetUpTill then
+    UpdateNote := 'Updating keeps this till''s mode, cafe slot, features, sales and settings. No password is needed.'
+  else
+    UpdateNote := 'Updating keeps this till''s sales and settings. The setup password is asked.';
   UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',
-    'Cafe POS is already on this PC.',
-    'Updating keeps this till''s mode, cafe slot, features, sales and settings. The setup password is still asked.',
-    True, False);
+    'Cafe POS is already on this PC.', UpdateNote, True, False);
   UpdatePage.Add('Update and keep this till''s settings');
   UpdatePage.Add('Change the settings or reset the offline admin password (needs the setup password)');
   UpdatePage.SelectedValueIndex := 0;
@@ -487,6 +498,8 @@ function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   if PageID = UpdatePage.ID then
     Result := not Installed
+  else if (PageID = PasswordPage.ID) and KeepSettings then
+    Result := SetUpTill
   else if KeepSettings then
     Result := (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
       (PageID = ResetPage.ID) or (PageID = FeaturePage.ID)
@@ -532,6 +545,20 @@ begin
     MsgBox(Problem, mbError, MB_OK);
     Result := False;
   end;
+end;
+
+// A silent run shows no password page, so it may only update a till an earlier setup finished.
+// Without features.json the app would turn every feature on, so a silent run there installs nothing
+// (exit code 7). The app it was updating closed itself first, so it is opened again.
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Code: Integer;
+begin
+  Result := '';
+  if not WizardSilent or SetUpTill then Exit;
+  if FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe') then
+    Exec(AddBackslash(WizardDirValue) + 'menu_web_v1.exe', '', WizardDirValue, SW_SHOWNORMAL, ewNoWait, Code);
+  Result := 'Cafe POS is not set up on this PC. Run the setup normally and enter the setup password.';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

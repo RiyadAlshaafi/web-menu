@@ -25,6 +25,13 @@ class PdfFonts {
 
 bool pdfHasArabic(String value) => RegExp(r'[\u0600-\u06FF]').hasMatch(value);
 
+/// The pdf package lays Arabic out right to left but does not mirror brackets, so "(x)" would
+/// print as ")x(". Swapping them first makes them print the right way round.
+String pdfMirrorBrackets(String value) {
+  const pairs = {'(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<'};
+  return value.split('').map((char) => pairs[char] ?? char).join();
+}
+
 /// Draws [value] with Noto Naskh Arabic embedded.
 /// Arabic strings are shaped and laid out right-to-left by the pdf package.
 /// English strings stay left-to-right.
@@ -35,8 +42,10 @@ pw.Text pdfText(
   bool bold = false,
 }) {
   final arabic = pdfHasArabic(value);
+  // Neither embedded font has the long dash shown for an empty value.
+  final text = value.replaceAll('—', '-');
   return pw.Text(
-    value,
+    arabic ? pdfMirrorBrackets(text) : text,
     textAlign: align ?? (arabic ? pw.TextAlign.right : pw.TextAlign.left),
     textDirection: arabic ? pw.TextDirection.rtl : pw.TextDirection.ltr,
     style: pw.TextStyle(

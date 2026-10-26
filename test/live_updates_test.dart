@@ -48,4 +48,25 @@ void main() {
       expect(alerts.newOrders([order('a', OrderStatus.received)]), isEmpty);
     });
   });
+
+  group('new call and bill alert', () {
+    ({String kind, String tableId}) req(String kind, String table) => (kind: kind, tableId: table);
+
+    test('the first load never alerts', () {
+      expect(NewRequestWatch().newKinds([req('bill', 't1')]), isEmpty);
+    });
+
+    test('a new bill request or staff call alerts with its kind', () {
+      final alerts = NewRequestWatch()..newKinds([req('bill', 't1')]);
+      expect(alerts.newKinds([req('bill', 't1'), req('assistance', 't2'), req('bill', 't3')]), {'assistance', 'bill'});
+      expect(alerts.newKinds([req('bill', 't1'), req('assistance', 't2'), req('bill', 't3')]), isEmpty,
+          reason: 'still open is not new');
+    });
+
+    test('a table asking again after being served alerts again', () {
+      final alerts = NewRequestWatch()..newKinds([req('assistance', 't1')]);
+      alerts.newKinds(const []);
+      expect(alerts.newKinds([req('assistance', 't1')]), {'assistance'});
+    });
+  });
 }

@@ -32,6 +32,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   DateTime? from;
   DateTime? to;
   EmployeeFilter employee = const AllEmployees();
+  bool showFilters = false;
   String? categoryId;
 
   /// The cards' totals, from the server (or this till's own records offline): the recent sales
@@ -138,6 +139,19 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
                 height: 48,
                 child: PageSearchField(controller: search, hint: context.l10n.salesSearchHint, onChanged: (_) => setState(() {})),
               ),
+              FiltersButton(
+                open: showFilters,
+                active: [from != null, to != null, employee is! AllEmployees].where((inUse) => inUse).length,
+                onPressed: () => setState(() => showFilters = !showFilters),
+              ),
+            ],
+          ),
+          if (showFilters) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
               DateBox(label: context.l10n.salesDateFrom, value: from, onPicked: (value) => setState(() => from = value)),
               DateBox(label: context.l10n.salesDateTo, value: to, onPicked: (value) => setState(() => to = value)),
               SelectBox<EmployeeFilter>(
@@ -155,6 +169,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
               ),
             ],
           ),
+          ],
           const SizedBox(height: 16),
           Expanded(
             child: TawlaPanel(

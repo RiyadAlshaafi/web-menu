@@ -284,6 +284,7 @@ extension CafeStoreOrders on CafeStore {
         ),
       );
     }
+    _learnRequests();
     notifyListeners();
     // One server call marks the table and opens the bill call, so a guest no
     // longer needs write access to the table row.
@@ -343,6 +344,7 @@ extension CafeStoreOrders on CafeStore {
         kind: kind,
       ),
     );
+    _learnRequests();
     await db.writeCalls(calls);
     notifyListeners();
   }

@@ -52,3 +52,21 @@ app.*.map.json
 
 # Wrangler local state
 .wrangler/
+
+
+# Local tool config
+.mcp.json
+.agents/
+skills-lock.json
+
+# Database dumps and backups
+*.db
+*.sqlite
+*.sql.gz
+*.gpg
+backup-*
+
+# Local only
+node_modules/
+.claude/settings.local.json
+.claude/skills/

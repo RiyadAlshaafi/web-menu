@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_ext.dart';
 import '../theme/cafe_theme.dart';
 
 /// Small building blocks of the Tawla staff design, so every console page reads the same:
@@ -201,6 +202,51 @@ class FilterPill extends StatelessWidget {
               widthFactor: 1,
               child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? surfaces.onButton : CafeColors.ink)),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shows or hides a screen's filter row. [active] counts the filters in use, so the cashier
+/// sees the list is narrowed even while the row is hidden.
+class FiltersButton extends StatelessWidget {
+  const FiltersButton({super.key, required this.open, required this.active, required this.onPressed, this.height = 48});
+
+  final bool open;
+  final int active;
+  final VoidCallback onPressed;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaces = CafeSurfaces.of(context);
+    return Semantics(
+      button: true,
+      expanded: open,
+      child: SizedBox(
+        height: height,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: open ? surfaces.button : Colors.white,
+            foregroundColor: open ? surfaces.onButton : surfaces.buttonInk,
+            side: BorderSide(color: open ? surfaces.button : TawlaTokens.border),
+            minimumSize: Size(height, height),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.tune, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                active == 0 ? context.l10n.filtersButton : context.l10n.filtersButtonActive(active),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
         ),
       ),

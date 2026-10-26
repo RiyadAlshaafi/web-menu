@@ -24,6 +24,7 @@ class AdminCategoriesScreen extends StatefulWidget {
 class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
   String query = '';
   String? categoryFilter;
+  bool showFilters = false;
 
   // The promo form on the right.
   String? targetCategoryId;
@@ -56,7 +57,20 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PageSearchField(hint: context.l10n.catalogSearchDishesHint, filled: CafeColors.key, onChanged: (value) => setState(() => query = value)),
+          Row(
+            children: [
+              Expanded(
+                child: PageSearchField(hint: context.l10n.catalogSearchDishesHint, filled: CafeColors.key, onChanged: (value) => setState(() => query = value)),
+              ),
+              const SizedBox(width: 10),
+              FiltersButton(
+                open: showFilters,
+                active: categoryFilter == null ? 0 : 1,
+                onPressed: () => setState(() => showFilters = !showFilters),
+              ),
+            ],
+          ),
+          if (showFilters) ...[
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
@@ -72,6 +86,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                 FilterPill(label: category.nameEn, selected: categoryFilter == category.id, height: 40, onTap: () => setState(() => categoryFilter = category.id)),
             ],
           ),
+          ],
           const SizedBox(height: 12),
           const Divider(height: 1, color: TawlaTokens.hairline),
           Expanded(

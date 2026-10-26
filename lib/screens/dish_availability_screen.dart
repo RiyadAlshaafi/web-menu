@@ -20,6 +20,7 @@ class DishAvailabilityScreen extends StatefulWidget {
 class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
   final search = TextEditingController();
   String? categoryId;
+  bool showFilters = false;
   _DishStatus status = _DishStatus.all;
 
   @override
@@ -38,8 +39,8 @@ class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
+          Builder(
+            builder: (context) {
               final search = PageSearchField(controller: this.search, hint: context.l10n.dishSearchHint, onChanged: (_) => setState(() {}));
               final pills = SegmentedPills<_DishStatus>(
                 options: [
@@ -59,13 +60,19 @@ class _DishAvailabilityScreenState extends State<DishAvailabilityScreen> {
                 ],
                 onChanged: (value) => setState(() => categoryId = value),
               );
-              if (constraints.maxWidth < 760) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [search, const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: [pills, select])],
-                );
-              }
-              return Row(children: [Expanded(child: search), const SizedBox(width: 12), pills, const SizedBox(width: 12), select]);
+              final button = FiltersButton(
+                open: showFilters,
+                active: [status != _DishStatus.all, categoryId != null].where((inUse) => inUse).length,
+                height: 52,
+                onPressed: () => setState(() => showFilters = !showFilters),
+              );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [Expanded(child: search), const SizedBox(width: 12), button]),
+                  if (showFilters) ...[const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: [pills, select])],
+                ],
+              );
             },
           ),
           const SizedBox(height: 18),

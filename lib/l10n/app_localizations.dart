@@ -4513,6 +4513,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cards: server totals for the dates, type and employee picked. The search box only narrows the list.'**
   String get summaryCardsNote;
+
+  /// No description provided for @filtersButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersButton;
+
+  /// No description provided for @filtersButtonActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters ({count})'**
+  String filtersButtonActive(int count);
+
+  /// No description provided for @pdfTotalExclVoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Total (excl. void): {amount}'**
+  String pdfTotalExclVoid(String amount);
 }
 
 class _AppLocalizationsDelegate
