@@ -13,6 +13,7 @@ import '../data/app_database.dart';
 import '../data/error_codes.dart';
 import '../data/local_state_store.dart';
 import '../platform/device_location.dart';
+import '../platform/device_os.dart';
 import '../data/live_updates.dart';
 import '../features/app_feature.dart';
 import '../features/feature_file.dart';

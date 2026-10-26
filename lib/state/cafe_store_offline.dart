@@ -2,7 +2,7 @@ part of 'cafe_store.dart';
 
 /// Offline support for the cashier app: takeout sales, expenses and shift changes are saved on the
 /// device first and uploaded in order whenever the server answers. Only the desktop app keeps a
-/// local outbox; the web keeps its old online-only behaviour.
+/// local outbox; the web and Android (waiter devices) stay online-only.
 extension CafeStoreOffline on CafeStore {
   /// Whether this install saves cashier work locally before uploading it.
   bool get offlineEnabled => offline != null;
@@ -11,7 +11,7 @@ extension CafeStoreOffline on CafeStore {
   bool get isOffline => offline != null && !offline!.online;
 
   Future<void> _initOffline() async {
-    if (kIsWeb) return;
+    if (kIsWeb || isAndroidDevice) return;
     try {
       final store = await OutboxStore.open(AppDatabase.supabaseUrl);
       final sync = OfflineSync(store: store, rpc: db.callRpc);

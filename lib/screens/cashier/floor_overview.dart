@@ -68,7 +68,8 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                 ? TawlaPanel(child: EmptyHint(context.l10n.noTables))
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      final columns = constraints.maxWidth >= 1000
+                      // Four cards need about 300 px each, or the status badge is cut off.
+                      final columns = constraints.maxWidth >= 1200
                           ? 4
                           : constraints.maxWidth >= 720
                               ? 3
@@ -199,7 +200,11 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                   constraints: const BoxConstraints.tightFor(width: 36, height: 36),
                   padding: EdgeInsets.zero,
                   onPressed: waitingForPayment ? null : () => _confirmClear(context, store, item),
-                  icon: const Icon(Icons.layers_clear_outlined, size: 20, color: TawlaTokens.muted),
+                  icon: Icon(
+                    Icons.layers_clear_outlined,
+                    size: 20,
+                    color: waitingForPayment ? TawlaTokens.muted.withValues(alpha: 0.35) : TawlaTokens.muted,
+                  ),
                 ),
             ],
           ),
