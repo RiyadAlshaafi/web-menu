@@ -17,6 +17,7 @@ import '../platform/device_os.dart';
 import '../data/live_updates.dart';
 import '../features/app_feature.dart';
 import '../features/feature_file.dart';
+import '../lan/waiter_hub.dart';
 import '../models/models.dart';
 import '../core/money.dart';
 import '../core/sales_report.dart';
@@ -72,6 +73,9 @@ class CafeStore extends ChangeNotifier {
   List<StaffCall> calls = [];
 
   AuthKind authKind = AuthKind.none;
+
+  /// Waiter phones on the Wi-Fi; set only on a desktop till (see lib/lan/store_hub_host.dart).
+  WaiterHub? waiterHub;
   Cashier? currentCashier;
   CashShift? currentShift;
 

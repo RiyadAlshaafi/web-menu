@@ -176,6 +176,29 @@ extension CafeStoreOrders on CafeStore {
     return openOrderFor(tableId);
   }
 
+  /// Sends a waiter phone's dishes, once the cashier accepted them, as if the cashier typed them
+  /// in. Dishes the cashier left in this table's own cart stay there, unsent.
+  Future<({String? error, String? orderId})> sendWaiterLines(String tableId, List<OrderLine> lines) async {
+    if (_sendingTables.contains(tableId)) return (error: 'in_flight', orderId: null);
+    final kept = [...cartFor(tableId).lines];
+    cartFor(tableId).lines
+      ..clear()
+      ..addAll([for (final line in lines) line.withQty(line.qty)]);
+    _saveCarts(tableId);
+    try {
+      final order = await sendCartToKitchen(tableId);
+      return (error: null, orderId: order?.id);
+    } on StateError catch (error) {
+      return (error: error.message, orderId: null);
+    } finally {
+      final cart = cartFor(tableId);
+      cart.lines
+        ..clear()
+        ..addAll(kept);
+      _saveCarts(tableId);
+    }
+  }
+
   /// The cashier typed this order in: it skips the "accept" step and the new-order sound.
   Future<void> _acceptOwnOrder(String tableId) async {
     _alertNewOrders(exceptTableId: tableId);

@@ -4531,6 +4531,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total (excl. void): {amount}'**
   String pdfTotalExclVoid(String amount);
+
+  /// No description provided for @waiterPairAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to take orders from this till'**
+  String waiterPairAsk(String name);
+
+  /// No description provided for @waiterAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get waiterAllow;
+
+  /// No description provided for @waiterDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get waiterDeny;
+
+  /// No description provided for @waiterOrderBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiter order · {table} · {count} items · {total}'**
+  String waiterOrderBanner(String table, int count, String total);
+
+  /// No description provided for @waiterOrderFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String waiterOrderFrom(String name);
+
+  /// No description provided for @waiterAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get waiterAccept;
+
+  /// No description provided for @waiterRefuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get waiterRefuse;
+
+  /// No description provided for @waiterAcceptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiter order for {table}'**
+  String waiterAcceptTitle(String table);
+
+  /// No description provided for @waiterOrderAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{table}: sent to the kitchen.'**
+  String waiterOrderAccepted(String table);
+
+  /// No description provided for @waiterPhones.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiter phones'**
+  String get waiterPhones;
+
+  /// No description provided for @waiterPhonesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No phones yet. Open the Tawla Waiter app on a phone on the same Wi-Fi.'**
+  String get waiterPhonesEmpty;
+
+  /// No description provided for @waiterPhoneRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get waiterPhoneRemove;
+
+  /// No description provided for @waiterPhoneLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {time}'**
+  String waiterPhoneLastSeen(String time);
+
+  /// No description provided for @waiterClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get waiterClose;
+
+  /// No description provided for @waiterSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for the cashier…'**
+  String get waiterSearching;
+
+  /// No description provided for @waiterSearchingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this phone on the cafe Wi-Fi. The cashier must be signed in on the till.'**
+  String get waiterSearchingHint;
+
+  /// No description provided for @waiterFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your cafe'**
+  String get waiterFoundTitle;
+
+  /// No description provided for @waiterSearchAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Search again'**
+  String get waiterSearchAgain;
+
+  /// No description provided for @waiterEnterAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the till\'s address'**
+  String get waiterEnterAddress;
+
+  /// No description provided for @waiterAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 192.168.1.20'**
+  String get waiterAddressHint;
+
+  /// No description provided for @waiterConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get waiterConnect;
+
+  /// No description provided for @waiterWaitingAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the cashier to allow this phone'**
+  String get waiterWaitingAllow;
+
+  /// No description provided for @waiterWaitingAllowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the cashier to tap Allow on the till.'**
+  String get waiterWaitingAllowHint;
+
+  /// No description provided for @waiterDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'The cashier did not allow this phone.'**
+  String get waiterDenied;
+
+  /// No description provided for @waiterNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The till did not answer. Check the Wi-Fi and try again.'**
+  String get waiterNoAnswer;
+
+  /// No description provided for @waiterTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get waiterTryAgain;
+
+  /// No description provided for @waiterTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tables'**
+  String get waiterTables;
+
+  /// No description provided for @waiterTableFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get waiterTableFree;
+
+  /// No description provided for @waiterTableDining.
+  ///
+  /// In en, this message translates to:
+  /// **'Dining'**
+  String get waiterTableDining;
+
+  /// No description provided for @waiterTableBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get waiterTableBill;
+
+  /// No description provided for @waiterTableWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting'**
+  String waiterTableWaiting(int count);
+
+  /// No description provided for @waiterItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String waiterItems(int count);
+
+  /// No description provided for @waiterReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting to the cashier…'**
+  String get waiterReconnecting;
+
+  /// No description provided for @waiterAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get waiterAllCategories;
+
+  /// No description provided for @waiterReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review {count} items · {total}'**
+  String waiterReview(int count, String total);
+
+  /// No description provided for @waiterReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number}'**
+  String waiterReviewTitle(String number);
+
+  /// No description provided for @waiterSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to cashier'**
+  String get waiterSend;
+
+  /// No description provided for @waiterSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get waiterSentTitle;
+
+  /// No description provided for @waiterSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the cashier to accept.'**
+  String get waiterSentBody;
+
+  /// No description provided for @waiterSoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold out'**
+  String get waiterSoldOut;
+
+  /// No description provided for @waiterAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get waiterAdd;
+
+  /// No description provided for @waiterSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent. Check the Wi-Fi and try again.'**
+  String get waiterSendFailed;
+
+  /// No description provided for @waiterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Some dishes are no longer available. The menu was refreshed.'**
+  String get waiterUnavailable;
+
+  /// No description provided for @waiterChangeCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Change till'**
+  String get waiterChangeCafe;
+
+  /// No description provided for @waiterStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get waiterStatusPending;
+
+  /// No description provided for @waiterStatusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get waiterStatusAccepted;
+
+  /// No description provided for @waiterStatusRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused'**
+  String get waiterStatusRefused;
+
+  /// No description provided for @waiterMyOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'My orders'**
+  String get waiterMyOrders;
+
+  /// No description provided for @waiterSearchDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a dish'**
+  String get waiterSearchDish;
+
+  /// No description provided for @waiterTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get waiterTotal;
+
+  /// No description provided for @waiterNoTables.
+  ///
+  /// In en, this message translates to:
+  /// **'No tables yet. The admin adds them on the till.'**
+  String get waiterNoTables;
+
+  /// No description provided for @waiterYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name (shown to the cashier)'**
+  String get waiterYourName;
 }
 
 class _AppLocalizationsDelegate

@@ -2546,4 +2546,187 @@ class AppLocalizationsEn extends AppLocalizations {
   String pdfTotalExclVoid(String amount) {
     return 'Total (excl. void): $amount';
   }
+
+  @override
+  String waiterPairAsk(String name) {
+    return '$name wants to take orders from this till';
+  }
+
+  @override
+  String get waiterAllow => 'Allow';
+
+  @override
+  String get waiterDeny => 'Deny';
+
+  @override
+  String waiterOrderBanner(String table, int count, String total) {
+    return 'Waiter order · $table · $count items · $total';
+  }
+
+  @override
+  String waiterOrderFrom(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get waiterAccept => 'Accept';
+
+  @override
+  String get waiterRefuse => 'Refuse';
+
+  @override
+  String waiterAcceptTitle(String table) {
+    return 'Waiter order for $table';
+  }
+
+  @override
+  String waiterOrderAccepted(String table) {
+    return '$table: sent to the kitchen.';
+  }
+
+  @override
+  String get waiterPhones => 'Waiter phones';
+
+  @override
+  String get waiterPhonesEmpty =>
+      'No phones yet. Open the Tawla Waiter app on a phone on the same Wi-Fi.';
+
+  @override
+  String get waiterPhoneRemove => 'Remove';
+
+  @override
+  String waiterPhoneLastSeen(String time) {
+    return 'Last seen $time';
+  }
+
+  @override
+  String get waiterClose => 'Close';
+
+  @override
+  String get waiterSearching => 'Looking for the cashier…';
+
+  @override
+  String get waiterSearchingHint =>
+      'Keep this phone on the cafe Wi-Fi. The cashier must be signed in on the till.';
+
+  @override
+  String get waiterFoundTitle => 'Choose your cafe';
+
+  @override
+  String get waiterSearchAgain => 'Search again';
+
+  @override
+  String get waiterEnterAddress => 'Type the till\'s address';
+
+  @override
+  String get waiterAddressHint => 'e.g. 192.168.1.20';
+
+  @override
+  String get waiterConnect => 'Connect';
+
+  @override
+  String get waiterWaitingAllow =>
+      'Waiting for the cashier to allow this phone';
+
+  @override
+  String get waiterWaitingAllowHint =>
+      'Ask the cashier to tap Allow on the till.';
+
+  @override
+  String get waiterDenied => 'The cashier did not allow this phone.';
+
+  @override
+  String get waiterNoAnswer =>
+      'The till did not answer. Check the Wi-Fi and try again.';
+
+  @override
+  String get waiterTryAgain => 'Try again';
+
+  @override
+  String get waiterTables => 'Tables';
+
+  @override
+  String get waiterTableFree => 'Free';
+
+  @override
+  String get waiterTableDining => 'Dining';
+
+  @override
+  String get waiterTableBill => 'Bill';
+
+  @override
+  String waiterTableWaiting(int count) {
+    return '$count waiting';
+  }
+
+  @override
+  String waiterItems(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get waiterReconnecting => 'Reconnecting to the cashier…';
+
+  @override
+  String get waiterAllCategories => 'All';
+
+  @override
+  String waiterReview(int count, String total) {
+    return 'Review $count items · $total';
+  }
+
+  @override
+  String waiterReviewTitle(String number) {
+    return 'Table $number';
+  }
+
+  @override
+  String get waiterSend => 'Send to cashier';
+
+  @override
+  String get waiterSentTitle => 'Sent';
+
+  @override
+  String get waiterSentBody => 'Waiting for the cashier to accept.';
+
+  @override
+  String get waiterSoldOut => 'Sold out';
+
+  @override
+  String get waiterAdd => 'Add';
+
+  @override
+  String get waiterSendFailed => 'Not sent. Check the Wi-Fi and try again.';
+
+  @override
+  String get waiterUnavailable =>
+      'Some dishes are no longer available. The menu was refreshed.';
+
+  @override
+  String get waiterChangeCafe => 'Change till';
+
+  @override
+  String get waiterStatusPending => 'Waiting';
+
+  @override
+  String get waiterStatusAccepted => 'Accepted';
+
+  @override
+  String get waiterStatusRefused => 'Refused';
+
+  @override
+  String get waiterMyOrders => 'My orders';
+
+  @override
+  String get waiterSearchDish => 'Search a dish';
+
+  @override
+  String get waiterTotal => 'Total';
+
+  @override
+  String get waiterNoTables =>
+      'No tables yet. The admin adds them on the till.';
+
+  @override
+  String get waiterYourName => 'Your name (shown to the cashier)';
 }

@@ -104,9 +104,9 @@ class CashierShell extends StatelessWidget {
       header: AppHeader(
         title: section.crumb(context),
         showMenu: drawer,
-        actions: const [HeaderClock(), LanguageButton()],
+        actions: [const HeaderClock(), if (!waiter) const WaiterPhonesButton(), const LanguageButton()],
       ),
-      banners: const [OfflineStatusBanner(), UpdateReadyStrip(), NewOrderToaster()],
+      banners: const [OfflineStatusBanner(), UpdateReadyStrip(), WaiterHubBanner(), NewOrderToaster()],
       // A short or narrow window scrolls the page instead of cutting its bottom off;
       // narrow windows stack the cards, which needs more height.
       // A waiter's phone shows only the floor and the order screen, which fit a phone's height.

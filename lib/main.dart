@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'lan/store_hub_host.dart';
 import 'navigation/app_sections.dart';
 import 'core/report_error.dart';
 import 'screens/admin_screens.dart' deferred as admin_ui;
@@ -34,6 +35,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
   final store = CafeStore(AppDatabase.instance);
+  WaiterHubLink.attach(store);
   // The opening screen below resets the browser address to '/', so remember
   // the page the visitor really asked for (a scanned table QR is /t/<slug>)
   // before anything can overwrite it.

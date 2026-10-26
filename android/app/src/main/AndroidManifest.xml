@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- The waiter device only talks to Supabase over HTTPS. No other permission. -->
+    <!-- The waiter phone talks only to the cashier's till on the cafe Wi-Fi (lib/main_waiter.dart):
+         a UDP broadcast finds the till, then plain HTTP on the local network. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- geolocator asks for this; the waiter app never tracks location. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove"/>
     <application
@@ -9,7 +11,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

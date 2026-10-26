@@ -27,6 +27,7 @@ import '../widgets/tawla_ui.dart';
 import '../widgets/update_panel.dart';
 import '../widgets/refund_line_dialog.dart';
 import '../widgets/void_sale_dialog.dart';
+import '../lan/waiter_hub.dart';
 
 
 part 'cashier/shell.dart';
@@ -37,3 +38,4 @@ part 'cashier/shift_sales.dart';
 part 'cashier/quick_takeout.dart';
 part 'cashier/table_order.dart';
 part 'cashier/shared.dart';
+part 'cashier/waiter_phones.dart';

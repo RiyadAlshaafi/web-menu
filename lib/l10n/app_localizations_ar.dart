@@ -2533,4 +2533,184 @@ class AppLocalizationsAr extends AppLocalizations {
   String pdfTotalExclVoid(String amount) {
     return 'الإجمالي (بدون الملغاة): $amount';
   }
+
+  @override
+  String waiterPairAsk(String name) {
+    return 'يريد $name إرسال الطلبات إلى هذه الخزينة';
+  }
+
+  @override
+  String get waiterAllow => 'سماح';
+
+  @override
+  String get waiterDeny => 'رفض';
+
+  @override
+  String waiterOrderBanner(String table, int count, String total) {
+    return 'طلب نادل · $table · $count أصناف · $total';
+  }
+
+  @override
+  String waiterOrderFrom(String name) {
+    return 'من $name';
+  }
+
+  @override
+  String get waiterAccept => 'قبول';
+
+  @override
+  String get waiterRefuse => 'رفض';
+
+  @override
+  String waiterAcceptTitle(String table) {
+    return 'طلب نادل لـ $table';
+  }
+
+  @override
+  String waiterOrderAccepted(String table) {
+    return '$table: أُرسل إلى المطبخ.';
+  }
+
+  @override
+  String get waiterPhones => 'هواتف النُدُل';
+
+  @override
+  String get waiterPhonesEmpty =>
+      'لا توجد هواتف بعد. افتح تطبيق Tawla Waiter على هاتف متصل بنفس شبكة الواي فاي.';
+
+  @override
+  String get waiterPhoneRemove => 'إزالة';
+
+  @override
+  String waiterPhoneLastSeen(String time) {
+    return 'آخر ظهور $time';
+  }
+
+  @override
+  String get waiterClose => 'إغلاق';
+
+  @override
+  String get waiterSearching => 'جارٍ البحث عن الخزينة…';
+
+  @override
+  String get waiterSearchingHint =>
+      'أبقِ الهاتف على واي فاي المقهى. يجب أن يكون الكاشير مسجّلاً على الخزينة.';
+
+  @override
+  String get waiterFoundTitle => 'اختر المقهى';
+
+  @override
+  String get waiterSearchAgain => 'ابحث مجدداً';
+
+  @override
+  String get waiterEnterAddress => 'اكتب عنوان الخزينة';
+
+  @override
+  String get waiterAddressHint => 'مثال: 192.168.1.20';
+
+  @override
+  String get waiterConnect => 'اتصال';
+
+  @override
+  String get waiterWaitingAllow => 'بانتظار سماح الكاشير لهذا الهاتف';
+
+  @override
+  String get waiterWaitingAllowHint =>
+      'اطلب من الكاشير الضغط على «سماح» في الخزينة.';
+
+  @override
+  String get waiterDenied => 'لم يسمح الكاشير لهذا الهاتف.';
+
+  @override
+  String get waiterNoAnswer =>
+      'لم تُجب الخزينة. تحقق من الواي فاي وحاول مجدداً.';
+
+  @override
+  String get waiterTryAgain => 'حاول مجدداً';
+
+  @override
+  String get waiterTables => 'الطاولات';
+
+  @override
+  String get waiterTableFree => 'متاحة';
+
+  @override
+  String get waiterTableDining => 'مشغولة';
+
+  @override
+  String get waiterTableBill => 'الحساب';
+
+  @override
+  String waiterTableWaiting(int count) {
+    return '$count بالانتظار';
+  }
+
+  @override
+  String waiterItems(int count) {
+    return '$count أصناف';
+  }
+
+  @override
+  String get waiterReconnecting => 'جارٍ إعادة الاتصال بالخزينة…';
+
+  @override
+  String get waiterAllCategories => 'الكل';
+
+  @override
+  String waiterReview(int count, String total) {
+    return 'مراجعة $count أصناف · $total';
+  }
+
+  @override
+  String waiterReviewTitle(String number) {
+    return 'طاولة $number';
+  }
+
+  @override
+  String get waiterSend => 'إرسال إلى الكاشير';
+
+  @override
+  String get waiterSentTitle => 'تم الإرسال';
+
+  @override
+  String get waiterSentBody => 'بانتظار قبول الكاشير.';
+
+  @override
+  String get waiterSoldOut => 'نفدت الكمية';
+
+  @override
+  String get waiterAdd => 'إضافة';
+
+  @override
+  String get waiterSendFailed => 'لم يُرسل. تحقق من الواي فاي وحاول مجدداً.';
+
+  @override
+  String get waiterUnavailable => 'بعض الأصناف لم تعد متاحة. تم تحديث القائمة.';
+
+  @override
+  String get waiterChangeCafe => 'تغيير الخزينة';
+
+  @override
+  String get waiterStatusPending => 'بالانتظار';
+
+  @override
+  String get waiterStatusAccepted => 'مقبول';
+
+  @override
+  String get waiterStatusRefused => 'مرفوض';
+
+  @override
+  String get waiterMyOrders => 'طلباتي';
+
+  @override
+  String get waiterSearchDish => 'ابحث عن صنف';
+
+  @override
+  String get waiterTotal => 'الإجمالي';
+
+  @override
+  String get waiterNoTables => 'لا توجد طاولات بعد. يضيفها المدير من الخزينة.';
+
+  @override
+  String get waiterYourName => 'اسمك (يظهر للكاشير)';
 }
