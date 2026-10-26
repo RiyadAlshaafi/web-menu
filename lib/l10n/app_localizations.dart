@@ -1538,6 +1538,18 @@ abstract class AppLocalizations {
   /// **'Tablet/phone'**
   String get staffDeviceTag;
 
+  /// No description provided for @waiterWaitingForPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment'**
+  String get waiterWaitingForPayment;
+
+  /// No description provided for @waiterClearTableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything on this table is paid. Free it for the next guests?'**
+  String get waiterClearTableBody;
+
   /// No description provided for @catalogSaveCashier.
   ///
   /// In en, this message translates to:

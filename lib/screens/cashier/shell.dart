@@ -45,6 +45,7 @@ class CashierShell extends StatelessWidget {
       );
     });
     final store = context.read<CafeStore>();
+    final waiter = store.authKind == AuthKind.waiter;
     final section = AppSections.forCashier(location);
     final width = MediaQuery.sizeOf(context).width;
     final drawer = AppSections.useDrawer(width);
@@ -66,7 +67,7 @@ class CashierShell extends StatelessWidget {
                   children: [
                     SyncStatusStrip(disconnected: view.disconnected, compact: compact),
                     const SizedBox(height: 14),
-                    for (final item in AppSections.visible(AppSections.cashier, store.features))
+                    for (final item in waiter ? AppSections.waiter : AppSections.visible(AppSections.cashier, store.features))
                       if (!view.offline || item.path == '/pos/takeout' || item.path == '/pos/shifts')
                       ShellNavItem(
                         section: item,
@@ -83,7 +84,7 @@ class CashierShell extends StatelessWidget {
                     ShellProfileCard(
                       initials: view.initials,
                       name: view.name ?? context.l10n.cashierRole,
-                      subtitle: context.l10n.cashierSoloCashier,
+                      subtitle: waiter ? context.l10n.staffRoleServer : context.l10n.cashierSoloCashier,
                       compact: compact,
                       onLogOut: () {
                         store.signOut();

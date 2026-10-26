@@ -365,6 +365,8 @@
   "staffUsesDevice": "Uses tablet/phone",
   "staffUsesDeviceHint": "Signs in on a waiter device with a PIN to take orders. Never sees money.",
   "staffDeviceTag": "Tablet/phone",
+  "waiterWaitingForPayment": "Waiting for payment",
+  "waiterClearTableBody": "Everything on this table is paid. Free it for the next guests?",
   "catalogSaveCashier": "Save Staff Member",
   "cashierLanguage": "Language",
   "cashierRole": "Cashier",

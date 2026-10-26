@@ -301,10 +301,11 @@ extension CafeStoreOrders on CafeStore {
   }
 
   /// Frees a table for good: unpaid orders are cancelled, the cart is emptied and the table goes
-  /// back to free. Needs the server (or this PC's own database); returns the error, if any.
+  /// back to free. A waiter's clear is refused while an order is unpaid. Needs the server (or this
+  /// PC's own database); returns the error, if any.
   Future<String?> clearTable(String tableId) async {
     if (db.offlineMode) return ErrorCodes.network;
-    final failure = await db.clearTable(tableId);
+    final failure = authKind == AuthKind.waiter ? await db.waiterClearTable(tableId) : await db.clearTable(tableId);
     if (failure != null) {
       _sessionExpired(failure); // signs the cashier out when the session ended
       return failure;

@@ -781,6 +781,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get staffDeviceTag => 'Tablet/phone';
 
   @override
+  String get waiterWaitingForPayment => 'Waiting for payment';
+
+  @override
+  String get waiterClearTableBody =>
+      'Everything on this table is paid. Free it for the next guests?';
+
+  @override
   String get catalogSaveCashier => 'Save Staff Member';
 
   @override

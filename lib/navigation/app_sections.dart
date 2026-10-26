@@ -130,6 +130,25 @@ class AppSections {
     ),
   ];
 
+  /// A waiter's tablet or phone: the floor and its tables only, never money pages.
+  static final waiter = <AppSection>[
+    AppSection(
+      path: '/pos/tables',
+      labelOf: (l) => l.navFloorOverview,
+      crumbOf: (l) => l.navFloorOverview,
+      icon: Icons.table_bar_outlined,
+    ),
+  ];
+
+  /// Where a waiter device goes instead of [path], or null when it may open it: only
+  /// `/pos/tables` and `/pos/tables/<id>`; other till pages go to the floor, admin pages to sign-in.
+  static String? waiterRedirect(String path) {
+    if (path == '/pos/tables' || RegExp(r'^/pos/tables/[^/]+$').hasMatch(path)) return null;
+    if (path == '/pos' || path.startsWith('/pos/')) return '/pos/tables';
+    if (path == '/admin' || path.startsWith('/admin/')) return '/login';
+    return null;
+  }
+
   /// Sections this install shows, in menu order.
   static List<AppSection> visible(List<AppSection> sections, FeatureSet features) => sections
       .where((section) => switch (section.feature) {

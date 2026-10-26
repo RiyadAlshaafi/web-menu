@@ -247,6 +247,8 @@
   "staffUsesDevice": "يستخدم جهازاً لوحياً/هاتفاً",
   "staffUsesDeviceHint": "يسجّل الدخول على جهاز النادل برمز PIN لأخذ الطلبات. لا يرى أي مبالغ.",
   "staffDeviceTag": "جهاز لوحي/هاتف",
+  "waiterWaitingForPayment": "بانتظار الدفع",
+  "waiterClearTableBody": "كل ما على هذه الطاولة مدفوع. هل تريد إخلاءها للزبائن التاليين؟",
   "catalogSaveCashier": "حفظ الموظف",
   "cashierLanguage": "اللغة",
   "cashierRole": "أمين الصندوق",

@@ -160,6 +160,7 @@ class _TawlaAppState extends State<TawlaApp> {
           return null;
         }
         if (auth) return null;
+        if (widget.store.authKind == AuthKind.waiter) return AppSections.waiterRedirect(path);
         if (path.startsWith('/pos') && widget.store.authKind != AuthKind.cashier) {
           return '/login';
         }

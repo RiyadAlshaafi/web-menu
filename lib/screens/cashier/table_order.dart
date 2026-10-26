@@ -33,7 +33,8 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
       return;
     }
     if (!mounted) return;
-    if (order != null) printKitchenRounds(context, store, order.id);
+    // A waiter's order reaches the till's live alerts, which prints it on accept.
+    if (order != null && store.authKind != AuthKind.waiter) printKitchenRounds(context, store, order.id);
     messenger.showSnackBar(SnackBar(content: Text(l10n.tableOrderSent(l10n.cashierTableNumber(table.number)))));
     router.go('/pos/tables');
   }

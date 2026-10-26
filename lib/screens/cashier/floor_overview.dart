@@ -105,8 +105,13 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                 ? (CafeColors.terracotta, BadgeTone.terracotta, context.l10n.cashierStatusStaffCall)
                 : (const Color(0xFF2F6F8F), BadgeTone.navy, context.l10n.cashierStatusDining);
     final navy = CafeSurfaces.of(context).header;
+    final waiter = store.authKind == AuthKind.waiter;
+    // A waiter clears a table only once nothing on it is unpaid; the till settles the bill.
+    final waitingForPayment = waiter && order != null;
     Widget action;
-    if (billDue) {
+    if (billDue && waiter) {
+      action = _cardButton(context.l10n.waiterWaitingForPayment, null);
+    } else if (billDue) {
       action = _cardButton(context.l10n.cashierSettleBill, () => showCashSettleDialog(context, store, item.id));
     } else if (calling) {
       action = _cardButton(context.l10n.cashierAttended, () {
@@ -189,11 +194,11 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
               if (!free)
                 IconButton(
                   key: Key('clear-table-${item.id}'),
-                  tooltip: context.l10n.cashierClearTable,
+                  tooltip: waitingForPayment ? context.l10n.waiterWaitingForPayment : context.l10n.cashierClearTable,
                   visualDensity: VisualDensity.compact,
                   constraints: const BoxConstraints.tightFor(width: 36, height: 36),
                   padding: EdgeInsets.zero,
-                  onPressed: () => _confirmClear(context, store, item),
+                  onPressed: waitingForPayment ? null : () => _confirmClear(context, store, item),
                   icon: const Icon(Icons.layers_clear_outlined, size: 20, color: TawlaTokens.muted),
                 ),
             ],
@@ -285,7 +290,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.cashierClearTableTitle(table.number)),
-        content: Text(l10n.cashierClearTableBody),
+        content: Text(store.authKind == AuthKind.waiter ? l10n.waiterClearTableBody : l10n.cashierClearTableBody),
         actions: [
           OutlineAction(
             label: MaterialLocalizations.of(dialogContext).cancelButtonLabel,
@@ -313,7 +318,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
     );
   }
 
-  Widget _cardButton(String label, VoidCallback onPressed) {
+  Widget _cardButton(String label, VoidCallback? onPressed) {
     return SizedBox(
       width: double.infinity,
       height: 44,
@@ -376,7 +381,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                   height: 44,
                   onPressed: () => Navigator.of(dialogContext).pop(),
                 ),
-                if (order != null)
+                if (order != null && store.authKind != AuthKind.waiter)
                   FilledButton(
                     onPressed: () {
                       Navigator.of(dialogContext).pop();

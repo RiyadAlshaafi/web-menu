@@ -780,6 +780,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get staffDeviceTag => 'جهاز لوحي/هاتف';
 
   @override
+  String get waiterWaitingForPayment => 'بانتظار الدفع';
+
+  @override
+  String get waiterClearTableBody =>
+      'كل ما على هذه الطاولة مدفوع. هل تريد إخلاءها للزبائن التاليين؟';
+
+  @override
   String get catalogSaveCashier => 'حفظ الموظف';
 
   @override
