@@ -771,6 +771,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogCashierPinLabel => '4-digit secret passcode';
 
   @override
+  String get staffUsesDevice => 'Uses tablet/phone';
+
+  @override
+  String get staffUsesDeviceHint =>
+      'Signs in on a waiter device with a PIN to take orders. Never sees money.';
+
+  @override
+  String get staffDeviceTag => 'Tablet/phone';
+
+  @override
   String get catalogSaveCashier => 'Save Staff Member';
 
   @override
@@ -1799,6 +1809,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errCartEmpty => 'The cart is empty.';
+
+  @override
+  String get errWaitingForPayment =>
+      'Waiting for payment. The table can be cleared once the bill is paid.';
 
   @override
   String cashierNewOrderToast(String where) {

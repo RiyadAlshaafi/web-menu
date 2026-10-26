@@ -60,6 +60,7 @@ class Cashier {
     required this.initials,
     this.active = true,
     this.role = StaffJob.cashier,
+    this.usesDevice = false,
   });
 
   final String id;
@@ -67,10 +68,17 @@ class Cashier {
   String initials;
   bool active;
 
-  /// One of [StaffJob.all]. Only cashiers have a PIN and can sign in.
+  /// One of [StaffJob.all].
   final String role;
 
-  bool get canSignIn => role == StaffJob.cashier;
+  /// A server with a waiter tablet or phone; such a server has a PIN.
+  final bool usesDevice;
+
+  /// Cashiers sign in at the till; servers with [usesDevice] sign in on a waiter device.
+  bool get canSignIn => role == StaffJob.cashier || (role == StaffJob.server && usesDevice);
+
+  /// Signs in as a waiter device rather than a till.
+  bool get isWaiter => role == StaffJob.server && usesDevice;
 
   factory Cashier.fromJson(Map<String, dynamic> json) => Cashier(
     id: json['id'] as String,
@@ -78,6 +86,7 @@ class Cashier {
     initials: json['initials'] as String,
     active: json['active'] as bool? ?? true,
     role: StaffJob.parse(json['role'] as String?),
+    usesDevice: json['usesDevice'] as bool? ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -86,6 +95,7 @@ class Cashier {
     'initials': initials,
     'active': active,
     'role': role,
+    'usesDevice': usesDevice,
   };
 }
 

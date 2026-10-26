@@ -195,8 +195,14 @@ extension AppDatabaseLocal on AppDatabase {
 
   // ------------------------------------------------------------------ cashiers
 
-  String _localCreateCashier(String name, String pin, String initials, String role) {
-    final cashier = Cashier(id: Secrets.id(), name: name, initials: initials, role: role);
+  String _localCreateCashier(String name, String pin, String initials, String role, {bool usesDevice = false}) {
+    final cashier = Cashier(
+      id: Secrets.id(),
+      name: name,
+      initials: initials,
+      role: role,
+      usesDevice: role == StaffJob.server && usesDevice,
+    );
     final salt = Secrets.publicId(16);
     _cashiers = [..._cashiers, cashier];
     _store.transaction(() {
@@ -239,7 +245,8 @@ extension AppDatabaseLocal on AppDatabase {
     _store.writeDoc('cashierPins', pins);
     localCashierId = cashierId;
     restaurantId = _localCafeId;
-    return {'ok': true, 'restaurant_id': _localCafeId};
+    final waiter = _cashiers.any((c) => c.id == cashierId && c.isWaiter);
+    return {'ok': true, 'restaurant_id': _localCafeId, 'kind': waiter ? 'waiter' : 'till'};
   }
 
   String? _localDeactivateCashier(String id) {
@@ -772,6 +779,14 @@ extension AppDatabaseLocal on AppDatabase {
       }
     });
     return null;
+  }
+
+  /// Like the server's waiter_clear_table: refuses while the table has an unpaid order.
+  String? _localWaiterClearTable(String tableId) {
+    if (_orders.any((o) => o.tableId == tableId && o.status != OrderStatus.paid)) {
+      return ErrorCodes.waitingForPayment;
+    }
+    return _localClearTable(tableId);
   }
 
   /// Frees a table whatever its state, like the server's cashier_clear_table: unpaid tabs are

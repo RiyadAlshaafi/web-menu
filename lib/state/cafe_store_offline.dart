@@ -93,10 +93,11 @@ extension CafeStoreOffline on CafeStore {
 
   /// Every 30 s (the server counts a cashier online for 75 s): tell the server a cashier is here, upload waiting work, keep numbers in stock.
   Future<void> _pulse() async {
-    if (authKind != AuthKind.cashier || db.client == null) return;
-    final sync = offline;
+    if ((authKind != AuthKind.cashier && authKind != AuthKind.waiter) || db.client == null) return;
+    // A waiter device has no offline work to upload.
+    final sync = authKind == AuthKind.waiter ? null : offline;
     if (sync == null) {
-      // Web cashier: only the presence signal that keeps guest ordering open.
+      // Web cashier or waiter: only the presence signal (a waiter's does not open guest ordering).
       try {
         await db.callRpc('cashier_heartbeat_v2', {'p_app_version': appVersion});
       } catch (error, stackTrace) {

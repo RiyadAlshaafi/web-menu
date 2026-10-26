@@ -823,6 +823,7 @@ class AppDatabase {
           name: map['name'] as String,
           initials: map['initials'] as String? ?? 'C',
           role: StaffJob.parse(map['role'] as String?),
+          usesDevice: map['uses_device'] as bool? ?? false,
         );
       }).toList();
     }
@@ -1235,18 +1236,26 @@ class AppDatabase {
         .eq('id', restaurantId!);
   }
 
-  /// [pin] is needed only for a cashier; other roles never sign in.
+  /// [pin] is needed only for a cashier or a server with [usesDevice]; other staff never sign in.
   Future<String?> createCashier({
     required String name,
     String pin = '',
     required String initials,
     String role = StaffJob.cashier,
+    bool usesDevice = false,
   }) async {
-    if (isLocal) return _localCreateCashier(name, pin, initials, role);
+    if (isLocal) return _localCreateCashier(name, pin, initials, role, usesDevice: usesDevice);
     if (client == null) return null;
     final id = await client!.rpc(
       'create_cashier',
-      params: {'p_name': name, 'p_pin': pin, 'p_initials': initials, 'p_role': role},
+      params: {
+        'p_name': name,
+        'p_pin': pin,
+        'p_initials': initials,
+        'p_role': role,
+        // Sent only when on, so an admin on a database without the column still adds staff.
+        if (usesDevice) 'p_uses_device': true,
+      },
     );
     await refreshFromDisk();
     return id as String?;
@@ -2192,7 +2201,9 @@ class AppDatabase {
       for (final e in _expenseCategories)
         {'id': e.id, 'nameEn': e.nameEn, 'nameAr': e.nameAr, 'enabled': e.enabled, 'sortOrder': e.sortOrder},
     ],
-    'cashiers': [for (final c in _cashiers) {'id': c.id, 'name': c.name, 'initials': c.initials, 'role': c.role}],
+    'cashiers': [
+      for (final c in _cashiers) {'id': c.id, 'name': c.name, 'initials': c.initials, 'role': c.role, 'usesDevice': c.usesDevice},
+    ],
   };
 
   /// Loads a copy saved by [offlineSnapshot] so the till can open without internet.
@@ -2239,6 +2250,7 @@ class AppDatabase {
           name: r['name'] as String,
           initials: r['initials'] as String? ?? 'C',
           role: StaffJob.parse(r['role'] as String?),
+          usesDevice: r['usesDevice'] as bool? ?? false,
         ),
     ];
     _orders = [];
@@ -2305,6 +2317,17 @@ class AppDatabase {
     if (client == null) return null;
     _epoch++; // a load already running would bring back the cancelled orders
     final result = await _rpcResult('cashier_clear_table', 'clear table', {'p_table_id': tableId});
+    return _failure(result, 'The table was not cleared.');
+  }
+
+  /// A waiter frees a table only once it is paid: the server refuses while an order is unpaid
+  /// ([ErrorCodes.waitingForPayment]). The cart is emptied and open calls are closed.
+  Future<String?> waiterClearTable(String tableId) async {
+    if (isLocal) return _localWaiterClearTable(tableId);
+    if (client == null) return null;
+    _epoch++; // a load already running would bring the table back as taken
+    final result = await _rpcResult('waiter_clear_table', 'waiter clear table', {'p_table_id': tableId});
+    if (result['code'] == 'unpaid') return ErrorCodes.waitingForPayment;
     return _failure(result, 'The table was not cleared.');
   }
 

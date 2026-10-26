@@ -1520,6 +1520,24 @@ abstract class AppLocalizations {
   /// **'4-digit secret passcode'**
   String get catalogCashierPinLabel;
 
+  /// No description provided for @staffUsesDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses tablet/phone'**
+  String get staffUsesDevice;
+
+  /// No description provided for @staffUsesDeviceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs in on a waiter device with a PIN to take orders. Never sees money.'**
+  String get staffUsesDeviceHint;
+
+  /// No description provided for @staffDeviceTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet/phone'**
+  String get staffDeviceTag;
+
   /// No description provided for @catalogSaveCashier.
   ///
   /// In en, this message translates to:
@@ -3259,6 +3277,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The cart is empty.'**
   String get errCartEmpty;
+
+  /// No description provided for @errWaitingForPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment. The table can be cleared once the bill is paid.'**
+  String get errWaitingForPayment;
 
   /// No description provided for @cashierNewOrderToast.
   ///

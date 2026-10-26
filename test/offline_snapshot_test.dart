@@ -49,7 +49,8 @@ void main() {
         {'id': 'e1', 'nameEn': 'Supplies', 'nameAr': 'مستلزمات', 'enabled': true, 'sortOrder': 0},
       ],
       'cashiers': [
-        {'id': 'k1', 'name': 'Sara', 'initials': 'S', 'role': 'cashier'},
+        {'id': 'k1', 'name': 'Sara', 'initials': 'S', 'role': 'cashier', 'usesDevice': false},
+        {'id': 'k2', 'name': 'Omar', 'initials': 'O', 'role': 'server', 'usesDevice': true},
       ],
     };
     db.applyOfflineSnapshot(Map<String, dynamic>.from(jsonDecode(jsonEncode(saved)) as Map));

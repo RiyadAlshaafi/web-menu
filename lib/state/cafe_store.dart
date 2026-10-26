@@ -39,7 +39,8 @@ part 'cafe_store_feedback.dart';
 part 'cafe_store_offline.dart';
 part 'cafe_store_update.dart';
 
-enum AuthKind { none, admin, cashier }
+/// [cashier] is a till; [waiter] is a server's tablet or phone, which never handles money.
+enum AuthKind { none, admin, cashier, waiter }
 
 enum GuestLocationStatus { off, checking, allowed, tooFar, denied, unavailable }
 
@@ -840,9 +841,16 @@ class CafeStore extends ChangeNotifier {
     currentCashier =
         cashiers.where((item) => item.id == selectedCashierId).firstOrNull ??
         cashiers.firstOrNull;
-    authKind = AuthKind.cashier;
+    authKind = result['kind'] == 'waiter' ? AuthKind.waiter : AuthKind.cashier;
     pinBuffer = '';
     loginError = null;
+    if (authKind == AuthKind.waiter) {
+      // No shift or receipt numbers: those belong to the till.
+      startLiveSync();
+      _startCashierPulse();
+      notifyListeners();
+      return true;
+    }
     try {
       await _ensureShift();
     } catch (error, stackTrace) {
@@ -941,7 +949,12 @@ class CafeStore extends ChangeNotifier {
     return true;
   }
 
-  Future<void> addCashier({required String name, String pin = '', String role = StaffJob.cashier}) async {
+  Future<void> addCashier({
+    required String name,
+    String pin = '',
+    String role = StaffJob.cashier,
+    bool usesDevice = false,
+  }) async {
     final initials = name
         .trim()
         .split(RegExp(r'\s+'))
@@ -955,6 +968,7 @@ class CafeStore extends ChangeNotifier {
       pin: pin,
       initials: initials.isEmpty ? 'C' : initials,
       role: role,
+      usesDevice: usesDevice,
     );
     if (id == null) return;
     await syncFromDisk();

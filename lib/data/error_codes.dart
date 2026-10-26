@@ -13,4 +13,7 @@ abstract final class ErrorCodes {
 
   static const lineNotFound = 'line_not_found';
   static const cartEmpty = 'cart_empty';
+
+  /// A waiter tried to clear a table that still has an unpaid order.
+  static const waitingForPayment = 'waiting_for_payment';
 }

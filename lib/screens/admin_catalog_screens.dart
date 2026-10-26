@@ -329,6 +329,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final cashierName = TextEditingController();
   final cashierPin = TextEditingController();
   String staffRole = StaffJob.cashier;
+  bool staffUsesDevice = false;
+
+  /// A cashier always has a PIN; a server only when they use a tablet or phone.
+  bool get _staffNeedsPin => staffRole == StaffJob.cashier || (staffRole == StaffJob.server && staffUsesDevice);
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
   bool changingPassword = false;
@@ -453,9 +457,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       children: [
                         Text(member.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: CafeColors.ink)),
                         Text(
-                          member.canSignIn
-                              ? '${_roleLabel(member.role)} · ${context.l10n.catalogCashierPinMasked}'
-                              : _roleLabel(member.role),
+                          [
+                            _roleLabel(member.role),
+                            if (member.isWaiter) context.l10n.staffDeviceTag,
+                            if (member.canSignIn) context.l10n.catalogCashierPinMasked,
+                          ].join(' · '),
                           style: const TextStyle(fontSize: 12, color: TawlaTokens.muted),
                         ),
                       ],
@@ -490,7 +496,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ),
                 ),
               ),
-              if (staffRole == StaffJob.cashier) ...[
+              if (_staffNeedsPin) ...[
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
@@ -508,13 +514,26 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ],
             ],
           ),
+          if (staffRole == StaffJob.server)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: staffUsesDevice,
+              onChanged: (value) => setState(() => staffUsesDevice = value),
+              title: Text(context.l10n.staffUsesDevice, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              subtitle: Text(context.l10n.staffUsesDeviceHint, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted)),
+            ),
           const SizedBox(height: 14),
           NavyButton(
             label: context.l10n.catalogSaveCashier,
             onPressed: () async {
-              final needsPin = staffRole == StaffJob.cashier;
+              final needsPin = _staffNeedsPin;
               if (cashierName.text.trim().isEmpty || (needsPin && cashierPin.text.length != 4)) return;
-              await store.addCashier(name: cashierName.text, pin: needsPin ? cashierPin.text : '', role: staffRole);
+              await store.addCashier(
+                name: cashierName.text,
+                pin: needsPin ? cashierPin.text : '',
+                role: staffRole,
+                usesDevice: staffRole == StaffJob.server && staffUsesDevice,
+              );
               cashierName.clear();
               cashierPin.clear();
             },

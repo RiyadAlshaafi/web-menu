@@ -16,6 +16,8 @@ extension ErrorText on AppLocalizations {
         return errLineNotFound;
       case ErrorCodes.cartEmpty:
         return errCartEmpty;
+      case ErrorCodes.waitingForPayment:
+        return errWaitingForPayment;
       case 'session expired, sign in again':
         return errSessionExpired;
       case 'no open bill':

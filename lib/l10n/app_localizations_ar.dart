@@ -770,6 +770,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogCashierPinLabel => 'رمز PIN سري من 4 أرقام';
 
   @override
+  String get staffUsesDevice => 'يستخدم جهازاً لوحياً/هاتفاً';
+
+  @override
+  String get staffUsesDeviceHint =>
+      'يسجّل الدخول على جهاز النادل برمز PIN لأخذ الطلبات. لا يرى أي مبالغ.';
+
+  @override
+  String get staffDeviceTag => 'جهاز لوحي/هاتف';
+
+  @override
   String get catalogSaveCashier => 'حفظ الموظف';
 
   @override
@@ -1788,6 +1798,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errCartEmpty => 'السلة فارغة.';
+
+  @override
+  String get errWaitingForPayment =>
+      'بانتظار الدفع. يمكن إخلاء الطاولة بعد دفع الفاتورة.';
 
   @override
   String cashierNewOrderToast(String where) {
