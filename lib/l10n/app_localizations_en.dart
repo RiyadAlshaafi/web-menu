@@ -2761,4 +2761,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waiterYourName => 'Your name (shown to the cashier)';
+
+  @override
+  String waiterAlertReady(String number) {
+    return 'Table $number: food is ready to serve';
+  }
+
+  @override
+  String waiterAlertCall(String number) {
+    return 'Table $number is calling you';
+  }
+
+  @override
+  String waiterAlertBill(String number) {
+    return 'Table $number wants the bill';
+  }
+
+  @override
+  String get waiterAlertGo => 'Tap to open the table';
+
+  @override
+  String get waiterSoundOn => 'Sound on';
+
+  @override
+  String get waiterSoundOff => 'Sound off';
+
+  @override
+  String get soundSettingsTitle => 'Alert sounds';
+
+  @override
+  String get soundSettingsAll => 'Play alert sounds';
+
+  @override
+  String get soundSettingsOrders => 'New orders';
+
+  @override
+  String get soundSettingsCalls => 'Guest calls';
+
+  @override
+  String get soundSettingsBills => 'Bill requests';
+
+  @override
+  String get soundSettingsHint => 'Saved on this device only.';
 }

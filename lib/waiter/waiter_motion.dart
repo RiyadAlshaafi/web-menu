@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -154,6 +156,83 @@ class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin
           dot,
         ],
       ),
+    );
+  }
+}
+
+/// Shakes [child] now and then and draws a glowing outline around it while [color] is set, to call
+/// the waiter to a table. With reduced motion the outline stays still.
+class ShakeAlert extends StatefulWidget {
+  const ShakeAlert({super.key, required this.color, required this.radius, required this.child});
+
+  /// The outline colour; null means no alert and the child is shown as is.
+  final Color? color;
+  final double radius;
+  final Widget child;
+
+  @override
+  State<ShakeAlert> createState() => _ShakeAlertState();
+}
+
+class _ShakeAlertState extends State<ShakeAlert> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2200),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(ShakeAlert oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    if (widget.color != null && !_still(context)) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.color;
+    if (color == null) return widget.child;
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final t = _controller.value;
+        // A burst of wobbles in the first third of each cycle, then a rest.
+        final burst = t < 0.3 ? t / 0.3 : 1.0;
+        final wobble = t < 0.3 ? sin(burst * pi * 6) * 5 * (1 - burst) : 0.0;
+        final glow = 0.25 + 0.2 * sin(t * 2 * pi);
+        return Transform.translate(
+          offset: Offset(wobble, 0),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(widget.radius),
+              border: Border.all(color: color, width: 3.5),
+              boxShadow: [BoxShadow(color: color.withValues(alpha: glow), blurRadius: 18, spreadRadius: 2)],
+            ),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

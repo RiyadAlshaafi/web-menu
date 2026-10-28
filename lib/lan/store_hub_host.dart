@@ -55,6 +55,14 @@ class StoreHubHost implements WaiterHubHost {
 
   @override
   void ringNewOrder() => playAlertSound(AlertKind.order);
+
+  @override
+  List<StaffCall> get openCalls => store.openCalls;
+
+  @override
+  bool hasReadyFood(String tableId) => store.orders.any(
+    (order) => order.tableId == tableId && order.status == OrderStatus.ready,
+  );
 }
 
 /// Hosts waiter phones while a cashier is signed in at this desktop till, and stops when they

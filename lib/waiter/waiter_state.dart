@@ -10,6 +10,7 @@ import '../lan/lan_protocol.dart';
 import '../models/models.dart';
 import '../theme/cafe_theme.dart';
 import 'hub_client.dart';
+import 'waiter_tone.dart';
 
 enum WaiterPhase { starting, searching, choose, pairing, denied, noAnswer, ready }
 
@@ -24,6 +25,8 @@ class WaiterTable {
     required this.items,
     required this.total,
     required this.waiting,
+    this.ready = false,
+    this.call,
   });
 
   final String id;
@@ -35,6 +38,12 @@ class WaiterTable {
   /// Waiter orders for this table the cashier has not answered yet.
   final int waiting;
 
+  /// A dish for this table is cooked and waits to be served.
+  final bool ready;
+
+  /// What the guests at this table asked for ('assistance' or 'bill'), or null.
+  final String? call;
+
   factory WaiterTable.fromJson(Map<String, dynamic> json) => WaiterTable(
     id: json['id'] as String,
     number: json['number'] as String? ?? '',
@@ -42,7 +51,22 @@ class WaiterTable {
     items: (json['items'] as num?)?.toInt() ?? 0,
     total: (json['total'] as num?)?.toDouble() ?? 0,
     waiting: (json['waiting'] as num?)?.toInt() ?? 0,
+    ready: json['ready'] == true,
+    call: json['call'] as String?,
   );
+}
+
+enum WaiterAlertKind { ready, call, bill }
+
+/// Something at a table the waiter should go to: food to serve or guests who called.
+class WaiterAlert {
+  const WaiterAlert(this.tableId, this.tableNumber, this.kind);
+
+  final String tableId;
+  final String tableNumber;
+  final WaiterAlertKind kind;
+
+  String get key => '${kind.name}:$tableId';
 }
 
 /// An order this phone sent, and what the cashier did with it.
@@ -82,10 +106,12 @@ class WaiterLine {
 
 /// Everything the waiter phone knows: which till it talks to, the menu, the floor and the carts.
 class WaiterController extends ChangeNotifier {
-  WaiterController(this.client, {this.pollEvery = const Duration(seconds: 5)});
+  WaiterController(this.client, {this.pollEvery = const Duration(seconds: 5), TonePlayer? playTone})
+    : _playTone = playTone ?? playWaiterTone;
 
   final HubClient client;
   final Duration pollEvery;
+  final TonePlayer _playTone;
 
   static const _deviceIdKey = 'waiter_device_id';
   static const _nameKey = 'waiter_device_name';
@@ -93,6 +119,7 @@ class WaiterController extends ChangeNotifier {
   static const _tokenKey = 'waiter_token';
   static const _localeKey = 'waiter_locale';
   static const _brandKey = 'waiter_brand';
+  static const _soundKey = 'waiter_sound';
 
   /// Languages the waiter can pick on this phone, whatever language the till uses.
   static const languages = {'en': 'English', 'ar': 'العربية'};
@@ -120,6 +147,12 @@ class WaiterController extends ChangeNotifier {
   /// The till has no internet, so it cannot take table orders until it is back.
   bool ordersPaused = false;
   bool sending = false;
+
+  /// Beep when food is ready or guests call. The waiter can switch it off on this phone.
+  bool soundOn = true;
+  final Set<String> _seenAlerts = {};
+  final Set<String> _acknowledged = {};
+  bool _alertsSeeded = false;
   int _failures = 0;
   Timer? _poll;
   final Map<String, List<WaiterLine>> _carts = {};
@@ -131,6 +164,7 @@ class WaiterController extends ChangeNotifier {
     final saved = prefs.getString(_localeKey);
     locale = languages.containsKey(saved) ? saved! : 'en';
     _applyBrand(prefs.getString(_brandKey));
+    soundOn = prefs.getBool(_soundKey) ?? true;
     deviceName = prefs.getString(_nameKey) ?? '';
     _deviceId = prefs.getString(_deviceIdKey) ?? '';
     if (_deviceId.isEmpty) {
@@ -168,6 +202,70 @@ class WaiterController extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, value);
+  }
+
+  Future<void> setSoundOn(bool value) async {
+    if (value == soundOn) return;
+    soundOn = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_soundKey, value);
+    if (value) unawaited(_playTone(WaiterTone.ready));
+  }
+
+  /// Everything at the tables that still needs the waiter and that they have not tapped yet.
+  List<WaiterAlert> get alerts => [
+    for (final alert in _activeAlerts())
+      if (!_acknowledged.contains(alert.key)) alert,
+  ];
+
+  /// The kind of alert shown on [tableId]'s tile, or null when there is none (or it was tapped).
+  WaiterAlertKind? alertFor(String tableId) =>
+      alerts.where((alert) => alert.tableId == tableId).map((alert) => alert.kind).firstOrNull;
+
+  /// The waiter saw the alert (tapped the table or its banner): it stops shaking until it comes again.
+  void acknowledge(String tableId) {
+    final before = _acknowledged.length;
+    _acknowledged.addAll(_activeAlerts().where((alert) => alert.tableId == tableId).map((alert) => alert.key));
+    if (_acknowledged.length != before) notifyListeners();
+  }
+
+  List<WaiterAlert> _activeAlerts() => [
+    for (final table in tables) ...[
+      if (table.call == 'bill')
+        WaiterAlert(table.id, table.number, WaiterAlertKind.bill)
+      else if (table.call != null)
+        WaiterAlert(table.id, table.number, WaiterAlertKind.call),
+      if (table.ready) WaiterAlert(table.id, table.number, WaiterAlertKind.ready),
+    ],
+  ];
+
+  /// Beeps for alerts that appeared since the last refresh. The first refresh only learns what is
+  /// already there, so opening the app never beeps for old news.
+  void _noticeAlerts() {
+    final active = _activeAlerts();
+    final keys = {for (final alert in active) alert.key};
+    // An alert that cleared may come again later and must alert again.
+    _seenAlerts.retainAll(keys);
+    _acknowledged.retainAll(keys);
+    final fresh = [
+      for (final alert in active)
+        if (_seenAlerts.add(alert.key)) alert,
+    ];
+    if (!_alertsSeeded) {
+      _alertsSeeded = true;
+      return;
+    }
+    if (!soundOn || fresh.isEmpty) return;
+    // The most urgent one decides the tone.
+    final kind = fresh.map((alert) => alert.kind).reduce((a, b) => a.index > b.index ? a : b);
+    unawaited(
+      _playTone(switch (kind) {
+        WaiterAlertKind.ready => WaiterTone.ready,
+        WaiterAlertKind.call => WaiterTone.call,
+        WaiterAlertKind.bill => WaiterTone.bill,
+      }),
+    );
   }
 
   Future<void> search() async {
@@ -228,6 +326,9 @@ class WaiterController extends ChangeNotifier {
     hub = null;
     _token = null;
     _carts.clear();
+    _seenAlerts.clear();
+    _acknowledged.clear();
+    _alertsSeeded = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_hubKey);
     await prefs.remove(_tokenKey);
@@ -302,6 +403,7 @@ class WaiterController extends ChangeNotifier {
       for (final table in reply.body['tables'] as List? ?? const [])
         WaiterTable.fromJson(Map<String, dynamic>.from(table as Map)),
     ];
+    _noticeAlerts();
     ordersPaused = reply.body['paused'] == true;
     sentOrders = [
       for (final order in reply.body['orders'] as List? ?? const [])

@@ -872,5 +872,17 @@
   "waiterSearchDish": "ابحث عن صنف",
   "waiterTotal": "الإجمالي",
   "waiterNoTables": "لا توجد طاولات بعد. يضيفها المدير من الخزينة.",
-  "waiterYourName": "اسمك (يظهر للكاشير)"
+  "waiterYourName": "اسمك (يظهر للكاشير)",
+  "waiterAlertReady": "الطاولة {number}: الطلب جاهز للتقديم",
+  "waiterAlertCall": "الطاولة {number} تناديك",
+  "waiterAlertBill": "الطاولة {number} تطلب الحساب",
+  "waiterAlertGo": "اضغط لفتح الطاولة",
+  "waiterSoundOn": "الصوت يعمل",
+  "waiterSoundOff": "الصوت متوقف",
+  "soundSettingsTitle": "أصوات التنبيه",
+  "soundSettingsAll": "تشغيل أصوات التنبيه",
+  "soundSettingsOrders": "الطلبات الجديدة",
+  "soundSettingsCalls": "نداءات الزبائن",
+  "soundSettingsBills": "طلبات الحساب",
+  "soundSettingsHint": "تُحفظ على هذا الجهاز فقط."
 }

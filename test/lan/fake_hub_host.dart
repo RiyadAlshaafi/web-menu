@@ -72,5 +72,14 @@ class FakeHost implements WaiterHubHost {
 
   @override
   void ringNewOrder() => rings++;
+
+  @override
+  final openCalls = <StaffCall>[];
+
+  /// Tables whose food is ready to serve.
+  final readyTables = <String>{};
+
+  @override
+  bool hasReadyFood(String tableId) => readyTables.contains(tableId);
 }
 

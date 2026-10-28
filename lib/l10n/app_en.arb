@@ -1253,5 +1253,20 @@
   "waiterSearchDish": "Search a dish",
   "waiterTotal": "Total",
   "waiterNoTables": "No tables yet. The admin adds them on the till.",
-  "waiterYourName": "Your name (shown to the cashier)"
+  "waiterYourName": "Your name (shown to the cashier)",
+  "waiterAlertReady": "Table {number}: food is ready to serve",
+  "@waiterAlertReady": {"placeholders": {"number": {"type": "String"}}},
+  "waiterAlertCall": "Table {number} is calling you",
+  "@waiterAlertCall": {"placeholders": {"number": {"type": "String"}}},
+  "waiterAlertBill": "Table {number} wants the bill",
+  "@waiterAlertBill": {"placeholders": {"number": {"type": "String"}}},
+  "waiterAlertGo": "Tap to open the table",
+  "waiterSoundOn": "Sound on",
+  "waiterSoundOff": "Sound off",
+  "soundSettingsTitle": "Alert sounds",
+  "soundSettingsAll": "Play alert sounds",
+  "soundSettingsOrders": "New orders",
+  "soundSettingsCalls": "Guest calls",
+  "soundSettingsBills": "Bill requests",
+  "soundSettingsHint": "Saved on this device only."
 }

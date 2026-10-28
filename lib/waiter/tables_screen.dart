@@ -32,6 +32,7 @@ class TablesScreen extends StatelessWidget {
               children: [
                 if (!waiter.connected) const ReconnectingBanner(),
                 if (waiter.ordersPaused) const OrdersPausedBanner(),
+                for (final alert in waiter.alerts) _AlertBanner(key: ValueKey(alert.key), alert: alert),
                 if (waiter.sentOrders.isNotEmpty) _SentStrip(orders: waiter.sentOrders),
               ],
             ),
@@ -118,6 +119,7 @@ class _FloorHeader extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const _SoundButton(),
                   const WaiterLanguageButton(),
                   _TillMenu(color: ink),
                 ],
@@ -203,6 +205,7 @@ class _TableTile extends StatelessWidget {
     final waiter = context.read<WaiterController>();
     final surfaces = CafeSurfaces.of(context);
     final inCart = context.select<WaiterController, int>((waiter) => waiter.cartCount(table.id));
+    final alert = context.select<WaiterController, WaiterAlertKind?>((waiter) => waiter.alertFor(table.id));
     final (color, label, icon) = switch (table.status) {
       TableStatus.free => (CafeColors.success, l10n.waiterTableFree, Icons.event_seat_outlined),
       TableStatus.dining => (surfaces.header, l10n.waiterTableDining, Icons.restaurant),
@@ -212,92 +215,209 @@ class _TableTile extends StatelessWidget {
       button: true,
       label: '${l10n.cashierTableNumber(table.number)}, $label',
       child: PressScale(
-        child: AnimatedContainer(
-          duration: CafeMotion.medium,
-          curve: CafeMotion.easeOut,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: inCart > 0 ? surfaces.button : Colors.transparent, width: 2),
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.16), blurRadius: 18, offset: const Offset(0, 8))],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
+        child: ShakeAlert(
+          color: alert == null ? null : _alertColor(alert),
+          radius: 22,
+          child: AnimatedContainer(
+            duration: CafeMotion.medium,
+            curve: CafeMotion.easeOut,
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(22),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: waiter,
-                    child: OrderScreen(tableId: table.id),
-                  ),
+              border: Border.all(color: inCart > 0 ? surfaces.button : Colors.transparent, width: 2),
+              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.16), blurRadius: 18, offset: const Offset(0, 8))],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: () => _openTable(context, table.id),
+                child: Stack(
+                  children: [
+                    PositionedDirectional(
+                      end: -18,
+                      bottom: -18,
+                      child: Icon(icon, size: 96, color: color.withValues(alpha: 0.07)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              _Pill(text: label, color: color),
+                              const Spacer(),
+                              if (inCart > 0) _CartBadge(count: inCart, color: surfaces.button, ink: surfaces.onButton),
+                            ],
+                          ),
+                          const Spacer(),
+                          ExcludeSemantics(
+                            child: Text(
+                              table.number,
+                              style: const TextStyle(
+                                fontSize: 46,
+                                fontWeight: FontWeight.w900,
+                                color: CafeColors.ink,
+                                height: 1,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          if (table.items > 0)
+                            Text(
+                              '${l10n.waiterItems(table.items)} · ${waiter.money.format(table.total)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: CafeColors.inkMuted,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          if (alert != null) _AlertLine(kind: alert),
+                          if (table.waiting > 0)
+                            Row(
+                              children: [
+                                PulseDot(color: surfaces.buttonInk, size: 7),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    l10n.waiterTableWaiting(table.waiting),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: surfaces.buttonInk,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Stack(
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Color _alertColor(WaiterAlertKind kind) => switch (kind) {
+  WaiterAlertKind.ready => CafeColors.success,
+  WaiterAlertKind.call => CafeColors.alert,
+  WaiterAlertKind.bill => const Color(0xFFE08A1E),
+};
+
+IconData _alertIcon(WaiterAlertKind kind) => switch (kind) {
+  WaiterAlertKind.ready => Icons.room_service,
+  WaiterAlertKind.call => Icons.notifications_active,
+  WaiterAlertKind.bill => Icons.receipt_long,
+};
+
+String _alertText(BuildContext context, WaiterAlert alert) => switch (alert.kind) {
+  WaiterAlertKind.ready => context.l10n.waiterAlertReady(alert.tableNumber),
+  WaiterAlertKind.call => context.l10n.waiterAlertCall(alert.tableNumber),
+  WaiterAlertKind.bill => context.l10n.waiterAlertBill(alert.tableNumber),
+};
+
+/// Opens a table's order screen and counts its alert as seen.
+void _openTable(BuildContext context, String tableId) {
+  final waiter = context.read<WaiterController>()..acknowledge(tableId);
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => ChangeNotifierProvider.value(
+        value: waiter,
+        child: OrderScreen(tableId: tableId),
+      ),
+    ),
+  );
+}
+
+/// Short coloured line on the tile saying what the table needs.
+class _AlertLine extends StatelessWidget {
+  const _AlertLine({required this.kind});
+
+  final WaiterAlertKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _alertColor(kind);
+    final text = switch (kind) {
+      WaiterAlertKind.ready => context.l10n.cashierReadyToServe,
+      WaiterAlertKind.call => context.l10n.cashierCallStaff,
+      WaiterAlertKind.bill => context.l10n.cashierBillRequest,
+    };
+    return Row(
+      children: [
+        Icon(_alertIcon(kind), size: 15, color: color),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Pops in at the top when food is ready or guests call; tapping it opens that table.
+class _AlertBanner extends StatelessWidget {
+  const _AlertBanner({super.key, required this.alert});
+
+  final WaiterAlert alert;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _alertColor(alert.kind);
+    return EntranceRise(
+      index: 0,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Material(
+          color: color,
+          borderRadius: BorderRadius.circular(18),
+          elevation: 4,
+          shadowColor: color.withValues(alpha: 0.5),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _openTable(context, alert.tableId),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
                 children: [
-                  PositionedDirectional(
-                    end: -18,
-                    bottom: -18,
-                    child: Icon(icon, size: 96, color: color.withValues(alpha: 0.07)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(14),
+                  Icon(_alertIcon(alert.kind), color: Colors.white, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            _Pill(text: label, color: color),
-                            const Spacer(),
-                            if (inCart > 0) _CartBadge(count: inCart, color: surfaces.button, ink: surfaces.onButton),
-                          ],
+                        Text(
+                          _alertText(context, alert),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
                         ),
-                        const Spacer(),
-                        ExcludeSemantics(
-                          child: Text(
-                            table.number,
-                            style: const TextStyle(
-                              fontSize: 46,
-                              fontWeight: FontWeight.w900,
-                              color: CafeColors.ink,
-                              height: 1,
-                              letterSpacing: -1,
-                            ),
-                          ),
+                        Text(
+                          context.l10n.waiterAlertGo,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
                         ),
-                        const Spacer(),
-                        if (table.items > 0)
-                          Text(
-                            '${l10n.waiterItems(table.items)} · ${waiter.money.format(table.total)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: CafeColors.inkMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        if (table.waiting > 0)
-                          Row(
-                            children: [
-                              PulseDot(color: surfaces.buttonInk, size: 7),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  l10n.waiterTableWaiting(table.waiting),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: surfaces.buttonInk,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                       ],
                     ),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.waiterClose,
+                    onPressed: () => context.read<WaiterController>().acknowledge(alert.tableId),
+                    icon: const Icon(Icons.close, color: Colors.white),
                   ),
                 ],
               ),
@@ -305,6 +425,23 @@ class _TableTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Turns the alert beeps on this phone on or off.
+class _SoundButton extends StatelessWidget {
+  const _SoundButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final on = context.select<WaiterController, bool>((waiter) => waiter.soundOn);
+    final ink = CafeSurfaces.of(context).onHeader;
+    final l10n = context.l10n;
+    return IconButton(
+      tooltip: on ? l10n.waiterSoundOn : l10n.waiterSoundOff,
+      onPressed: () => context.read<WaiterController>().setSoundOn(!on),
+      icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: ink),
     );
   }
 }

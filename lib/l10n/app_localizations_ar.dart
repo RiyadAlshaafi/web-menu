@@ -2745,4 +2745,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get waiterYourName => 'اسمك (يظهر للكاشير)';
+
+  @override
+  String waiterAlertReady(String number) {
+    return 'الطاولة $number: الطلب جاهز للتقديم';
+  }
+
+  @override
+  String waiterAlertCall(String number) {
+    return 'الطاولة $number تناديك';
+  }
+
+  @override
+  String waiterAlertBill(String number) {
+    return 'الطاولة $number تطلب الحساب';
+  }
+
+  @override
+  String get waiterAlertGo => 'اضغط لفتح الطاولة';
+
+  @override
+  String get waiterSoundOn => 'الصوت يعمل';
+
+  @override
+  String get waiterSoundOff => 'الصوت متوقف';
+
+  @override
+  String get soundSettingsTitle => 'أصوات التنبيه';
+
+  @override
+  String get soundSettingsAll => 'تشغيل أصوات التنبيه';
+
+  @override
+  String get soundSettingsOrders => 'الطلبات الجديدة';
+
+  @override
+  String get soundSettingsCalls => 'نداءات الزبائن';
+
+  @override
+  String get soundSettingsBills => 'طلبات الحساب';
+
+  @override
+  String get soundSettingsHint => 'تُحفظ على هذا الجهاز فقط.';
 }

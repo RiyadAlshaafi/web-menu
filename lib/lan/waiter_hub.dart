@@ -42,6 +42,12 @@ abstract interface class WaiterHubHost {
 
   /// Rings the new-order sound on the till.
   void ringNewOrder();
+
+  /// Guest calls (staff or bill) nobody has answered yet.
+  List<StaffCall> get openCalls;
+
+  /// A dish for [tableId] is cooked and waits to be served.
+  bool hasReadyFood(String tableId);
 }
 
 class HubRequest {
@@ -285,12 +291,14 @@ class WaiterHub extends ChangeNotifier {
   Map<String, dynamic> _tables(WaiterDevice device) {
     _followTillOrders();
     final pending = _orders.where((order) => order.status == WaiterOrderStatus.pending).toList();
+    final calls = host.openCalls;
     return {
       'paused': !host.takesTableOrders,
       'tables': [
         for (final table in host.waiterTables)
           () {
             final order = host.openOrderFor(table.id);
+            final call = calls.where((call) => call.tableId == table.id).firstOrNull;
             return {
               'id': table.id,
               'number': table.number,
@@ -299,6 +307,8 @@ class WaiterHub extends ChangeNotifier {
               'items': order?.lines.fold<int>(0, (sum, line) => sum + line.qty) ?? 0,
               'total': order?.subtotal ?? 0,
               'waiting': pending.where((waiting) => waiting.tableId == table.id).length,
+              'ready': host.hasReadyFood(table.id),
+              if (call != null) 'call': call.kind,
             };
           }(),
       ],

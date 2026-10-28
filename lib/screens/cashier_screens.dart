@@ -28,6 +28,8 @@ import '../widgets/update_panel.dart';
 import '../widgets/refund_line_dialog.dart';
 import '../widgets/void_sale_dialog.dart';
 import '../lan/waiter_hub.dart';
+import '../platform/alert_sound.dart';
+import '../platform/alert_sound_settings.dart';
 
 
 part 'cashier/shell.dart';
@@ -39,3 +41,4 @@ part 'cashier/quick_takeout.dart';
 part 'cashier/table_order.dart';
 part 'cashier/shared.dart';
 part 'cashier/waiter_phones.dart';
+part 'cashier/sound_settings.dart';

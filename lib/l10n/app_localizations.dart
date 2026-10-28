@@ -4897,6 +4897,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your name (shown to the cashier)'**
   String get waiterYourName;
+
+  /// No description provided for @waiterAlertReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number}: food is ready to serve'**
+  String waiterAlertReady(String number);
+
+  /// No description provided for @waiterAlertCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} is calling you'**
+  String waiterAlertCall(String number);
+
+  /// No description provided for @waiterAlertBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} wants the bill'**
+  String waiterAlertBill(String number);
+
+  /// No description provided for @waiterAlertGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open the table'**
+  String get waiterAlertGo;
+
+  /// No description provided for @waiterSoundOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound on'**
+  String get waiterSoundOn;
+
+  /// No description provided for @waiterSoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound off'**
+  String get waiterSoundOff;
+
+  /// No description provided for @soundSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert sounds'**
+  String get soundSettingsTitle;
+
+  /// No description provided for @soundSettingsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play alert sounds'**
+  String get soundSettingsAll;
+
+  /// No description provided for @soundSettingsOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'New orders'**
+  String get soundSettingsOrders;
+
+  /// No description provided for @soundSettingsCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest calls'**
+  String get soundSettingsCalls;
+
+  /// No description provided for @soundSettingsBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill requests'**
+  String get soundSettingsBills;
+
+  /// No description provided for @soundSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device only.'**
+  String get soundSettingsHint;
 }
 
 class _AppLocalizationsDelegate
