@@ -5,7 +5,7 @@
 import { Icon } from "@/components/icons";
 import { LandingMark } from "./logo";
 
-export type TableStatus = "free" | "dining" | "bill" | "call" | "new";
+type TableStatus = "free" | "dining" | "bill" | "call" | "new";
 
 const STATUS: Record<TableStatus, { chip: string; label: string; badge: string; badgeText: string; line: string; lineColor: string }> = {
   free: { chip: "#F1EDE7", label: "FREE", badge: "#EAF3DE", badgeText: "#4F7A45", line: "Clean, ready", lineColor: "#56423C" },
@@ -15,7 +15,7 @@ const STATUS: Record<TableStatus, { chip: string; label: string; badge: string; 
   new: { chip: "#2F6F8F", label: "NEW", badge: "#FFDBD1", badgeText: "#9A3C1D", line: "30 LYD · 3 items", lineColor: "#2F6F8F" },
 };
 
-export function TableCard({ number, status, pop = false }: { number: number; status: TableStatus; pop?: boolean }) {
+function TableCard({ number, status, pop = false }: { number: number; status: TableStatus; pop?: boolean }) {
   const s = STATUS[status];
   const free = status === "free";
   return (
