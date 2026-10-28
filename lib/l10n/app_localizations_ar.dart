@@ -930,6 +930,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moveTableNothing => 'لا يوجد ما يُنقل من هذه الطاولة.';
 
   @override
+  String get moveTableAcceptFirst =>
+      'اقبل الطلب الجديد أولاً ثم ادمج الطاولات.';
+
+  @override
   String get moveTablePickOther => 'اختر طاولة أخرى من هذا المقهى.';
 
   @override

@@ -374,6 +374,7 @@ extension CafeStoreOrders on CafeStore {
       return switch (failure) {
         'nothing to move' => l10n.moveTableNothing,
         'pick another table' || 'table not found' => l10n.moveTablePickOther,
+        'accept the new order first' => l10n.moveTableAcceptFirst,
         _ => failure,
       };
     }

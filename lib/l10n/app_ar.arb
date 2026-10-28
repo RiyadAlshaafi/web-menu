@@ -289,6 +289,7 @@
   "moveTableMoved": "نُقلت الطاولة {from} إلى الطاولة {to}",
   "moveTableMerged": "دُمجت الطاولة {from} في الطاولة {to}",
   "moveTableNothing": "لا يوجد ما يُنقل من هذه الطاولة.",
+  "moveTableAcceptFirst": "اقبل الطلب الجديد أولاً ثم ادمج الطاولات.",
   "moveTablePickOther": "اختر طاولة أخرى من هذا المقهى.",
   "cashierClearTableDone": "تم إفراغ الطاولة {number}",
   "@cashierClearTableDone": {"placeholders": {"number": {"type": "String"}}},

@@ -1,5 +1,6 @@
--- Checks 20261027120000_move_table.sql as a signed-in cashier device: a tab moves to a free table
--- as the same order; a tab merges into another tab with its rounds capped so nothing reprints;
+-- Checks 20261027120000_move_table.sql and 20261028110000_move_table_accept_first.sql as a
+-- signed-in cashier device: a tab moves to a free table as the same order; a tab merges into
+-- another tab with its rounds capped so nothing reprints, but only once both are past Accept;
 -- the cart, open calls and guests follow; the first table is freed and loses its phone; moving to
 -- the same table, an empty table or another cafe's table is refused.
 -- Run by tool/test_db.sh. Everything is rolled back; any failed check aborts with its message.
@@ -74,6 +75,21 @@ begin
   select count(*) into n from public.table_claims where table_id = t1;
   assert n = 0, 'the phone lost table 1';
 
+  -- ------------------------------------------------ a tab still waiting for Accept is not merged
+  execute 'set local role anon';
+  r := public.cashier_move_table(t2, t3);
+  assert r->>'error' = 'accept the new order first', 'both received: ' || r::text;
+  execute 'reset role';
+  select count(*) into n from public.orders where id = o1 and table_id = t2;
+  assert n = 1, 'nothing moved when refused';
+  update public.orders set status = 'preparing' where id = o1;
+  execute 'set local role anon';
+  r := public.cashier_move_table(t2, t3);
+  assert r->>'error' = 'accept the new order first', 'only the other tab received: ' || r::text;
+  execute 'reset role';
+  update public.orders set status = 'served' where id = o1;
+  update public.orders set status = 'preparing' where id = o3;
+
   -- ------------------------------------------------ merge table 2 into table 3
   execute 'set local role anon';
   r := public.cashier_move_table(t2, t3);
@@ -89,6 +105,8 @@ begin
   assert n = 5, 'guests add up';
   select count(*) into n from public.cart_lines where table_id = t3;
   assert n = 1, 'the cart joined table 3';
+  select count(*) into n from public.orders where id = o3 and status = 'preparing';
+  assert n = 1, 'the merged tab takes the less advanced status (preparing, not served)';
 
   raise notice 'move_table_test: all checks passed';
 end $test$;

@@ -1784,6 +1784,12 @@ abstract class AppLocalizations {
   /// **'This table has nothing to move.'**
   String get moveTableNothing;
 
+  /// No description provided for @moveTableAcceptFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the new order first, then merge the tables.'**
+  String get moveTableAcceptFirst;
+
   /// No description provided for @moveTablePickOther.
   ///
   /// In en, this message translates to:

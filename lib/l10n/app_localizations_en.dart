@@ -931,6 +931,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveTableNothing => 'This table has nothing to move.';
 
   @override
+  String get moveTableAcceptFirst =>
+      'Accept the new order first, then merge the tables.';
+
+  @override
   String get moveTablePickOther => 'Pick another table of this cafe.';
 
   @override

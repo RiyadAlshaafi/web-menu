@@ -466,6 +466,7 @@
   "moveTableMerged": "Table {from} merged into table {to}",
   "@moveTableMerged": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
   "moveTableNothing": "This table has nothing to move.",
+  "moveTableAcceptFirst": "Accept the new order first, then merge the tables.",
   "moveTablePickOther": "Pick another table of this cafe.",
   "cashierClearTableDone": "Table {number} is clear",
   "@cashierClearTableDone": {"placeholders": {"number": {"type": "String"}}},
