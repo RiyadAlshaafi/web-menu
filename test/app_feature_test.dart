@@ -47,7 +47,8 @@ void main() {
   });
 
   test('fromJson with an empty list allows only core', () {
-    final set = FeatureSet.fromJson('{"features": [], "listed": ["tables", "stock", "kitchen_printer", "dish_choices"]}');
+    final listed = [for (final feature in AppFeature.values) '"${feature.key}"'].join(', ');
+    final set = FeatureSet.fromJson('{"features": [], "listed": [$listed]}');
     for (final feature in AppFeature.values) {
       expect(set.allows(feature), isFalse, reason: feature.key);
     }
@@ -59,7 +60,50 @@ void main() {
     expect(set.allows(AppFeature.kitchenPrinter), isTrue);
     expect(set.allows(AppFeature.dishChoices), isTrue);
     expect(set.allows(AppFeature.waiterPhones), isTrue, reason: 'tills set up before 2.7.8 keep their waiter phones');
+    expect(set.allows(AppFeature.cashDrawer), isTrue);
+    expect(set.allows(AppFeature.moveTables), isTrue);
+    expect(set.allows(AppFeature.serviceCharge), isTrue);
     expect(set.allows(AppFeature.discounts), isFalse);
+  });
+
+  test('a 2.7.7 setup that never showed the new boxes keeps them on after the update', () {
+    final set = FeatureSet.fromJson(
+      '{"mode": "online", "features": ["tables", "stock"], "listed": ["tables", "qr_ordering", "stock", "kitchen_printer", "dish_choices"]}',
+    );
+    expect(set.allows(AppFeature.waiterPhones), isTrue);
+    expect(set.allows(AppFeature.cashDrawer), isTrue);
+    expect(set.allows(AppFeature.moveTables), isTrue);
+    expect(set.allows(AppFeature.serviceCharge), isTrue);
+    expect(set.allows(AppFeature.kitchenPrinter), isFalse, reason: 'shown and left unticked');
+    expect(set.allows(AppFeature.stock), isTrue);
+  });
+
+  test('a 2.7.7 setup that never showed the new boxes keeps them on after the update', () {
+    final set = FeatureSet.fromJson(
+      '{"mode": "online", "features": ["tables", "stock"], "listed": ["tables", "qr_ordering", "stock", "kitchen_printer", "dish_choices"]}',
+    );
+    expect(set.allows(AppFeature.waiterPhones), isTrue);
+    expect(set.allows(AppFeature.cashDrawer), isTrue);
+    expect(set.allows(AppFeature.moveTables), isTrue);
+    expect(set.allows(AppFeature.serviceCharge), isTrue);
+    expect(set.allows(AppFeature.kitchenPrinter), isFalse, reason: 'shown and left unticked');
+    expect(set.allows(AppFeature.stock), isTrue);
+  });
+
+  test('a setup that listed the new boxes and left them unticked turns them off', () {
+    final set = FeatureSet.fromJson(
+      '{"mode": "offline", "features": ["tables"], "listed": ["tables", "cash_drawer", "move_tables", "service_charge"]}',
+    );
+    expect(set.allows(AppFeature.cashDrawer), isFalse);
+    expect(set.allows(AppFeature.moveTables), isFalse);
+    expect(set.allows(AppFeature.serviceCharge), isFalse);
+  });
+
+  test('moving tables and the service charge need tables', () {
+    final set = FeatureSet.fromKeys(['move_tables', 'service_charge', 'cash_drawer']);
+    expect(set.allows(AppFeature.moveTables), isFalse);
+    expect(set.allows(AppFeature.serviceCharge), isFalse);
+    expect(set.allows(AppFeature.cashDrawer), isTrue);
   });
 
   test('a newer setup that showed stock and kitchen printing and left them unticked turns them off', () {
@@ -98,6 +142,9 @@ void main() {
       AppFeature.kitchenPrinter,
       AppFeature.dishChoices,
       AppFeature.waiterPhones,
+      AppFeature.cashDrawer,
+      AppFeature.moveTables,
+      AppFeature.serviceCharge,
     ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });

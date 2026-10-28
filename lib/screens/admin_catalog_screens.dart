@@ -13,6 +13,7 @@ import 'admin_brand_settings.dart';
 import 'admin_feedback_card.dart';
 import 'admin_printers_kitchens_card.dart';
 import 'admin_receipt_editor.dart';
+import 'admin_service_charge_card.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -400,7 +401,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (_languagePanel(store), store.allows(AppFeature.locationCheck) || store.allows(AppFeature.qrOrdering) ? const OrderingCard() : null),
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersKitchensCard(), store.isLocalMode ? null : const FeedbackCard()),
-      (const TakeoutLayoutCard(), null),
+      (const TakeoutLayoutCard(), store.allows(AppFeature.serviceCharge) || store.savedServiceChargeRate > 0 ? const ServiceChargeCard() : null),
       (const ReceiptEditorCard(), null),
     ];
     return LayoutBuilder(

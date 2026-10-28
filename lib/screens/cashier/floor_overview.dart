@@ -182,7 +182,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                   context.l10n.cashierElapsedMinutes('${DateTime.now().difference(order.createdAt).inMinutes}'),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: TawlaTokens.muted),
                 ),
-              if (!free)
+              if (!free && store.allows(AppFeature.moveTables))
                 IconButton(
                   key: Key('move-table-${item.id}'),
                   tooltip: context.l10n.moveTable,

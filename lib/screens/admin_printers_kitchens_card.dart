@@ -205,7 +205,7 @@ class _PrintersKitchensCardState extends State<PrintersKitchensCard> {
             TillPrinters.saveReceipt(value);
           },
         ),
-        if (receipt != null) ...[
+        if (receipt != null && context.read<CafeStore>().allows(AppFeature.cashDrawer)) ...[
           const SizedBox(height: 4),
           SwitchRow(
             title: context.l10n.cashDrawerSwitch,

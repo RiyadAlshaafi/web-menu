@@ -3,16 +3,21 @@ import '../models/models.dart';
 /// Tells which orders are new since the last look, so the cashier is alerted once per guest order.
 /// The first look only learns what is already on screen, so opening the app never rings.
 class NewOrderWatch {
-  Set<String>? _known;
+  /// Order id to the newest round seen on it.
+  Map<String, int>? _known;
 
-  /// Orders in [current] that were not there last time and still need the cashier (not paid).
+  /// Orders in [current] that were not there last time, or got a new round that is waiting for
+  /// Accept (a guest ordering again on the same table), and still need the cashier (not paid).
   List<CafeOrder> newOrders(List<CafeOrder> current) {
     final known = _known;
-    _known = {for (final order in current) order.id};
+    _known = {for (final order in current) order.id: order.latestRound};
     if (known == null) return const [];
     return [
       for (final order in current)
-        if (!known.contains(order.id) && order.status != OrderStatus.paid) order,
+        if (order.status != OrderStatus.paid &&
+            (!known.containsKey(order.id) ||
+                (order.latestRound > known[order.id]! && order.status == OrderStatus.received)))
+          order,
     ];
   }
 

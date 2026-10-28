@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/report_error.dart';
+import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
 import 'cash_drawer_stub.dart' if (dart.library.io) 'cash_drawer_io.dart' as impl;
@@ -38,7 +39,7 @@ class CashDrawer {
   /// After a sale: opens the drawer when it is switched on and [payment] was paid in cash.
   /// False only when it should have opened and did not.
   static Future<bool> afterSale(CafeStore store, Payment payment) async {
-    if (!await enabled() || !store.isCashSale(payment)) return true;
+    if (!store.allows(AppFeature.cashDrawer) || !await enabled() || !store.isCashSale(payment)) return true;
     return open();
   }
 }

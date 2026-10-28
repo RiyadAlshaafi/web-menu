@@ -2703,6 +2703,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some dishes are no longer available. The menu was refreshed.';
 
   @override
+  String get serviceChargeTitle => 'Service charge';
+
+  @override
+  String get serviceChargeHint =>
+      'Added to dine-in bills. The cashier can leave it off a bill. Takeout never pays it.';
+
+  @override
+  String get serviceChargePercent => 'Percent';
+
+  @override
+  String get serviceChargeSave => 'Save';
+
+  @override
+  String get serviceChargeSaved => 'Service charge saved.';
+
+  @override
+  String get serviceChargeSaveFailed => 'Not saved. Try again.';
+
+  @override
+  String serviceChargeInvalid(String max) {
+    return 'Enter a percent from 0 to $max.';
+  }
+
+  @override
   String get waiterOrdersPaused =>
       'The cashier has no internet. Table orders are paused, tell the cashier in person.';
 

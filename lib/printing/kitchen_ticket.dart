@@ -162,6 +162,19 @@ class TillPrinters {
   /// order, or only what was added later. Each kitchen gets a ticket with only its own dishes,
   /// and a kitchen whose ticket failed is the only one printed again next time.
   static Future<KitchenPrintReport> printNewRounds(CafeStore store, String orderId, AppLocalizations l10n) async {
+    // A second tap while this order is still printing would print the same rounds twice, because
+    // a round counts as printed only after its ticket went out.
+    if (!_printingOrders.add(orderId)) return const KitchenPrintReport(KitchenPrintResult.nothingNew);
+    try {
+      return await _printNewRounds(store, orderId, l10n);
+    } finally {
+      _printingOrders.remove(orderId);
+    }
+  }
+
+  static final Set<String> _printingOrders = {};
+
+  static Future<KitchenPrintReport> _printNewRounds(CafeStore store, String orderId, AppLocalizations l10n) async {
     final main = (await settings()).kitchen;
     final perKitchen = await kitchenPrinters();
     if ((main == null && perKitchen.isEmpty) || !store.allows(AppFeature.kitchenPrinter)) {

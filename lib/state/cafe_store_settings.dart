@@ -89,7 +89,23 @@ extension CafeStoreSettings on CafeStore {
         background: CafeColors.defaultBackground,
         button: CafeColors.defaultButton,
       );
-  double get serviceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
+  /// The percent saved for the cafe, whether or not this install charges it.
+  double get savedServiceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
+
+  /// What bills charge: nothing when the setup left "Service charge" off.
+  double get serviceChargeRate => allows(AppFeature.serviceCharge) ? savedServiceChargeRate : 0;
+
+  /// The service percent for labels: "10", "12.5".
+  String get serviceChargePercentLabel {
+    final percent = savedServiceChargeRate * 100;
+    return percent == percent.roundToDouble() ? '${percent.round()}' : percent.toStringAsFixed(1);
+  }
+
+  Future<void> setServiceChargeRate(double rate) async {
+    cafe = {...cafe, 'serviceChargeRate': rate};
+    notifyListeners();
+    await db.writeCafe(cafe);
+  }
   bool get autoPrintReceipt => cafe['autoPrintReceipt'] as bool? ?? true;
 
   Future<void> setAutoPrintReceipt(bool value) async {

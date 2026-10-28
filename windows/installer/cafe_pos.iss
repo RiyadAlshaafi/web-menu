@@ -70,7 +70,7 @@ Type: files; Name: "{app}\admin_reset.json"
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
 // be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
 const
-  FeatureCount = 13;
+  FeatureCount = 16;
   SlotCount = 8;
 
 var
@@ -227,6 +227,9 @@ begin
     'kitchen_printer': Result := 'Kitchen printer (kitchen ticket for each order)';
     'dish_choices': Result := 'Dish choices & extras (ingredients to remove, toppings to add)';
     'waiter_phones': Result := 'Waiter phones & tablets (orders over Wi-Fi, alerts screen to accept them)';
+    'move_tables': Result := 'Move or merge tables';
+    'service_charge': Result := 'Service charge on dine-in bills';
+    'cash_drawer': Result := 'Cash drawer (opens after each cash sale)';
   else
     Result := Key;
   end;
@@ -245,6 +248,8 @@ begin
     'qr_ordering': Result := 'tables';
     'location_check': Result := 'qr_ordering';
     'waiter_phones': Result := 'tables';
+    'move_tables': Result := 'tables';
+    'service_charge': Result := 'tables';
   else
     Result := '';
   end;
@@ -256,6 +261,8 @@ begin
     'qr_ordering': Result := 1;
     'location_check': Result := 2;
     'waiter_phones': Result := 1;
+    'move_tables': Result := 1;
+    'service_charge': Result := 1;
   else
     Result := 0;
   end;
@@ -350,12 +357,34 @@ begin
   Result := OfflineChosen and ResetPage.Values[0];
 end;
 
-// Ticked when there is no saved choice yet, otherwise as saved. A box an older setup never showed
-// (not in "listed") starts ticked, like the app treats it.
-function StartsTicked(Key, Saved: String): Boolean;
+// Must match AppFeature.addedLater.
+function AddedLater(Key: String): Boolean;
 begin
-  Result := (Saved = '') or (Pos('"' + Key + '"', Saved) > 0) or
-    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices') or (Key = 'waiter_phones')));
+  Result := (Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices') or (Key = 'waiter_phones') or
+    (Key = 'cash_drawer') or (Key = 'move_tables') or (Key = 'service_charge');
+end;
+
+// Ticked when there is no saved choice yet, otherwise as saved. Only the "features" part counts as
+// ticked ("listed" names every box shown, ticked or not). A box an older setup never showed (not in
+// "listed") starts ticked, like the app treats it.
+function StartsTicked(Key, Saved: String): Boolean;
+var
+  At: Integer;
+  Ticked, Listed: String;
+begin
+  At := Pos('"listed"', Saved);
+  if At > 0 then
+  begin
+    Ticked := Copy(Saved, 1, At - 1);
+    Listed := Copy(Saved, At, Length(Saved));
+  end
+  else
+  begin
+    Ticked := Saved;
+    Listed := '';
+  end;
+  Result := (Saved = '') or (Pos('"' + Key + '"', Ticked) > 0) or
+    (AddedLater(Key) and (Pos('"' + Key + '"', Listed) = 0));
 end;
 
 procedure FillFeatureList;
@@ -435,15 +464,18 @@ begin
   FeatureKeys[1] := 'qr_ordering';
   FeatureKeys[2] := 'location_check';
   FeatureKeys[3] := 'waiter_phones';
-  FeatureKeys[4] := 'discounts';
-  FeatureKeys[5] := 'dish_toggle';
-  FeatureKeys[6] := 'expenses';
-  FeatureKeys[7] := 'reports';
-  FeatureKeys[8] := 'branding';
-  FeatureKeys[9] := 'payment_types';
-  FeatureKeys[10] := 'stock';
-  FeatureKeys[11] := 'kitchen_printer';
-  FeatureKeys[12] := 'dish_choices';
+  FeatureKeys[4] := 'move_tables';
+  FeatureKeys[5] := 'service_charge';
+  FeatureKeys[6] := 'discounts';
+  FeatureKeys[7] := 'dish_toggle';
+  FeatureKeys[8] := 'expenses';
+  FeatureKeys[9] := 'reports';
+  FeatureKeys[10] := 'branding';
+  FeatureKeys[11] := 'payment_types';
+  FeatureKeys[12] := 'stock';
+  FeatureKeys[13] := 'kitchen_printer';
+  FeatureKeys[14] := 'cash_drawer';
+  FeatureKeys[15] := 'dish_choices';
 
   // Already installed when the exe is in the install folder, or when Windows has this app's
   // uninstall entry (a till installed to another folder, or whose exe was moved).

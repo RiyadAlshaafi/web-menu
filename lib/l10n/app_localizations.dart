@@ -4790,6 +4790,48 @@ abstract class AppLocalizations {
   /// **'Some dishes are no longer available. The menu was refreshed.'**
   String get waiterUnavailable;
 
+  /// No description provided for @serviceChargeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service charge'**
+  String get serviceChargeTitle;
+
+  /// No description provided for @serviceChargeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to dine-in bills. The cashier can leave it off a bill. Takeout never pays it.'**
+  String get serviceChargeHint;
+
+  /// No description provided for @serviceChargePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get serviceChargePercent;
+
+  /// No description provided for @serviceChargeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get serviceChargeSave;
+
+  /// No description provided for @serviceChargeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Service charge saved.'**
+  String get serviceChargeSaved;
+
+  /// No description provided for @serviceChargeSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved. Try again.'**
+  String get serviceChargeSaveFailed;
+
+  /// No description provided for @serviceChargeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a percent from 0 to {max}.'**
+  String serviceChargeInvalid(String max);
+
   /// No description provided for @waiterOrdersPaused.
   ///
   /// In en, this message translates to:

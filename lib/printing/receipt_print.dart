@@ -129,7 +129,7 @@ List<SlipLine> receiptSlip(CafeStore store, ReceiptData data, AppLocalizations l
     SlipPair(l10n.cashierSubtotal, money(data.subtotal)),
     if (look.showDiscount && data.discount > 0) SlipPair(l10n.salesColDiscount, money(data.discount)),
     if (look.showServiceCharge && data.service > 0.009)
-      SlipPair(l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), money(data.service)),
+      SlipPair(l10n.cashierServiceCharge(store.serviceChargePercentLabel), money(data.service)),
     SlipPair(l10n.cashierTotalPayable, money(data.total), bold: true),
     if (look.showPaymentMethod) SlipText('${l10n.salesColMethod} ${data.method}'),
     const SlipGap(8),

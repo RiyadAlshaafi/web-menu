@@ -990,7 +990,8 @@ extension AppDatabaseLocal on AppDatabase {
 
 const _localCafeId = 'local';
 
-double _round2(double value) => (value * 100).round() / 100;
+/// Half-up to 2 decimals like Postgres round(x, 2); the nudge stops 2.475 (stored as 2.4749...) going down.
+double _round2(double value) => (value * 100 + 1e-6).round() / 100;
 const _maxPinTries = 5;
 const _pinLock = Duration(minutes: 15);
 const _hashRounds = 20000;

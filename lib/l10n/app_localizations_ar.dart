@@ -2688,6 +2688,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get waiterUnavailable => 'بعض الأصناف لم تعد متاحة. تم تحديث القائمة.';
 
   @override
+  String get serviceChargeTitle => 'رسوم الخدمة';
+
+  @override
+  String get serviceChargeHint =>
+      'تُضاف إلى فواتير الطاولات. يمكن للكاشير إلغاؤها من الفاتورة. الطلبات الخارجية لا تدفعها.';
+
+  @override
+  String get serviceChargePercent => 'النسبة';
+
+  @override
+  String get serviceChargeSave => 'حفظ';
+
+  @override
+  String get serviceChargeSaved => 'تم حفظ رسوم الخدمة.';
+
+  @override
+  String get serviceChargeSaveFailed => 'لم يتم الحفظ. حاول مجدداً.';
+
+  @override
+  String serviceChargeInvalid(String max) {
+    return 'أدخل نسبة من 0 إلى $max.';
+  }
+
+  @override
   String get waiterOrdersPaused =>
       'لا يوجد إنترنت لدى الكاشير. طلبات الطاولات متوقفة مؤقتاً، أبلغ الكاشير مباشرة.';
 

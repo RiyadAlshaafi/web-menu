@@ -44,7 +44,13 @@ enum AppFeature {
   dishChoices('dish_choices', worksOffline: true, addedLater: true),
   /// Waiter phones and tablets on the cafe Wi-Fi send table orders to this till, which shows them
   /// on the alerts screen to accept. Works offline too: the phones never need the internet.
-  waiterPhones('waiter_phones', worksOffline: true, addedLater: true);
+  waiterPhones('waiter_phones', worksOffline: true, addedLater: true),
+  /// Opens the till's cash drawer after each cash sale (the drawer switch in printer settings).
+  cashDrawer('cash_drawer', worksOffline: true, addedLater: true),
+  /// Move a table's tab to another table, or merge it into one that is eating.
+  moveTables('move_tables', worksOffline: true, addedLater: true),
+  /// A percent added to dine-in bills; the admin sets it and the cashier may leave it off a bill.
+  serviceCharge('service_charge', worksOffline: true, addedLater: true);
 
   const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false});
 
@@ -61,6 +67,8 @@ enum AppFeature {
   AppFeature? get requires => switch (this) {
         qrOrdering => tables,
         waiterPhones => tables,
+        moveTables => tables,
+        serviceCharge => tables,
         locationCheck => qrOrdering,
         _ => null,
       };
@@ -110,9 +118,9 @@ class FeatureSet {
       return FeatureSet.fromKeys(
         [
           ...(decoded['features'] as List).whereType<String>(),
-          if (listed is! List)
-            for (final feature in AppFeature.values)
-              if (feature.addedLater) feature.key,
+          // A box the till's setup never showed (not in "listed") was added later: it stays on.
+          for (final feature in AppFeature.values)
+            if (feature.addedLater && (listed is! List || !listed.contains(feature.key))) feature.key,
         ],
         mode: mode,
         slot: slot is int ? slot : null,

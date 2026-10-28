@@ -526,7 +526,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         ),
         const Divider(),
         _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
-        _cashKv(context.l10n.cashierServiceCharge('${(store.serviceChargeRate * 100).round()}'), store.currency.format(service)),
+        if (store.serviceChargeRate > 0)
+          _cashKv(context.l10n.cashierServiceCharge(store.serviceChargePercentLabel), store.currency.format(service)),
         const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,

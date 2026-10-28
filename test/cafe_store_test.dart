@@ -109,6 +109,27 @@ void main() {
     expect(store.chargeTotal(20, applyService: true), closeTo(22, 0.001));
   });
 
+  test('the charge is rounded like the server, so settling never reads as insufficient cash', () async {
+    store.cafe = {'serviceChargeRate': 0.125};
+    expect(store.chargeTotal(3), 3.38, reason: 'server: round(3 * 1.125, 2)');
+    store.cafe = {'serviceChargeRate': 0.12};
+    expect(store.chargeTotal(23), 25.76, reason: '23 * 1.12 is 25.7599... in floating point');
+    store.cafe = {'serviceChargeRate': 0.10};
+    expect(store.chargeTotal(2.25), 2.48, reason: '2.475 rounds half-up');
+    expect(store.serviceCharge(2.25), closeTo(0.23, 1e-9));
+  });
+
+  test('the charge is rounded like the server, so settling never reads as insufficient cash', () async {
+    store.cafe = {'serviceChargeRate': 0.125};
+    expect(store.chargeTotal(3), 3.38, reason: 'server: round(3 * 1.125, 2)');
+    store.cafe = {'serviceChargeRate': 0.12};
+    expect(store.chargeTotal(23), 25.76, reason: '23 * 1.12 is 25.7599... in floating point');
+    store.cafe = {'serviceChargeRate': 0.10};
+    expect(store.chargeTotal(2.25), 2.48, reason: '2.475 rounds half-up');
+    expect(store.serviceCharge(2.25), closeTo(0.23, 1e-9));
+    expect(store.chargeTotal(2.125, applyService: false), 2.13, reason: 'the server rounds the no-service due too');
+  });
+
   test('cashier cannot skip a new order straight to ready, and a bill request stays open', () async {
     final table = CafeTable(id: 't1', number: '1', qrSlug: 't1');
     store.tables = [table];

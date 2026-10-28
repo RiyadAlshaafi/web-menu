@@ -48,11 +48,15 @@ extension CafeStoreOrders on CafeStore {
   /// cart were never ordered, so the bill and settlement leave them out.
   double tabSubtotal(String tableId) => openOrderFor(tableId)?.subtotal ?? 0;
 
-  double serviceCharge(double subtotal) => subtotal * serviceChargeRate;
+  double serviceCharge(double subtotal) => chargeTotal(subtotal) - chargeTotal(subtotal, applyService: false);
 
-  /// One formula for the amount on screen and the amount sent to settlement.
-  double chargeTotal(double subtotal, {bool applyService = true}) =>
-      applyService ? subtotal + serviceCharge(subtotal) : subtotal;
+  /// One formula for the amount on screen and the amount sent to settlement. Rounded half-up to
+  /// 2 decimals like settle_cash, settle_part and the offline database, so the cash sent is never
+  /// a hair below what they ask for ("insufficient cash").
+  double chargeTotal(double subtotal, {bool applyService = true}) {
+    final raw = applyService ? subtotal * (1 + serviceChargeRate) : subtotal;
+    return (raw * 100 + 1e-6).round() / 100;
+  }
 
   double tabTotal(String tableId, {bool applyService = true}) {
     return chargeTotal(tabSubtotal(tableId), applyService: applyService);

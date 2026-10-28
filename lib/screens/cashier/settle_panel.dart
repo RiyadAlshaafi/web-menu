@@ -130,6 +130,7 @@ Future<void> showCashSettleDialog(BuildContext context, CafeStore store, String 
                     ),
                     const Divider(),
                     _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
+                    if (store.serviceChargeRate > 0)
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       value: applyService,

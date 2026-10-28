@@ -37,6 +37,21 @@ void main() {
           reason: 'a status change is not a new order');
     });
 
+    test('a guest ordering again on the same table alerts when the new round waits for Accept', () {
+      CafeOrder withRounds(OrderStatus status, int rounds) => CafeOrder(
+        id: 'a',
+        tableId: 't1',
+        tableNumber: '1',
+        status: status,
+        createdAt: DateTime.utc(2026, 10, 9),
+        lines: [for (var round = 1; round <= rounds; round++) OrderLine(menuItemId: 'm', name: 'Latte', qty: 1, unitPrice: 5, round: round)],
+      );
+      final alerts = NewOrderWatch()..newOrders([withRounds(OrderStatus.served, 1)]);
+      expect(alerts.newOrders([withRounds(OrderStatus.received, 2)]).map((o) => o.id), ['a']);
+      expect(alerts.newOrders([withRounds(OrderStatus.received, 2)]), isEmpty, reason: 'once per round');
+      expect(alerts.newOrders([withRounds(OrderStatus.preparing, 2)]), isEmpty);
+    });
+
     test('paid orders (quick takeout) never alert', () {
       final alerts = NewOrderWatch()..newOrders(const []);
       expect(alerts.newOrders([order('t', OrderStatus.paid)]), isEmpty);
