@@ -70,7 +70,7 @@ Type: files; Name: "{app}\admin_reset.json"
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
 // be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
 const
-  FeatureCount = 12;
+  FeatureCount = 13;
   SlotCount = 8;
 
 var
@@ -226,6 +226,7 @@ begin
     'stock': Result := 'Dish stock (count what is left; sold out at 0)';
     'kitchen_printer': Result := 'Kitchen printer (kitchen ticket for each order)';
     'dish_choices': Result := 'Dish choices & extras (ingredients to remove, toppings to add)';
+    'waiter_phones': Result := 'Waiter phones & tablets (orders over Wi-Fi, alerts screen to accept them)';
   else
     Result := Key;
   end;
@@ -243,6 +244,7 @@ begin
   case Key of
     'qr_ordering': Result := 'tables';
     'location_check': Result := 'qr_ordering';
+    'waiter_phones': Result := 'tables';
   else
     Result := '';
   end;
@@ -253,6 +255,7 @@ begin
   case Key of
     'qr_ordering': Result := 1;
     'location_check': Result := 2;
+    'waiter_phones': Result := 1;
   else
     Result := 0;
   end;
@@ -352,7 +355,7 @@ end;
 function StartsTicked(Key, Saved: String): Boolean;
 begin
   Result := (Saved = '') or (Pos('"' + Key + '"', Saved) > 0) or
-    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices')));
+    ((Pos('"listed"', Saved) = 0) and ((Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices') or (Key = 'waiter_phones')));
 end;
 
 procedure FillFeatureList;
@@ -431,15 +434,16 @@ begin
   FeatureKeys[0] := 'tables';
   FeatureKeys[1] := 'qr_ordering';
   FeatureKeys[2] := 'location_check';
-  FeatureKeys[3] := 'discounts';
-  FeatureKeys[4] := 'dish_toggle';
-  FeatureKeys[5] := 'expenses';
-  FeatureKeys[6] := 'reports';
-  FeatureKeys[7] := 'branding';
-  FeatureKeys[8] := 'payment_types';
-  FeatureKeys[9] := 'stock';
-  FeatureKeys[10] := 'kitchen_printer';
-  FeatureKeys[11] := 'dish_choices';
+  FeatureKeys[3] := 'waiter_phones';
+  FeatureKeys[4] := 'discounts';
+  FeatureKeys[5] := 'dish_toggle';
+  FeatureKeys[6] := 'expenses';
+  FeatureKeys[7] := 'reports';
+  FeatureKeys[8] := 'branding';
+  FeatureKeys[9] := 'payment_types';
+  FeatureKeys[10] := 'stock';
+  FeatureKeys[11] := 'kitchen_printer';
+  FeatureKeys[12] := 'dish_choices';
 
   // Already installed when the exe is in the install folder, or when Windows has this app's
   // uninstall entry (a till installed to another folder, or whose exe was moved).

@@ -1,3 +1,4 @@
+import '../features/app_feature.dart';
 import '../models/models.dart';
 import '../platform/alert_sound.dart';
 import '../state/cafe_store.dart';
@@ -77,7 +78,7 @@ class WaiterHubLink {
   }
 
   void _sync() {
-    if (store.authKind == AuthKind.cashier) {
+    if (store.authKind == AuthKind.cashier && store.allows(AppFeature.waiterPhones)) {
       if (!server.running) server.start();
     } else if (server.running) {
       server.stop();

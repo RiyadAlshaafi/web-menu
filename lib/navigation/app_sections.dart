@@ -11,6 +11,7 @@ class AppSection {
     required this.icon,
     this.match,
     this.feature,
+    this.orFeature,
   });
 
   final String path;
@@ -21,6 +22,17 @@ class AppSection {
 
   /// The installer feature this section belongs to; null means always shown.
   final AppFeature? feature;
+
+  /// A second feature that also shows this section (the alerts screen serves QR guests and waiter
+  /// phones alike).
+  final AppFeature? orFeature;
+
+  bool shownIn(FeatureSet features) {
+    final needed = feature;
+    if (needed == null || features.allows(needed)) return true;
+    final other = orFeature;
+    return other != null && features.allows(other);
+  }
 
   String label(BuildContext context) => labelOf(context.l10n);
   String crumb(BuildContext context) => crumbOf(context.l10n);
@@ -97,6 +109,7 @@ class AppSections {
     AppSection(
       path: '/pos',
       feature: AppFeature.qrOrdering,
+      orFeature: AppFeature.waiterPhones,
       labelOf: (l) => l.navLiveAlerts,
       crumbOf: (l) => l.navLiveAlerts,
       icon: Icons.notifications_none_outlined,
@@ -150,12 +163,8 @@ class AppSections {
   }
 
   /// Sections this install shows, in menu order.
-  static List<AppSection> visible(List<AppSection> sections, FeatureSet features) => sections
-      .where((section) => switch (section.feature) {
-            null => true,
-            final feature => features.allows(feature),
-          })
-      .toList();
+  static List<AppSection> visible(List<AppSection> sections, FeatureSet features) =>
+      sections.where((section) => section.shownIn(features)).toList();
 
   /// Where to send [path] when its feature is off, or null when the page may open.
   static String? blockedRedirect(String path, FeatureSet features) {
@@ -169,8 +178,7 @@ class AppSections {
     }
     final matches = sections.where((section) => section.matches(path));
     if (matches.isEmpty) return null;
-    final feature = matches.first.feature;
-    if (feature == null || features.allows(feature)) return null;
+    if (matches.first.shownIn(features)) return null;
     return visible(sections, features).first.path;
   }
 

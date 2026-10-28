@@ -41,7 +41,10 @@ enum AppFeature {
   kitchenPrinter('kitchen_printer', worksOffline: true, addedLater: true),
   /// Ingredient and topping choices on a dish: the admin's choices editor, and the cashier's hold
   /// on a dish (or tap on a ticket line) to change them. Off, dishes are sold as they come.
-  dishChoices('dish_choices', worksOffline: true, addedLater: true);
+  dishChoices('dish_choices', worksOffline: true, addedLater: true),
+  /// Waiter phones and tablets on the cafe Wi-Fi send table orders to this till, which shows them
+  /// on the alerts screen to accept. Works offline too: the phones never need the internet.
+  waiterPhones('waiter_phones', worksOffline: true, addedLater: true);
 
   const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false});
 
@@ -57,6 +60,7 @@ enum AppFeature {
   /// The feature this one cannot work without, if any.
   AppFeature? get requires => switch (this) {
         qrOrdering => tables,
+        waiterPhones => tables,
         locationCheck => qrOrdering,
         _ => null,
       };

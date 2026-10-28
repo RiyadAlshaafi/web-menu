@@ -136,8 +136,9 @@ class WaiterPhonesButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hub = context.read<CafeStore>().waiterHub;
-    if (hub == null) return const SizedBox.shrink();
+    final store = context.read<CafeStore>();
+    final hub = store.waiterHub;
+    if (hub == null || !store.allows(AppFeature.waiterPhones)) return const SizedBox.shrink();
     return HeaderAction(
       icon: Icons.phone_android,
       tooltip: context.l10n.waiterPhones,

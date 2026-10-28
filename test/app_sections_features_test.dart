@@ -24,6 +24,15 @@ void main() {
     expect(_paths(AppSections.visible(AppSections.cashier, both)), containsAll(['/pos', '/pos/tables']));
   });
 
+  test('an offline till with waiter phones gets the alerts screen to accept their orders', () {
+    final offline = FeatureSet.fromKeys(['tables', 'waiter_phones'], mode: InstallMode.offline);
+    expect(_paths(AppSections.visible(AppSections.cashier, offline)), containsAll(['/pos', '/pos/tables']));
+    expect(AppSections.blockedRedirect('/pos', offline), isNull);
+    final noPhones = FeatureSet.fromKeys(['tables'], mode: InstallMode.offline);
+    expect(_paths(AppSections.visible(AppSections.cashier, noPhones)), isNot(contains('/pos')));
+    expect(FeatureSet.fromKeys(['waiter_phones']).allows(AppFeature.waiterPhones), isFalse, reason: 'needs tables');
+  });
+
   test('a page whose feature is off goes to the first page that is on', () {
     expect(AppSections.blockedRedirect('/admin/dashboard', coreOnly), '/admin/menu');
     expect(AppSections.blockedRedirect('/admin/wages', coreOnly), '/admin/menu');

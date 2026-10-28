@@ -58,6 +58,7 @@ void main() {
     expect(set.allows(AppFeature.stock), isTrue);
     expect(set.allows(AppFeature.kitchenPrinter), isTrue);
     expect(set.allows(AppFeature.dishChoices), isTrue);
+    expect(set.allows(AppFeature.waiterPhones), isTrue, reason: 'tills set up before 2.7.8 keep their waiter phones');
     expect(set.allows(AppFeature.discounts), isFalse);
   });
 
@@ -96,6 +97,7 @@ void main() {
       AppFeature.stock,
       AppFeature.kitchenPrinter,
       AppFeature.dishChoices,
+      AppFeature.waiterPhones,
     ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });
