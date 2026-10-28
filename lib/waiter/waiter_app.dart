@@ -18,13 +18,13 @@ class WaiterApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: controller,
-      child: Selector<WaiterController, String>(
-        selector: (_, waiter) => waiter.locale,
-        builder: (context, locale, _) => MaterialApp(
+      child: Selector<WaiterController, (String, CafeSurfaces)>(
+        selector: (_, waiter) => (waiter.locale, waiter.surfaces),
+        builder: (context, look, _) => MaterialApp(
           title: 'Tawla Waiter',
           debugShowCheckedModeBanner: false,
-          theme: CafeTheme.light,
-          locale: Locale(locale),
+          theme: CafeTheme.forSurfaces(look.$2),
+          locale: Locale(look.$1),
           supportedLocales: const [Locale('en'), Locale('ar')],
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -46,7 +46,12 @@ class _WaiterHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final ready = context.select<WaiterController, bool>((waiter) => waiter.phase == WaiterPhase.ready);
     return AnimatedSwitcher(
-      duration: CafeMotion.medium,
+      duration: const Duration(milliseconds: 420),
+      switchInCurve: CafeMotion.easeOut,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(scale: Tween(begin: 0.96, end: 1.0).animate(animation), child: child),
+      ),
       child: ready ? const TablesScreen() : const ConnectScreen(),
     );
   }

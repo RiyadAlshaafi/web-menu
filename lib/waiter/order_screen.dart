@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/dish_choices_sheet.dart';
 import 'tables_screen.dart';
+import 'waiter_motion.dart';
 import 'waiter_state.dart';
 
 /// One table's order: pick dishes, review, send to the cashier.
@@ -35,17 +36,17 @@ class _OrderScreenState extends State<OrderScreen> {
     final dishes = [
       for (final item in waiter.items)
         if ((_categoryId == null || item.categoryId == _categoryId) &&
-            (query.isEmpty ||
-                item.nameEn.toLowerCase().contains(query) ||
-                item.nameIt.toLowerCase().contains(query)))
+            (query.isEmpty || item.nameEn.toLowerCase().contains(query) || item.nameIt.toLowerCase().contains(query)))
           item,
     ];
     final count = waiter.cartCount(widget.tableId);
+    final surfaces = CafeSurfaces.of(context);
     return Scaffold(
-      backgroundColor: CafeColors.cream,
+      backgroundColor: surfaces.background,
       appBar: AppBar(
-        backgroundColor: CafeColors.defaultHeader,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: DecoratedBox(decoration: brandGradient(surfaces)),
+        foregroundColor: surfaces.onHeader,
         title: Text(l10n.waiterReviewTitle(number), style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: const [WaiterLanguageButton()],
       ),
@@ -95,7 +96,11 @@ class _OrderScreenState extends State<OrderScreen> {
                 mainAxisExtent: 150,
               ),
               itemCount: dishes.length,
-              itemBuilder: (context, index) => _DishCard(tableId: widget.tableId, item: dishes[index]),
+              itemBuilder: (context, index) => EntranceRise(
+                key: ValueKey('${_categoryId ?? ''}/${dishes[index].id}'),
+                index: index,
+                child: _DishCard(tableId: widget.tableId, item: dishes[index]),
+              ),
             ),
           ),
         ],
@@ -103,13 +108,26 @@ class _OrderScreenState extends State<OrderScreen> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: FilledButton.icon(
-            onPressed: count == 0 ? null : () => _openReview(context),
-            icon: const Icon(Icons.receipt_long),
-            label: Text(l10n.waiterReview(count, waiter.money.format(waiter.cartTotal(widget.tableId)))),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(60),
-              textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          // The review bar rises in with the first dish and pops each time the cart changes.
+          child: AnimatedSlide(
+            offset: count == 0 ? const Offset(0, 0.25) : Offset.zero,
+            duration: CafeMotion.medium,
+            curve: CafeMotion.easeOut,
+            child: AnimatedOpacity(
+              opacity: count == 0 ? 0.55 : 1,
+              duration: CafeMotion.medium,
+              child: PressScale(
+                child: FilledButton.icon(
+                  onPressed: count == 0 ? null : () => _openReview(context),
+                  icon: const Icon(Icons.receipt_long),
+                  label: BumpText(l10n.waiterReview(count, waiter.money.format(waiter.cartTotal(widget.tableId)))),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -124,7 +142,10 @@ class _OrderScreenState extends State<OrderScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => ChangeNotifierProvider.value(value: waiter, child: _ReviewSheet(tableId: widget.tableId)),
+      builder: (_) => ChangeNotifierProvider.value(
+        value: waiter,
+        child: _ReviewSheet(tableId: widget.tableId),
+      ),
     );
     if (!context.mounted || outcome == null) return;
     final l10n = context.l10n;
@@ -147,10 +168,22 @@ class _OrderScreenState extends State<OrderScreen> {
     return showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, size: 72, color: CafeColors.success),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: MediaQuery.disableAnimationsOf(context) ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 650),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) => Transform.scale(scale: value, child: child),
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(color: CafeColors.success.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: const Icon(Icons.check_rounded, size: 64, color: CafeColors.success),
+              ),
+            ),
             const SizedBox(height: 12),
             Text(context.l10n.waiterSentTitle, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 6),
@@ -178,9 +211,12 @@ class _CategoryChip extends StatelessWidget {
         selected: selected,
         onSelected: (_) => onTap(),
         showCheckmark: false,
-        selectedColor: CafeColors.terracotta,
+        selectedColor: CafeSurfaces.of(context).button,
         backgroundColor: Colors.white,
-        labelStyle: TextStyle(color: selected ? Colors.white : CafeColors.ink, fontWeight: FontWeight.w700),
+        labelStyle: TextStyle(
+          color: selected ? CafeSurfaces.of(context).onButton : CafeColors.ink,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -213,11 +249,11 @@ class _DishCard extends StatelessWidget {
     final waiter = context.watch<WaiterController>();
     final count = waiter.dishCount(tableId, item.id);
     final soldOut = item.soldOut;
-    return Material(
-      color: count > 0 ? CafeColors.terracottaSoft : Colors.white,
-      borderRadius: BorderRadius.circular(18),
+    final surfaces = CafeSurfaces.of(context);
+    final card = Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: soldOut ? null : () => _add(context),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -259,6 +295,19 @@ class _DishCard extends StatelessWidget {
         ),
       ),
     );
+    return PressScale(
+      child: AnimatedContainer(
+        duration: CafeMotion.medium,
+        curve: CafeMotion.easeOut,
+        decoration: BoxDecoration(
+          color: count > 0 ? Color.alphaBlend(surfaces.button.withValues(alpha: 0.10), Colors.white) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: count > 0 ? surfaces.button : Colors.transparent, width: 2),
+          boxShadow: const [BoxShadow(color: Color(0x0F1B3A4B), blurRadius: 12, offset: Offset(0, 4))],
+        ),
+        child: card,
+      ),
+    );
   }
 }
 
@@ -275,7 +324,7 @@ class _Stepper extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton.outlined(onPressed: onMinus, icon: const Icon(Icons.remove)),
-        Text('$count', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+        BumpText('$count', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
         IconButton.filled(onPressed: onPlus, icon: const Icon(Icons.add)),
       ],
     );
@@ -302,14 +351,15 @@ class _ReviewSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.waiterReviewTitle(number), style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text(
+                l10n.waiterReviewTitle(number),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 8),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
-                  children: [
-                    for (final line in lines) _ReviewLine(tableId: tableId, line: line),
-                  ],
+                  children: [for (final line in lines) _ReviewLine(tableId: tableId, line: line)],
                 ),
               ),
               const Divider(height: 24),
@@ -317,7 +367,7 @@ class _ReviewSheet extends StatelessWidget {
                 children: [
                   Text(l10n.waiterTotal, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  Text(
+                  BumpText(
                     waiter.money.format(waiter.cartTotal(tableId)),
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
                   ),
@@ -333,7 +383,11 @@ class _ReviewSheet extends StatelessWidget {
                         navigator.pop(outcome);
                       },
                 icon: waiter.sending
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
                     : const Icon(Icons.send),
                 label: Text(waiter.connected ? l10n.waiterSend : l10n.waiterReconnecting),
                 style: FilledButton.styleFrom(
@@ -385,7 +439,9 @@ class _ReviewLine extends StatelessWidget {
           ),
           SizedBox(
             width: 36,
-            child: Text('${line.qty}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            child: Center(
+              child: BumpText('${line.qty}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            ),
           ),
           IconButton.filled(
             onPressed: () => waiter.setLineQty(tableId, line.key, line.qty + 1),

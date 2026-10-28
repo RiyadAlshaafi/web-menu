@@ -96,11 +96,11 @@ void main() {
 
     expect(waiter.phase, WaiterPhase.ready);
     expect(find.text('Tables'), findsOneWidget);
-    expect(find.text('Free'), findsOneWidget);
-    expect(find.text('Dining'), findsOneWidget);
+    expect(find.text('Free'), findsWidgets, reason: 'on the tile and in the header count');
+    expect(find.text('Dining'), findsWidgets);
     expect(till.tokens, everyElement('secret'));
 
-    await tester.tap(find.text('1'));
+    await tester.tap(find.bySemanticsLabel(RegExp(r'^Table 1,')));
     await pumpFor(tester, const Duration(milliseconds: 500));
     expect(find.text('Sold out'), findsOneWidget, reason: 'mocha is sold out');
 

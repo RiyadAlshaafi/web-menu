@@ -18,8 +18,23 @@ abstract interface class WaiterHubHost {
   List<CafeTable> get waiterTables;
   CafeOrder? openOrderFor(String tableId);
 
-  /// Sends [lines] to [tableId]'s bill the same way the cashier's own order screen does.
-  Future<({String? error, String? orderId})> sendWaiterLines(String tableId, List<OrderLine> lines);
+  /// The admin's brand colours (header, sidebar, background, button) as hex, so phones match the till.
+  Map<String, String> get brandColors;
+
+  /// Whether the till can keep an order waiting for the cashier's Accept, the way a guest's QR
+  /// order waits. The offline till cannot, so its waiter orders wait on the hub instead.
+  bool get holdsOrders;
+
+  /// Where a till order is now; null when it is gone.
+  OrderStatus? tillOrderStatus(String orderId);
+
+  /// Sends [lines] to [tableId]'s bill. With [forAccept] the order arrives like a guest's QR
+  /// order: it rings, shows as a new order and waits for the cashier's Accept.
+  Future<({String? error, String? orderId})> sendWaiterLines(
+    String tableId,
+    List<OrderLine> lines, {
+    bool forAccept = false,
+  });
 
   /// Rings the new-order sound on the till.
   void ringNewOrder();
@@ -75,6 +90,10 @@ class WaiterOrder {
   final DateTime createdAt;
   WaiterOrderStatus status = WaiterOrderStatus.pending;
 
+  /// The till order it went into when it waits in the cashier's new-order list; null while it
+  /// waits on the hub (offline till).
+  String? tillOrderId;
+
   int get itemCount => lines.fold(0, (sum, line) => sum + line.qty);
   double get total => lines.fold(0, (sum, line) => sum + line.total);
 }
@@ -108,8 +127,11 @@ class WaiterHub extends ChangeNotifier {
 
   List<WaiterDevice> get devices => List.unmodifiable(_devices);
   List<PairRequest> get pairRequests => List.unmodifiable(_pairRequests);
-  List<WaiterOrder> get pendingOrders =>
-      List.unmodifiable(_orders.where((order) => order.status == WaiterOrderStatus.pending));
+
+  /// Orders waiting on the hub's own banner; orders already on the till wait in its new-order list.
+  List<WaiterOrder> get pendingOrders => List.unmodifiable(
+    _orders.where((order) => order.status == WaiterOrderStatus.pending && order.tillOrderId == null),
+  );
   bool isAccepting(String orderId) => _accepting.contains(orderId);
 
   static String _randomId() {
@@ -140,7 +162,7 @@ class WaiterHub extends ChangeNotifier {
     return switch (route) {
       'GET /menu' => HubResponse(200, _menu()),
       'GET /tables' => HubResponse(200, _tables(device)),
-      'POST /order' => _order(device, request.body),
+      'POST /order' => await _order(device, request.body),
       _ => HubResponse.error(404, 'not_found'),
     };
   }
@@ -221,6 +243,7 @@ class WaiterHub extends ChangeNotifier {
     ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return {
       'cafe': host.cafeName,
+      'brand': host.brandColors,
       'categories': [
         for (final category in visible)
           {'id': category.id, 'nameEn': category.nameEn, 'nameAr': category.nameAr, 'sortOrder': category.sortOrder},
@@ -245,8 +268,19 @@ class WaiterHub extends ChangeNotifier {
     };
   }
 
+  /// A till-held order counts as accepted once the cashier moved it past "received".
+  void _followTillOrders() {
+    for (final order in _orders) {
+      final id = order.tillOrderId;
+      if (id == null || order.status != WaiterOrderStatus.pending) continue;
+      final status = host.tillOrderStatus(id);
+      if (status != OrderStatus.received) order.status = WaiterOrderStatus.accepted;
+    }
+  }
+
   Map<String, dynamic> _tables(WaiterDevice device) {
-    final pending = pendingOrders;
+    _followTillOrders();
+    final pending = _orders.where((order) => order.status == WaiterOrderStatus.pending).toList();
     return {
       'tables': [
         for (final table in host.waiterTables)
@@ -265,17 +299,12 @@ class WaiterHub extends ChangeNotifier {
       ],
       'orders': [
         for (final order in _orders.reversed.where((order) => order.deviceId == device.id).take(10))
-          {
-            'id': order.id,
-            'tableNumber': order.tableNumber,
-            'status': order.status.name,
-            'items': order.itemCount,
-          },
+          {'id': order.id, 'tableNumber': order.tableNumber, 'status': order.status.name, 'items': order.itemCount},
       ],
     };
   }
 
-  HubResponse _order(WaiterDevice device, Map<String, dynamic>? body) {
+  Future<HubResponse> _order(WaiterDevice device, Map<String, dynamic>? body) async {
     final tableId = body?['tableId'];
     final rawLines = body?['lines'];
     if (tableId is! String || rawLines is! List || rawLines.isEmpty || rawLines.length > LanProtocol.maxLines) {
@@ -322,9 +351,18 @@ class WaiterHub extends ChangeNotifier {
       lines: lines,
       createdAt: _clock(),
     );
+    if (host.holdsOrders) {
+      // Like a guest's QR order: it goes to the till now and waits there for the cashier's Accept.
+      final result = await host.sendWaiterLines(table.id, lines, forAccept: true);
+      final error = result.error;
+      if (error != null && error.startsWith('items_unavailable')) return HubResponse.error(409, 'items_unavailable');
+      if (error != null || result.orderId == null) return HubResponse.error(503, 'not_sent');
+      order.tillOrderId = result.orderId;
+    } else {
+      host.ringNewOrder();
+    }
     _orders.add(order);
     if (_orders.length > keptOrders) _orders.removeAt(0);
-    host.ringNewOrder();
     notifyListeners();
     return HubResponse(200, {'id': order.id});
   }

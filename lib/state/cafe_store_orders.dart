@@ -130,7 +130,8 @@ extension CafeStoreOrders on CafeStore {
 
   void endOrderConfirm(String tableId) => _confirmingOrders.remove(tableId);
 
-  Future<CafeOrder?> sendCartToKitchen(String tableId) async {
+  /// With [forAccept] staff send like a guest: the order waits for Accept and rings as new.
+  Future<CafeOrder?> sendCartToKitchen(String tableId, {bool forAccept = false}) async {
     if (!_sendingTables.add(tableId)) return openOrderFor(tableId);
     notifyListeners();
     if (cartFor(tableId).lines.isEmpty) {
@@ -165,7 +166,11 @@ extension CafeStoreOrders on CafeStore {
       }
       if (error != null) throw StateError(error);
       _hydrateOperational();
-      if (staff) await _acceptOwnOrder(tableId);
+      if (forAccept) {
+        _alertWaiterOrder(tableId);
+      } else if (staff) {
+        await _acceptOwnOrder(tableId);
+      }
     } finally {
       _writeFinished();
       _sendingTables.remove(tableId);
@@ -176,9 +181,14 @@ extension CafeStoreOrders on CafeStore {
     return openOrderFor(tableId);
   }
 
-  /// Sends a waiter phone's dishes, once the cashier accepted them, as if the cashier typed them
-  /// in. Dishes the cashier left in this table's own cart stay there, unsent.
-  Future<({String? error, String? orderId})> sendWaiterLines(String tableId, List<OrderLine> lines) async {
+  /// Sends a waiter phone's dishes to [tableId]'s bill. With [forAccept] they arrive like a guest's
+  /// QR order and wait for Accept; without it (offline till, already accepted) they go straight to
+  /// the kitchen. Dishes the cashier left in this table's own cart stay there, unsent.
+  Future<({String? error, String? orderId})> sendWaiterLines(
+    String tableId,
+    List<OrderLine> lines, {
+    bool forAccept = false,
+  }) async {
     if (_sendingTables.contains(tableId)) return (error: 'in_flight', orderId: null);
     final kept = [...cartFor(tableId).lines];
     cartFor(tableId).lines
@@ -186,7 +196,7 @@ extension CafeStoreOrders on CafeStore {
       ..addAll([for (final line in lines) line.withQty(line.qty)]);
     _saveCarts(tableId);
     try {
-      final order = await sendCartToKitchen(tableId);
+      final order = await sendCartToKitchen(tableId, forAccept: forAccept);
       return (error: null, orderId: order?.id);
     } on StateError catch (error) {
       return (error: error.message, orderId: null);
@@ -197,6 +207,17 @@ extension CafeStoreOrders on CafeStore {
         ..addAll(kept);
       _saveCarts(tableId);
     }
+  }
+
+  /// A waiter phone's order: ring and toast like a guest's, even when it is a new round on an
+  /// order the till already knows (the new-order watch only sees new order ids).
+  void _alertWaiterOrder(String tableId) {
+    _newOrderWatch.newOrders(orders);
+    final order = openOrderFor(tableId);
+    if (order == null || authKind != AuthKind.cashier) return;
+    lastNewOrders = [order];
+    newOrderAlerts++;
+    playAlertSound(AlertKind.order);
   }
 
   /// The cashier typed this order in: it skips the "accept" step and the new-order sound.

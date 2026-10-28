@@ -137,6 +137,37 @@ void main() {
       expect(((floor.body['orders'] as List).single as Map)['status'], 'accepted');
     });
 
+    test('on an online till the order waits in the new-order list like a QR order', () async {
+      host.holdsOrders = true;
+      final token = await pairedToken(hub);
+      final reply = await hub.handle(order(token, {
+        'tableId': 't1',
+        'lines': [
+          {'itemId': 'latte', 'qty': 2},
+        ],
+      }));
+      expect(reply.status, 200);
+      expect(host.sent.single.forAccept, isTrue, reason: 'sent as a guest order, not auto-accepted');
+      expect(hub.pendingOrders, isEmpty, reason: 'no separate waiter banner');
+
+      Future<Map> floor() async =>
+          (await hub.handle(HubRequest(method: 'GET', path: '/tables', token: token))).body;
+      var tables = await floor();
+      expect(((tables['orders'] as List).single as Map)['status'], 'pending');
+      expect(((tables['tables'] as List).first as Map)['waiting'], 1);
+
+      host.tillStatuses['order-1'] = OrderStatus.preparing;
+      tables = await floor();
+      expect(((tables['orders'] as List).single as Map)['status'], 'accepted');
+      expect(((tables['tables'] as List).first as Map)['waiting'], 0);
+    });
+
+    test('the menu carries the admin brand colours', () async {
+      final token = await pairedToken(hub);
+      final menu = await hub.handle(HubRequest(method: 'GET', path: '/menu', token: token));
+      expect(menu.body['brand'], {'headerColor': '#123456', 'buttonColor': '#00AA55'});
+    });
+
     test('a refused order never reaches the bill and the phone sees it', () async {
       final token = await pairedToken(hub);
       await hub.handle(order(token, {

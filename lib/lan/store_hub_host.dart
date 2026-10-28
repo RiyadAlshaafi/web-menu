@@ -30,8 +30,24 @@ class StoreHubHost implements WaiterHubHost {
   CafeOrder? openOrderFor(String tableId) => store.openOrderFor(tableId);
 
   @override
-  Future<({String? error, String? orderId})> sendWaiterLines(String tableId, List<OrderLine> lines) =>
-      store.sendWaiterLines(tableId, lines);
+  Map<String, String> get brandColors => {
+    for (final key in const ['headerColor', 'sidebarColor', 'backgroundColor', 'buttonColor'])
+      if (store.cafe[key] case final String hex when hex.isNotEmpty) key: hex,
+  };
+
+  @override
+  bool get holdsOrders => !store.db.isLocal && !store.db.offlineMode;
+
+  @override
+  OrderStatus? tillOrderStatus(String orderId) =>
+      store.orders.where((order) => order.id == orderId).firstOrNull?.status;
+
+  @override
+  Future<({String? error, String? orderId})> sendWaiterLines(
+    String tableId,
+    List<OrderLine> lines, {
+    bool forAccept = false,
+  }) => store.sendWaiterLines(tableId, lines, forAccept: forAccept);
 
   @override
   void ringNewOrder() => playAlertSound(AlertKind.order);

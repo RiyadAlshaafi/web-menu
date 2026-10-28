@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/money.dart';
 import '../lan/lan_protocol.dart';
 import '../models/models.dart';
+import '../theme/cafe_theme.dart';
 import 'hub_client.dart';
 
 enum WaiterPhase { starting, searching, choose, pairing, denied, noAnswer, ready }
@@ -56,7 +57,10 @@ class SentOrder {
   factory SentOrder.fromJson(Map<String, dynamic> json) => SentOrder(
     id: json['id'] as String,
     tableNumber: json['tableNumber'] as String? ?? '',
-    status: WaiterOrderStatus.values.firstWhere((value) => value.name == json['status'], orElse: () => WaiterOrderStatus.pending),
+    status: WaiterOrderStatus.values.firstWhere(
+      (value) => value.name == json['status'],
+      orElse: () => WaiterOrderStatus.pending,
+    ),
     items: (json['items'] as num?)?.toInt() ?? 0,
   );
 }
@@ -88,6 +92,10 @@ class WaiterController extends ChangeNotifier {
   static const _hubKey = 'waiter_hub';
   static const _tokenKey = 'waiter_token';
   static const _localeKey = 'waiter_locale';
+  static const _brandKey = 'waiter_brand';
+
+  /// Languages the waiter can pick on this phone, whatever language the till uses.
+  static const languages = {'en': 'English', 'ar': 'العربية'};
 
   /// After this many failed refreshes in a row the phone looks for its till again, in case the
   /// PC got a new Wi-Fi address.
@@ -95,6 +103,9 @@ class WaiterController extends ChangeNotifier {
 
   WaiterPhase phase = WaiterPhase.starting;
   String locale = 'en';
+
+  /// The admin's colours from the till, so the phone looks like the rest of the cafe's system.
+  CafeSurfaces surfaces = CafeSurfaces.defaults;
   String deviceName = '';
   String _deviceId = '';
   FoundHub? hub;
@@ -114,7 +125,9 @@ class WaiterController extends ChangeNotifier {
 
   Future<void> start() async {
     final prefs = await SharedPreferences.getInstance();
-    locale = prefs.getString(_localeKey) ?? 'en';
+    final saved = prefs.getString(_localeKey);
+    locale = languages.containsKey(saved) ? saved! : 'en';
+    _applyBrand(prefs.getString(_brandKey));
     deviceName = prefs.getString(_nameKey) ?? '';
     _deviceId = prefs.getString(_deviceIdKey) ?? '';
     if (_deviceId.isEmpty) {
@@ -147,6 +160,7 @@ class WaiterController extends ChangeNotifier {
   }
 
   Future<void> setLocale(String value) async {
+    if (!languages.containsKey(value) || value == locale) return;
     locale = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
@@ -199,7 +213,10 @@ class WaiterController extends ChangeNotifier {
   /// For a Wi-Fi that blocks the search: the waiter types the till's address.
   Future<void> connectToAddress(String address, {required String name}) {
     final host = address.trim();
-    return connect(FoundHub(host: host, port: LanProtocol.httpPort, hubId: '', cafeName: host), name: name);
+    return connect(
+      FoundHub(host: host, port: LanProtocol.httpPort, hubId: '', cafeName: host),
+      name: name,
+    );
   }
 
   /// Leaves this till; the phone must be allowed again to come back.
@@ -300,6 +317,16 @@ class WaiterController extends ChangeNotifier {
       for (final item in reply.body['items'] as List? ?? const [])
         MenuItem.fromJson(Map<String, dynamic>.from(item as Map)),
     ];
+    final brand = reply.body['brand'];
+    if (brand is Map) {
+      final encoded = jsonEncode({
+        for (final entry in brand.entries)
+          if (entry.key is String && entry.value is String) entry.key: entry.value,
+      });
+      _applyBrand(encoded);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_brandKey, encoded);
+    }
     final cafe = reply.body['cafe'];
     final current = hub;
     if (cafe is String && current != null && cafe != current.cafeName) {
@@ -308,6 +335,27 @@ class WaiterController extends ChangeNotifier {
     }
     _dropGoneDishes();
     notifyListeners();
+  }
+
+  /// Reads the saved or fresh brand colours; anything unreadable keeps the default look.
+  void _applyBrand(String? encoded) {
+    if (encoded == null) return;
+    try {
+      final json = jsonDecode(encoded);
+      if (json is! Map<String, dynamic>) return;
+      final next = CafeSurfaces.fromCafe(json);
+      bool same(Color a, Color b) => a.toARGB32() == b.toARGB32();
+      // A new object only when a colour changed, so the app does not rebuild its theme every poll.
+      if (same(next.header, surfaces.header) &&
+          same(next.sidebar, surfaces.sidebar) &&
+          same(next.background, surfaces.background) &&
+          same(next.button, surfaces.button)) {
+        return;
+      }
+      surfaces = next;
+    } on FormatException {
+      return;
+    }
   }
 
   /// Cart lines whose dish left the menu or sold out are removed, so a send never fails on them;
@@ -389,11 +437,7 @@ class WaiterController extends ChangeNotifier {
           'tableId': tableId,
           'lines': [
             for (final line in lines)
-              {
-                'itemId': line.item.id,
-                'qty': line.qty,
-                if (line.onIds != null) 'onIds': line.onIds!.toList(),
-              },
+              {'itemId': line.item.id, 'qty': line.qty, if (line.onIds != null) 'onIds': line.onIds!.toList()},
           ],
         },
       );

@@ -3,8 +3,21 @@ import 'package:menu_web_v1/models/models.dart';
 
 /// A till with two tables and three dishes; records what the hub sends on.
 class FakeHost implements WaiterHubHost {
-  final sent = <({String tableId, List<OrderLine> lines})>[];
+  final sent = <({String tableId, List<OrderLine> lines, bool forAccept})>[];
   int rings = 0;
+
+  /// Online till: waiter orders wait in its new-order list like a guest's QR order.
+  @override
+  bool holdsOrders = false;
+
+  /// Till order statuses the hub reads back.
+  final tillStatuses = <String, OrderStatus>{};
+
+  @override
+  Map<String, String> get brandColors => const {'headerColor': '#123456', 'buttonColor': '#00AA55'};
+
+  @override
+  OrderStatus? tillOrderStatus(String orderId) => tillStatuses[orderId];
 
   @override
   String get cafeName => 'Caffe test';
@@ -43,8 +56,13 @@ class FakeHost implements WaiterHubHost {
   CafeOrder? openOrderFor(String tableId) => null;
 
   @override
-  Future<({String? error, String? orderId})> sendWaiterLines(String tableId, List<OrderLine> lines) async {
-    sent.add((tableId: tableId, lines: lines));
+  Future<({String? error, String? orderId})> sendWaiterLines(
+    String tableId,
+    List<OrderLine> lines, {
+    bool forAccept = false,
+  }) async {
+    sent.add((tableId: tableId, lines: lines, forAccept: forAccept));
+    if (forAccept) tillStatuses['order-1'] = OrderStatus.received;
     return (error: null, orderId: 'order-1');
   }
 
