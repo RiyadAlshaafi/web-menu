@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -2175,6 +2176,21 @@ class AppDatabase {
       return true;
     } catch (error) {
       return !isNetworkError(error);
+    }
+  }
+
+  /// Quick check that the internet reaches the server. Uses a fresh connection every time, so a
+  /// dead connection left over from before a cable or Wi-Fi drop can't hide that the link is back.
+  Future<bool> linkAlive({Duration timeout = const Duration(seconds: 3)}) async {
+    if (client == null) return false;
+    final probe = http.Client();
+    try {
+      await probe.get(Uri.parse('$supabaseUrl/auth/v1/health'), headers: {'apikey': supabaseAnonKey}).timeout(timeout);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      probe.close();
     }
   }
 

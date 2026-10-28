@@ -167,7 +167,7 @@ class _TawlaAppState extends State<TawlaApp> {
           return '/login';
         }
         // Offline (started without internet) only quick takeout and shift expenses work.
-        if (widget.store.offlineSession && path.startsWith('/pos') && path != '/pos/takeout' && path != '/pos/shifts') {
+        if (widget.store.offlineLook && path.startsWith('/pos') && path != '/pos/takeout' && path != '/pos/shifts') {
           return '/pos/takeout';
         }
         if (path.startsWith('/admin') && widget.store.authKind != AuthKind.admin) {
@@ -409,17 +409,20 @@ class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(this._store) {
     _auth = _store.authKind;
     _hasAdmin = _store.hasAdmin;
+    _offlineLook = _store.offlineLook;
     _store.addListener(_handle);
   }
 
   final CafeStore _store;
   late AuthKind _auth;
   late bool _hasAdmin;
+  late bool _offlineLook;
 
   void _handle() {
-    if (_store.authKind == _auth && _store.hasAdmin == _hasAdmin) return;
+    if (_store.authKind == _auth && _store.hasAdmin == _hasAdmin && _store.offlineLook == _offlineLook) return;
     _auth = _store.authKind;
     _hasAdmin = _store.hasAdmin;
+    _offlineLook = _store.offlineLook;
     notifyListeners();
   }
 

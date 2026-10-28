@@ -79,16 +79,46 @@ extension CafeStoreOffline on CafeStore {
     }
   }
 
+  /// The till shows only takeout and shifts: it started offline, or the connection dropped while signed in.
+  bool get offlineLook => offlineSession || isOffline;
+
   void _startCashierPulse() {
     _cashierPulse?.cancel();
     offline?.signedIn();
     unawaited(_pulse());
     _cashierPulse = Timer.periodic(const Duration(seconds: 30), (_) => unawaited(_pulse()));
+    _linkProbe?.cancel();
+    if (offline != null && authKind != AuthKind.waiter) {
+      _linkProbe = Timer.periodic(const Duration(seconds: 5), (_) => unawaited(_checkLink()));
+    }
   }
 
   void _stopCashierPulse() {
     _cashierPulse?.cancel();
     _cashierPulse = null;
+    _linkProbe?.cancel();
+    _linkProbe = null;
+  }
+
+  /// Every 5 s: a short check of the internet so the till goes offline within seconds and
+  /// comes back as soon as the link returns, instead of waiting for the 30 s heartbeat.
+  Future<void> _checkLink() async {
+    final sync = offline;
+    if (sync == null || _probing || offlineSession || authKind != AuthKind.cashier) return;
+    _probing = true;
+    try {
+      final alive = await db.linkAlive();
+      if (alive && !sync.online) {
+        await _pulse();
+      } else if (!alive && sync.online) {
+        // A second miss confirms it, so one dropped packet doesn't flip the till.
+        if (await db.linkAlive()) return;
+        sync.online = false;
+        notifyListeners();
+      }
+    } finally {
+      _probing = false;
+    }
   }
 
   /// Every 30 s (the server counts a cashier online for 75 s): tell the server a cashier is here, upload waiting work, keep numbers in stock.
@@ -419,8 +449,8 @@ extension CafeStoreOffline on CafeStore {
 
   void _startReconnectProbe() {
     _reconnectProbe?.cancel();
-    _reconnectProbe = Timer.periodic(const Duration(seconds: 15), (_) async {
-      if (!await db.serverReachable()) return;
+    _reconnectProbe = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (!await db.linkAlive() || !await db.serverReachable()) return;
       _reconnectProbe?.cancel();
       _reconnectProbe = null;
       await _onReconnected();

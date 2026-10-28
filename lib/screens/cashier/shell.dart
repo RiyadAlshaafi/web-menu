@@ -34,7 +34,7 @@ class CashierShell extends StatelessWidget {
       final dining = store.diningTables;
       final sales = store.currentShift?.cashSales ?? store.openShift?.cashSales ?? 0;
       return (
-        offline: store.offlineSession,
+        offline: store.offlineLook,
         disconnected: store.isOffline,
         initials: staff?.initials ?? 'C',
         name: staff?.name ?? (store.offlineSession ? context.l10n.offlineUnassigned : null),

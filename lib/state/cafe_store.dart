@@ -136,6 +136,8 @@ class CafeStore extends ChangeNotifier {
   /// The connection came back during an offline session; the offline work needs a cashier.
   bool reconnectPending = false;
   Timer? _reconnectProbe;
+  Timer? _linkProbe;
+  bool _probing = false;
   String? _savedSnapshot;
 
   /// False while no cashier device is online; guests can then only browse the menu.
@@ -272,6 +274,7 @@ class CafeStore extends ChangeNotifier {
     stopLiveSync();
     _cashierPulse?.cancel();
     _reconnectProbe?.cancel();
+    _linkProbe?.cancel();
     _updateTimer?.cancel();
     super.dispose();
   }
