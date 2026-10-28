@@ -2703,6 +2703,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some dishes are no longer available. The menu was refreshed.';
 
   @override
+  String get waiterOrdersPaused =>
+      'The cashier has no internet. Table orders are paused, tell the cashier in person.';
+
+  @override
   String get waiterChangeCafe => 'Change till';
 
   @override

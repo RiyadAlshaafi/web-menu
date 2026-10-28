@@ -855,6 +855,7 @@
   "waiterAdd": "إضافة",
   "waiterSendFailed": "لم يُرسل. تحقق من الواي فاي وحاول مجدداً.",
   "waiterUnavailable": "بعض الأصناف لم تعد متاحة. تم تحديث القائمة.",
+  "waiterOrdersPaused": "لا يوجد إنترنت لدى الكاشير. طلبات الطاولات متوقفة مؤقتاً، أبلغ الكاشير مباشرة.",
   "waiterChangeCafe": "تغيير الخزينة",
   "waiterStatusPending": "بالانتظار",
   "waiterStatusAccepted": "مقبول",

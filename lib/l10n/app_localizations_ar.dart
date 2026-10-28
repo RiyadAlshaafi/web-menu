@@ -2688,6 +2688,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get waiterUnavailable => 'بعض الأصناف لم تعد متاحة. تم تحديث القائمة.';
 
   @override
+  String get waiterOrdersPaused =>
+      'لا يوجد إنترنت لدى الكاشير. طلبات الطاولات متوقفة مؤقتاً، أبلغ الكاشير مباشرة.';
+
+  @override
   String get waiterChangeCafe => 'تغيير الخزينة';
 
   @override

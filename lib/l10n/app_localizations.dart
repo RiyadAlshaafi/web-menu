@@ -4790,6 +4790,12 @@ abstract class AppLocalizations {
   /// **'Some dishes are no longer available. The menu was refreshed.'**
   String get waiterUnavailable;
 
+  /// No description provided for @waiterOrdersPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'The cashier has no internet. Table orders are paused, tell the cashier in person.'**
+  String get waiterOrdersPaused;
+
   /// No description provided for @waiterChangeCafe.
   ///
   /// In en, this message translates to:

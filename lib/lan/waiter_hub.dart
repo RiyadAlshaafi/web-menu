@@ -25,6 +25,10 @@ abstract interface class WaiterHubHost {
   /// order waits. The offline till cannot, so its waiter orders wait on the hub instead.
   bool get holdsOrders;
 
+  /// Whether the till can put dishes on a table's bill right now. The online version cannot while
+  /// it has no internet (it sells takeout only then), so waiter orders pause.
+  bool get takesTableOrders;
+
   /// Where a till order is now; null when it is gone.
   OrderStatus? tillOrderStatus(String orderId);
 
@@ -282,6 +286,7 @@ class WaiterHub extends ChangeNotifier {
     _followTillOrders();
     final pending = _orders.where((order) => order.status == WaiterOrderStatus.pending).toList();
     return {
+      'paused': !host.takesTableOrders,
       'tables': [
         for (final table in host.waiterTables)
           () {
@@ -310,6 +315,8 @@ class WaiterHub extends ChangeNotifier {
     if (tableId is! String || rawLines is! List || rawLines.isEmpty || rawLines.length > LanProtocol.maxLines) {
       return HubResponse.error(400, 'bad_request');
     }
+    // Refused up front, so an order never waits for an Accept that cannot work.
+    if (!host.takesTableOrders) return HubResponse.error(503, 'orders_paused');
     final table = host.waiterTables.where((table) => table.id == tableId).firstOrNull;
     if (table == null) return HubResponse.error(404, 'table_not_found');
     final lines = <OrderLine>[];

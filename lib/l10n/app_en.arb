@@ -1235,6 +1235,7 @@
   "waiterAdd": "Add",
   "waiterSendFailed": "Not sent. Check the Wi-Fi and try again.",
   "waiterUnavailable": "Some dishes are no longer available. The menu was refreshed.",
+  "waiterOrdersPaused": "The cashier has no internet. Table orders are paused, tell the cashier in person.",
   "waiterChangeCafe": "Change till",
   "waiterStatusPending": "Waiting",
   "waiterStatusAccepted": "Accepted",

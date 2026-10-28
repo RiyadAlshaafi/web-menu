@@ -10,6 +10,10 @@ class FakeHost implements WaiterHubHost {
   @override
   bool holdsOrders = false;
 
+  /// False while the online till has no internet.
+  @override
+  bool takesTableOrders = true;
+
   /// Till order statuses the hub reads back.
   final tillStatuses = <String, OrderStatus>{};
 

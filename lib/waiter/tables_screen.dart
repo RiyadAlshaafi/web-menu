@@ -31,6 +31,7 @@ class TablesScreen extends StatelessWidget {
             child: Column(
               children: [
                 if (!waiter.connected) const ReconnectingBanner(),
+                if (waiter.ordersPaused) const OrdersPausedBanner(),
                 if (waiter.sentOrders.isNotEmpty) _SentStrip(orders: waiter.sentOrders),
               ],
             ),
@@ -451,6 +452,37 @@ class ReconnectingBanner extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The till has no internet: the waiter must tell the cashier in person until it is back.
+class OrdersPausedBanner extends StatelessWidget {
+  const OrdersPausedBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE6DD),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: CafeColors.terracotta.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off, color: CafeColors.terracottaDark),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.waiterOrdersPaused,
+              style: const TextStyle(fontWeight: FontWeight.w700, color: CafeColors.terracottaDark),
+            ),
+          ),
+        ],
       ),
     );
   }

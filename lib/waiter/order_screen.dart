@@ -53,6 +53,7 @@ class _OrderScreenState extends State<OrderScreen> {
       body: Column(
         children: [
           if (!waiter.connected) const ReconnectingBanner(),
+          if (waiter.ordersPaused) const OrdersPausedBanner(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: TextField(
@@ -155,6 +156,8 @@ class _OrderScreenState extends State<OrderScreen> {
         if (context.mounted) Navigator.of(context).pop();
       case SendOutcome.unavailable:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.waiterUnavailable)));
+      case SendOutcome.paused:
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.waiterOrdersPaused)));
       case SendOutcome.failed:
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.waiterSendFailed)));
     }
@@ -375,7 +378,7 @@ class _ReviewSheet extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: lines.isEmpty || waiter.sending || !waiter.connected
+                onPressed: lines.isEmpty || waiter.sending || !waiter.connected || waiter.ordersPaused
                     ? null
                     : () async {
                         final navigator = Navigator.of(context);

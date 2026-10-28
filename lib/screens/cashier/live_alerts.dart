@@ -13,8 +13,18 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hub = context.read<CafeStore>().waiterHub;
+    if (hub == null) return _board(context, null);
+    return ListenableBuilder(listenable: hub, builder: (context, _) => _board(context, hub));
+  }
+
+  /// [hub] holds waiter orders the offline till cannot keep as "received"; they show here like a
+  /// guest's new order (the online till already has them in [CafeStore.liveOrders]).
+  Widget _board(BuildContext context, WaiterHub? hub) {
     final store = context.watch<CafeStore>();
+    final waiting = hub?.pendingOrders ?? const <WaiterOrder>[];
     final orders = store.liveOrders();
+    final newCount = orders.length + waiting.length;
     final calls = store.openCalls.where((call) => call.kind != 'bill').toList();
     final bills = store.billTables;
     CafeOrder? selected = orders.where((order) => order.id == selectedOrderId).firstOrNull;
@@ -39,8 +49,10 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                 ),
                 _stat(
                   context.l10n.cashierIncomingOrders,
-                  context.l10n.cashierOrdersCount('${orders.length}'),
-                  orders.any((order) => order.status == OrderStatus.received) ? context.l10n.cashierNeedsAccept : null,
+                  context.l10n.cashierOrdersCount('$newCount'),
+                  waiting.isNotEmpty || orders.any((order) => order.status == OrderStatus.received)
+                      ? context.l10n.cashierNeedsAccept
+                      : null,
                   Icons.receipt_outlined,
                   _AlertTone.order,
                   expand: !stacked,
@@ -72,9 +84,9 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                   padding: const EdgeInsetsDirectional.only(end: 4),
                   child: PanelTitle(context.l10n.cashierInstantAlerts, size: 18),
                 ),
-                FilterPill(label: context.l10n.cashierFilterAllAlerts('${calls.length + orders.length + bills.length}'), selected: filter == _AlertFilter.all, onTap: () => setState(() => filter = _AlertFilter.all)),
+                FilterPill(label: context.l10n.cashierFilterAllAlerts('${calls.length + newCount + bills.length}'), selected: filter == _AlertFilter.all, onTap: () => setState(() => filter = _AlertFilter.all)),
                 FilterPill(label: context.l10n.cashierFilterCallStaff('${calls.length}'), selected: filter == _AlertFilter.calls, onTap: () => setState(() => filter = _AlertFilter.calls)),
-                FilterPill(label: context.l10n.cashierFilterNewOrders('${orders.length}'), selected: filter == _AlertFilter.orders, onTap: () => setState(() => filter = _AlertFilter.orders)),
+                FilterPill(label: context.l10n.cashierFilterNewOrders('$newCount'), selected: filter == _AlertFilter.orders, onTap: () => setState(() => filter = _AlertFilter.orders)),
                 FilterPill(label: context.l10n.cashierFilterBillRequests('${bills.length}'), selected: filter == _AlertFilter.bills, onTap: () => setState(() => filter = _AlertFilter.bills)),
                 FilterPill(label: context.l10n.cashierReadyToServe, selected: filter == _AlertFilter.ready, onTap: () => setState(() => filter = _AlertFilter.ready)),
               ],
@@ -89,9 +101,11 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                     children: [
                       if (store.activeTables.isEmpty)
                         TawlaPanel(child: EmptyHint(context.l10n.noTables))
-                      else if (orders.isEmpty && calls.isEmpty && bills.isEmpty)
+                      else if (newCount == 0 && calls.isEmpty && bills.isEmpty)
                         TawlaPanel(child: EmptyHint(context.l10n.noOrders))
                       else ...[
+                        if (hub != null && (filter == _AlertFilter.all || filter == _AlertFilter.orders))
+                          ...waiting.map((order) => _waiterAlert(context, store, hub, order)),
                         if (filter == _AlertFilter.all || filter == _AlertFilter.bills)
                           ...bills.map((table) {
                             final order = store.openOrderFor(table.id);
@@ -213,6 +227,30 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     );
   }
 
+  /// A waiter's order held on the hub (offline till): Accept sends it to the bill and kitchen.
+  Widget _waiterAlert(BuildContext context, CafeStore store, WaiterHub hub, WaiterOrder order) {
+    final busy = hub.isAccepting(order.id);
+    return _alert(
+      id: 'waiter-${order.id}',
+      tone: _AlertTone.order,
+      arrivedAt: order.createdAt,
+      table: order.tableNumber,
+      badge: context.l10n.cashierNewOrder,
+      detail: context.l10n.waiterOrderFrom(order.deviceName),
+      body: order.lines
+          .map((line) => line.choices.isEmpty
+              ? '${line.qty}× ${line.name}'
+              : '${line.qty}× ${line.name} (${choicesText(line.choices, store.locale, without: context.l10n.dishChoiceWithout)})')
+          .join(', '),
+      time: order.createdAt,
+      amount: order.total,
+      action: busy ? null : context.l10n.cashierAcceptOrder,
+      onAction: busy ? null : () => acceptWaiterOrder(context, hub, order),
+      secondary: busy ? null : context.l10n.waiterRefuse,
+      onSecondary: busy ? null : () => hub.refuse(order),
+    );
+  }
+
   String _orderStatusLabel(BuildContext context, OrderStatus status) {
     return switch (status) {
       OrderStatus.received => context.l10n.guestStatusReceived,
@@ -291,6 +329,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     bool selected = false,
     VoidCallback? onTap,
     VoidCallback? onAction,
+    String? secondary,
+    VoidCallback? onSecondary,
   }) {
     final (strong, soft, ink) = tone.colors;
     final navy = CafeSurfaces.of(context).header;
@@ -390,6 +430,10 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                 ? const SizedBox.shrink()
                                 : Text(store.currency.format(amount), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: navy)),
                           ),
+                          if (secondary != null && onSecondary != null) ...[
+                            TextButton(onPressed: onSecondary, child: Text(secondary)),
+                            const SizedBox(width: 6),
+                          ],
                           if (action != null && onAction != null)
                             SizedBox(
                               height: 44,

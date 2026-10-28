@@ -13,7 +13,7 @@ import 'hub_client.dart';
 
 enum WaiterPhase { starting, searching, choose, pairing, denied, noAnswer, ready }
 
-enum SendOutcome { sent, unavailable, failed }
+enum SendOutcome { sent, unavailable, paused, failed }
 
 /// One table as the waiter sees it.
 class WaiterTable {
@@ -116,6 +116,9 @@ class WaiterController extends ChangeNotifier {
   List<WaiterTable> tables = const [];
   List<SentOrder> sentOrders = const [];
   bool connected = true;
+
+  /// The till has no internet, so it cannot take table orders until it is back.
+  bool ordersPaused = false;
   bool sending = false;
   int _failures = 0;
   Timer? _poll;
@@ -299,6 +302,7 @@ class WaiterController extends ChangeNotifier {
       for (final table in reply.body['tables'] as List? ?? const [])
         WaiterTable.fromJson(Map<String, dynamic>.from(table as Map)),
     ];
+    ordersPaused = reply.body['paused'] == true;
     sentOrders = [
       for (final order in reply.body['orders'] as List? ?? const [])
         SentOrder.fromJson(Map<String, dynamic>.from(order as Map)),
@@ -449,6 +453,10 @@ class WaiterController extends ChangeNotifier {
       if (reply.status == 409) {
         await _loadMenu();
         return SendOutcome.unavailable;
+      }
+      if (reply.body['error'] == 'orders_paused') {
+        ordersPaused = true;
+        return SendOutcome.paused;
       }
       return SendOutcome.failed;
     } finally {

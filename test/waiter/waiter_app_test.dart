@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// A till that answers at once: it allows every phone and takes every order.
 class FakeHubClient implements HubClient {
   bool offline = false;
+  bool paused = false;
   int discoveries = 0;
   final orders = <Map<String, dynamic>>[];
   final tokens = <String?>[];
@@ -43,12 +44,13 @@ class FakeHubClient implements HubClient {
           {'id': 'mocha', 'nameIt': 'Mocha', 'nameEn': 'Mocha', 'price': 9, 'categoryId': 'coffee', 'soldOut': true},
         ],
       }),
-      'GET /tables' => const HubReply(200, {
-        'tables': [
+      'GET /tables' => HubReply(200, {
+        'paused': paused,
+        'tables': const [
           {'id': 't1', 'number': '1', 'status': 'free'},
           {'id': 't2', 'number': '2', 'status': 'dining', 'items': 3, 'total': 21},
         ],
-        'orders': [],
+        'orders': const [],
       }),
       'POST /order' => () {
         orders.add(body!);
@@ -139,6 +141,18 @@ void main() {
     expect(find.text('Choose your cafe'), findsNothing);
     expect(find.text('Tables'), findsOneWidget);
     expect(till.discoveries, 0);
+    waiter.dispose();
+  });
+
+  testWidgets('a till without internet shows the paused banner', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'waiter_hub': '{"host":"10.0.0.5","port":47820,"hubId":"hub-1","cafe":"Caffe test"}',
+      'waiter_token': 'secret',
+    });
+    till.paused = true;
+    await open(tester);
+    expect(waiter.ordersPaused, isTrue);
+    expect(find.text('The cashier has no internet. Table orders are paused, tell the cashier in person.'), findsOneWidget);
     waiter.dispose();
   });
 

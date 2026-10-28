@@ -1,8 +1,39 @@
 part of '../cashier_screens.dart';
 
-/// On the till: phones asking to be allowed and waiter orders waiting for accept.
-class WaiterHubBanner extends StatelessWidget {
+/// On the till: phones asking to be allowed. A waiter order held on the hub (offline till) shows
+/// in the new-order list instead, with the same toast a guest's new order gets.
+class WaiterHubBanner extends StatefulWidget {
   const WaiterHubBanner({super.key});
+
+  @override
+  State<WaiterHubBanner> createState() => _WaiterHubBannerState();
+}
+
+class _WaiterHubBannerState extends State<WaiterHubBanner> {
+  final Set<String> _toasted = {};
+
+  void _toastNew(List<WaiterOrder> orders) {
+    final fresh = orders.where((order) => _toasted.add(order.id)).toList();
+    if (fresh.isEmpty) return;
+    final l10n = context.l10n;
+    final where = {for (final order in fresh) l10n.cashierTableNumber(order.tableNumber)}.join(', ');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.notifications_active, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(child: Text(l10n.cashierNewOrderToast(where))),
+            ],
+          ),
+          duration: const Duration(seconds: 6),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,17 +42,14 @@ class WaiterHubBanner extends StatelessWidget {
     return ListenableBuilder(
       listenable: hub,
       builder: (context, _) {
+        _toastNew(hub.pendingOrders);
         final asks = hub.pairRequests;
-        final orders = hub.pendingOrders;
-        if (asks.isEmpty && orders.isEmpty) return const SizedBox.shrink();
+        if (asks.isEmpty) return const SizedBox.shrink();
         return Material(
           color: CafeColors.peach,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final ask in asks) _PairRow(hub: hub, request: ask),
-              for (final order in orders) _WaiterOrderRow(hub: hub, order: order),
-            ],
+            children: [for (final ask in asks) _PairRow(hub: hub, request: ask)],
           ),
         );
       },
@@ -30,11 +58,10 @@ class WaiterHubBanner extends StatelessWidget {
 }
 
 class _BannerRow extends StatelessWidget {
-  const _BannerRow({required this.icon, required this.title, this.subtitle, required this.actions});
+  const _BannerRow({required this.icon, required this.title, required this.actions});
 
   final IconData icon;
   final String title;
-  final String? subtitle;
   final List<Widget> actions;
 
   @override
@@ -50,7 +77,6 @@ class _BannerRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: CafeColors.ink)),
-                if (subtitle != null) Text(subtitle!, style: const TextStyle(fontSize: 12, color: CafeColors.inkMuted)),
               ],
             ),
           ),
@@ -81,41 +107,6 @@ class _PairRow extends StatelessWidget {
         FilledButton(
           onPressed: () => hub.answerPair(request, allow: true),
           child: Text(context.l10n.waiterAllow),
-        ),
-      ],
-    );
-  }
-}
-
-class _WaiterOrderRow extends StatelessWidget {
-  const _WaiterOrderRow({required this.hub, required this.order});
-
-  final WaiterHub hub;
-  final WaiterOrder order;
-
-  @override
-  Widget build(BuildContext context) {
-    final store = context.read<CafeStore>();
-    final table = context.l10n.cashierTableNumber(order.tableNumber);
-    final busy = hub.isAccepting(order.id);
-    return _BannerRow(
-      icon: Icons.room_service,
-      title: context.l10n.waiterOrderBanner(table, order.itemCount, store.currency.format(order.total)),
-      subtitle: [
-        context.l10n.waiterOrderFrom(order.deviceName),
-        order.lines.map((line) => '${line.qty}× ${line.name}').join(', '),
-      ].join(' · '),
-      actions: [
-        TextButton(
-          onPressed: busy ? null : () => hub.refuse(order),
-          child: Text(context.l10n.waiterRefuse),
-        ),
-        const SizedBox(width: 6),
-        FilledButton(
-          onPressed: busy ? null : () => acceptWaiterOrder(context, hub, order),
-          child: busy
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(context.l10n.waiterAccept),
         ),
       ],
     );

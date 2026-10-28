@@ -162,6 +162,23 @@ void main() {
       expect(((tables['tables'] as List).first as Map)['waiting'], 0);
     });
 
+    test('a till without internet pauses table orders and tells the phone', () async {
+      host.takesTableOrders = false;
+      final token = await pairedToken(hub);
+      final reply = await hub.handle(order(token, {
+        'tableId': 't1',
+        'lines': [
+          {'itemId': 'latte', 'qty': 1},
+        ],
+      }));
+      expect(reply.status, 503);
+      expect(reply.body['error'], 'orders_paused');
+      expect(host.sent, isEmpty);
+      expect(hub.pendingOrders, isEmpty, reason: 'nothing waits for an Accept that cannot work');
+      final floor = await hub.handle(HubRequest(method: 'GET', path: '/tables', token: token));
+      expect(floor.body['paused'], isTrue);
+    });
+
     test('the menu carries the admin brand colours', () async {
       final token = await pairedToken(hub);
       final menu = await hub.handle(HubRequest(method: 'GET', path: '/menu', token: token));
