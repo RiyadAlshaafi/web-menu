@@ -2787,4 +2787,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get soundSettingsHint => 'تُحفظ على هذا الجهاز فقط.';
+
+  @override
+  String get waiterWatching =>
+      'نراقب طاولاتك. سيصلك تنبيه عند جاهزية الطلب أو نداء الزبائن.';
 }

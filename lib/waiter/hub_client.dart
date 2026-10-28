@@ -81,7 +81,9 @@ class LanHubClient implements HubClient {
   }) async {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
     try {
-      final request = await client.openUrl(method, Uri(scheme: 'http', host: host, port: port, path: path)).timeout(timeout);
+      final request = await client
+          .openUrl(method, Uri(scheme: 'http', host: host, port: port, path: path))
+          .timeout(timeout);
       if (token != null) request.headers.set(LanProtocol.tokenHeader, token);
       if (body != null) {
         request.headers.contentType = ContentType.json;

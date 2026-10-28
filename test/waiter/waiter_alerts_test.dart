@@ -1,8 +1,10 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/lan/lan_protocol.dart';
 import 'package:menu_web_v1/lan/waiter_devices.dart';
 import 'package:menu_web_v1/lan/waiter_hub.dart';
 import 'package:menu_web_v1/models/models.dart';
+import 'package:menu_web_v1/waiter/background_alerts.dart';
 import 'package:menu_web_v1/waiter/hub_client.dart';
 import 'package:menu_web_v1/waiter/waiter_state.dart';
 import 'package:menu_web_v1/waiter/waiter_tone.dart';
@@ -34,21 +36,41 @@ class HubBackedClient implements HubClient {
   }
 }
 
+class FakeBackground implements BackgroundAlerts {
+  int keepAlives = 0;
+  int stops = 0;
+  final shown = <({String body, bool silent})>[];
+
+  @override
+  Future<void> keepAlive({required String title, required String text}) async => keepAlives++;
+
+  @override
+  Future<void> stopKeepAlive() async => stops++;
+
+  @override
+  Future<void> notify({required int id, required String title, required String body, bool silent = false}) async =>
+      shown.add((body: body, silent: silent));
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late FakeHost host;
   late WaiterHub hub;
   late WaiterController waiter;
   late List<WaiterTone> beeps;
+  late FakeBackground background;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     host = FakeHost();
     hub = WaiterHub(host: host, deviceStore: MemoryWaiterDeviceStore());
     beeps = [];
+    background = FakeBackground();
     waiter = WaiterController(
       HubBackedClient(hub),
       pollEvery: const Duration(hours: 1),
       playTone: (tone) async => beeps.add(tone),
+      background: background,
     );
     final pairing = hub.handle(
       const HubRequest(method: 'POST', path: '/pair', body: {'deviceId': 'p1', 'deviceName': 'Omar'}),
@@ -101,6 +123,27 @@ void main() {
     await waiter.refresh();
     expect(waiter.alertFor('t1'), WaiterAlertKind.ready);
     expect(beeps.length, 2);
+  });
+
+  test('the keep-alive service runs while connected', () {
+    expect(background.keepAlives, 1);
+  });
+
+  test('with the app in the background an alert becomes a phone notification, not an in-app beep', () async {
+    waiter.didChangeAppLifecycleState(AppLifecycleState.paused);
+    host.readyTables.add('t1');
+    await waiter.refresh();
+    expect(beeps, isEmpty);
+    expect(background.shown.single.body, 'Table 1: food is ready to serve');
+    expect(background.shown.single.silent, isFalse);
+  });
+
+  test('a background notification is silent when sound is off', () async {
+    await waiter.setSoundOn(false);
+    waiter.didChangeAppLifecycleState(AppLifecycleState.paused);
+    host.readyTables.add('t1');
+    await waiter.refresh();
+    expect(background.shown.single.silent, isTrue);
   });
 
   test('sound off keeps the alert on screen but stays silent, and is remembered', () async {

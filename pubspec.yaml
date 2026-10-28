@@ -36,6 +36,8 @@ dependencies:
   win32: ^5.15.0
   ffi: ^2.2.0
   audioplayers: ^6.8.1
+  flutter_foreground_task: ^11.0.3
+  flutter_local_notifications: ^22.3.3
 
 dev_dependencies:
   flutter_test:

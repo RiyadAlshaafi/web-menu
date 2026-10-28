@@ -4969,6 +4969,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved on this device only.'**
   String get soundSettingsHint;
+
+  /// No description provided for @waiterWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching your tables. You will be alerted when food is ready or guests call.'**
+  String get waiterWatching;
 }
 
 class _AppLocalizationsDelegate

@@ -1268,5 +1268,6 @@
   "soundSettingsOrders": "New orders",
   "soundSettingsCalls": "Guest calls",
   "soundSettingsBills": "Bill requests",
-  "soundSettingsHint": "Saved on this device only."
+  "soundSettingsHint": "Saved on this device only.",
+  "waiterWatching": "Watching your tables. You will be alerted when food is ready or guests call."
 }

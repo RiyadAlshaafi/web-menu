@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/lan/lan_protocol.dart';
+import 'package:menu_web_v1/waiter/background_alerts.dart';
 import 'package:menu_web_v1/waiter/hub_client.dart';
 import 'package:menu_web_v1/waiter/waiter_app.dart';
 import 'package:menu_web_v1/waiter/waiter_state.dart';
@@ -75,7 +76,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     till = FakeHubClient();
-    waiter = WaiterController(till, pollEvery: const Duration(hours: 1));
+    waiter = WaiterController(till, pollEvery: const Duration(hours: 1), background: const NoBackgroundAlerts());
   });
 
   Future<void> open(WidgetTester tester) async {
@@ -152,7 +153,10 @@ void main() {
     till.paused = true;
     await open(tester);
     expect(waiter.ordersPaused, isTrue);
-    expect(find.text('The cashier has no internet. Table orders are paused, tell the cashier in person.'), findsOneWidget);
+    expect(
+      find.text('The cashier has no internet. Table orders are paused, tell the cashier in person.'),
+      findsOneWidget,
+    );
     waiter.dispose();
   });
 

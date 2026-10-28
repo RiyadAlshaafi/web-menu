@@ -2803,4 +2803,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soundSettingsHint => 'Saved on this device only.';
+
+  @override
+  String get waiterWatching =>
+      'Watching your tables. You will be alerted when food is ready or guests call.';
 }

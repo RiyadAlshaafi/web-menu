@@ -9,6 +9,8 @@ import '../core/money.dart';
 import '../lan/lan_protocol.dart';
 import '../models/models.dart';
 import '../theme/cafe_theme.dart';
+import '../l10n/app_localizations.dart';
+import 'background_alerts.dart';
 import 'hub_client.dart';
 import 'waiter_tone.dart';
 
@@ -105,13 +107,22 @@ class WaiterLine {
 }
 
 /// Everything the waiter phone knows: which till it talks to, the menu, the floor and the carts.
-class WaiterController extends ChangeNotifier {
-  WaiterController(this.client, {this.pollEvery = const Duration(seconds: 5), TonePlayer? playTone})
-    : _playTone = playTone ?? playWaiterTone;
+class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
+  WaiterController(
+    this.client, {
+    this.pollEvery = const Duration(seconds: 5),
+    TonePlayer? playTone,
+    BackgroundAlerts? background,
+  }) : _playTone = playTone ?? playWaiterTone,
+       _background = background ?? createBackgroundAlerts();
 
   final HubClient client;
   final Duration pollEvery;
   final TonePlayer _playTone;
+  final BackgroundAlerts _background;
+
+  /// The app is not on screen (home pressed, screen off): alerts go to the phone's notifications.
+  bool _inBackground = false;
 
   static const _deviceIdKey = 'waiter_device_id';
   static const _nameKey = 'waiter_device_name';
@@ -159,7 +170,13 @@ class WaiterController extends ChangeNotifier {
 
   CafeMoney get money => CafeMoney(locale);
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _inBackground = state != AppLifecycleState.resumed;
+  }
+
   Future<void> start() async {
+    WidgetsFlutterBinding.ensureInitialized().addObserver(this);
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_localeKey);
     locale = languages.containsKey(saved) ? saved! : 'en';
@@ -256,7 +273,12 @@ class WaiterController extends ChangeNotifier {
       _alertsSeeded = true;
       return;
     }
-    if (!soundOn || fresh.isEmpty) return;
+    if (fresh.isEmpty) return;
+    if (_inBackground) {
+      _notifyInBackground(fresh);
+      return;
+    }
+    if (!soundOn) return;
     // The most urgent one decides the tone.
     final kind = fresh.map((alert) => alert.kind).reduce((a, b) => a.index > b.index ? a : b);
     unawaited(
@@ -266,6 +288,31 @@ class WaiterController extends ChangeNotifier {
         WaiterAlertKind.bill => WaiterTone.bill,
       }),
     );
+  }
+
+  /// Shows each new alert as a phone notification (the phone's own sound plays unless sound is off).
+  void _notifyInBackground(List<WaiterAlert> fresh) {
+    final text = lookupAppLocalizations(Locale(locale));
+    for (final alert in fresh) {
+      final body = switch (alert.kind) {
+        WaiterAlertKind.ready => text.waiterAlertReady(alert.tableNumber),
+        WaiterAlertKind.call => text.waiterAlertCall(alert.tableNumber),
+        WaiterAlertKind.bill => text.waiterAlertBill(alert.tableNumber),
+      };
+      unawaited(
+        _background.notify(
+          id: alert.key.hashCode & 0x7fffffff,
+          title: hub?.cafeName ?? 'Tawla',
+          body: body,
+          silent: !soundOn,
+        ),
+      );
+    }
+  }
+
+  void _keepAlive() {
+    final text = lookupAppLocalizations(Locale(locale));
+    unawaited(_background.keepAlive(title: 'Tawla Waiter', text: text.waiterWatching));
   }
 
   Future<void> search() async {
@@ -323,6 +370,7 @@ class WaiterController extends ChangeNotifier {
   /// Leaves this till; the phone must be allowed again to come back.
   Future<void> forgetTill() async {
     _poll?.cancel();
+    unawaited(_background.stopKeepAlive());
     hub = null;
     _token = null;
     _carts.clear();
@@ -351,6 +399,7 @@ class WaiterController extends ChangeNotifier {
     notifyListeners();
     _poll?.cancel();
     _poll = Timer.periodic(pollEvery, (_) => refresh());
+    _keepAlive();
     unawaited(refresh(withMenu: true));
   }
 
@@ -569,6 +618,8 @@ class WaiterController extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_background.stopKeepAlive());
     _poll?.cancel();
     super.dispose();
   }
