@@ -75,7 +75,6 @@ const
 
 var
   Installed: Boolean;
-  UpdatePage: TInputOptionWizardPage;
   PasswordPage: TInputQueryWizardPage;
   ModePage: TInputOptionWizardPage;
   SlotPage: TInputOptionWizardPage;
@@ -271,7 +270,7 @@ end;
 // An update that keeps this till's mode, slot and features.
 function KeepSettings: Boolean;
 begin
-  Result := Installed and (UpdatePage.SelectedValueIndex = 0);
+  Result := Installed;
 end;
 
 // A till an earlier setup finished (its choices are saved). Only such a till updates with no password.
@@ -457,7 +456,6 @@ end;
 procedure InitializeWizard;
 var
   I: Integer;
-  UpdateNote: String;
 begin
   SetArrayLength(FeatureKeys, FeatureCount);
   FeatureKeys[0] := 'tables';
@@ -482,17 +480,7 @@ begin
   Installed := FileExists(AddBackslash(WizardDirValue) + 'menu_web_v1.exe') or
     RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1') or
     RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0F3B5E-2C7A-4E61-9C1B-8E5A2D4F7C31}_is1');
-  if SetUpTill then
-    UpdateNote := 'Updating keeps this till''s mode, cafe slot, features, sales and settings. No password is needed.'
-  else
-    UpdateNote := 'Updating keeps this till''s sales and settings. The setup password is asked.';
-  UpdatePage := CreateInputOptionPage(wpWelcome, 'Update',
-    'Cafe POS is already on this PC.', UpdateNote, True, False);
-  UpdatePage.Add('Update and keep this till''s settings');
-  UpdatePage.Add('Change the settings or reset the offline admin password (needs the setup password)');
-  UpdatePage.SelectedValueIndex := 0;
-
-  PasswordPage := CreateInputQueryPage(UpdatePage.ID, 'Password',
+  PasswordPage := CreateInputQueryPage(wpWelcome, 'Password',
     'Only the seller can install Cafe POS.',
     'Enter the setup password. This PC needs internet for this check only.');
   PasswordPage.Add('Password:', True);
@@ -532,9 +520,7 @@ end;
 // The slot page is for online tills; the admin reset is for offline tills (online ones reset by email).
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  if PageID = UpdatePage.ID then
-    Result := not Installed
-  else if (PageID = PasswordPage.ID) and KeepSettings then
+  if (PageID = PasswordPage.ID) and KeepSettings then
     Result := SetUpTill
   else if KeepSettings then
     Result := (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
