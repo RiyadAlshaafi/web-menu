@@ -53,7 +53,8 @@ class TablesScreen extends StatelessWidget {
                       ],
                     )
                   : GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                      // The nav bar is see-through, so the last row clears it.
+                      padding: EdgeInsets.fromLTRB(16, 12, 16, 24 + MediaQuery.viewPaddingOf(context).bottom),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 180,
                         mainAxisSpacing: 14,

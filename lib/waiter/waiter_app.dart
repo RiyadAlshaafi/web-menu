@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -32,6 +33,12 @@ class WaiterApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          // Status-bar icons follow the cafe's header colour, and the nav bar is see-through, so
+          // the phone's own bars read as part of the app rather than a strip above it.
+          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: waiterSystemBars(look.$2),
+            child: child!,
+          ),
           home: const _WaiterHome(),
         ),
       ),
@@ -55,4 +62,18 @@ class _WaiterHome extends StatelessWidget {
       child: ready ? const TablesScreen() : const ConnectScreen(),
     );
   }
+}
+
+/// Transparent system bars with icons that contrast with the header the status bar sits on.
+SystemUiOverlayStyle waiterSystemBars(CafeSurfaces surfaces) {
+  final dark = ThemeData.estimateBrightnessForColor(surfaces.header) == Brightness.dark;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+    statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarContrastEnforced: false,
+  );
 }

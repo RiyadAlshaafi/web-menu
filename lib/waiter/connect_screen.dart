@@ -59,6 +59,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 460),
                 child: ListView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
                     const Align(alignment: AlignmentDirectional.centerEnd, child: WaiterLanguageButton()),
@@ -151,6 +152,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
       TextField(
         controller: _name,
         textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.done,
+        autocorrect: false,
+        onTapOutside: (_) => FocusScope.of(context).unfocus(),
         maxLength: 40,
         decoration: InputDecoration(
           labelText: l10n.waiterYourName,
@@ -202,6 +206,9 @@ class _ConnectScreenState extends State<ConnectScreen> {
               child: TextField(
                 controller: _address,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: TextInputAction.go,
+                autocorrect: false,
+                enableSuggestions: false,
                 decoration: InputDecoration(labelText: l10n.waiterEnterAddress, hintText: l10n.waiterAddressHint),
                 onSubmitted: (_) => _connectTyped(waiter),
               ),

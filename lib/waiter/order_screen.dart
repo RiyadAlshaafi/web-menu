@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/choice_labels.dart';
@@ -9,6 +10,7 @@ import '../models/models.dart';
 import '../theme/cafe_theme.dart';
 import '../widgets/dish_choices_sheet.dart';
 import 'tables_screen.dart';
+import 'waiter_app.dart' show waiterSystemBars;
 import 'waiter_motion.dart';
 import 'waiter_state.dart';
 
@@ -50,6 +52,7 @@ class _OrderScreenState extends State<OrderScreen> {
         backgroundColor: Colors.transparent,
         flexibleSpace: DecoratedBox(decoration: brandGradient(surfaces)),
         foregroundColor: surfaces.onHeader,
+        systemOverlayStyle: waiterSystemBars(surfaces),
         title: Text(l10n.waiterReviewTitle(number), style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: const [WaiterLanguageButton()],
       ),
@@ -60,6 +63,9 @@ class _OrderScreenState extends State<OrderScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: TextField(
+              textInputAction: TextInputAction.search,
+              autocorrect: false,
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
                 hintText: l10n.waiterSearchDish,
@@ -98,6 +104,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           Expanded(
             child: GridView.builder(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 220,
@@ -244,6 +251,7 @@ class _DishCard extends StatelessWidget {
   Future<void> _add(BuildContext context) async {
     final waiter = context.read<WaiterController>();
     if (item.options.isEmpty) {
+      unawaited(HapticFeedback.selectionClick());
       waiter.addDish(tableId, item);
       return;
     }
@@ -254,7 +262,9 @@ class _DishCard extends StatelessWidget {
       locale: waiter.locale,
       money: waiter.money.format,
     );
-    if (onIds != null) waiter.addDish(tableId, item, onIds: onIds);
+    if (onIds == null) return;
+    unawaited(HapticFeedback.selectionClick());
+    waiter.addDish(tableId, item, onIds: onIds);
   }
 
   @override
