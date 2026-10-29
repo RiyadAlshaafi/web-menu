@@ -42,7 +42,7 @@ export function MenuScreen() {
       type="button"
       aria-pressed={selected}
       onClick={() => setFilter(next)}
-      className={`min-h-[44px] shrink-0 rounded-[20px] border-[1.5px] px-4 text-sm font-bold whitespace-nowrap ${
+      className={`press min-h-[44px] shrink-0 rounded-[20px] border-[1.5px] px-4 text-sm font-bold whitespace-nowrap ${
         selected ? "border-brand bg-brand text-on-brand" : "border-border bg-white text-ink"
       }`}
     >
@@ -192,7 +192,8 @@ function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => voi
       </button>
       {inCart > 0 && (
         <span
-          className="ms-2 grid h-[26px] min-w-[26px] place-items-center rounded-[13px] bg-brand-header px-1.5 text-xs font-extrabold text-on-header"
+          key={inCart}
+          className="pop-in ms-2 grid h-[26px] min-w-[26px] place-items-center rounded-[13px] bg-brand-header px-1.5 text-xs font-extrabold text-on-header"
           aria-label={text("inCart", { count: inCart })}
         >
           {inCart}
@@ -211,7 +212,7 @@ function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => voi
           // The dish as it comes; choices are made in the sheet.
           add(item);
         }}
-        className={`ms-3 grid h-11 w-11 shrink-0 place-items-center rounded-full ${
+        className={`press ms-3 grid h-11 w-11 shrink-0 place-items-center rounded-full ${
           item.available && canPlaceOrder ? "bg-brand text-on-brand" : "bg-ink/10 text-ink/40"
         }`}
       >
@@ -245,7 +246,7 @@ function CartBar({ onOpen }: { onOpen: () => void }) {
   const { count, total, lang, text, canPlaceOrder, blockedMessage, showToast } = useGuest();
   if (count === 0) return null;
   return (
-    <div className="sticky bottom-[68px] z-10 px-3 pt-2 pb-3">
+    <div className="rise-in sticky bottom-[68px] z-10 px-3 pt-2 pb-3">
       <button
         type="button"
         onClick={() => {
@@ -256,7 +257,7 @@ function CartBar({ onOpen }: { onOpen: () => void }) {
           onOpen();
         }}
         aria-disabled={!canPlaceOrder || undefined}
-        className={`flex min-h-[60px] w-full items-center gap-2.5 rounded-2xl px-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.16)] ${
+        className={`press flex min-h-[60px] w-full items-center gap-2.5 rounded-2xl px-[18px] shadow-[0_4px_12px_rgba(0,0,0,0.16)] ${
           canPlaceOrder ? "bg-brand text-on-brand" : "bg-[#e9e7e3] text-ink/60"
         }`}
       >
@@ -279,7 +280,7 @@ function Stepper({ value, onChange, min = 1, label }: { value: number; onChange:
         aria-label={text("decrease")}
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="grid h-11 w-11 place-items-center rounded-full border-[1.5px] border-brand-ink text-brand-ink disabled:opacity-40"
+        className="press grid h-11 w-11 place-items-center rounded-full border-[1.5px] border-brand-ink text-brand-ink disabled:opacity-40"
       >
         <Icon name="remove" size={20} />
       </button>
@@ -291,7 +292,7 @@ function Stepper({ value, onChange, min = 1, label }: { value: number; onChange:
         aria-label={text("increase")}
         disabled={value >= MAX_QTY}
         onClick={() => onChange(Math.min(MAX_QTY, value + 1))}
-        className="grid h-11 w-11 place-items-center rounded-full bg-brand text-on-brand disabled:opacity-40"
+        className="press grid h-11 w-11 place-items-center rounded-full bg-brand text-on-brand disabled:opacity-40"
       >
         <Icon name="add" size={20} />
       </button>

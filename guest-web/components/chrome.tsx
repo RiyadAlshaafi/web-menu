@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useGuest } from "./guest-provider";
 import { Icon, type IconName } from "./icons";
 import { GuestHeader } from "./parts";
@@ -60,11 +60,20 @@ export function BottomNav() {
 
 export function Toast() {
   const { toast } = useGuest();
+  // Keep the last message on screen while it fades out, so it leaves the way it came.
+  const [last, setLast] = useState(toast);
+  if (toast && toast !== last) setLast(toast);
+  const shown = Boolean(toast);
   return (
     <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-      {toast && (
-        <p className="fade-in pointer-events-auto max-w-[400px] rounded-xl bg-ink px-4 py-3 text-sm leading-snug text-white shadow-lg">
-          {toast}
+      {last && (
+        <p
+          aria-hidden={!shown || undefined}
+          className={`toast max-w-[400px] rounded-xl bg-ink px-4 py-3 text-sm leading-snug text-white shadow-lg ${
+            shown ? "fade-in pointer-events-auto" : "translate-y-2 opacity-0"
+          }`}
+        >
+          {last}
         </p>
       )}
     </div>

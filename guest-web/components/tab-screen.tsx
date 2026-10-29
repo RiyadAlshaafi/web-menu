@@ -35,10 +35,10 @@ function StatusSteps({ status }: { status: string }) {
         return (
           <li key={label} className="flex flex-1 flex-col items-center" aria-current={index === current ? "step" : undefined}>
             <div className="relative flex h-9 w-full items-center">
-              <span className={`h-[3px] flex-1 ${index === 0 ? "bg-transparent" : reached ? "bg-brand" : "bg-border"}`} />
-              <span className={`h-[3px] flex-1 ${index === 3 ? "bg-transparent" : index < current ? "bg-brand" : "bg-border"}`} />
+              <span className={`h-[3px] flex-1 motion-safe:transition-colors motion-safe:duration-300 ${index === 0 ? "bg-transparent" : reached ? "bg-brand" : "bg-border"}`} />
+              <span className={`h-[3px] flex-1 motion-safe:transition-colors motion-safe:duration-300 ${index === 3 ? "bg-transparent" : index < current ? "bg-brand" : "bg-border"}`} />
               <span
-                className={`absolute start-1/2 grid h-7 w-7 -translate-x-1/2 rtl:translate-x-1/2 place-items-center rounded-full text-xs font-extrabold ${
+                className={`absolute start-1/2 grid motion-safe:transition-colors motion-safe:duration-300 h-7 w-7 -translate-x-1/2 rtl:translate-x-1/2 place-items-center rounded-full text-xs font-extrabold ${
                   reached ? "bg-brand text-on-brand" : "bg-step-idle text-ink"
                 } ${index === current && !done ? "ring-4 ring-brand/20" : ""}`}
                 aria-hidden="true"
@@ -113,7 +113,7 @@ export function TabScreen() {
                             type="button"
                             aria-label={`${b.label} ${dishName(item, lang)}`}
                             onClick={() => (canPlaceOrder ? setQty(key, b.next) : blockedMessage && showToast(blockedMessage))}
-                            className={`grid h-11 w-11 place-items-center ${canPlaceOrder ? "text-brand-ink" : "text-muted"}`}
+                            className={`press grid h-11 w-11 place-items-center ${canPlaceOrder ? "text-brand-ink" : "text-muted"}`}
                           >
                             <Icon name={b.icon} size={18} />
                           </button>

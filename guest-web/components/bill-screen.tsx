@@ -48,7 +48,7 @@ export function BillScreen() {
           <div className="mt-2">
             {paid ? (
               <div className="flex flex-col items-center py-3 text-center">
-                <Icon name="checkCircle" size={48} className="text-success" />
+                <Icon name="checkCircle" size={48} className="pop-in text-success" />
                 <p className="mt-2 font-extrabold tracking-[0.1em] text-success">{text("guestPaid")}</p>
                 <p className="text-lg font-bold">{text("guestPaymentSuccessful")}</p>
                 <p className="text-muted">{text("guestThankYou", { cafe: menu.cafe.name })}</p>

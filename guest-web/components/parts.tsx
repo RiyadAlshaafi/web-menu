@@ -148,7 +148,7 @@ export function PrimaryButton({
       disabled={disabled || busy}
       aria-busy={busy || undefined}
       style={{ minHeight: height }}
-      className={`flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand px-4 text-base font-extrabold text-on-brand transition-opacity disabled:bg-ink/10 disabled:text-ink/40 ${className}`}
+      className={`flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand px-4 text-base font-extrabold text-on-brand press disabled:bg-ink/10 disabled:text-ink/40 ${className}`}
     >
       {busy ? <Spinner /> : children}
     </button>
@@ -161,7 +161,7 @@ export function OutlineButton({ children, onClick, height = 52 }: { children: Re
       type="button"
       onClick={onClick}
       style={{ minHeight: height }}
-      className="flex w-full items-center justify-center rounded-xl border border-brand-ink px-3 text-[15px] font-extrabold text-brand-ink"
+      className="press flex w-full items-center justify-center rounded-xl border border-brand-ink px-3 text-[15px] font-extrabold text-brand-ink"
     >
       {children}
     </button>
