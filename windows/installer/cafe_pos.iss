@@ -267,16 +267,17 @@ begin
   end;
 end;
 
-// An update that keeps this till's mode, slot and features.
-function KeepSettings: Boolean;
-begin
-  Result := Installed;
-end;
-
 // A till an earlier setup finished (its choices are saved). Only such a till updates with no password.
 function SetUpTill: Boolean;
 begin
   Result := FileExists(FeaturesFile);
+end;
+
+// An update that keeps this till's mode, slot and features. A till with no saved choices goes
+// through the full setup once, so later updates ask nothing.
+function KeepSettings: Boolean;
+begin
+  Result := Installed and SetUpTill;
 end;
 
 function OfflineChosen: Boolean;
@@ -520,10 +521,8 @@ end;
 // The slot page is for online tills; the admin reset is for offline tills (online ones reset by email).
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  if (PageID = PasswordPage.ID) and KeepSettings then
-    Result := SetUpTill
-  else if KeepSettings then
-    Result := (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
+  if KeepSettings then
+    Result := (PageID = PasswordPage.ID) or (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
       (PageID = ResetPage.ID) or (PageID = FeaturePage.ID)
   else
     Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);
