@@ -127,10 +127,15 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
                       if (cashiers.isEmpty)
                         EmptyHint(context.l10n.noCashiers)
                       else
-                        Row(
-                          children: cashiers.take(3).map((member) {
+                        // Every cashier gets a tile, three to a row, so a fourth or fifth one can
+                        // still pick their name on a touch till.
+                        LayoutBuilder(
+                          builder: (context, box) => Wrap(
+                            runSpacing: 8,
+                            children: cashiers.map((member) {
                             final active = member.id == store.selectedCashierId;
-                            return Expanded(
+                            return SizedBox(
+                              width: box.maxWidth / 3,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 4),
                                 child: InkWell(
@@ -159,14 +164,20 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
                                           ),
                                         ),
                                         const SizedBox(height: 8),
-                                        Text(member.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        Text(
+                                          member.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
                               ),
                             );
-                          }).toList(),
+                            }).toList(),
+                          ),
                         ),
                       const SizedBox(height: 18),
                       AnimatedBuilder(

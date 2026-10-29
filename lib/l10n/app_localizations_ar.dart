@@ -1046,6 +1046,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierItemRefused => 'تمت إزالة الصنف وتمييزه كغير متاح';
 
   @override
+  String cashierRefuseTitle(String dish) {
+    return 'رفض $dish؟';
+  }
+
+  @override
+  String get cashierRefuseMessage =>
+      'ستتم إزالة الصنف من الطلب وتمييزه كغير متاح في القائمة.';
+
+  @override
   String get cashierWaitingCustomerConfirm =>
       'بانتظار تأكيد الطاولة للطلب المحدّث.';
 

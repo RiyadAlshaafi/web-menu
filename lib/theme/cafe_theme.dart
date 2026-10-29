@@ -185,6 +185,10 @@ class CafeTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: surfaces.background,
       canvasColor: surfaces.background,
+      // The tills are touch screens: without these, Windows gets mouse density (every control
+      // 8px smaller) and no 48px tap padding.
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       extensions: [surfaces],
       appBarTheme: AppBarTheme(
         backgroundColor: surfaces.header,

@@ -186,18 +186,18 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
                 IconButton(
                   key: Key('move-table-${item.id}'),
                   tooltip: context.l10n.moveTable,
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  constraints: const BoxConstraints.tightFor(width: 44, height: 44),
                   padding: EdgeInsets.zero,
                   onPressed: () => _pickMoveTarget(context, store, item),
                   icon: const Icon(Icons.swap_horiz, size: 20, color: TawlaTokens.muted),
                 ),
+              // A gap so a finger meant for one does not land on the other.
+              if (!free && store.allows(AppFeature.moveTables)) const SizedBox(width: 8),
               if (!free)
                 IconButton(
                   key: Key('clear-table-${item.id}'),
                   tooltip: waitingForPayment ? context.l10n.waiterWaitingForPayment : context.l10n.cashierClearTable,
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  constraints: const BoxConstraints.tightFor(width: 44, height: 44),
                   padding: EdgeInsets.zero,
                   onPressed: waitingForPayment ? null : () => _confirmClear(context, store, item),
                   icon: Icon(

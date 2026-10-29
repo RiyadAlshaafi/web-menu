@@ -1048,6 +1048,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierItemRefused => 'Item removed — marked as unavailable';
 
   @override
+  String cashierRefuseTitle(String dish) {
+    return 'Refuse $dish?';
+  }
+
+  @override
+  String get cashierRefuseMessage =>
+      'The item is removed from the order and marked as unavailable on the menu.';
+
+  @override
   String get cashierWaitingCustomerConfirm =>
       'Waiting for the table to confirm the updated order.';
 

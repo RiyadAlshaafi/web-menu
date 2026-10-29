@@ -1970,6 +1970,18 @@ abstract class AppLocalizations {
   /// **'Item removed — marked as unavailable'**
   String get cashierItemRefused;
 
+  /// No description provided for @cashierRefuseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse {dish}?'**
+  String cashierRefuseTitle(String dish);
+
+  /// No description provided for @cashierRefuseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The item is removed from the order and marked as unavailable on the menu.'**
+  String get cashierRefuseMessage;
+
   /// No description provided for @cashierWaitingCustomerConfirm.
   ///
   /// In en, this message translates to:

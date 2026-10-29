@@ -142,7 +142,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                               body: context.l10n.cashierAssistanceRequested,
                               time: call.createdAt,
                               action: context.l10n.cashierAttended,
-                              onTap: () => store.resolveCall(call.id),
+                              // Only the Attended button clears a call: a stray tap or palm on the
+                              // card must not hide a guest who is waiting.
                               onAction: () => store.resolveCall(call.id),
                             ),
                           ),

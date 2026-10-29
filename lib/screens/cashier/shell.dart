@@ -108,9 +108,10 @@ class CashierShell extends StatelessWidget {
       ),
       banners: const [OfflineStatusBanner(), UpdateReadyStrip(), WaiterHubBanner(), NewOrderToaster()],
       // A short or narrow window scrolls the page instead of cutting its bottom off;
-      // narrow windows stack the cards, which needs more height.
+      // narrow windows stack the cards (below about 820px), which needs more height.
+      // 640 lets a 1024x768 till show the whole page, Pay button included, without scrolling.
       // A waiter's phone shows only the floor and the order screen, which fit a phone's height.
-      body: ScrollWhenShort(minHeightOf: (c) => waiter ? 560 : (c.maxWidth < 900 ? 900 : 680), child: child),
+      body: ScrollWhenShort(minHeightOf: (c) => waiter ? 560 : (c.maxWidth < 820 ? 900 : 640), child: child),
     );
   }
 

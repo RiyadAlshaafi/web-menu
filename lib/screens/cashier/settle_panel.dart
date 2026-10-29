@@ -383,14 +383,12 @@ class _SplitStepper extends StatelessWidget {
       children: [
         IconButton(
           tooltip: '−',
-          visualDensity: VisualDensity.compact,
           onPressed: change == null || qty <= 0 ? null : () => change(qty - 1),
           icon: const Icon(Icons.remove_circle_outline, size: 22),
         ),
         SizedBox(width: 22, child: Text('$qty', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800))),
         IconButton(
           tooltip: '+',
-          visualDensity: VisualDensity.compact,
           onPressed: change == null || qty >= max ? null : () => change(qty + 1),
           icon: const Icon(Icons.add_circle_outline, size: 22),
         ),

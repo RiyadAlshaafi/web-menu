@@ -190,7 +190,8 @@ class AppSections {
     return cashier.firstWhere((section) => section.matches(location), orElse: () => cashier.first);
   }
 
-  static bool compact(double width) => width < 960;
+  /// Icon-only side menu, so a 1024px touch till keeps dishes and the Pay button side by side.
+  static bool compact(double width) => width < 1100;
 
   /// Sidebar becomes a drawer so the page can use the full width.
   static bool useDrawer(double width) => width < 800;

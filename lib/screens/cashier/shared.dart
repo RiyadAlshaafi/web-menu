@@ -44,21 +44,29 @@ List<Widget> _orderLineRows(BuildContext context, CafeStore store, CafeOrder ord
               ),
               if (dish.isNotEmpty)
                 IconButton(
-                  visualDensity: VisualDensity.compact,
                   tooltip: dish.first.available ? context.l10n.cashierMarkUnavailable : context.l10n.cashierMarkAvailable,
                   onPressed: () => store.setItemAvailable(dish.first.id, !dish.first.available),
                   icon: Icon(dish.first.available ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
                   style: IconButton.styleFrom(foregroundColor: CafeSurfaces.of(context).buttonInk),
                 ),
+              // Apart from the eye, so a finger meant for one does not hit the other.
+              const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () async {
+                  final sure = await showCafeConfirmDialog(
+                    context,
+                    title: context.l10n.cashierRefuseTitle(line.name),
+                    message: context.l10n.cashierRefuseMessage,
+                    confirm: context.l10n.cashierRefuse,
+                  );
+                  if (!sure || !context.mounted) return;
                   final error = await store.refuseOrderLine(order, line);
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? context.l10n.cashierItemRefused)));
                 },
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: const Size(0, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ).merge(CafeButtons.destructiveOutlined),
                 icon: const Icon(Icons.block, size: 15),
