@@ -87,7 +87,8 @@ describe("GET /api/guest/menu", () => {
     const body = await json(res);
     expect(body.ok).toBe(true);
     expect(body.data).toMatchObject({
-      cafe: { name: "Akakus", headerColor: "#1B3A4B", backgroundColor: "", serviceChargeRate: 0.1 },
+      // No menu_layout from a database before that migration: the default list.
+      cafe: { name: "Akakus", headerColor: "#1B3A4B", backgroundColor: "", serviceChargeRate: 0.1, menuLayout: "list" },
       table: { number: "4" },
       categories: [{ id: "c1", nameEn: "Drinks", nameAr: "مشروبات" }],
       items: [
@@ -104,6 +105,14 @@ describe("GET /api/guest/menu", () => {
       paymentTypes: [{ id: TYPE, nameEn: "Card" }],
     });
     expect(calls).toEqual([expect.objectContaining({ name: "guest_menu", args: { p_qr_slug: SLUG } })]);
+  });
+
+  it("passes the cafe's menu design through, and treats an unknown one as the list", async () => {
+    for (const [sent, got] of [["grid", "grid"], ["list", "list"], ["carousel", "list"]]) {
+      mockSupabase(() => ({ body: { ...menuRow, cafe: { ...menuRow.cafe, menu_layout: sent } } }));
+      const body = await json(await menu.GET(get(`/api/guest/menu?slug=${SLUG}`)));
+      expect(body.data).toMatchObject({ cafe: { menuLayout: got } });
+    }
   });
 
   it("refuses an option of an unknown kind instead of guessing", async () => {

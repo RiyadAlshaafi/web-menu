@@ -544,6 +544,154 @@ class _TakeoutLayoutCardState extends State<TakeoutLayoutCard> {
   }
 }
 
+/// Settings: how guests see the menu after scanning a table QR code. Same two-button pick as the
+/// takeout screen; the choice is kept only when Save is pressed.
+class GuestMenuLayoutCard extends StatefulWidget {
+  const GuestMenuLayoutCard({super.key});
+
+  @override
+  State<GuestMenuLayoutCard> createState() => _GuestMenuLayoutCardState();
+}
+
+class _GuestMenuLayoutCardState extends State<GuestMenuLayoutCard> {
+  /// The option picked on screen; null until the admin picks, then the saved one is not shown.
+  bool? picked;
+  var saving = false;
+
+  Future<void> _save(CafeStore store, bool grid) async {
+    final l10n = context.l10n;
+    setState(() => saving = true);
+    String message;
+    try {
+      await store.setGuestMenuGrid(grid);
+      message = l10n.guestMenuDesignSaved;
+    } on Exception catch (error, stackTrace) {
+      reportError('guest menu layout', error, stackTrace);
+      message = l10n.guestMenuDesignSaveFailed;
+    }
+    if (!mounted) return;
+    setState(() {
+      saving = false;
+      picked = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<CafeStore>();
+    final grid = picked ?? store.guestMenuGrid;
+    final changed = grid != store.guestMenuGrid;
+    return TawlaPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PanelTitle(context.l10n.guestMenuDesignTitle, size: 18),
+          const SizedBox(height: 4),
+          Text(context.l10n.guestMenuDesignHint, style: const TextStyle(color: TawlaTokens.muted, fontSize: 12)),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _TakeoutLayoutOption(
+                  title: context.l10n.guestMenuDesignList,
+                  hint: context.l10n.guestMenuDesignListHint,
+                  selected: !grid,
+                  picture: const _GuestMenuPicture(grid: false),
+                  onTap: () => setState(() => picked = false),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TakeoutLayoutOption(
+                  title: context.l10n.guestMenuDesignGrid,
+                  hint: context.l10n.guestMenuDesignGridHint,
+                  selected: grid,
+                  picture: const _GuestMenuPicture(grid: true),
+                  onTap: () => setState(() => picked = true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: NavyButton(
+              label: context.l10n.takeoutLayoutSave,
+              height: 44,
+              onPressed: changed && !saving ? () => _save(store, grid) : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A tiny phone screen: rows with a small photo, or two photo cards per row.
+class _GuestMenuPicture extends StatelessWidget {
+  const _GuestMenuPicture({required this.grid});
+
+  final bool grid;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = CafeSurfaces.of(context).button;
+    const photo = Color(0xFFF6DED1);
+    Widget dot() => Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+        );
+    Widget row() => Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
+            child: Row(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(decoration: BoxDecoration(color: photo, borderRadius: BorderRadius.circular(4))),
+                ),
+                const Spacer(),
+                dot(),
+              ],
+            ),
+          ),
+        );
+    Widget card() => Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(2),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                Expanded(flex: 3, child: Container(color: photo)),
+                Expanded(
+                  flex: 2,
+                  child: Align(alignment: AlignmentDirectional.centerEnd, child: Padding(padding: const EdgeInsets.all(3), child: dot())),
+                ),
+              ],
+            ),
+          ),
+        );
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: CafeColors.creamDark, borderRadius: BorderRadius.circular(10)),
+      child: grid
+          ? Column(
+              children: [
+                Expanded(child: Row(children: [card(), card()])),
+                Expanded(child: Row(children: [card(), card()])),
+              ],
+            )
+          : Column(children: [row(), row(), row()]),
+    );
+  }
+}
+
 class _TakeoutLayoutOption extends StatelessWidget {
   const _TakeoutLayoutOption({
     required this.title,

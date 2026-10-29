@@ -593,7 +593,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout, receipt_settings',
+          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout, guest_menu_layout, receipt_settings',
         )
         .eq('id', id)
         .maybeSingle();
@@ -613,6 +613,7 @@ class AppDatabase {
       'autoPrintReceipt': restaurant['auto_print_receipt'] as bool? ?? true,
       'requireCashierOnline': restaurant['require_cashier_online'] as bool? ?? false,
       'takeoutLayout': restaurant['takeout_layout'] as String? ?? 'cards',
+      'guestMenuLayout': restaurant['guest_menu_layout'] as String? ?? 'list',
       'receiptSettings': restaurant['receipt_settings'] is Map ? Map<String, dynamic>.from(restaurant['receipt_settings'] as Map) : <String, dynamic>{},
     };
   }
@@ -1197,6 +1198,13 @@ class AppDatabase {
     _saveLocalSettingsIfLocal();
     if (client == null || restaurantId == null) return;
     await client!.from('restaurants').update({'takeout_layout': layout}).eq('id', restaurantId!);
+  }
+
+  Future<void> writeGuestMenuLayout(String layout) async {
+    _cafe = {..._cafe, 'guestMenuLayout': layout};
+    _saveLocalSettingsIfLocal();
+    if (client == null || restaurantId == null) return;
+    await client!.from('restaurants').update({'guest_menu_layout': layout}).eq('id', restaurantId!);
   }
 
   Future<void> writeRequireCashierOnline(bool value) async {

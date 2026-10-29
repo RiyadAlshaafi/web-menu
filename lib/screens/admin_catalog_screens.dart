@@ -402,7 +402,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersKitchensCard(), store.isLocalMode ? null : const FeedbackCard()),
       (const TakeoutLayoutCard(), store.allows(AppFeature.serviceCharge) || store.savedServiceChargeRate > 0 ? const ServiceChargeCard() : null),
-      (const ReceiptEditorCard(), null),
+      // Local mode has no guest QR menu.
+      (const ReceiptEditorCard(), store.isLocalMode ? null : const GuestMenuLayoutCard()),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {

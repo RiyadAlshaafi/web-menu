@@ -65,6 +65,7 @@ export const menu = (): Menu => ({
     buttonColor: "#BA5333",
     backgroundColor: "",
     serviceChargeRate: 0.1,
+    menuLayout: "list",
   },
   table: { number: "4" },
   categories: [
@@ -141,13 +142,19 @@ export const err = (code: string, items?: string[]) => ({ ok: false, data: null,
 // Renders `ui` inside a GuestProvider with the fixtures above.
 export async function renderGuest(
   ui: ReactNode,
-  { status = open, tab = null, lang = "en", path = `/t/${SLUG}` }: { status?: GuestStatus | null; tab?: Tab | null; lang?: "en" | "ar"; path?: string } = {},
+  {
+    status = open,
+    tab = null,
+    lang = "en",
+    path = `/t/${SLUG}`,
+    layout = "list",
+  }: { status?: GuestStatus | null; tab?: Tab | null; lang?: "en" | "ar"; path?: string; layout?: "list" | "grid" } = {},
 ) {
   const { render } = await import("@testing-library/react");
   const { GuestProvider } = await import("@/components/guest-provider");
   nav.path = path;
   return render(
-    <GuestProvider slug={SLUG} lang={lang} initialMenu={menu()} initialStatus={status} initialTab={tab}>
+    <GuestProvider slug={SLUG} lang={lang} initialMenu={{ ...menu(), cafe: { ...menu().cafe, menuLayout: layout } }} initialStatus={status} initialTab={tab}>
       {ui}
     </GuestProvider>,
   );

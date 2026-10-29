@@ -69,6 +69,8 @@ const menuSchema = z
       button_color: text,
       background_color: text,
       service_charge_rate: money,
+      // Missing until the guest_menu_layout migration is applied; anything unknown is the list.
+      menu_layout: z.enum(["list", "grid"]).catch("list"),
     }),
     table: z.object({ number: text }),
     categories: z.array(z.object({ id: z.string(), name_en: text, name_ar: text })),
@@ -100,6 +102,7 @@ const menuSchema = z
         buttonColor: m.cafe.button_color,
         backgroundColor: m.cafe.background_color,
         serviceChargeRate: m.cafe.service_charge_rate,
+        menuLayout: m.cafe.menu_layout,
       },
       table: { number: m.table.number },
       categories: m.categories.map((c) => ({ id: c.id, nameEn: c.name_en, nameAr: c.name_ar })),

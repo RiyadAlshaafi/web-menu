@@ -2250,6 +2250,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'White cards with a picture for each category; tap one to see its dishes.';
 
   @override
+  String get guestMenuDesignTitle => 'Menu design';
+
+  @override
+  String get guestMenuDesignHint =>
+      'How guests see the menu after scanning the table QR code.';
+
+  @override
+  String get guestMenuDesignList => 'Default';
+
+  @override
+  String get guestMenuDesignListHint =>
+      'One dish per row with a small photo. Works well without photos.';
+
+  @override
+  String get guestMenuDesignGrid => 'Photo grid';
+
+  @override
+  String get guestMenuDesignGridHint =>
+      'Two big photo cards per row. Best when your dishes have good photos.';
+
+  @override
+  String get guestMenuDesignSaved => 'Menu design saved.';
+
+  @override
+  String get guestMenuDesignSaveFailed =>
+      'Couldn\'t save the menu design. Check the connection and try again.';
+
+  @override
   String get receiptSampleCashier => 'Sara';
 
   @override

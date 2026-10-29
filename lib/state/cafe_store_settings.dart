@@ -134,6 +134,16 @@ extension CafeStoreSettings on CafeStore {
     await db.writeTakeoutLayout(layout);
   }
 
+  /// How the guest QR menu lays out dishes: false for the list (the default), true for the photo grid.
+  bool get guestMenuGrid => (cafe['guestMenuLayout'] as String?) == 'grid';
+
+  Future<void> setGuestMenuGrid(bool value) async {
+    final layout = value ? 'grid' : 'list';
+    cafe = {...cafe, 'guestMenuLayout': layout};
+    notifyListeners();
+    await db.writeGuestMenuLayout(layout);
+  }
+
   /// Guests can only order while a cashier device is online (off until the admin turns it on).
   bool get requireCashierOnline => cafe['requireCashierOnline'] as bool? ?? false;
 

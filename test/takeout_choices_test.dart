@@ -107,6 +107,21 @@ void main() {
     expect(store.takeoutCards, isFalse);
   });
 
+  testWidgets('the guest menu design starts on Default and switches to the photo grid on Save', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    await pumpAdminScreen(tester, const GuestMenuLayoutCard(), store);
+    expect(store.guestMenuGrid, isFalse, reason: 'a cafe starts on the default list');
+
+    await tester.tap(find.text('Photo grid'));
+    await tester.pump();
+    expect(store.guestMenuGrid, isFalse, reason: 'picking alone changes nothing');
+
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+    expect(store.guestMenuGrid, isTrue);
+    expect(store.cafe['guestMenuLayout'], 'grid');
+  });
+
   testWidgets('tapping the ticket line opens the choices and the extra is charged', (tester) async {
     final store = (await tester.runAsync(storeWithBurger))!;
     await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);

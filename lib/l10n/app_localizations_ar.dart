@@ -2237,6 +2237,34 @@ class AppLocalizationsAr extends AppLocalizations {
       'بطاقات بيضاء بصورة لكل صنف؛ اضغط على صنف لعرض أطباقه.';
 
   @override
+  String get guestMenuDesignTitle => 'تصميم القائمة';
+
+  @override
+  String get guestMenuDesignHint =>
+      'كيف يرى الزبائن القائمة بعد مسح رمز QR على الطاولة.';
+
+  @override
+  String get guestMenuDesignList => 'الافتراضي';
+
+  @override
+  String get guestMenuDesignListHint =>
+      'طبق في كل سطر مع صورة صغيرة. مناسب حتى بدون صور.';
+
+  @override
+  String get guestMenuDesignGrid => 'شبكة الصور';
+
+  @override
+  String get guestMenuDesignGridHint =>
+      'بطاقتان كبيرتان بالصور في كل سطر. الأفضل عندما تكون لأطباقك صور جيدة.';
+
+  @override
+  String get guestMenuDesignSaved => 'تم حفظ تصميم القائمة.';
+
+  @override
+  String get guestMenuDesignSaveFailed =>
+      'تعذر حفظ تصميم القائمة. تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
   String get receiptSampleCashier => 'سارة';
 
   @override

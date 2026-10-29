@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useGuest } from "./guest-provider";
 import { Icon, type IconName } from "./icons";
+import { useReducedMotion } from "./landing/use-motion";
 import { GuestHeader } from "./parts";
 
 export function Header() {
@@ -99,25 +100,53 @@ export function RefusalNotice() {
   );
 }
 
+// The exit animation is 180ms (globals.css .sheet-out); this is the latest it may take.
+const EXIT_FALLBACK_MS = 320;
+
 // A bottom sheet: modal, closes on Escape or the backdrop, keeps focus inside while open.
+// Children given as a function get `close`, which plays the exit before onClose unmounts it.
 export function Sheet({
   label,
   onClose,
   children,
   floating = false,
+  locked = false,
 }: {
   label: string;
   onClose: () => void;
-  children: ReactNode;
+  children: ReactNode | ((close: () => void) => ReactNode);
   floating?: boolean;
+  /** Ignores Escape, the backdrop and `close` (e.g. while an order is sending). */
+  locked?: boolean;
 }) {
   const panel = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+  const [leaving, setLeaving] = useState(false);
+  const close = useCallback(() => {
+    if (locked) return;
+    if (reduced) onClose();
+    else setLeaving(true);
+  }, [locked, reduced, onClose]);
+  // The latest handlers, so the focus trap below is set up once, not again on every new onClose.
+  const onCloseRef = useRef(onClose);
+  const closeRef = useRef(close);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    closeRef.current = close;
+  }, [onClose, close]);
+  // A background tab can skip animationend; never leave an invisible sheet holding the page.
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = setTimeout(() => onCloseRef.current(), EXIT_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [leaving]);
+
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const node = panel.current;
     node?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") closeRef.current();
       if (event.key !== "Tab" || !node) return;
       const focusable = node.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), [href], select, [tabindex='0']");
       if (focusable.length === 0) return;
@@ -139,22 +168,25 @@ export function Sheet({
       document.body.style.overflow = overflow;
       previous?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center">
-      <div className="fade-in absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
+    <div className={`fixed inset-0 z-40 flex items-end justify-center ${leaving ? "pointer-events-none" : ""}`}>
+      <div className={`${leaving ? "fade-out" : "fade-in"} absolute inset-0 bg-black/40`} onClick={close} aria-hidden="true" />
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        className={`sheet-in relative max-h-[88dvh] w-full max-w-[430px] overflow-y-auto outline-none ${
+        onAnimationEnd={(event) => {
+          if (leaving && event.target === event.currentTarget) onCloseRef.current();
+        }}
+        className={`${leaving ? "sheet-out" : "sheet-in"} relative max-h-[88dvh] w-full max-w-[430px] overflow-y-auto outline-none ${
           floating ? "mx-3 mb-4 max-w-[420px] rounded-[20px] bg-white shadow-2xl" : "rounded-t-3xl bg-page"
         }`}
       >
-        {children}
+        {typeof children === "function" ? children(close) : children}
       </div>
     </div>
   );

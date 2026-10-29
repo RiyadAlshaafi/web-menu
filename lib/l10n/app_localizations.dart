@@ -4034,6 +4034,54 @@ abstract class AppLocalizations {
   /// **'White cards with a picture for each category; tap one to see its dishes.'**
   String get takeoutLayoutCardsHint;
 
+  /// No description provided for @guestMenuDesignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu design'**
+  String get guestMenuDesignTitle;
+
+  /// No description provided for @guestMenuDesignHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How guests see the menu after scanning the table QR code.'**
+  String get guestMenuDesignHint;
+
+  /// No description provided for @guestMenuDesignList.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get guestMenuDesignList;
+
+  /// No description provided for @guestMenuDesignListHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One dish per row with a small photo. Works well without photos.'**
+  String get guestMenuDesignListHint;
+
+  /// No description provided for @guestMenuDesignGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo grid'**
+  String get guestMenuDesignGrid;
+
+  /// No description provided for @guestMenuDesignGridHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Two big photo cards per row. Best when your dishes have good photos.'**
+  String get guestMenuDesignGridHint;
+
+  /// No description provided for @guestMenuDesignSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu design saved.'**
+  String get guestMenuDesignSaved;
+
+  /// No description provided for @guestMenuDesignSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the menu design. Check the connection and try again.'**
+  String get guestMenuDesignSaveFailed;
+
   /// No description provided for @receiptSampleCashier.
   ///
   /// In en, this message translates to:

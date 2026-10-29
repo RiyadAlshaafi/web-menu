@@ -8,6 +8,8 @@ export type Cafe = {
   buttonColor: string;
   backgroundColor: string;
   serviceChargeRate: number;
+  /** How dishes are laid out: rows with a small photo, or two photo cards per row. */
+  menuLayout: "list" | "grid";
 };
 
 export type Category = { id: string; nameEn: string; nameAr: string };

@@ -50,6 +50,25 @@ describe("MenuScreen", () => {
     expect(addButton(/^Add Juice/)).toBeDisabled();
   });
 
+  it("shows the photo grid when the cafe picked it, and adding still works", async () => {
+    mockApi(() => ok(tabEmpty));
+    await renderGuest(<MenuScreen />, { layout: "grid" });
+    const lists = screen.getAllByRole("list");
+    expect(lists.every((list) => list.classList.contains("grid-cols-2"))).toBe(true);
+    expect(screen.getByText("3 items")).toBeInTheDocument();
+
+    fireEvent.click(addButton(/^Add Cappuccino/));
+    fireEvent.click(addButton(/^Add Cappuccino/));
+    expect(screen.getByLabelText("2 in your order")).toBeInTheDocument();
+    expect(addButton(/^Add Juice/)).toBeDisabled();
+  });
+
+  it("keeps the default list for a cafe that did not pick the grid", async () => {
+    mockApi(() => ok(tabEmpty));
+    await renderGuest(<MenuScreen />);
+    expect(screen.getAllByRole("list").some((list) => list.classList.contains("grid-cols-2"))).toBe(false);
+  });
+
   it("adds to the cart, reviews and sends the order, then opens the tab", async () => {
     const calls = mockApi((url) =>
       url.includes("/order") ? ok({ orderId: "o1", round: 1 }) : ok(tabWith("received")),

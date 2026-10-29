@@ -8,6 +8,7 @@ import type { DishOption, MenuItem } from "@/lib/types";
 import { BottomNav, Header, RefusalNotice, Sheet, Toast } from "./chrome";
 import { useGuest } from "./guest-provider";
 import { Icon } from "./icons";
+import { useReducedMotion } from "./landing/use-motion";
 import { ChoiceNotes, DishPhoto, EmptyHint, PoweredBy, PrimaryButton, Spinner } from "./parts";
 
 type Filter = { kind: "all" } | { kind: "chef" } | { kind: "category"; id: string };
@@ -18,6 +19,8 @@ export function MenuScreen() {
   const [filter, setFilter] = useState<Filter>({ kind: "all" });
   const [dish, setDish] = useState<MenuItem | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const reduced = useReducedMotion();
+  const grid = menu.cafe.menuLayout === "grid";
 
   const locationEnabled = status?.location.enabled ?? false;
   useEffect(() => {
@@ -36,18 +39,33 @@ export function MenuScreen() {
     .map((category) => ({ category, dishes: items.filter((item) => item.categoryId === category.id) }))
     .filter((section) => section.dishes.length > 0);
   const showHeadings = sections.length > 1;
+  // Picking a filter: centre its chip, bring the list's top back under the pinned chips, and
+  // let the new list settle in, so the swap reads as one change rather than a jump.
+  // Nodes are found from the chip itself, as this only runs on a tap.
+  const pick = (next: Filter, chipNode: HTMLElement) => {
+    setFilter(next);
+    const behavior = reduced ? "auto" : "smooth";
+    chipNode.scrollIntoView?.({ behavior, inline: "center", block: "nearest" });
+    const main = chipNode.closest("main");
+    const title = main?.querySelector("h2");
+    if (title) {
+      const listTop = title.getBoundingClientRect().bottom + window.scrollY;
+      if (window.scrollY > listTop) window.scrollTo({ top: listTop, behavior: "auto" });
+    }
+    if (!reduced) {
+      main?.querySelector<HTMLElement>("[data-menu-list]")?.animate?.(
+        [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }],
+        { duration: 220, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+      );
+    }
+  };
   const chip = (label: string, selected: boolean, next: Filter) => (
-    <button
+    <FilterChip
       key={label + (next.kind === "category" ? next.id : next.kind)}
-      type="button"
-      aria-pressed={selected}
-      onClick={() => setFilter(next)}
-      className={`press min-h-[44px] shrink-0 rounded-[20px] border-[1.5px] px-4 text-sm font-bold whitespace-nowrap ${
-        selected ? "border-brand bg-brand text-on-brand" : "border-border bg-white text-ink"
-      }`}
-    >
-      {label}
-    </button>
+      label={label}
+      selected={selected}
+      onPick={(node) => pick(next, node)}
+    />
   );
 
   return (
@@ -57,7 +75,11 @@ export function MenuScreen() {
       <RefusalNotice />
       <main className="flex-1">
         <h2 className="px-4 pt-[18px] text-[21px] font-extrabold tracking-tight min-[360px]:text-2xl">{text("guestMenuTitle", { name: menu.cafe.name })}</h2>
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-2.5" role="group" aria-label={text("guestMenuTitle", { name: menu.cafe.name })}>
+        <div
+          className="no-scrollbar sticky top-0 z-10 flex gap-2 overflow-x-auto bg-page/95 px-4 py-2.5 backdrop-blur-sm"
+          role="group"
+          aria-label={text("guestMenuTitle", { name: menu.cafe.name })}
+        >
           {menu.categories.length > 0 && chip(text("guestCategoryAll"), filter.kind === "all", { kind: "all" })}
           {chip(text("guestChefsSpecials"), filter.kind === "chef", { kind: "chef" })}
           {menu.categories.map((category) =>
@@ -70,7 +92,7 @@ export function MenuScreen() {
         {menu.items.length === 0 ? (
           <EmptyHint>{text("noMenu")}</EmptyHint>
         ) : (
-          <>
+          <div data-menu-list>
             {featured && filter.kind !== "category" && (
               <div className="px-4 pt-0.5 pb-1">
                 <Spotlight item={featured} onOpen={() => setDish(featured)} />
@@ -84,17 +106,25 @@ export function MenuScreen() {
                     {categoryName(category, lang)}
                   </h3>
                 )}
-                <ul className="px-4">
-                  {dishes.map((item, index) => (
-                    <DishRow key={item.id} item={item} priority={index < 4} onOpen={() => setDish(item)} />
-                  ))}
-                </ul>
+                {grid ? (
+                  <ul className="mb-2.5 grid grid-cols-2 gap-2.5 px-4">
+                    {dishes.map((item, index) => (
+                      <DishCard key={item.id} item={item} priority={index < 4} onOpen={() => setDish(item)} />
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="px-4">
+                    {dishes.map((item, index) => (
+                      <DishRow key={item.id} item={item} priority={index < 4} onOpen={() => setDish(item)} />
+                    ))}
+                  </ul>
+                )}
               </section>
             ))}
             <div className="px-4 pt-2.5 pb-6">
               <PoweredBy label={text("guestPoweredBy")} />
             </div>
-          </>
+          </div>
         )}
       </main>
       <CartBar onOpen={() => setVerifying(true)} />
@@ -103,6 +133,21 @@ export function MenuScreen() {
       {dish && <DishSheet item={dish} onClose={() => setDish(null)} />}
       {verifying && <VerifySheet onClose={() => setVerifying(false)} />}
     </div>
+  );
+}
+
+function FilterChip({ label, selected, onPick }: { label: string; selected: boolean; onPick: (node: HTMLElement) => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={(event) => onPick(event.currentTarget)}
+      className={`press min-h-[44px] shrink-0 rounded-[20px] border-[1.5px] px-4 text-sm font-bold whitespace-nowrap ${
+        selected ? "border-brand bg-brand text-on-brand" : "border-border bg-white text-ink"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -145,7 +190,7 @@ function Spotlight({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
       onClick={onOpen}
       disabled={!item.available}
       aria-label={name}
-      className="block w-full overflow-hidden rounded-[18px] bg-white text-start shadow-[0_2px_10px_rgba(27,58,75,0.08)]"
+      className="press block w-full overflow-hidden rounded-[18px] bg-white text-start shadow-[0_2px_10px_rgba(27,58,75,0.08)]"
     >
       <div className="relative">
         <DishPhoto url={item.imageUrl} size={150} width={430} radius={0} priority />
@@ -167,9 +212,8 @@ function Spotlight({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
 }
 
 function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => void; priority: boolean }) {
-  const { lang, text, cart, add, canPlaceOrder, blockedMessage, showToast } = useGuest();
+  const { lang, text } = useGuest();
   const name = dishName(item, lang);
-  const inCart = dishQty(cart, item.id);
   return (
     <li className="mb-2.5 flex items-center rounded-2xl bg-white p-2.5">
       <button
@@ -190,35 +234,77 @@ function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => voi
           </span>
         </span>
       </button>
-      {inCart > 0 && (
-        <span
-          key={inCart}
-          className="pop-in ms-2 grid h-[26px] min-w-[26px] place-items-center rounded-[13px] bg-brand-header px-1.5 text-xs font-extrabold text-on-header"
-          aria-label={text("inCart", { count: inCart })}
-        >
-          {inCart}
-        </span>
-      )}
-      <button
-        type="button"
-        aria-label={text("addDish", { name })}
-        disabled={!item.available}
-        aria-disabled={item.available && !canPlaceOrder ? true : undefined}
-        onClick={() => {
-          if (!canPlaceOrder) {
-            if (blockedMessage) showToast(blockedMessage);
-            return;
-          }
-          // The dish as it comes; choices are made in the sheet.
-          add(item);
-        }}
-        className={`press ms-3 grid h-11 w-11 shrink-0 place-items-center rounded-full ${
-          item.available && canPlaceOrder ? "bg-brand text-on-brand" : "bg-ink/10 text-ink/40"
-        }`}
-      >
-        <Icon name="add" size={22} />
-      </button>
+      <InCartBadge item={item} className="ms-2" />
+      <AddButton item={item} className="ms-3" />
     </li>
+  );
+}
+
+// The photo grid (the cafe's "Photo grid" menu design): two cards per row, the photo on top and
+// the add button sitting on its corner.
+function DishCard({ item, onOpen, priority }: { item: MenuItem; onOpen: () => void; priority: boolean }) {
+  const { lang, text } = useGuest();
+  const name = dishName(item, lang);
+  return (
+    <li className="relative flex flex-col overflow-hidden rounded-2xl bg-white">
+      <button type="button" onClick={onOpen} disabled={!item.available} className="press flex flex-1 flex-col text-start">
+        <span className={`block w-full ${item.available ? "" : "opacity-50"}`}>
+          <DishPhoto url={item.imageUrl} size={128} width={215} radius={0} priority={priority} />
+        </span>
+        <span className="flex flex-1 flex-col px-3 pt-2.5 pb-3 pe-14">
+          <span className={`line-clamp-2 text-[15px] leading-snug font-bold ${item.available ? "text-ink" : "text-muted line-through"}`}>{name}</span>
+          <span className="mt-auto block pt-1">
+            {item.available ? (
+              <Price item={item} size={14} />
+            ) : (
+              <span className="text-xs font-extrabold text-brand-ink">{text("cashierNotAvailable")}</span>
+            )}
+          </span>
+        </span>
+      </button>
+      <InCartBadge item={item} className="absolute end-2 top-2" />
+      <AddButton item={item} className="absolute end-2.5 bottom-2.5" />
+    </li>
+  );
+}
+
+function InCartBadge({ item, className }: { item: MenuItem; className: string }) {
+  const { text, cart } = useGuest();
+  const inCart = dishQty(cart, item.id);
+  if (inCart === 0) return null;
+  return (
+    <span
+      key={inCart}
+      className={`pop-in grid h-[26px] min-w-[26px] place-items-center rounded-[13px] bg-brand-header px-1.5 text-xs font-extrabold text-on-header ${className}`}
+      aria-label={text("inCart", { count: inCart })}
+    >
+      {inCart}
+    </span>
+  );
+}
+
+function AddButton({ item, className }: { item: MenuItem; className: string }) {
+  const { lang, text, add, canPlaceOrder, blockedMessage, showToast } = useGuest();
+  return (
+    <button
+      type="button"
+      aria-label={text("addDish", { name: dishName(item, lang) })}
+      disabled={!item.available}
+      aria-disabled={item.available && !canPlaceOrder ? true : undefined}
+      onClick={() => {
+        if (!canPlaceOrder) {
+          if (blockedMessage) showToast(blockedMessage);
+          return;
+        }
+        // The dish as it comes; choices are made in the sheet.
+        add(item);
+      }}
+      className={`press grid h-11 w-11 shrink-0 place-items-center rounded-full ${
+        item.available && canPlaceOrder ? "bg-brand text-on-brand" : "bg-ink/10 text-ink/40"
+      } ${className}`}
+    >
+      <Icon name="add" size={22} />
+    </button>
   );
 }
 
@@ -338,70 +424,74 @@ function DishSheet({ item, onClose }: { item: MenuItem; onClose: () => void }) {
     setOn((current) => normalizeOn(item, current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   return (
     <Sheet label={name} onClose={onClose}>
-      <div className="relative">
-        <DishPhoto url={item.imageUrl} size={200} width={430} radius={0} />
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={text("close")}
-          className="absolute end-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink"
-        >
-          <Icon name="close" size={20} />
-        </button>
-        {item.featured && (
-          <span className="absolute start-3.5 bottom-3.5">
-            <Badge>{text("guestChefsPick")}</Badge>
-          </span>
-        )}
-      </div>
-      <div className="px-[18px] pt-[18px] pb-6">
-        <div className="flex items-start gap-2.5">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-[22px] font-extrabold">{name}</h2>
-            {otherName !== name && <p className="mt-0.5 text-[15px] text-muted">{otherName}</p>}
+      {(close) => (
+        <>
+          <div className="relative">
+            <DishPhoto url={item.imageUrl} size={200} width={430} radius={0} />
+            <button
+              type="button"
+              onClick={close}
+              aria-label={text("close")}
+              className="press absolute end-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink shadow-sm"
+            >
+              <Icon name="close" size={20} />
+            </button>
+            {item.featured && (
+              <span className="absolute start-3.5 bottom-3.5">
+                <Badge>{text("guestChefsPick")}</Badge>
+              </span>
+            )}
           </div>
-          <div className="pt-1">
-            <Price item={item} size={18} />
+          <div className="px-[18px] pt-[18px] pb-6">
+            <div className="flex items-start gap-2.5">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[22px] font-extrabold">{name}</h2>
+                {otherName !== name && <p className="mt-0.5 text-[15px] text-muted">{otherName}</p>}
+              </div>
+              <div className="pt-1">
+                <Price item={item} size={18} />
+              </div>
+            </div>
+            {item.description && <p className="mt-2.5 leading-relaxed text-muted">{item.description}</p>}
+            <OptionGroup
+              title={text("guestIngredients")}
+              options={item.options.filter((o) => o.kind === "ingredient")}
+              on={on}
+              onToggle={toggle}
+            />
+            <OptionGroup
+              title={text("guestExtras")}
+              options={item.options.filter((o) => o.kind === "topping")}
+              on={on}
+              onToggle={toggle}
+            />
+            <div className="mt-3.5 flex items-center rounded-[14px] bg-white px-3.5 py-3">
+              <div className="flex-1">
+                <p className="text-xs font-extrabold tracking-[0.12em] text-muted">{text("guestQuantity")}</p>
+                <p className="mt-0.5 text-[13px] text-muted">{text("guestPortionServing")}</p>
+              </div>
+              <Stepper value={qty} onChange={(v) => setQty(Math.min(v, Math.max(1, room)))} label={text("guestQuantity")} />
+            </div>
+            <div className="mt-3.5">
+              <PrimaryButton
+                height={58}
+                disabled={room <= 0}
+                onClick={() => {
+                  if (!canPlaceOrder) {
+                    if (blockedMessage) showToast(blockedMessage);
+                    return;
+                  }
+                  add(item, on, qty);
+                  close();
+                }}
+                className={canPlaceOrder ? "" : "!bg-ink/10 !text-ink/40"}
+              >
+                {text("guestAddToOrder", { amount: money(unitPrice * qty, lang) })}
+              </PrimaryButton>
+            </div>
           </div>
-        </div>
-        {item.description && <p className="mt-2.5 leading-relaxed text-muted">{item.description}</p>}
-        <OptionGroup
-          title={text("guestIngredients")}
-          options={item.options.filter((o) => o.kind === "ingredient")}
-          on={on}
-          onToggle={toggle}
-        />
-        <OptionGroup
-          title={text("guestExtras")}
-          options={item.options.filter((o) => o.kind === "topping")}
-          on={on}
-          onToggle={toggle}
-        />
-        <div className="mt-3.5 flex items-center rounded-[14px] bg-white px-3.5 py-3">
-          <div className="flex-1">
-            <p className="text-xs font-extrabold tracking-[0.12em] text-muted">{text("guestQuantity")}</p>
-            <p className="mt-0.5 text-[13px] text-muted">{text("guestPortionServing")}</p>
-          </div>
-          <Stepper value={qty} onChange={(v) => setQty(Math.min(v, Math.max(1, room)))} label={text("guestQuantity")} />
-        </div>
-        <div className="mt-3.5">
-          <PrimaryButton
-            height={58}
-            disabled={room <= 0}
-            onClick={() => {
-              if (!canPlaceOrder) {
-                if (blockedMessage) showToast(blockedMessage);
-                return;
-              }
-              add(item, on, qty);
-              onClose();
-            }}
-            className={canPlaceOrder ? "" : "!bg-ink/10 !text-ink/40"}
-          >
-            {text("guestAddToOrder", { amount: money(unitPrice * qty, lang) })}
-          </PrimaryButton>
-        </div>
-      </div>
+        </>
+      )}
     </Sheet>
   );
 }
@@ -442,100 +532,104 @@ function VerifySheet({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Sheet label={text("guestConfirmOrderTitle")} onClose={sending ? () => {} : onClose} floating>
-      <div className="mx-auto mt-2.5 h-1 w-10 rounded bg-line" aria-hidden="true" />
-      <div className="flex items-start px-4 pt-3 pb-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-peach px-2 py-[3px] text-xs font-bold text-terracotta-dark">
-              {text("guestTableNumber", { number: menu.table.number })}
-            </span>
-            <span className="truncate text-xs text-ink-muted">{text("guestDineInOrder")}</span>
-          </div>
-          <h2 className="mt-1.5 text-[26px] font-extrabold">{text("guestConfirmOrderTitle")}</h2>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={sending}
-          aria-label={text("guestCloseReview")}
-          className="grid h-11 w-11 place-items-center rounded-full text-ink"
-        >
-          <Icon name="close" size={18} />
-        </button>
-      </div>
-      <div className="px-4 pb-2">
-        <p className="font-bold tracking-wide text-ink-muted">{text("guestItemsInOrder", { count })}</p>
-        <ul className="mt-2">
-          {visible.map(({ key, item, on }) => {
-            const qty = draft[key];
-            const name = dishName(item, lang);
-            return (
-              <li key={key} className="mb-2 flex items-center rounded-2xl bg-key p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold">{name}</p>
-                  <ChoiceNotes choices={lineChoices(item, on)} lang={lang} />
-                  <p className="font-extrabold">{money(linePrice(item, on) * qty, lang)}</p>
-                </div>
-                <div className="flex items-center rounded-full bg-white" role="group" aria-label={name}>
-                  <button
-                    type="button"
-                    aria-label={text("decrease")}
-                    disabled={sending}
-                    onClick={() => setDraft((d) => ({ ...d, [key]: qty - 1 }))}
-                    className="grid h-11 w-11 place-items-center"
-                  >
-                    <Icon name="remove" size={16} />
-                  </button>
-                  <span className="min-w-4 text-center font-extrabold">{qty}</span>
-                  <button
-                    type="button"
-                    aria-label={text("increase")}
-                    disabled={sending || qty >= MAX_QTY}
-                    onClick={() => setDraft((d) => ({ ...d, [key]: Math.min(MAX_QTY, qty + 1) }))}
-                    className="grid h-11 w-11 place-items-center disabled:opacity-40"
-                  >
-                    <Icon name="add" size={16} />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="rounded-2xl bg-cream-dark p-3.5">
-          <div className="flex">
-            <span className="flex-1 text-ink-muted">{text("guestSubtotal")}</span>
-            <span className="font-bold">{money(subtotal, lang)}</span>
-          </div>
-          <div className="mt-2 flex items-center">
-            <div className="flex-1">
-              <p className="font-extrabold">{text("guestTotalDue")}</p>
-              <p className="text-xs text-ink-muted">{text("guestBilledToTable", { table: menu.table.number })}</p>
+    <Sheet label={text("guestConfirmOrderTitle")} onClose={onClose} locked={sending} floating>
+      {(close) => (
+        <>
+          <div className="mx-auto mt-2.5 h-1 w-10 rounded bg-line" aria-hidden="true" />
+          <div className="flex items-start px-4 pt-3 pb-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-peach px-2 py-[3px] text-xs font-bold text-terracotta-dark">
+                  {text("guestTableNumber", { number: menu.table.number })}
+                </span>
+                <span className="truncate text-xs text-ink-muted">{text("guestDineInOrder")}</span>
+              </div>
+              <h2 className="mt-1.5 text-[26px] font-extrabold">{text("guestConfirmOrderTitle")}</h2>
             </div>
-            <span className="text-xl font-extrabold text-terracotta-dark">{money(subtotal, lang)}</span>
+            <button
+              type="button"
+              onClick={close}
+              disabled={sending}
+              aria-label={text("guestCloseReview")}
+              className="grid h-11 w-11 place-items-center rounded-full text-ink"
+            >
+              <Icon name="close" size={18} />
+            </button>
           </div>
-        </div>
-      </div>
-      <div className="px-4 pt-2 pb-3">
-        <button
-          type="button"
-          onClick={() => void send()}
-          disabled={sending || count === 0}
-          className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand text-base font-extrabold text-on-brand disabled:opacity-60"
-        >
-          {sending ? <Spinner className="h-[18px] w-[18px]" /> : <Icon name="restaurant" size={18} />}
-          {sending ? text("guestSendingOrder") : text("guestConfirmSendKitchen")}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={sending}
-          className="mt-1 flex min-h-[44px] w-full items-center justify-center gap-1.5 text-sm font-bold text-brand-ink"
-        >
-          <Icon name="back" size={16} />
-          {text("guestModifyOrder")}
-        </button>
-      </div>
+          <div className="px-4 pb-2">
+            <p className="font-bold tracking-wide text-ink-muted">{text("guestItemsInOrder", { count })}</p>
+            <ul className="mt-2">
+              {visible.map(({ key, item, on }) => {
+                const qty = draft[key];
+                const name = dishName(item, lang);
+                return (
+                  <li key={key} className="mb-2 flex items-center rounded-2xl bg-key p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold">{name}</p>
+                      <ChoiceNotes choices={lineChoices(item, on)} lang={lang} />
+                      <p className="font-extrabold">{money(linePrice(item, on) * qty, lang)}</p>
+                    </div>
+                    <div className="flex items-center rounded-full bg-white" role="group" aria-label={name}>
+                      <button
+                        type="button"
+                        aria-label={text("decrease")}
+                        disabled={sending}
+                        onClick={() => setDraft((d) => ({ ...d, [key]: qty - 1 }))}
+                        className="grid h-11 w-11 place-items-center"
+                      >
+                        <Icon name="remove" size={16} />
+                      </button>
+                      <span className="min-w-4 text-center font-extrabold">{qty}</span>
+                      <button
+                        type="button"
+                        aria-label={text("increase")}
+                        disabled={sending || qty >= MAX_QTY}
+                        onClick={() => setDraft((d) => ({ ...d, [key]: Math.min(MAX_QTY, qty + 1) }))}
+                        className="grid h-11 w-11 place-items-center disabled:opacity-40"
+                      >
+                        <Icon name="add" size={16} />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="rounded-2xl bg-cream-dark p-3.5">
+              <div className="flex">
+                <span className="flex-1 text-ink-muted">{text("guestSubtotal")}</span>
+                <span className="font-bold">{money(subtotal, lang)}</span>
+              </div>
+              <div className="mt-2 flex items-center">
+                <div className="flex-1">
+                  <p className="font-extrabold">{text("guestTotalDue")}</p>
+                  <p className="text-xs text-ink-muted">{text("guestBilledToTable", { table: menu.table.number })}</p>
+                </div>
+                <span className="text-xl font-extrabold text-terracotta-dark">{money(subtotal, lang)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="px-4 pt-2 pb-3">
+            <button
+              type="button"
+              onClick={() => void send()}
+              disabled={sending || count === 0}
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-brand text-base font-extrabold text-on-brand disabled:opacity-60"
+            >
+              {sending ? <Spinner className="h-[18px] w-[18px]" /> : <Icon name="restaurant" size={18} />}
+              {sending ? text("guestSendingOrder") : text("guestConfirmSendKitchen")}
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              disabled={sending}
+              className="mt-1 flex min-h-[44px] w-full items-center justify-center gap-1.5 text-sm font-bold text-brand-ink"
+            >
+              <Icon name="back" size={16} />
+              {text("guestModifyOrder")}
+            </button>
+          </div>
+        </>
+      )}
     </Sheet>
   );
 }

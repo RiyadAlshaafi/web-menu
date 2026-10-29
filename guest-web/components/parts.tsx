@@ -206,7 +206,7 @@ export function DishPhoto({ url, size, width, radius, priority }: { url: string;
     );
   }
   return (
-    <div className="grid shrink-0 place-items-center bg-peach text-terracotta" style={style}>
+    <div className="grid shrink-0 place-items-center bg-linear-135 from-peach to-soft-accent text-terracotta" style={style}>
       <Icon name="restaurant" size={Math.min(28, size / 2.5)} />
     </div>
   );
