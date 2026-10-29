@@ -12,10 +12,13 @@ bool _still(BuildContext context) => MediaQuery.disableAnimationsOf(context);
 
 /// Fades and lifts [child] in once, a little later for each [index], so a list arrives in a wave.
 class EntranceRise extends StatefulWidget {
-  const EntranceRise({super.key, required this.index, required this.child});
+  const EntranceRise({super.key, required this.index, required this.child, this.animate = true});
 
   final int index;
   final Widget child;
+
+  /// False shows [child] at once, for lists the waiter reshuffles often (a category tap).
+  final bool animate;
 
   /// Later items start together, so a long list never waits.
   static const _maxStagger = 8;
@@ -27,13 +30,17 @@ class EntranceRise extends StatefulWidget {
 class _EntranceRiseState extends State<EntranceRise> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 240),
   );
 
   @override
   void initState() {
     super.initState();
-    final delay = Duration(milliseconds: 45 * widget.index.clamp(0, EntranceRise._maxStagger));
+    if (!widget.animate) {
+      _controller.value = 1;
+      return;
+    }
+    final delay = Duration(milliseconds: 30 * widget.index.clamp(0, EntranceRise._maxStagger));
     Future<void>.delayed(delay, () {
       if (mounted) _controller.forward();
     });
@@ -161,11 +168,11 @@ class _PulseDotState extends State<PulseDot> with SingleTickerProviderStateMixin
 }
 
 /// Shakes [child] now and then and draws a glowing outline around it while [color] is set, to call
-/// the waiter to a table. With reduced motion the outline stays still.
+/// the waiter to a table. The outline fades in and out; with reduced motion it stays still.
 class ShakeAlert extends StatefulWidget {
   const ShakeAlert({super.key, required this.color, required this.radius, required this.child});
 
-  /// The outline colour; null means no alert and the child is shown as is.
+  /// The outline colour; null means no alert.
   final Color? color;
   final double radius;
   final Widget child;
@@ -174,11 +181,22 @@ class ShakeAlert extends StatefulWidget {
   State<ShakeAlert> createState() => _ShakeAlertState();
 }
 
-class _ShakeAlertState extends State<ShakeAlert> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
+class _ShakeAlertState extends State<ShakeAlert> with TickerProviderStateMixin {
+  late final AnimationController _shake = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2200),
   );
+  late final AnimationController _fade = AnimationController(vsync: this, duration: CafeMotion.quick);
+
+  /// Kept after the alert ends, so the outline fades out in its own colour.
+  Color? _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _color = widget.color;
+    if (_color != null) _fade.value = 1;
+  }
 
   @override
   void didChangeDependencies() {
@@ -193,41 +211,51 @@ class _ShakeAlertState extends State<ShakeAlert> with SingleTickerProviderStateM
   }
 
   void _sync() {
-    if (widget.color != null && !_still(context)) {
-      if (!_controller.isAnimating) _controller.repeat();
+    final active = widget.color != null;
+    if (active) {
+      _color = widget.color;
+      _fade.animateTo(1, curve: CafeMotion.easeOut, duration: _still(context) ? Duration.zero : CafeMotion.quick);
     } else {
-      _controller.stop();
-      _controller.value = 0;
+      _fade.animateBack(0, curve: CafeMotion.easeOut, duration: _still(context) ? Duration.zero : CafeMotion.quick);
+    }
+    if (active && !_still(context)) {
+      if (!_shake.isAnimating) _shake.repeat();
+    } else {
+      _shake.stop();
+      _shake.value = 0;
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _shake.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.color;
-    if (color == null) return widget.child;
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_shake, _fade]),
       child: widget.child,
       builder: (context, child) {
-        final t = _controller.value;
+        final t = _shake.value;
         // A burst of wobbles in the first third of each cycle, then a rest.
         final burst = t < 0.3 ? t / 0.3 : 1.0;
         final wobble = t < 0.3 ? sin(burst * pi * 6) * 5 * (1 - burst) : 0.0;
-        final glow = 0.25 + 0.2 * sin(t * 2 * pi);
+        final color = _color;
+        final visible = color != null && _fade.value > 0;
         return Transform.translate(
           offset: Offset(wobble, 0),
           child: DecoratedBox(
             position: DecorationPosition.foreground,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(widget.radius),
-              border: Border.all(color: color, width: 3.5),
-              boxShadow: [BoxShadow(color: color.withValues(alpha: glow), blurRadius: 18, spreadRadius: 2)],
+              border: visible ? Border.all(color: color.withValues(alpha: _fade.value), width: 3.5) : null,
+              // A fixed glow: only the colour fades, so nothing is re-blurred between shakes.
+              boxShadow: visible
+                  ? [BoxShadow(color: color.withValues(alpha: 0.3 * _fade.value), blurRadius: 18, spreadRadius: 2)]
+                  : null,
             ),
             child: child,
           ),

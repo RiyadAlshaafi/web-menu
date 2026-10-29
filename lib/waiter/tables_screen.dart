@@ -32,7 +32,7 @@ class TablesScreen extends StatelessWidget {
               children: [
                 if (!waiter.connected) const ReconnectingBanner(),
                 if (waiter.ordersPaused) const OrdersPausedBanner(),
-                for (final alert in waiter.alerts) _AlertBanner(key: ValueKey(alert.key), alert: alert),
+                _AlertSlot(alerts: waiter.alerts),
                 if (waiter.sentOrders.isNotEmpty) _SentStrip(orders: waiter.sentOrders),
               ],
             ),
@@ -372,55 +372,89 @@ class _AlertLine extends StatelessWidget {
   }
 }
 
-/// Pops in at the top when food is ready or guests call; tapping it opens that table.
+/// Shows the most urgent alert (a bill, then a call, then food) and slides it away when it is
+/// answered; the next one takes its place. Others wait behind a "+N more" count, so a busy
+/// floor never fills the screen with banners.
+class _AlertSlot extends StatelessWidget {
+  const _AlertSlot({required this.alerts});
+
+  final List<WaiterAlert> alerts;
+
+  @override
+  Widget build(BuildContext context) {
+    WaiterAlert? top;
+    for (final alert in alerts) {
+      if (top == null || alert.kind.index > top.kind.index) top = alert;
+    }
+    final still = MediaQuery.disableAnimationsOf(context);
+    return AnimatedSwitcher(
+      duration: still ? Duration.zero : CafeMotion.quick,
+      switchInCurve: CafeMotion.easeOut,
+      switchOutCurve: CafeMotion.easeOut,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: top == null
+          ? const SizedBox(key: ValueKey('no-alert'), width: double.infinity)
+          : _AlertBanner(key: ValueKey(top.key), alert: top, more: alerts.length - 1),
+    );
+  }
+}
+
+/// Banner for one alert; tapping it opens that table.
 class _AlertBanner extends StatelessWidget {
-  const _AlertBanner({super.key, required this.alert});
+  const _AlertBanner({super.key, required this.alert, required this.more});
 
   final WaiterAlert alert;
+  final int more;
 
   @override
   Widget build(BuildContext context) {
     final color = _alertColor(alert.kind);
-    return EntranceRise(
-      index: 0,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: Material(
-          color: color,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Material(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+        elevation: 4,
+        shadowColor: color.withValues(alpha: 0.5),
+        child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          elevation: 4,
-          shadowColor: color.withValues(alpha: 0.5),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _openTable(context, alert.tableId),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Icon(_alertIcon(alert.kind), color: Colors.white, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _alertText(context, alert),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
-                        ),
-                        Text(
-                          context.l10n.waiterAlertGo,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
-                        ),
-                      ],
-                    ),
+          onTap: () => _openTable(context, alert.tableId),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(_alertIcon(alert.kind), color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _alertText(context, alert),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                      ),
+                      Text(
+                        context.l10n.waiterAlertGo,
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    tooltip: context.l10n.waiterClose,
-                    onPressed: () => context.read<WaiterController>().acknowledge(alert.tableId),
-                    icon: const Icon(Icons.close, color: Colors.white),
+                ),
+                if (more > 0)
+                  Text(
+                    context.l10n.waiterAlertMore(more),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
                   ),
-                ],
-              ),
+                IconButton(
+                  tooltip: context.l10n.waiterClose,
+                  onPressed: () => context.read<WaiterController>().acknowledge(alert.tableId),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ),
@@ -441,7 +475,14 @@ class _SoundButton extends StatelessWidget {
     return IconButton(
       tooltip: on ? l10n.waiterSoundOn : l10n.waiterSoundOff,
       onPressed: () => context.read<WaiterController>().setSoundOn(!on),
-      icon: Icon(on ? Icons.volume_up : Icons.volume_off, color: ink),
+      icon: AnimatedSwitcher(
+        duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : CafeMotion.quick,
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: Tween(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: animation, curve: CafeMotion.easeOut)),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: Icon(on ? Icons.volume_up : Icons.volume_off, key: ValueKey(on), color: ink),
+      ),
     );
   }
 }

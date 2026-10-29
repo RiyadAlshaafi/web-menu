@@ -24,6 +24,9 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   String? _categoryId;
+
+  /// The waiter picked a category: dishes then show at once instead of rising in again.
+  bool _picked = false;
   String _query = '';
 
   @override
@@ -76,13 +79,19 @@ class _OrderScreenState extends State<OrderScreen> {
                 _CategoryChip(
                   label: l10n.waiterAllCategories,
                   selected: _categoryId == null,
-                  onTap: () => setState(() => _categoryId = null),
+                  onTap: () => setState(() {
+                    _categoryId = null;
+                    _picked = true;
+                  }),
                 ),
                 for (final category in waiter.categories)
                   _CategoryChip(
                     label: category.label(waiter.locale),
                     selected: _categoryId == category.id,
-                    onTap: () => setState(() => _categoryId = category.id),
+                    onTap: () => setState(() {
+                      _categoryId = category.id;
+                      _picked = true;
+                    }),
                   ),
               ],
             ),
@@ -100,6 +109,7 @@ class _OrderScreenState extends State<OrderScreen> {
               itemBuilder: (context, index) => EntranceRise(
                 key: ValueKey('${_categoryId ?? ''}/${dishes[index].id}'),
                 index: index,
+                animate: !_picked,
                 child: _DishCard(tableId: widget.tableId, item: dishes[index]),
               ),
             ),

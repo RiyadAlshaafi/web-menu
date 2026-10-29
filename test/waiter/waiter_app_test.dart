@@ -11,6 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FakeHubClient implements HubClient {
   bool offline = false;
   bool paused = false;
+
+  /// Table 1 has called and table 2's food is ready.
+  bool alerts = false;
   int discoveries = 0;
   final orders = <Map<String, dynamic>>[];
   final tokens = <String?>[];
@@ -47,9 +50,9 @@ class FakeHubClient implements HubClient {
       }),
       'GET /tables' => HubReply(200, {
         'paused': paused,
-        'tables': const [
-          {'id': 't1', 'number': '1', 'status': 'free'},
-          {'id': 't2', 'number': '2', 'status': 'dining', 'items': 3, 'total': 21},
+        'tables': [
+          {'id': 't1', 'number': '1', 'status': 'free', if (alerts) 'call': 'assistance'},
+          {'id': 't2', 'number': '2', 'status': 'dining', 'items': 3, 'total': 21, 'ready': alerts},
         ],
         'orders': const [],
       }),
@@ -87,6 +90,24 @@ void main() {
     await waiter.start();
     await pumpFor(tester, const Duration(milliseconds: 500));
   }
+
+  testWidgets('alerts show as one banner with a count, and tapping a table answers its alert', (tester) async {
+    till.alerts = true;
+    await open(tester);
+    await tester.tap(find.text('Caffe test'));
+    await pumpFor(tester, const Duration(milliseconds: 500));
+
+    expect(find.text('Table 1 is calling you'), findsOneWidget);
+    expect(find.text('Table 2: food is ready to serve'), findsNothing, reason: 'only the most urgent shows');
+    expect(find.text('+1 more'), findsOneWidget);
+    expect(waiter.alertFor('t2'), WaiterAlertKind.ready);
+
+    await tester.tap(find.byTooltip('Close'));
+    await pumpFor(tester, const Duration(milliseconds: 500));
+    expect(find.text('Table 2: food is ready to serve'), findsOneWidget, reason: 'the next one takes its place');
+    expect(find.text('+1 more'), findsNothing);
+    waiter.dispose();
+  });
 
   testWidgets('connect, pick a table, add dishes and send them to the cashier', (tester) async {
     await open(tester);

@@ -4975,6 +4975,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watching your tables. You will be alerted when food is ready or guests call.'**
   String get waiterWatching;
+
+  /// No description provided for @waiterAlertMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String waiterAlertMore(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/money.dart';
@@ -278,6 +279,8 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
       _notifyInBackground(fresh);
       return;
     }
+    // A buzz even with the sound off, so a silent phone still gets noticed in the hand or pocket.
+    unawaited(HapticFeedback.heavyImpact());
     if (!soundOn) return;
     // The most urgent one decides the tone.
     final kind = fresh.map((alert) => alert.kind).reduce((a, b) => a.index > b.index ? a : b);

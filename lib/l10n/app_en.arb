@@ -1269,5 +1269,7 @@
   "soundSettingsCalls": "Guest calls",
   "soundSettingsBills": "Bill requests",
   "soundSettingsHint": "Saved on this device only.",
-  "waiterWatching": "Watching your tables. You will be alerted when food is ready or guests call."
+  "waiterWatching": "Watching your tables. You will be alerted when food is ready or guests call.",
+  "waiterAlertMore": "+{count} more",
+  "@waiterAlertMore": {"placeholders": {"count": {"type": "int"}}}
 }

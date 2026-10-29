@@ -2807,4 +2807,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get waiterWatching =>
       'Watching your tables. You will be alerted when food is ready or guests call.';
+
+  @override
+  String waiterAlertMore(int count) {
+    return '+$count more';
+  }
 }
