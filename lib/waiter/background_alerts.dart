@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -10,8 +12,17 @@ abstract interface class BackgroundAlerts {
 
   Future<void> stopKeepAlive();
 
-  /// Shows a notification (with the phone's notification sound) for table [id]'s alert.
-  Future<void> notify({required int id, required String title, required String body, bool silent = false});
+  /// Shows a notification (with the phone's notification sound) for an alert at [tableId].
+  Future<void> notify({
+    required int id,
+    required String tableId,
+    required String title,
+    required String body,
+    bool silent = false,
+  });
+
+  /// Tables whose notification the waiter tapped, including the one that opened the app.
+  Stream<String> get openedTables;
 }
 
 BackgroundAlerts createBackgroundAlerts() =>
@@ -27,7 +38,16 @@ class NoBackgroundAlerts implements BackgroundAlerts {
   Future<void> stopKeepAlive() async {}
 
   @override
-  Future<void> notify({required int id, required String title, required String body, bool silent = false}) async {}
+  Future<void> notify({
+    required int id,
+    required String tableId,
+    required String title,
+    required String body,
+    bool silent = false,
+  }) async {}
+
+  @override
+  Stream<String> get openedTables => const Stream.empty();
 }
 
 /// The service needs a task to run; the work itself stays in the app (it keeps polling the till),
@@ -62,7 +82,16 @@ class AndroidBackgroundAlerts implements BackgroundAlerts {
   );
 
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final StreamController<String> _opened = StreamController.broadcast();
   bool _ready = false;
+
+  @override
+  Stream<String> get openedTables => _opened.stream;
+
+  void _open(NotificationResponse response) {
+    final tableId = response.payload;
+    if (tableId != null && tableId.isNotEmpty) _opened.add(tableId);
+  }
 
   Future<void> _prepare() async {
     if (_ready) return;
@@ -83,7 +112,12 @@ class AndroidBackgroundAlerts implements BackgroundAlerts {
     );
     await _notifications.initialize(
       settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      onDidReceiveNotificationResponse: _open,
     );
+    // The app was closed and the waiter opened it from a notification.
+    final launch = await _notifications.getNotificationAppLaunchDetails();
+    final response = launch?.notificationResponse;
+    if (launch?.didNotificationLaunchApp == true && response != null) _open(response);
     final android = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     await android?.createNotificationChannel(_alertChannel);
     await android?.createNotificationChannel(_quietChannel);
@@ -118,7 +152,13 @@ class AndroidBackgroundAlerts implements BackgroundAlerts {
   }
 
   @override
-  Future<void> notify({required int id, required String title, required String body, bool silent = false}) async {
+  Future<void> notify({
+    required int id,
+    required String tableId,
+    required String title,
+    required String body,
+    bool silent = false,
+  }) async {
     try {
       await _prepare();
       final channel = silent ? _quietChannel : _alertChannel;
@@ -136,6 +176,7 @@ class AndroidBackgroundAlerts implements BackgroundAlerts {
             category: AndroidNotificationCategory.message,
           ),
         ),
+        payload: tableId,
       );
     } catch (error, stackTrace) {
       debugPrint('waiter notification: $error\n$stackTrace');

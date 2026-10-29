@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menu_web_v1/lan/lan_protocol.dart';
@@ -39,7 +41,8 @@ class HubBackedClient implements HubClient {
 class FakeBackground implements BackgroundAlerts {
   int keepAlives = 0;
   int stops = 0;
-  final shown = <({String body, bool silent})>[];
+  final shown = <({String tableId, String body, bool silent})>[];
+  final opened = StreamController<String>.broadcast();
 
   @override
   Future<void> keepAlive({required String title, required String text}) async => keepAlives++;
@@ -48,8 +51,16 @@ class FakeBackground implements BackgroundAlerts {
   Future<void> stopKeepAlive() async => stops++;
 
   @override
-  Future<void> notify({required int id, required String title, required String body, bool silent = false}) async =>
-      shown.add((body: body, silent: silent));
+  Future<void> notify({
+    required int id,
+    required String tableId,
+    required String title,
+    required String body,
+    bool silent = false,
+  }) async => shown.add((tableId: tableId, body: body, silent: silent));
+
+  @override
+  Stream<String> get openedTables => opened.stream;
 }
 
 void main() {
@@ -136,6 +147,15 @@ void main() {
     expect(beeps, isEmpty);
     expect(background.shown.single.body, 'Table 1: food is ready to serve');
     expect(background.shown.single.silent, isFalse);
+    expect(background.shown.single.tableId, 't1');
+  });
+
+  test('tapping a phone notification asks the floor to open that table once', () async {
+    background.opened.add('t1');
+    await Future<void>.delayed(Duration.zero);
+    expect(waiter.tableToOpen, 't1');
+    expect(waiter.takeTableToOpen(), 't1');
+    expect(waiter.takeTableToOpen(), isNull);
   });
 
   test('a background notification is silent when sound is off', () async {

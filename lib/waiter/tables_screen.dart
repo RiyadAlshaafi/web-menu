@@ -20,6 +20,10 @@ class TablesScreen extends StatelessWidget {
     final waiter = context.watch<WaiterController>();
     final l10n = context.l10n;
     final surfaces = CafeSurfaces.of(context);
+    final requested = waiter.tableToOpen;
+    if (requested != null && waiter.tableById(requested) != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotification(context));
+    }
     return Scaffold(
       backgroundColor: surfaces.background,
       body: Column(
@@ -340,6 +344,15 @@ void _openTable(BuildContext context, String tableId) {
       ),
     ),
   );
+}
+
+/// Opens the table whose phone notification was tapped, on top of the floor (not of another table).
+void _openFromNotification(BuildContext context) {
+  if (!context.mounted) return;
+  final tableId = context.read<WaiterController>().takeTableToOpen();
+  if (tableId == null) return;
+  Navigator.of(context).popUntil((route) => route.isFirst);
+  _openTable(context, tableId);
 }
 
 /// Short coloured line on the tile saying what the table needs.

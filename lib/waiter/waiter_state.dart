@@ -124,6 +124,10 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// The app is not on screen (home pressed, screen off): alerts go to the phone's notifications.
   bool _inBackground = false;
+  StreamSubscription<String>? _openedTables;
+
+  /// A table the waiter tapped in a phone notification; the floor opens it once it is loaded.
+  String? tableToOpen;
 
   static const _deviceIdKey = 'waiter_device_id';
   static const _nameKey = 'waiter_device_name';
@@ -178,6 +182,10 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> start() async {
     WidgetsFlutterBinding.ensureInitialized().addObserver(this);
+    _openedTables ??= _background.openedTables.listen((tableId) {
+      tableToOpen = tableId;
+      notifyListeners();
+    });
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_localeKey);
     locale = languages.containsKey(saved) ? saved! : 'en';
@@ -240,6 +248,13 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
   /// The kind of alert shown on [tableId]'s tile, or null when there is none (or it was tapped).
   WaiterAlertKind? alertFor(String tableId) =>
       alerts.where((alert) => alert.tableId == tableId).map((alert) => alert.kind).firstOrNull;
+
+  /// Hands over [tableToOpen] once, so the floor opens it a single time.
+  String? takeTableToOpen() {
+    final tableId = tableToOpen;
+    tableToOpen = null;
+    return tableId;
+  }
 
   /// The waiter saw the alert (tapped the table or its banner): it stops shaking until it comes again.
   void acknowledge(String tableId) {
@@ -305,6 +320,7 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(
         _background.notify(
           id: alert.key.hashCode & 0x7fffffff,
+          tableId: alert.tableId,
           title: hub?.cafeName ?? 'Tawla',
           body: body,
           silent: !soundOn,
@@ -622,6 +638,7 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_openedTables?.cancel());
     unawaited(_background.stopKeepAlive());
     _poll?.cancel();
     super.dispose();
