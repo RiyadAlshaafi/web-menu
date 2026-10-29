@@ -83,3 +83,24 @@ class CafeMoney {
     return locale == 'ar' ? '$amount د.ل' : '$amount LYD';
   }
 }
+
+/// A cash amount typed on the till: Arabic or Persian digits, a comma or the Arabic decimal mark
+/// all work. Null when the text is empty, not a number or negative, so a slip never counts as 0.
+double? parseMoneyInput(String text) {
+  const arabic = '٠١٢٣٤٥٦٧٨٩';
+  const persian = '۰۱۲۳۴۵۶۷۸۹';
+  final buffer = StringBuffer();
+  for (final char in text.trim().split('')) {
+    final digit = arabic.contains(char) ? arabic.indexOf(char) : persian.indexOf(char);
+    if (digit >= 0) {
+      buffer.write(digit);
+    } else if (char == ',' || char == '٫') {
+      buffer.write('.');
+    } else {
+      buffer.write(char);
+    }
+  }
+  final value = double.tryParse(buffer.toString());
+  if (value == null || value.isNaN || value.isInfinite || value < 0) return null;
+  return value;
+}

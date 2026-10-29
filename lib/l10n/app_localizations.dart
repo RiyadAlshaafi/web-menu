@@ -1982,6 +1982,60 @@ abstract class AppLocalizations {
   /// **'The item is removed from the order and marked as unavailable on the menu.'**
   String get cashierRefuseMessage;
 
+  /// No description provided for @receiptRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get receiptRefunded;
+
+  /// No description provided for @receiptNetPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Net paid'**
+  String get receiptNetPaid;
+
+  /// No description provided for @cashierCloseNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get cashierCloseNext;
+
+  /// No description provided for @cashierCloseBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get cashierCloseBack;
+
+  /// No description provided for @cashierExpectedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected in drawer'**
+  String get cashierExpectedCash;
+
+  /// No description provided for @cashierCountedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get cashierCountedCash;
+
+  /// No description provided for @cashierDifferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get cashierDifferenceLabel;
+
+  /// No description provided for @errAdminLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong passwords. Try again in {minutes} min.'**
+  String errAdminLocked(String minutes);
+
+  /// No description provided for @adminIdleSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out after {minutes} minutes without use.'**
+  String adminIdleSignedOut(String minutes);
+
   /// No description provided for @cashierWaitingCustomerConfirm.
   ///
   /// In en, this message translates to:

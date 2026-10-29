@@ -27,6 +27,7 @@ class ReceiptData {
     required this.service,
     required this.total,
     required this.method,
+    this.refunded = 0,
     this.voidReason,
   });
 
@@ -42,6 +43,10 @@ class ReceiptData {
   final double service;
   final double total;
   final String method;
+
+  /// What was given back after the sale. [total] stays what was paid, so the lines add up, and
+  /// the receipt adds a Refunded line and the Net paid under it.
+  final double refunded;
 
   /// Set for a voided sale, which prints with a VOID banner and the reason.
   final String? voidReason;
@@ -59,8 +64,11 @@ class ReceiptData {
       lines: row.lines,
       subtotal: row.subtotal,
       discount: row.discount,
-      service: row.total - charged,
-      total: row.total,
+      // From what was paid, not the ledger's net: after a refund the net would make the
+      // service charge negative and the total disagree with the lines.
+      service: payment.totalDue - charged,
+      total: payment.totalDue,
+      refunded: payment.refundedTotal,
       method: store.paymentLabel(payment),
       voidReason: payment.isVoided ? (payment.voidReason ?? '') : null,
     );
@@ -131,6 +139,10 @@ List<SlipLine> receiptSlip(CafeStore store, ReceiptData data, AppLocalizations l
     if (look.showServiceCharge && data.service > 0.009)
       SlipPair(l10n.cashierServiceCharge(store.serviceChargePercentLabel), money(data.service)),
     SlipPair(l10n.cashierTotalPayable, money(data.total), bold: true),
+    if (data.refunded > 0.009) ...[
+      SlipPair(l10n.receiptRefunded, '-${money(data.refunded)}'),
+      SlipPair(l10n.receiptNetPaid, money(data.total - data.refunded), bold: true),
+    ],
     if (look.showPaymentMethod) SlipText('${l10n.salesColMethod} ${data.method}'),
     const SlipGap(8),
     SlipText(look.footer.isEmpty ? l10n.receiptThankYou : look.footer, center: true),

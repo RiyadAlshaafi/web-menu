@@ -1057,6 +1057,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'The item is removed from the order and marked as unavailable on the menu.';
 
   @override
+  String get receiptRefunded => 'Refunded';
+
+  @override
+  String get receiptNetPaid => 'Net paid';
+
+  @override
+  String get cashierCloseNext => 'Next';
+
+  @override
+  String get cashierCloseBack => 'Back';
+
+  @override
+  String get cashierExpectedCash => 'Expected in drawer';
+
+  @override
+  String get cashierCountedCash => 'Counted';
+
+  @override
+  String get cashierDifferenceLabel => 'Difference';
+
+  @override
+  String errAdminLocked(String minutes) {
+    return 'Too many wrong passwords. Try again in $minutes min.';
+  }
+
+  @override
+  String adminIdleSignedOut(String minutes) {
+    return 'Signed out after $minutes minutes without use.';
+  }
+
+  @override
   String get cashierWaitingCustomerConfirm =>
       'Waiting for the table to confirm the updated order.';
 

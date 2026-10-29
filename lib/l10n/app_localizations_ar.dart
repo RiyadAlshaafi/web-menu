@@ -1055,6 +1055,37 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستتم إزالة الصنف من الطلب وتمييزه كغير متاح في القائمة.';
 
   @override
+  String get receiptRefunded => 'مسترد';
+
+  @override
+  String get receiptNetPaid => 'صافي المدفوع';
+
+  @override
+  String get cashierCloseNext => 'التالي';
+
+  @override
+  String get cashierCloseBack => 'رجوع';
+
+  @override
+  String get cashierExpectedCash => 'المتوقع في الدرج';
+
+  @override
+  String get cashierCountedCash => 'المعدود';
+
+  @override
+  String get cashierDifferenceLabel => 'الفرق';
+
+  @override
+  String errAdminLocked(String minutes) {
+    return 'محاولات خاطئة كثيرة. حاول مرة أخرى بعد $minutes دقيقة.';
+  }
+
+  @override
+  String adminIdleSignedOut(String minutes) {
+    return 'تم تسجيل الخروج بعد $minutes دقيقة دون استخدام.';
+  }
+
+  @override
   String get cashierWaitingCustomerConfirm =>
       'بانتظار تأكيد الطاولة للطلب المحدّث.';
 

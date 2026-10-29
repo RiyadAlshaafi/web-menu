@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -80,7 +83,8 @@ class AdminShell extends StatelessWidget {
               ),
             ),
           );
-    return ShellFrame(
+    return AdminIdleLock(
+      child: ShellFrame(
       drawer: drawer,
       drawerWidth: 260,
       rail: rail,
@@ -90,6 +94,7 @@ class AdminShell extends StatelessWidget {
       ),
       // A short or narrow window scrolls the page instead of cutting its bottom off.
       body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
+      ),
     );
   }
 
@@ -348,4 +353,61 @@ class _AdminTablesScreenState extends State<AdminTablesScreen> {
   }
 }
 
+/// On the offline till, signs the admin out after [timeout] with no touch, click or key, so a
+/// cashier who walks up to an unattended till does not get the owner's console.
+class AdminIdleLock extends StatefulWidget {
+  const AdminIdleLock({super.key, required this.child, this.timeout = const Duration(minutes: 10)});
 
+  final Widget child;
+  final Duration timeout;
+
+  @override
+  State<AdminIdleLock> createState() => _AdminIdleLockState();
+}
+
+class _AdminIdleLockState extends State<AdminIdleLock> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _restart();
+    HardwareKeyboard.instance.addHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    super.dispose();
+  }
+
+  bool _onKey(KeyEvent event) {
+    _restart();
+    return false;
+  }
+
+  void _restart() {
+    _timer?.cancel();
+    _timer = Timer(widget.timeout, _lock);
+  }
+
+  void _lock() {
+    if (!mounted) return;
+    final store = context.read<CafeStore>();
+    if (!store.db.isLocal || store.authKind != AuthKind.admin) return;
+    store.signOut();
+    store.adminError = context.l10n.adminIdleSignedOut('${widget.timeout.inMinutes}');
+    context.go('/admin/login');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) => _restart(),
+      onPointerSignal: (_) => _restart(),
+      child: widget.child,
+    );
+  }
+}

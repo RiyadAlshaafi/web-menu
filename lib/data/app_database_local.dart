@@ -30,7 +30,12 @@ extension AppDatabaseLocal on AppDatabase {
     _locale = _store.readDoc('locale') as String? ?? 'en';
     final admin = _localAdminDoc();
     anyAdmin = admin != null;
-    _rememberAdmin = admin?['remember'] as bool? ?? false;
+    // "Remember me" lasts until rememberUntil (half a day), not forever; older saves without
+    // it ask for the password once.
+    final rememberUntil = DateTime.tryParse(admin?['rememberUntil'] as String? ?? '');
+    _rememberAdmin = (admin?['remember'] as bool? ?? false) &&
+        rememberUntil != null &&
+        rememberUntil.isAfter(DateTime.now().toUtc());
     _admin = admin != null && _rememberAdmin ? _localAdminAccount(admin) : null;
     _cashiers = [
       for (final row in _docRows('cashiers'))
@@ -137,20 +142,47 @@ extension AppDatabaseLocal on AppDatabase {
   }
 
   /// Whether [email] and [password] match this PC's admin; signs them in when they do.
+  /// Wrong tries lock the admin for longer and longer (see [_adminLockFor]); while locked even the
+  /// right password is refused, so the till cannot be guessed at. [localAdminLockedFor] says how long.
   bool signInLocalAdmin({required String email, required String password, required bool remember}) {
     final doc = _localAdminDoc();
-    if (doc == null || (doc['email'] as String).toLowerCase() != email.trim().toLowerCase()) return false;
-    if (_localHash(password, doc['salt'] as String) != doc['hash']) return false;
-    _store.writeDoc('admin', {...doc, 'remember': remember});
+    if (doc == null || localAdminLockedFor != null) return false;
+    final rightEmail = (doc['email'] as String).toLowerCase() == email.trim().toLowerCase();
+    if (!rightEmail || !_sameHash(_localHash(password, doc['salt'] as String), doc['hash'] as String)) {
+      final failed = (doc['failed'] as int? ?? 0) + 1;
+      final lock = _adminLockFor(failed);
+      _store.writeDoc('admin', {
+        ...doc,
+        'failed': failed,
+        'lockedUntil': lock == null ? null : DateTime.now().toUtc().add(lock).toIso8601String(),
+      });
+      return false;
+    }
+    final now = DateTime.now().toUtc();
+    _store.writeDoc('admin', {
+      ...doc,
+      'failed': 0,
+      'lockedUntil': null,
+      'remember': remember,
+      'rememberUntil': remember ? now.add(_adminRemember).toIso8601String() : null,
+    });
     _rememberAdmin = remember;
     _admin = _localAdminAccount(doc);
     return true;
   }
 
+  /// How long the admin sign-in is still locked after too many wrong passwords; null when it is not.
+  Duration? get localAdminLockedFor {
+    final until = DateTime.tryParse(_localAdminDoc()?['lockedUntil'] as String? ?? '');
+    final now = DateTime.now().toUtc();
+    if (until == null || !until.isAfter(now)) return null;
+    return until.difference(now);
+  }
+
   /// Changes the admin password after checking [current]. Returns false when [current] is wrong.
   bool changeLocalAdminPassword({required String current, required String next}) {
     final doc = _localAdminDoc();
-    if (doc == null || _localHash(current, doc['salt'] as String) != doc['hash']) return false;
+    if (doc == null || !_sameHash(_localHash(current, doc['salt'] as String), doc['hash'] as String)) return false;
     final salt = Secrets.publicId(16);
     _store.writeDoc('admin', {...doc, 'salt': salt, 'hash': _localHash(next, salt)});
     return true;
@@ -178,6 +210,8 @@ extension AppDatabaseLocal on AppDatabase {
         'salt': salt,
         'hash': _localHash(next, salt),
         'remember': false,
+        'failed': 0,
+        'lockedUntil': null,
         'resetAt': DateTime.now().toUtc().toIso8601String(),
       });
       _store.writeDoc('adminResets', [...used, nonce]);
@@ -231,7 +265,7 @@ extension AppDatabaseLocal on AppDatabase {
     if (lockedUntil != null && lockedUntil.isAfter(now)) {
       return {'ok': false, 'code': 'locked', 'retry_after_seconds': lockedUntil.difference(now).inSeconds};
     }
-    if (_localHash(pin, entry['salt'] as String) != entry['hash']) {
+    if (!_sameHash(_localHash(pin, entry['salt'] as String), entry['hash'] as String)) {
       final failed = (entry['failed'] as int? ?? 0) + 1;
       pins[cashierId] = {
         ...entry,
@@ -995,6 +1029,27 @@ double _round2(double value) => (value * 100 + 1e-6).round() / 100;
 const _maxPinTries = 5;
 const _pinLock = Duration(minutes: 15);
 const _hashRounds = 20000;
+
+/// A remembered admin sign-in lasts this long, so a till left on overnight asks again.
+const _adminRemember = Duration(hours: 12);
+
+/// Lock after wrong admin passwords: 5 tries lock 1 minute, 10 lock 5, every 5 after lock 15.
+Duration? _adminLockFor(int failed) {
+  if (failed < 5 || failed % 5 != 0) return null;
+  if (failed == 5) return const Duration(minutes: 1);
+  if (failed == 10) return const Duration(minutes: 5);
+  return const Duration(minutes: 15);
+}
+
+/// Compares two hashes in time that does not depend on where they first differ.
+bool _sameHash(String a, String b) {
+  if (a.length != b.length) return false;
+  var diff = 0;
+  for (var i = 0; i < a.length; i++) {
+    diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+  }
+  return diff == 0;
+}
 
 /// Salted, repeated SHA-256 for local PINs and the admin password (no server to check them).
 String _localHash(String secret, String salt) {

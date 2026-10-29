@@ -396,69 +396,112 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     CashShift shift,
   ) async {
     final counted = TextEditingController();
+    final expected = store.expectedDrawer(shift);
+    // Two steps: type the count, then check it against what the drawer should hold. The count
+    // must be a real number, so a blank or mistyped field can no longer close the drawer at 0.
+    double? review;
     final actual = await showDialog<double>(
       context: context,
       barrierColor: const Color(0x99000000),
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 16, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    context.l10n.cashierCloseRegister,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: counted,
-                    autofocus: true,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: context.l10n.cashierActualCashCounted,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final typed = parseMoneyInput(counted.text);
+            final money = store.currency.format;
+            final checking = review;
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 16, 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(context.l10n.commonCancel),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(
-                          context,
-                          double.tryParse(counted.text.trim()) ?? 0,
+                      Text(
+                        context.l10n.cashierCloseRegister,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
                         ),
-                        child: Text(context.l10n.cashierCloseRegister),
+                      ),
+                      const SizedBox(height: 12),
+                      if (checking == null)
+                        TextField(
+                          key: const Key('close-register-count'),
+                          controller: counted,
+                          autofocus: true,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) {
+                            if (typed != null) setState(() => review = typed);
+                          },
+                          decoration: InputDecoration(
+                            labelText: context.l10n.cashierActualCashCounted,
+                          ),
+                        )
+                      else ...[
+                        _closeRow(context.l10n.cashierExpectedCash, money(expected)),
+                        _closeRow(context.l10n.cashierCountedCash, money(checking)),
+                        const Divider(height: 20),
+                        _closeRow(
+                          context.l10n.cashierDifferenceLabel,
+                          money(checking - expected),
+                          bold: true,
+                          color: (checking - expected).abs() < 0.005
+                              ? CafeColors.success
+                              : CafeColors.alert,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
+                            onPressed: checking == null
+                                ? () => Navigator.pop(context)
+                                : () => setState(() => review = null),
+                            child: Text(
+                              checking == null
+                                  ? context.l10n.commonCancel
+                                  : context.l10n.cashierCloseBack,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FilledButton(
+                            key: const Key('close-register-confirm'),
+                            style: FilledButton.styleFrom(minimumSize: const Size(120, 48)),
+                            onPressed: checking != null
+                                ? () => Navigator.pop(context, checking)
+                                : typed == null
+                                    ? null
+                                    : () => setState(() => review = typed),
+                            child: Text(
+                              checking == null
+                                  ? context.l10n.cashierCloseNext
+                                  : context.l10n.cashierCloseRegister,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
     counted.dispose();
     if (actual == null || !context.mounted) return;
-    final expected = store.expectedDrawer(shift);
     final error = await store.closeShift(actualCash: actual);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -670,3 +713,17 @@ final _rowActionStyle = OutlinedButton.styleFrom(
   padding: const EdgeInsets.symmetric(horizontal: 12),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
 );
+
+/// One "label ... amount" line of the close-register check.
+Widget _closeRow(String label, String amount, {bool bold = false, Color? color}) {
+  final style = TextStyle(fontSize: 16, fontWeight: bold ? FontWeight.w800 : FontWeight.w600, color: color);
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: style)),
+        Text(amount, style: style),
+      ],
+    ),
+  );
+}
