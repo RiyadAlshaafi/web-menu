@@ -17,6 +17,26 @@ class ReleaseNotes {
 /// The notes of each version that has any, by version and then language. Add the next version's
 /// notes here before its release; a version without notes shows no popup.
 const Map<String, Map<String, ReleaseNotes>> releaseNotes = {
+  '2.8.6': {
+    'en': ReleaseNotes(
+      added: [
+        'Running the setup again lets you reset the offline admin PIN',
+      ],
+      fixed: [
+        'A wrong offline PIN now says "Wrong PIN"',
+        'The settings card is now called "Ordering online"',
+      ],
+    ),
+    'ar': ReleaseNotes(
+      added: [
+        'إعادة تشغيل الإعداد تتيح إعادة تعيين رمز المدير دون إنترنت',
+      ],
+      fixed: [
+        'الرمز الخاطئ دون إنترنت يظهر الآن "الرمز غير صحيح"',
+        'أصبح اسم بطاقة الإعدادات "الطلب عبر الإنترنت"',
+      ],
+    ),
+  },
   '2.8.5': {
     'en': ReleaseNotes(
       added: [
