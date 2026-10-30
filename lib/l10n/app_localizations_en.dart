@@ -501,7 +501,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get layoutCategoryNameHint =>
-      'Enter Category Name (e.g. Bevande & Wines, Desserts)';
+      'Enter Category Name (e.g. Drinks, Desserts)';
 
   @override
   String get layoutCreateCategory => 'Create Category';
@@ -1151,10 +1151,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashierAvailable => 'Available';
 
   @override
-  String get cashierTotalShiftGrossSales => 'Total Shift Gross Sales';
+  String get cashierTotalShiftGrossSales => 'Total shift sales';
 
   @override
-  String get cashierSettledOrders => 'Settled Orders';
+  String get cashierSettledOrders => 'Receipts';
 
   @override
   String get cashierActivePendingBalance => 'Active Pending Balance';
@@ -1201,7 +1201,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navCashierLog => 'Cashier Log & Shift';
 
   @override
-  String get cashierLogScope => 'Your transactions. Filter them by shift.';
+  String get cashierLogScope =>
+      'Your transactions. Filter them by table or takeout.';
 
   @override
   String get salesAllShifts => 'All shifts';
@@ -1947,14 +1948,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dishChoicesHoldCard => 'choose ingredients and extras';
 
   @override
-  String get voidSale => 'Void sale';
+  String get voidSale => 'Refund sale';
 
   @override
-  String get voidSaleTitle => 'Void this sale?';
+  String get voidSaleTitle => 'Refund this whole sale?';
 
   @override
   String get voidSaleMessage =>
-      'Use this when the customer left after paying. The sale stays in the log marked VOID and stops counting in sales and the drawer. Give back any cash yourself.';
+      'Use this when the customer left after paying. The sale stays in the log marked REFUNDED and stops counting in sales and the drawer. Give back any cash yourself.';
 
   @override
   String get voidReasonLabel => 'Reason';
@@ -1963,32 +1964,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voidReasonHint => 'e.g. Customer left, food was late';
 
   @override
-  String get voidConfirm => 'Void sale';
+  String get voidConfirm => 'Refund sale';
 
   @override
-  String get voidDone => 'Sale voided';
+  String get voidDone => 'Sale refunded';
 
   @override
-  String get voidStatus => 'Void';
+  String get voidStatus => 'Refunded';
 
   @override
   String voidReasonLine(String reason) {
-    return 'Void reason: $reason';
+    return 'Refund reason: $reason';
   }
 
   @override
   String get voidNotAllowed =>
-      'Only the cashier who took this sale can void it, while their shift is open.';
+      'Only the cashier who took this sale can refund it, while their shift is open.';
 
   @override
-  String get voidAlreadyDone => 'This sale is already voided.';
+  String get voidAlreadyDone => 'This sale is already refunded.';
 
   @override
-  String get voidReasonRequired => 'Write a reason for the void.';
+  String get voidReasonRequired => 'Write a reason for the refund.';
 
   @override
   String get voidWaitForSync =>
-      'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.';
+      'This sale hasn\'t reached the server yet. Wait until it syncs, then refund it.';
 
   @override
   String get refundItem => 'Refund a dish';
@@ -2510,7 +2511,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportVoids(int count) {
-    return 'Voids ($count)';
+    return 'Refunded sales ($count)';
   }
 
   @override
@@ -2616,7 +2617,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pdfTotalExclVoid(String amount) {
-    return 'Total (excl. void): $amount';
+    return 'Total (excl. refunded): $amount';
   }
 
   @override
@@ -2880,4 +2881,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String waiterAlertMore(int count) {
     return '+$count more';
   }
+
+  @override
+  String get cashierViewBill => 'View full bill';
+
+  @override
+  String get salesAllStatuses => 'All statuses';
+
+  @override
+  String get cashierCashInDrawer => 'Cash in drawer';
+
+  @override
+  String get dashboardRecentRefunds => 'Recent Refunds';
+
+  @override
+  String get authRememberEmail => 'Remember my email';
+
+  @override
+  String get settingsSoon => 'Soon';
+
+  @override
+  String get settingsSoonHint => 'A new feature is on the way';
 }

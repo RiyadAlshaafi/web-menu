@@ -59,6 +59,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final expensesTotal = expenses.fold<double>(0, (sum, row) => sum + row.amount);
     final recentSales = saleLedgerRows(store);
     final recentExpenses = expenseLedgerRows(store);
+    // Whole sales given back and sales with a dish given back, newest refund first.
+    final recentRefunds = saleLedgerRows(store, includeVoided: true)
+        .where((row) => row.payment.isVoided || row.payment.refunds.isNotEmpty)
+        .toList()
+      ..sort((a, b) => _refundedAt(b.payment).compareTo(_refundedAt(a.payment)));
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -144,8 +149,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onViewAll: () => context.go('/admin/wages'),
               rows: [for (final row in recentExpenses.take(5)) _expenseRow(context, store, row)],
             );
+            final refundsPanel = _listPanel(
+              context,
+              title: context.l10n.dashboardRecentRefunds,
+              onViewAll: () => context.go('/admin/sales?status=refunded'),
+              rows: [for (final row in recentRefunds.take(5)) _refundRow(context, store, row)],
+            );
             if (constraints.maxWidth < 900) {
-              return Column(children: [salesPanel, const SizedBox(height: 16), expensesPanel]);
+              return Column(children: [salesPanel, const SizedBox(height: 16), expensesPanel, const SizedBox(height: 16), refundsPanel]);
             }
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,6 +164,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Expanded(child: salesPanel),
                 const SizedBox(width: 16),
                 Expanded(child: expensesPanel),
+                const SizedBox(width: 16),
+                Expanded(child: refundsPanel),
               ],
             );
           },
@@ -344,6 +357,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       title: context.l10n.salesReceiptLine(store.receiptNumber(row.payment)),
       subtitle: '$place · ${row.cashierName} · ${formatTripoliTime(row.payment.paidAt)}',
       amount: store.currency.format(row.total),
+    );
+  }
+
+  /// When the sale was last given back: the whole-sale refund, or its latest dish refund.
+  static DateTime _refundedAt(Payment payment) =>
+      payment.voidedAt ?? payment.refunds.map((refund) => refund.at).fold(payment.paidAt, (latest, at) => at.isAfter(latest) ? at : latest);
+
+  Widget _refundRow(BuildContext context, CafeStore store, SaleLedgerRow row) {
+    final payment = row.payment;
+    final place = row.takeout ? context.l10n.serviceTakeout : context.l10n.adminTableNumber(row.tableNumber);
+    return _listRow(
+      lead: _tile(const Icon(Icons.undo, size: 18, color: CafeColors.alert), const Color(0xFFFBE4E1)),
+      title: context.l10n.salesReceiptLine(store.receiptNumber(payment)),
+      subtitle: '$place · ${row.cashierName} · ${formatTripoliTime(_refundedAt(payment))}',
+      amount: store.currency.format(payment.isVoided ? payment.totalDue : payment.refundedTotal),
+      amountColor: CafeColors.alert,
     );
   }
 

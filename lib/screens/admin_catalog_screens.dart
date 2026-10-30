@@ -416,6 +416,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 const SizedBox(height: 16),
                 if (right != null) ...[right, const SizedBox(height: 16)],
               ],
+              const _SoonCard(),
             ],
           );
         }
@@ -425,9 +426,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Column(children: [for (final (left, _) in pairs) ...[left, const SizedBox(height: 16)]])),
+              // Stretch, so a card with little in it is as wide as its column like the others.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [for (final (left, _) in pairs) ...[left, const SizedBox(height: 16)]],
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: Column(children: [for (final (_, right) in pairs) if (right != null) ...[right, const SizedBox(height: 16)]])),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (_, right) in pairs) if (right != null) ...[right, const SizedBox(height: 16)],
+                    const _SoonCard(),
+                  ],
+                ),
+              ),
             ],
           ),
         );
@@ -965,6 +980,54 @@ class _ExpenseCategoriesCardState extends State<ExpenseCategoriesCard> {
             OutlineAction(label: '+ ${context.l10n.payTypeAdd}', height: 44, onPressed: () => setState(() => adding = true)),
         ],
       ),
+    );
+  }
+}
+
+/// A greyed-out card marking where a new setting is on its way. It does nothing when tapped.
+class _SoonCard extends StatelessWidget {
+  const _SoonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        TawlaPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(height: 18, width: 160, decoration: BoxDecoration(color: CafeColors.line, borderRadius: BorderRadius.circular(6))),
+              const SizedBox(height: 12),
+              Container(height: 12, decoration: BoxDecoration(color: CafeColors.line, borderRadius: BorderRadius.circular(6))),
+              const SizedBox(height: 8),
+              FractionallySizedBox(
+                widthFactor: 0.7,
+                child: Container(height: 12, decoration: BoxDecoration(color: CafeColors.line, borderRadius: BorderRadius.circular(6))),
+              ),
+              const SizedBox(height: 20),
+              Container(height: 44, width: 140, decoration: BoxDecoration(color: CafeColors.line, borderRadius: BorderRadius.circular(10))),
+            ],
+          ),
+        ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(16)),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.settingsSoon,
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: CafeSurfaces.of(context).header),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(context.l10n.settingsSoonHint, style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

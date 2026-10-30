@@ -175,15 +175,14 @@ void main() {
       expect(find.text('Sara advance'), findsOneWidget, reason: 'the hidden filter still applies');
     });
 
-    testWidgets('all employees: every expense, and Net is sales minus all expenses', (tester) async {
+    testWidgets('all employees: every expense, and no sales, expenses or net cards', (tester) async {
       final store = _store();
       await _pumpWages(tester, store);
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.expenseAllEmployees), findsOneWidget);
-      expect(find.text(store.currency.format(160)), findsOneWidget);
-      expect(find.text(store.currency.format(40)), findsOneWidget, reason: 'net = 200 - 160');
-      expect(find.textContaining(l10n.summaryNet), findsOneWidget);
+      expect(find.textContaining(l10n.summaryNet), findsNothing);
+      expect(find.textContaining(l10n.summarySales), findsNothing);
       for (final row in ['Sara advance', 'Chef knives', 'Milk', 'Hani last wage', 'Sara bonus fixed']) {
         expect(find.text(row), findsOneWidget);
       }
@@ -200,7 +199,7 @@ void main() {
       }
     });
 
-    testWidgets('one employee: only their expenses, sales stay whole cafe, no Net card', (tester) async {
+    testWidgets('one employee: only their expenses', (tester) async {
       final store = _store();
       await _pumpWages(tester, store);
 
@@ -210,10 +209,6 @@ void main() {
       expect(find.text('Sara bonus fixed'), findsOneWidget);
       expect(find.text('Chef knives'), findsNothing);
       expect(find.text('Milk'), findsNothing);
-      expect(find.text(store.currency.format(95)), findsOneWidget);
-      expect(find.text(store.currency.format(200)), findsOneWidget, reason: 'sales are the whole cafe');
-      expect(find.textContaining(l10n.summaryWholeCafe), findsOneWidget);
-      expect(find.textContaining(l10n.summaryNet), findsNothing);
     });
 
     testWidgets('a removed employee is found by the saved name', (tester) async {
@@ -260,35 +255,6 @@ void main() {
       final lines = File(file).readAsLinesSync();
       expect(lines, hasLength(3), reason: 'a header and Sara\'s two expenses');
       expect(lines.skip(1).every((line) => line.contains('Sara')), isTrue);
-    });
-  
-    testWidgets('the cards show the server totals for the month, not only the loaded rows', (tester) async {
-      final store = _store()
-        ..all = [
-          ..._store().expenses,
-          // Earlier this month, no longer in the loaded list.
-          _expense('old', 500, 'Rent', staff: 'k1', staffName: 'Lina'),
-        ];
-      await _pumpWages(tester, store);
-      await tester.pumpAndSettle();
-
-      expect(store.asked, isNotEmpty);
-      expect(store.asked.last.$1.day, 1, reason: 'this month from the 1st');
-      expect(find.text(store.currency.format(660)), findsOneWidget, reason: '160 loaded + 500 from the server');
-      expect(find.text('Rent'), findsNothing, reason: 'the list still shows the loaded rows');
-      await _pick(tester, l10n.expenseAllEmployees, 'Lina');
-      expect(find.text(store.currency.format(530)), findsOneWidget);
-    });
-
-    testWidgets('without the server the cards say so instead of showing partial totals', (tester) async {
-      final store = _store()..error = 'network';
-      await _pumpWages(tester, store);
-      await tester.pumpAndSettle();
-
-      // Three cards, plus the two empty date boxes, which show a dash too.
-      expect(find.text('—'), findsNWidgets(5));
-      expect(find.text(l10n.summaryNeedsServer), findsOneWidget);
-      expect(find.text(store.currency.format(160)), findsNothing);
     });
   });
 }

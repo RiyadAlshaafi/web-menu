@@ -1019,7 +1019,7 @@ abstract class AppLocalizations {
   /// No description provided for @layoutCategoryNameHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter Category Name (e.g. Bevande & Wines, Desserts)'**
+  /// **'Enter Category Name (e.g. Drinks, Desserts)'**
   String get layoutCategoryNameHint;
 
   /// No description provided for @layoutCreateCategory.
@@ -2141,13 +2141,13 @@ abstract class AppLocalizations {
   /// No description provided for @cashierTotalShiftGrossSales.
   ///
   /// In en, this message translates to:
-  /// **'Total Shift Gross Sales'**
+  /// **'Total shift sales'**
   String get cashierTotalShiftGrossSales;
 
   /// No description provided for @cashierSettledOrders.
   ///
   /// In en, this message translates to:
-  /// **'Settled Orders'**
+  /// **'Receipts'**
   String get cashierSettledOrders;
 
   /// No description provided for @cashierActivePendingBalance.
@@ -2237,7 +2237,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashierLogScope.
   ///
   /// In en, this message translates to:
-  /// **'Your transactions. Filter them by shift.'**
+  /// **'Your transactions. Filter them by table or takeout.'**
   String get cashierLogScope;
 
   /// No description provided for @salesAllShifts.
@@ -3515,19 +3515,19 @@ abstract class AppLocalizations {
   /// No description provided for @voidSale.
   ///
   /// In en, this message translates to:
-  /// **'Void sale'**
+  /// **'Refund sale'**
   String get voidSale;
 
   /// No description provided for @voidSaleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Void this sale?'**
+  /// **'Refund this whole sale?'**
   String get voidSaleTitle;
 
   /// No description provided for @voidSaleMessage.
   ///
   /// In en, this message translates to:
-  /// **'Use this when the customer left after paying. The sale stays in the log marked VOID and stops counting in sales and the drawer. Give back any cash yourself.'**
+  /// **'Use this when the customer left after paying. The sale stays in the log marked REFUNDED and stops counting in sales and the drawer. Give back any cash yourself.'**
   String get voidSaleMessage;
 
   /// No description provided for @voidReasonLabel.
@@ -3545,49 +3545,49 @@ abstract class AppLocalizations {
   /// No description provided for @voidConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Void sale'**
+  /// **'Refund sale'**
   String get voidConfirm;
 
   /// No description provided for @voidDone.
   ///
   /// In en, this message translates to:
-  /// **'Sale voided'**
+  /// **'Sale refunded'**
   String get voidDone;
 
   /// No description provided for @voidStatus.
   ///
   /// In en, this message translates to:
-  /// **'Void'**
+  /// **'Refunded'**
   String get voidStatus;
 
   /// No description provided for @voidReasonLine.
   ///
   /// In en, this message translates to:
-  /// **'Void reason: {reason}'**
+  /// **'Refund reason: {reason}'**
   String voidReasonLine(String reason);
 
   /// No description provided for @voidNotAllowed.
   ///
   /// In en, this message translates to:
-  /// **'Only the cashier who took this sale can void it, while their shift is open.'**
+  /// **'Only the cashier who took this sale can refund it, while their shift is open.'**
   String get voidNotAllowed;
 
   /// No description provided for @voidAlreadyDone.
   ///
   /// In en, this message translates to:
-  /// **'This sale is already voided.'**
+  /// **'This sale is already refunded.'**
   String get voidAlreadyDone;
 
   /// No description provided for @voidReasonRequired.
   ///
   /// In en, this message translates to:
-  /// **'Write a reason for the void.'**
+  /// **'Write a reason for the refund.'**
   String get voidReasonRequired;
 
   /// No description provided for @voidWaitForSync.
   ///
   /// In en, this message translates to:
-  /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then void it.'**
+  /// **'This sale hasn\'t reached the server yet. Wait until it syncs, then refund it.'**
   String get voidWaitForSync;
 
   /// No description provided for @refundItem.
@@ -4481,7 +4481,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportVoids.
   ///
   /// In en, this message translates to:
-  /// **'Voids ({count})'**
+  /// **'Refunded sales ({count})'**
   String reportVoids(int count);
 
   /// No description provided for @reportExpenses.
@@ -4649,7 +4649,7 @@ abstract class AppLocalizations {
   /// No description provided for @pdfTotalExclVoid.
   ///
   /// In en, this message translates to:
-  /// **'Total (excl. void): {amount}'**
+  /// **'Total (excl. refunded): {amount}'**
   String pdfTotalExclVoid(String amount);
 
   /// No description provided for @waiterPairAsk.
@@ -5095,6 +5095,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{count} more'**
   String waiterAlertMore(int count);
+
+  /// No description provided for @cashierViewBill.
+  ///
+  /// In en, this message translates to:
+  /// **'View full bill'**
+  String get cashierViewBill;
+
+  /// No description provided for @salesAllStatuses.
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get salesAllStatuses;
+
+  /// No description provided for @cashierCashInDrawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash in drawer'**
+  String get cashierCashInDrawer;
+
+  /// No description provided for @dashboardRecentRefunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Refunds'**
+  String get dashboardRecentRefunds;
+
+  /// No description provided for @authRememberEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember my email'**
+  String get authRememberEmail;
+
+  /// No description provided for @settingsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Soon'**
+  String get settingsSoon;
+
+  /// No description provided for @settingsSoonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A new feature is on the way'**
+  String get settingsSoonHint;
 }
 
 class _AppLocalizationsDelegate

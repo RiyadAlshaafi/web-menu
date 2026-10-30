@@ -12,12 +12,13 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final shift = store.currentShift ?? store.openShift;
-    final sales = shift?.cashSales ?? 0;
-    final txs = shift?.transactionCount ?? 0;
-    final pending = store.billTables.fold<double>(
-      0,
-      (sum, table) => sum + store.tabTotal(table.id),
-    );
+    // Only this shift's sales: from the cashier's sign-in until they end the shift.
+    final shiftSales = shift == null
+        ? const <Payment>[]
+        : store.payments.where((payment) => payment.shiftId == shift.id && !payment.isVoided).toList();
+    final sales = shiftSales.fold<double>(0, (sum, payment) => sum + payment.netTotal);
+    final txs = shiftSales.length;
+    final drawer = shift == null ? 0.0 : store.expectedDrawer(shift);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
@@ -46,17 +47,9 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                   expand: !stacked,
                 ),
                 _mini(
-                  context.l10n.cashierActivePendingBalance,
-                  store.currency.format(pending),
-                  color: const Color(0xFF95600F),
-                  detail: store.billTables.isEmpty
-                      ? null
-                      : store.billTables
-                            .map(
-                              (table) =>
-                                  '${context.l10n.cashierTableShort(table.number)} ${store.currency.format(store.tabTotal(table.id))}',
-                            )
-                            .join(' • '),
+                  context.l10n.cashierCashInDrawer,
+                  store.currency.format(drawer),
+                  color: const Color(0xFF4F7A45),
                   expand: !stacked,
                 ),
               ];

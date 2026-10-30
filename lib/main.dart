@@ -318,7 +318,7 @@ class _TawlaAppState extends State<TawlaApp> {
               path: '/admin/sales',
               pageBuilder: (_, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: DeferredView(load: _loadAdminSales, builder: () => sales_ui.SalesLogScreen()),
+                child: DeferredView(load: _loadAdminSales, builder: () => sales_ui.SalesLogScreen(refundedOnly: state.uri.queryParameters['status'] == 'refunded')),
               ),
             ),
             GoRoute(

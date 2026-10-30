@@ -176,6 +176,10 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                                 action: next == null ? null : _nextStatusAction(context, next),
                                 selected: order.id == selected?.id,
                                 onTap: () => setState(() => selectedOrderId = order.id),
+                                onOpen: () {
+                                  setState(() => selectedOrderId = order.id);
+                                  _showBill(context, order.id);
+                                },
                                 onAction: next == null
                                     ? null
                                     : () async {
@@ -329,6 +333,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     String? action,
     bool selected = false,
     VoidCallback? onTap,
+    VoidCallback? onOpen,
     VoidCallback? onAction,
     String? secondary,
     VoidCallback? onSecondary,
@@ -418,7 +423,12 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                           ],
                         ),
                       ),
-                      if (tone != _AlertTone.call) const Icon(Icons.chevron_right, color: TawlaTokens.muted),
+                      if (tone != _AlertTone.call)
+                        IconButton(
+                          onPressed: onOpen ?? onTap,
+                          tooltip: context.l10n.cashierViewBill,
+                          icon: const Icon(Icons.chevron_right, color: TawlaTokens.muted),
+                        ),
                     ],
                   ),
                   if (hasFooter)
@@ -458,6 +468,47 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// The order's full bill in a popup; it closes by itself once the order is paid or gone.
+  void _showBill(BuildContext context, String orderId) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final store = dialogContext.watch<CafeStore>();
+        final order = store.liveOrders().where((item) => item.id == orderId).firstOrNull;
+        if (order == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (dialogContext.mounted) Navigator.of(dialogContext).maybePop();
+          });
+          return const SizedBox.shrink();
+        }
+        final height = MediaQuery.sizeOf(dialogContext).height;
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: SizedBox(
+            width: 440,
+            height: (height * 0.85).clamp(360, 680),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      tooltip: MaterialLocalizations.of(dialogContext).closeButtonTooltip,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                  Expanded(child: _detail(dialogContext, store, order)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

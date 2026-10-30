@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MAX_QTY, defaultOn, dishQty, lineChoices, lineKey, linePrice, normalizeOn } from "@/lib/cart";
 import { categoryName, dishName, hasDiscount, money } from "@/lib/format";
 import type { DishOption, MenuItem } from "@/lib/types";
 import { BottomNav, Header, RefusalNotice, Sheet, Toast } from "./chrome";
 import { useGuest } from "./guest-provider";
 import { Icon } from "./icons";
-import { useReducedMotion } from "./landing/use-motion";
+import { useOnScreen, useReducedMotion } from "./landing/use-motion";
 import { ChoiceNotes, DishPhoto, EmptyHint, PoweredBy, PrimaryButton, Spinner } from "./parts";
 
 type Filter = { kind: "all" } | { kind: "chef" } | { kind: "category"; id: string };
@@ -34,7 +34,7 @@ export function MenuScreen() {
       ),
     [menu.items, filter],
   );
-  const featured = menu.items.find((item) => item.featured);
+  const featured = useMemo(() => menu.items.filter((item) => item.featured), [menu.items]);
   const sections = menu.categories
     .map((category) => ({ category, dishes: items.filter((item) => item.categoryId === category.id) }))
     .filter((section) => section.dishes.length > 0);
@@ -93,9 +93,13 @@ export function MenuScreen() {
           <EmptyHint>{text("noMenu")}</EmptyHint>
         ) : (
           <div data-menu-list>
-            {featured && filter.kind !== "category" && (
+            {featured.length > 0 && filter.kind !== "category" && (
               <div className="px-4 pt-0.5 pb-1">
-                <Spotlight item={featured} onOpen={() => setDish(featured)} />
+                {featured.length === 1 ? (
+                  <Spotlight item={featured[0]} onOpen={() => setDish(featured[0])} />
+                ) : (
+                  <SpotlightCarousel items={featured} onOpen={setDish} />
+                )}
               </div>
             )}
             <p className="px-4 pt-3 pb-2.5 text-[13px] font-bold text-muted">{text("guestItemCount", { count: items.length })}</p>
@@ -177,6 +181,88 @@ function Badge({ children }: { children: string }) {
     <span className="inline-flex h-6 items-center rounded-xl bg-brand px-2.5 text-[11px] font-extrabold tracking-[0.1em] text-on-brand uppercase">
       {children}
     </span>
+  );
+}
+
+/** How long each hero dish stays before the next one slides in. */
+const SPOTLIGHT_MS = 5000;
+const SWIPE_PX = 40;
+
+// Several hero dishes take turns, 5 seconds each, looping. It waits while the guest touches or
+// hovers it, or it is off screen, and never moves by itself when the device asks for less motion.
+function SpotlightCarousel({ items, onOpen }: { items: MenuItem[]; onOpen: (item: MenuItem) => void }) {
+  const { lang } = useGuest();
+  const reduced = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useOnScreen(ref);
+  const [index, setIndex] = useState(0);
+  const [held, setHeld] = useState(false);
+  const swipeStart = useRef<number | null>(null);
+  const count = items.length;
+  const shown = index % count;
+  const rtl = lang === "ar";
+
+  useEffect(() => {
+    if (reduced || held || !visible) return;
+    const timer = window.setTimeout(() => setIndex((value) => (value + 1) % count), SPOTLIGHT_MS);
+    return () => window.clearTimeout(timer);
+  }, [reduced, held, visible, count, shown]);
+
+  const go = (next: number) => setIndex(((next % count) + count) % count);
+
+  return (
+    <div
+      ref={ref}
+      role="region"
+      aria-roledescription="carousel"
+      onPointerEnter={() => setHeld(true)}
+      onPointerLeave={() => setHeld(false)}
+      onFocusCapture={() => setHeld(true)}
+      onBlurCapture={() => setHeld(false)}
+      onTouchStart={(event) => {
+        setHeld(true);
+        swipeStart.current = event.touches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(event) => {
+        setHeld(false);
+        const start = swipeStart.current;
+        swipeStart.current = null;
+        const end = event.changedTouches[0]?.clientX;
+        if (start == null || end == null || Math.abs(end - start) < SWIPE_PX) return;
+        const forward = rtl ? end > start : end < start;
+        go(shown + (forward ? 1 : -1));
+      }}
+    >
+      <div className="overflow-hidden rounded-[18px]">
+        <div
+          className="flex"
+          style={{
+            transform: `translateX(${rtl ? "" : "-"}${shown * 100}%)`,
+            transition: reduced ? "none" : "transform 450ms cubic-bezier(0.23, 1, 0.32, 1)",
+          }}
+        >
+          {items.map((item, i) => (
+            <div key={item.id} className="w-full shrink-0" aria-hidden={i !== shown} inert={i !== shown}>
+              <Spotlight item={item} onOpen={() => onOpen(item)} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-center gap-1.5 pt-2">
+        {items.map((item, i) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-label={`${i + 1} / ${count}`}
+            aria-current={i === shown}
+            onClick={() => go(i)}
+            className="flex h-6 w-6 items-center justify-center"
+          >
+            <span className={`block h-2 rounded-full transition-all ${i === shown ? "w-5 bg-brand" : "w-2 bg-muted/40"}`} />
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

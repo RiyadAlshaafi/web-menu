@@ -500,7 +500,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get layoutCategoryNameHint =>
-      'أدخل اسم الفئة (مثل: المشروبات والنبيذ، الحلويات)';
+      'أدخل اسم الفئة (مثل: المشروبات، الحلويات)';
 
   @override
   String get layoutCreateCategory => 'إنشاء فئة';
@@ -1152,7 +1152,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashierTotalShiftGrossSales => 'إجمالي مبيعات الوردية';
 
   @override
-  String get cashierSettledOrders => 'الطلبات المسددة';
+  String get cashierSettledOrders => 'الإيصالات';
 
   @override
   String get cashierActivePendingBalance => 'الرصيد المعلّق الحالي';
@@ -1199,7 +1199,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navCashierLog => 'سجل الكاشير والوردية';
 
   @override
-  String get cashierLogScope => 'معاملاتك فقط. يمكن تصفيتها حسب الوردية.';
+  String get cashierLogScope =>
+      'معاملاتك فقط. يمكن تصفيتها حسب الطاولة أو السفري.';
 
   @override
   String get salesAllShifts => 'كل الورديات';
@@ -1936,14 +1937,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dishChoicesHoldCard => 'اختيار المكونات والإضافات';
 
   @override
-  String get voidSale => 'إلغاء البيع';
+  String get voidSale => 'استرجاع البيع';
 
   @override
-  String get voidSaleTitle => 'إلغاء هذا البيع؟';
+  String get voidSaleTitle => 'استرجاع هذا البيع بالكامل؟';
 
   @override
   String get voidSaleMessage =>
-      'استخدم هذا عندما يغادر الزبون بعد الدفع. يبقى البيع في السجل بعلامة ملغى ولا يُحسب في المبيعات أو الدرج. أعد النقود بنفسك إن وُجدت.';
+      'استخدم هذا عندما يغادر الزبون بعد الدفع. يبقى البيع في السجل بعلامة مسترد ولا يُحسب في المبيعات أو الدرج. أعد النقود بنفسك إن وُجدت.';
 
   @override
   String get voidReasonLabel => 'السبب';
@@ -1952,32 +1953,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voidReasonHint => 'مثلاً: غادر الزبون، تأخر الطعام';
 
   @override
-  String get voidConfirm => 'إلغاء البيع';
+  String get voidConfirm => 'استرجاع البيع';
 
   @override
-  String get voidDone => 'تم إلغاء البيع';
+  String get voidDone => 'تم استرجاع البيع';
 
   @override
-  String get voidStatus => 'ملغى';
+  String get voidStatus => 'مسترد';
 
   @override
   String voidReasonLine(String reason) {
-    return 'سبب الإلغاء: $reason';
+    return 'سبب الاسترجاع: $reason';
   }
 
   @override
   String get voidNotAllowed =>
-      'فقط الكاشير الذي سجّل هذا البيع يمكنه إلغاؤه، وورديته مفتوحة.';
+      'فقط الكاشير الذي سجّل هذا البيع يمكنه استرجاعه، وورديته مفتوحة.';
 
   @override
-  String get voidAlreadyDone => 'هذا البيع ملغى بالفعل.';
+  String get voidAlreadyDone => 'هذا البيع مسترد بالفعل.';
 
   @override
-  String get voidReasonRequired => 'اكتب سبب الإلغاء.';
+  String get voidReasonRequired => 'اكتب سبب الاسترجاع.';
 
   @override
   String get voidWaitForSync =>
-      'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم ألغه.';
+      'لم يصل هذا البيع إلى الخادم بعد. انتظر حتى تتم المزامنة ثم استرجعه.';
 
   @override
   String get refundItem => 'استرجاع صنف';
@@ -2497,7 +2498,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String reportVoids(int count) {
-    return 'الملغاة ($count)';
+    return 'المبيعات المستردة ($count)';
   }
 
   @override
@@ -2603,7 +2604,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String pdfTotalExclVoid(String amount) {
-    return 'الإجمالي (بدون الملغاة): $amount';
+    return 'الإجمالي (بدون المستردة): $amount';
   }
 
   @override
@@ -2864,4 +2865,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String waiterAlertMore(int count) {
     return '+$count أخرى';
   }
+
+  @override
+  String get cashierViewBill => 'عرض الفاتورة كاملة';
+
+  @override
+  String get salesAllStatuses => 'كل الحالات';
+
+  @override
+  String get cashierCashInDrawer => 'النقد في الدرج';
+
+  @override
+  String get dashboardRecentRefunds => 'أحدث المستردات';
+
+  @override
+  String get authRememberEmail => 'تذكّر بريدي الإلكتروني';
+
+  @override
+  String get settingsSoon => 'قريباً';
+
+  @override
+  String get settingsSoonHint => 'ميزة جديدة في الطريق';
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
@@ -457,6 +458,35 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   bool signingIn = false;
   String? error;
 
+  /// The last admin email, kept on this device when "Remember my email" is ticked. Never the password.
+  static const _savedEmailKey = 'adminSavedEmail';
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.setup) _loadSavedEmail();
+  }
+
+  Future<void> _loadSavedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_savedEmailKey);
+    if (!mounted || saved == null || saved.isEmpty || email.text.isNotEmpty) return;
+    setState(() {
+      email.text = saved;
+      remember = true;
+    });
+  }
+
+  Future<void> _saveEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = email.text.trim();
+    if (remember && value.isNotEmpty) {
+      await prefs.setString(_savedEmailKey, value);
+    } else {
+      await prefs.remove(_savedEmailKey);
+    }
+  }
+
   @override
   void dispose() {
     email.dispose();
@@ -498,9 +528,11 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
       }
       return;
     }
-    final result = await store.signInAdmin(email.text, password.text, remember: remember);
+    final result = await store.signInAdmin(email.text, password.text, remember: false);
     if (!mounted) return;
     if (result == null) {
+      await _saveEmail();
+      if (!mounted) return;
       context.go('/admin/dashboard');
     } else {
       setState(() => signingIn = false);
@@ -744,7 +776,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(context.l10n.authKeepSignedIn),
+                      Text(context.l10n.authRememberEmail),
                     ],
                   ),
                 if (error != null || store.adminError != null) ...[

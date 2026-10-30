@@ -25,9 +25,12 @@ import '../widgets/void_sale_dialog.dart';
 enum _Sort { id, when, table, cashier, items, subtotal, discount, total, method, status }
 
 class SalesLogScreen extends StatefulWidget {
-  const SalesLogScreen({super.key, this.ownSalesOnly = false});
+  const SalesLogScreen({super.key, this.ownSalesOnly = false, this.refundedOnly = false});
 
   final bool ownSalesOnly;
+
+  /// Opens with the status filter on Refunded (the dashboard's "View all" of refunds).
+  final bool refundedOnly;
 
   @override
   State<SalesLogScreen> createState() => _SalesLogScreenState();
@@ -40,8 +43,9 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
   String? cashierName;
   String? tableNumber;
   String? methodId;
-  String? shiftId;
-  bool showFilters = false;
+  /// null shows every sale; true only refunded ones, false only paid ones.
+  late bool? refunded = widget.refundedOnly ? true : null;
+  late bool showFilters = widget.refundedOnly;
   _Sort sort = _Sort.when;
   bool ascending = false;
   int page = 0;
@@ -84,13 +88,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         setState(() { to = value; page = 0; });
         store.alignSalesWindow(from: from, to: to);
       }),
-      if (own)
-        _menu<String?>(
-          shiftId,
-          [null, ...store.shifts.where((shift) => shift.cashierId == store.currentCashier?.id).map((shift) => shift.id)],
-          (id) => id == null ? context.l10n.salesAllShifts : _shiftLabel(store, id),
-          (value) => setState(() { shiftId = value; page = 0; }),
-        ),
       if (!own)
         _menu<String?>(
           cashierName,
@@ -99,24 +96,43 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
           (name) => name ?? context.l10n.salesAllCashiers,
           (value) => setState(() { cashierName = value; page = 0; }),
         ),
-      if (!own)
-        _menu<String?>(
-          tableNumber,
-          [null, ...(store.payments.map((p) => saleLedgerRow(store, p).tableNumber).where((n) => n.isNotEmpty).toSet().toList()..sort())],
-          (number) => number ?? context.l10n.salesAllTables,
-          (value) => setState(() { tableNumber = value; page = 0; }),
-        ),
+      // Takeout sales have no table number, so '' stands for Takeout.
+      _menu<String?>(
+        tableNumber,
+        [
+          null,
+          ...(store.payments.map((p) => saleLedgerRow(store, p).tableNumber).where((n) => n.isNotEmpty).toSet().toList()..sort()),
+          '',
+        ],
+        (number) => switch (number) {
+          null => context.l10n.salesAllTables,
+          '' => context.l10n.serviceTakeout,
+          _ => context.l10n.adminTableNumber(number),
+        },
+        (value) => setState(() { tableNumber = value; page = 0; }),
+      ),
       _menu<String?>(
         methodId,
         [null, ...store.paymentTypes.map((item) => item.id)],
         (id) => id == null ? context.l10n.salesAllMethods : store.typeName(id),
         (value) => setState(() { methodId = value; page = 0; }),
       ),
+      if (!own)
+        _menu<bool?>(
+          refunded,
+          const [null, false, true],
+          (value) => switch (value) {
+            null => context.l10n.salesAllStatuses,
+            false => context.l10n.salesPaid,
+            true => context.l10n.voidStatus,
+          },
+          (value) => setState(() { refunded = value; page = 0; }),
+        ),
     ];
 
     final filtersButton = FiltersButton(
       open: showFilters,
-      active: [from, to, shiftId, cashierName, tableNumber, methodId].where((value) => value != null).length,
+      active: [from, to, cashierName, tableNumber, methodId, refunded].where((value) => value != null).length,
       height: 52,
       onPressed: () => setState(() => showFilters = !showFilters),
     );
@@ -127,12 +143,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (own) ...[
-            Row(
-              children: [
-                Expanded(child: Text(context.l10n.cashierLogScope, style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600))),
-                exportCsv,
-              ],
-            ),
+            Text(context.l10n.cashierLogScope, style: const TextStyle(color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
             const SizedBox(height: 14),
             Wrap(spacing: 12, runSpacing: 12, children: [SizedBox(width: 340, child: search), filtersButton]),
             if (showFilters) ...[const SizedBox(height: 12), Wrap(spacing: 12, runSpacing: 12, children: filters)],
@@ -354,11 +365,10 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       ownCashierId: widget.ownSalesOnly ? store.currentCashier?.id : null,
       tableNumber: tableNumber,
       methodId: methodId,
-      shiftId: shiftId,
       from: from,
       to: to,
       includeVoided: true,
-    );
+    )..retainWhere((row) => refunded == null || row.payment.isVoided == refunded);
     list.sort((a, b) {
       final result = switch (sort) {
         _Sort.id => store.receiptNumber(a.payment).compareTo(store.receiptNumber(b.payment)),
@@ -375,15 +385,6 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
       return ascending ? result : -result;
     });
     return list;
-  }
-
-  String _shiftLabel(CafeStore store, String id) {
-    final match = store.shifts.where((shift) => shift.id == id);
-    if (match.isEmpty) return id;
-    final shift = match.first;
-    final opened = formatTripoliDateTime(shift.openedAt);
-    final closed = shift.closedAt == null ? '' : ' – ${formatTripoliTime(shift.closedAt!)}';
-    return '$opened$closed';
   }
 
   Future<void> _detail(BuildContext context, SaleLedgerRow row) {
@@ -510,7 +511,7 @@ class _SalesLogScreenState extends State<SalesLogScreen> {
         row.discount,
         row.total,
         store.paymentLabel(row.payment),
-        row.payment.isVoided ? 'void' : 'paid',
+        row.payment.isVoided ? 'refunded' : 'paid',
         row.payment.voidReason ?? '',
       ].map(csvCell).join(','));
     }

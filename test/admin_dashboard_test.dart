@@ -77,7 +77,15 @@ void main() {
   testWidgets('View all on recent expenses opens the wages page', (tester) async {
     await pumpAdminScreen(tester, const AdminDashboardScreen(), _store());
 
-    await tapVisible(tester, find.text(l10n.dashboardViewAll).last);
+    await tapVisible(tester, find.text(l10n.dashboardViewAll).at(1));
     expect(find.text('page /admin/wages'), findsOneWidget);
+  });
+
+  testWidgets('recent refunds has its own list whose View all opens the sales log', (tester) async {
+    await pumpAdminScreen(tester, const AdminDashboardScreen(), _store());
+
+    expect(find.text(l10n.dashboardRecentRefunds), findsOneWidget);
+    await tapVisible(tester, find.text(l10n.dashboardViewAll).last);
+    expect(find.text('page /admin/sales'), findsOneWidget);
   });
 }

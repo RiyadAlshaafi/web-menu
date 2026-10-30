@@ -15,7 +15,7 @@ import 'pdf_text.dart';
 /// columns are listed here so the preview can name them.
 
 List<String> salesLogCsvColumns(AppLocalizations l10n) =>
-    [l10n.salesReceiptNo, l10n.salesOrderNo, 'date', 'table', 'cashier', 'items', 'subtotal', 'discount', 'total', 'method', 'status', 'void_reason'];
+    [l10n.salesReceiptNo, l10n.salesOrderNo, 'date', 'table', 'cashier', 'items', 'subtotal', 'discount', 'total', 'method', 'status', 'refund_reason'];
 
 const expensesCsvColumns = ['id', 'when', 'cashier', 'paid_to', 'type', 'description', 'amount'];
 

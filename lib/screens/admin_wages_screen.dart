@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../core/csv_safe.dart';
 import '../core/ledger.dart';
-import '../core/sales_report.dart';
 import '../printing/export_pdfs.dart';
 import '../platform/save_bytes.dart';
 import '../l10n/l10n_ext.dart';
@@ -37,9 +36,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
 
   /// The cards' totals, from the server (or this till's own records offline): the recent sales
   /// loaded for the list are not the whole month.
-  SalesReport? summary;
-  String? summaryError;
-  String? summaryKey;
 
   @override
   void dispose() {
@@ -51,17 +47,7 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     final rows = _rows(store);
-    final window = summaryWindow(from: from, to: to);
-    _watchSummary(store, window);
-    final report = summary;
-    String figure(double Function(SalesReport report) pick) =>
-        report == null ? (summaryError == null ? '…' : '—') : store.currency.format(pick(report));
-    final salesFigure = figure((report) => report.salesTotal);
-    final expensesFigure = figure((report) => report.expensesWhere(employee: employee, typeId: categoryId));
-    final netFigure = figure((report) => report.salesTotal - report.expensesWhere(typeId: categoryId));
-    final period = window.monthly ? context.l10n.summaryThisMonth : context.l10n.summarySelectedRange;
     final employees = expenseEmployees(store);
-    // One person's expenses next to the whole cafe's sales make no net figure, so Net hides then.
     final oneEmployee = employee is! AllEmployees;
     final categories = store.expenseCategories.where((item) => item.enabled || item.id == categoryId).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -71,41 +57,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final cards = [
-                _figure(
-                  context,
-                  oneEmployee ? '${context.l10n.summarySales} · $period · ${context.l10n.summaryWholeCafe}' : '${context.l10n.summarySales} · $period',
-                  salesFigure,
-                ),
-                _figure(
-                  context,
-                  oneEmployee ? '${context.l10n.summaryExpenses} · $period · ${_employeeLabel(context, employees)}' : '${context.l10n.summaryExpenses} · $period',
-                  expensesFigure,
-                  color: CafeColors.terracottaDark,
-                ),
-                if (!oneEmployee) _figure(context, '${context.l10n.summaryNet} · $period', netFigure, dark: true),
-              ];
-              if (constraints.maxWidth < 720) {
-                return Column(children: [for (final card in cards) Padding(padding: const EdgeInsets.only(bottom: 12), child: card)]);
-              }
-              return Row(
-                children: [
-                  for (final (index, card) in cards.indexed) ...[
-                    if (index > 0) const SizedBox(width: 14),
-                    Expanded(child: card),
-                  ],
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 6),
-          Text(
-            summaryError == null ? context.l10n.summaryCardsNote : context.l10n.summaryNeedsServer,
-            style: TextStyle(color: summaryError == null ? TawlaTokens.muted : CafeColors.alert, fontSize: 12),
-          ),
-          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -196,42 +147,6 @@ class _AdminWagesScreenState extends State<AdminWagesScreen> {
         ],
       ),
     );
-  }
-
-  Widget _figure(BuildContext context, String label, String value, {Color? color, bool dark = false}) {
-    final surfaces = CafeSurfaces.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(color: dark ? surfaces.header : Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: dark ? const Color(0xFFB9C7CF) : TawlaTokens.muted)),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: dark ? Colors.white : (color ?? surfaces.header)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Fetches the cards' totals again when the days change, or a sale or expense comes in.
-  void _watchSummary(CafeStore store, SummaryWindow window) {
-    final days = reportDaysFor(window);
-    final key = '${days.from}|${days.to}|${store.payments.length}|${store.payments.firstOrNull?.id}'
-        '|${store.expenses.length}|${store.expenses.firstOrNull?.id}|${store.expenses.where((e) => e.voided).length}';
-    if (key == summaryKey) return;
-    summaryKey = key;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final result = await store.salesReport(days.from, days.to);
-      if (!mounted || summaryKey != key) return;
-      setState(() {
-        summary = result.report;
-        summaryError = result.report == null ? (result.error ?? 'failed') : null;
-      });
-    });
   }
 
   /// What the employee filter shows now, for card labels and the PDF.
