@@ -1780,7 +1780,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutNewCategoryLabel => 'NEW CATEGORY';
 
   @override
-  String get settingsOrderingTitle => 'Ordering & receipts';
+  String get settingsOrderingTitle => 'Ordering online';
 
   @override
   String get cafeLocationRequireHint =>

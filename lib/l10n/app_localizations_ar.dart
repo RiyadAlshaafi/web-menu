@@ -1770,7 +1770,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get layoutNewCategoryLabel => 'فئة جديدة';
 
   @override
-  String get settingsOrderingTitle => 'الطلبات والإيصالات';
+  String get settingsOrderingTitle => 'الطلب عبر الإنترنت';
 
   @override
   String get cafeLocationRequireHint =>

@@ -3215,7 +3215,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsOrderingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Ordering & receipts'**
+  /// **'Ordering online'**
   String get settingsOrderingTitle;
 
   /// No description provided for @cafeLocationRequireHint.
