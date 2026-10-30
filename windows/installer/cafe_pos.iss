@@ -69,8 +69,11 @@ Type: files; Name: "{app}\admin_reset.json"
 // (supabase/functions/admin-reset-ticket, after the seller password check) that
 // lib/data/admin_reset.dart checks when the app starts, so a forgotten offline admin password can
 // be replaced without internet on the till. Setup holds no key: it can't make a ticket itself.
+// The setup lists big features, then small ones. Standard features are always on and not listed.
 const
-  FeatureCount = 16;
+  FeatureCount = 17;
+  BigCount = 7;
+  StandardKeys = '"reports", "expenses", "payment_types"';
   SlotCount = 8;
 
 var
@@ -213,21 +216,22 @@ end;
 function FeatureLabel(Key: String): String;
 begin
   case Key of
-    'tables': Result := 'Tables & floor (open a table, add dishes, settle the bill)';
-    'qr_ordering': Result := 'QR guest ordering (live alerts, staff calls, bill requests)';
-    'location_check': Result := 'Guest location check';
+    'stock': Result := 'Stock (count what is left; sold out at 0)';
     'discounts': Result := 'Discounts';
-    'dish_toggle': Result := 'Cashiers can turn dishes on/off';
-    'expenses': Result := 'Expenses & wages';
-    'reports': Result := 'Reports (dashboard, sales log, CSV/PDF export)';
-    'branding': Result := 'Custom colours';
-    'payment_types': Result := 'Extra payment types (card, etc.)';
-    'stock': Result := 'Dish stock (count what is left; sold out at 0)';
-    'kitchen_printer': Result := 'Kitchen printer (kitchen ticket for each order)';
-    'dish_choices': Result := 'Dish choices & extras (ingredients to remove, toppings to add)';
-    'waiter_phones': Result := 'Waiter phones & tablets (orders over Wi-Fi, alerts screen to accept them)';
-    'move_tables': Result := 'Move or merge tables';
-    'service_charge': Result := 'Service charge on dine-in bills';
+    'tables': Result := 'Tables & live alerts (open a table, add dishes, settle the bill)';
+    'qr_ordering': Result := 'QR & web ordering (guests order from their phones; needs Tables)';
+    'waiter_phones': Result := 'Waiter app (phones send table orders over Wi-Fi; needs Tables)';
+    'kitchen_printer': Result := 'Printers & kitchens (a kitchen ticket for each order)';
+    'dish_choices': Result := 'Ingredients & toppings (remove ingredients, add toppings)';
+    'branding': Result := 'Appearance & theme colours';
+    'languages': Result := 'Two languages (English and Arabic)';
+    'location_check': Result := 'Ordering online (guest location check; needs QR ordering)';
+    'takeout_layout': Result := 'Takeout screen (2 designs)';
+    'menu_design': Result := 'Menu design (how guests see the menu; needs QR ordering)';
+    'receipt_editor': Result := 'Receipts & printouts';
+    'move_tables': Result := 'Merge & move tables (needs Tables)';
+    'dish_toggle': Result := 'Cashier dishes on/off';
+    'service_charge': Result := 'Service charge on dine-in bills (needs Tables)';
     'cash_drawer': Result := 'Cash drawer (opens after each cash sale)';
   else
     Result := Key;
@@ -237,7 +241,7 @@ end;
 // Must match AppFeature.worksOffline.
 function WorksOffline(Key: String): Boolean;
 begin
-  Result := (Key <> 'qr_ordering') and (Key <> 'location_check');
+  Result := (Key <> 'qr_ordering') and (Key <> 'location_check') and (Key <> 'menu_design');
 end;
 
 // Must match AppFeature.requires.
@@ -246,6 +250,7 @@ begin
   case Key of
     'qr_ordering': Result := 'tables';
     'location_check': Result := 'qr_ordering';
+    'menu_design': Result := 'qr_ordering';
     'waiter_phones': Result := 'tables';
     'move_tables': Result := 'tables';
     'service_charge': Result := 'tables';
@@ -254,18 +259,6 @@ begin
   end;
 end;
 
-function FeatureLevel(Key: String): Byte;
-begin
-  case Key of
-    'qr_ordering': Result := 1;
-    'location_check': Result := 2;
-    'waiter_phones': Result := 1;
-    'move_tables': Result := 1;
-    'service_charge': Result := 1;
-  else
-    Result := 0;
-  end;
-end;
 
 // A till an earlier setup finished (its choices are saved). Only such a till updates with no password.
 function SetUpTill: Boolean;
@@ -361,7 +354,8 @@ end;
 function AddedLater(Key: String): Boolean;
 begin
   Result := (Key = 'stock') or (Key = 'kitchen_printer') or (Key = 'dish_choices') or (Key = 'waiter_phones') or
-    (Key = 'cash_drawer') or (Key = 'move_tables') or (Key = 'service_charge');
+    (Key = 'cash_drawer') or (Key = 'move_tables') or (Key = 'service_charge') or (Key = 'languages') or
+    (Key = 'takeout_layout') or (Key = 'menu_design') or (Key = 'receipt_editor');
 end;
 
 // Ticked when there is no saved choice yet, otherwise as saved. Only the "features" part counts as
@@ -387,11 +381,21 @@ begin
     (AddedLater(Key) and (Pos('"' + Key + '"', Listed) = 0));
 end;
 
+// Two headed groups; a group row is not a feature, so its key is ''.
+procedure AddGroupRow(Caption: String);
+var
+  Row: Integer;
+begin
+  Row := FeatureList.AddGroup(Caption, '', 0, nil);
+  SetArrayLength(RowKeys, Row + 1);
+  RowKeys[Row] := '';
+end;
+
 procedure FillFeatureList;
 var
   I, Row: Integer;
   Key, Saved: String;
-  Offline, HasChildren: Boolean;
+  Offline: Boolean;
 begin
   Saved := SavedFeatures;
   Offline := OfflineChosen;
@@ -399,11 +403,11 @@ begin
   SetArrayLength(RowKeys, 0);
   for I := 0 to FeatureCount - 1 do
   begin
+    if I = 0 then AddGroupRow('Big features');
+    if I = BigCount then AddGroupRow('Small features');
     Key := FeatureKeys[I];
     if Offline and not WorksOffline(Key) then Continue;
-    HasChildren := (Key = 'tables') or (Key = 'qr_ordering');
-    Row := FeatureList.AddCheckBox(FeatureLabel(Key), '', FeatureLevel(Key),
-      StartsTicked(Key, Saved), True, HasChildren, False, nil);
+    Row := FeatureList.AddCheckBox(FeatureLabel(Key), '', 1, StartsTicked(Key, Saved), True, False, False, nil);
     SetArrayLength(RowKeys, Row + 1);
     RowKeys[Row] := Key;
   end;
@@ -435,7 +439,7 @@ var
   Mode, List, Listed: String;
 begin
   if OfflineChosen then Mode := 'offline' else Mode := 'online';
-  List := '';
+  List := StandardKeys;
   for I := 0 to FeatureCount - 1 do
     if KeyOn(FeatureKeys[I]) then
     begin
@@ -444,10 +448,11 @@ begin
     end;
   Listed := '';
   for Row := 0 to GetArrayLength(RowKeys) - 1 do
-  begin
-    if Listed <> '' then Listed := Listed + ', ';
-    Listed := Listed + '"' + RowKeys[Row] + '"';
-  end;
+    if RowKeys[Row] <> '' then
+    begin
+      if Listed <> '' then Listed := Listed + ', ';
+      Listed := Listed + '"' + RowKeys[Row] + '"';
+    end;
   Result := '{"mode": "' + Mode + '", "features": [' + List + '], "listed": [' + Listed + ']';
   if not OfflineChosen and (SlotPage.SelectedValueIndex >= 0) then
     Result := Result + ', "slot": ' + IntToStr(SlotPage.SelectedValueIndex + 1);
@@ -459,22 +464,23 @@ var
   I: Integer;
 begin
   SetArrayLength(FeatureKeys, FeatureCount);
-  FeatureKeys[0] := 'tables';
-  FeatureKeys[1] := 'qr_ordering';
-  FeatureKeys[2] := 'location_check';
-  FeatureKeys[3] := 'waiter_phones';
-  FeatureKeys[4] := 'move_tables';
-  FeatureKeys[5] := 'service_charge';
-  FeatureKeys[6] := 'discounts';
-  FeatureKeys[7] := 'dish_toggle';
-  FeatureKeys[8] := 'expenses';
-  FeatureKeys[9] := 'reports';
-  FeatureKeys[10] := 'branding';
-  FeatureKeys[11] := 'payment_types';
-  FeatureKeys[12] := 'stock';
-  FeatureKeys[13] := 'kitchen_printer';
-  FeatureKeys[14] := 'cash_drawer';
-  FeatureKeys[15] := 'dish_choices';
+  FeatureKeys[0] := 'stock';
+  FeatureKeys[1] := 'discounts';
+  FeatureKeys[2] := 'tables';
+  FeatureKeys[3] := 'qr_ordering';
+  FeatureKeys[4] := 'waiter_phones';
+  FeatureKeys[5] := 'kitchen_printer';
+  FeatureKeys[6] := 'dish_choices';
+  FeatureKeys[7] := 'branding';
+  FeatureKeys[8] := 'languages';
+  FeatureKeys[9] := 'location_check';
+  FeatureKeys[10] := 'takeout_layout';
+  FeatureKeys[11] := 'menu_design';
+  FeatureKeys[12] := 'receipt_editor';
+  FeatureKeys[13] := 'move_tables';
+  FeatureKeys[14] := 'dish_toggle';
+  FeatureKeys[15] := 'service_charge';
+  FeatureKeys[16] := 'cash_drawer';
 
   // Already installed when the exe is in the install folder, or when Windows has this app's
   // uninstall entry (a till installed to another folder, or whose exe was moved).
@@ -511,7 +517,8 @@ begin
   ResetPage.Add('Reset the offline admin password');
 
   FeaturePage := CreateCustomPage(ResetPage.ID, 'Features',
-    'Tick the features this cafe gets. Login, menu, quick takeout, payment, receipts, shifts and settings are always included.');
+    'Tick the features this cafe gets. Always included: dashboard, menu catalog, sales and expenses logs, ' +
+    'cafe info, cashier and staff access, payment types, admin password, expense categories and feedback.');
   FeatureList := TNewCheckListBox.Create(FeaturePage);
   FeatureList.Parent := FeaturePage.Surface;
   FeatureList.Width := FeaturePage.SurfaceWidth;

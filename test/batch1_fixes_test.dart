@@ -169,7 +169,7 @@ void main() {
       final store = CafeStore(db);
       await store.load(localStore: openMemoryLocalStateStore());
       store.locale = 'en';
-      expect(await store.createAdmin(email: 'owner@cafe.ly', password: 'Secret#123', confirm: 'Secret#123'), isNull);
+      expect(await store.createAdmin(email: '', password: '1234', confirm: '1234'), isNull);
       return store;
     }))!;
     addTearDown(db.closeLocal);

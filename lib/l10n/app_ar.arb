@@ -912,5 +912,21 @@
   "dashboardRecentRefunds": "أحدث المستردات",
   "authRememberEmail": "تذكّر بريدي الإلكتروني",
   "settingsSoon": "قريباً",
-  "settingsSoonHint": "ميزة جديدة في الطريق"
+  "settingsSoonHint": "ميزة جديدة في الطريق",
+  "errPinsMismatch": "الرمزان غير متطابقين.",
+  "errWeakAdminPin": "استخدم {min} أرقام على الأقل.",
+  "authAdminPin": "رمز المدير",
+  "authConfirmPin": "تأكيد الرمز",
+  "authRepeatPin": "اكتب الرمز مرة أخرى",
+  "authNewPin": "الرمز الجديد",
+  "authPinHint": "أرقام فقط، {min} على الأقل",
+  "authResetPinTitle": "تعيين رمز جديد للمدير",
+  "authResetPinBody": "فتح الإعداد إعادة تعيين الرمز لمرة واحدة. تبقى المبيعات والقائمة والإعدادات كما هي.",
+  "catalogChangePin": "تغيير الرمز",
+  "catalogCurrentPin": "الرمز الحالي",
+  "catalogUpdatePin": "تحديث الرمز",
+  "whatsNewTitle": "الجديد في {version}",
+  "whatsNewAdded": "أُضيف",
+  "whatsNewFixed": "أُصلح",
+  "whatsNewGotIt": "حسناً"
 }

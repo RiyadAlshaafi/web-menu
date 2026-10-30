@@ -719,16 +719,18 @@ void main() {
       expect(store.isLocalMode, isTrue);
       expect(store.deviceLinked, isTrue);
       expect(store.hasAdmin, isFalse);
-      expect(await store.createAdmin(email: 'owner@cafe.ly', password: 'Secret#123', confirm: 'Secret#123'), isNull);
+      expect(await store.createAdmin(email: '', password: '12', confirm: '12'), store.l10n.errWeakAdminPin('4'));
+      expect(await store.createAdmin(email: '', password: '2468', confirm: '2468'), isNull);
       expect(store.authKind, AuthKind.admin);
-      expect(await store.changeAdminPassword(current: 'Secret#123', next: 'Better#456'), isNull);
+      expect(await store.changeAdminPassword(current: '2468', next: 'abc'), store.l10n.errWeakAdminPin('4'));
+      expect(await store.changeAdminPassword(current: '2468', next: '13572468'), isNull);
       await store.addCashier(name: 'Sara Ali', pin: '1234');
       final dish = await _dish();
       await store.syncFromDisk();
       store.signOut();
       expect(store.hasAdmin, isTrue);
-      expect(await store.signInAdmin('owner@cafe.ly', 'Secret#123'), isNotNull);
-      expect(await store.signInAdmin('owner@cafe.ly', 'Better#456'), isNull);
+      expect(await store.signInAdmin('', '2468'), isNotNull);
+      expect(await store.signInAdmin('', '13572468'), isNull, reason: 'a PIN of any length, no email');
       store.signOut();
 
       store.selectCashier(store.cashiers.single.id);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../data/app_database.dart';
 import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
@@ -347,8 +349,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   String staffRole = StaffJob.cashier;
   bool staffUsesDevice = false;
 
-  /// A cashier always has a PIN; a server only when they use a tablet or phone.
-  bool get _staffNeedsPin => staffRole == StaffJob.cashier || (staffRole == StaffJob.server && staffUsesDevice);
+  /// A cashier always has a PIN; a server only online, when they use a tablet or phone.
+  bool get _staffNeedsPin =>
+      staffRole == StaffJob.cashier ||
+      (staffRole == StaffJob.server && staffUsesDevice && !context.read<CafeStore>().isLocalMode);
   final currentPassword = TextEditingController();
   final newPassword = TextEditingController();
   bool changingPassword = false;
@@ -394,27 +398,31 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
     // Left and right column cards, in the order of the design board. A null card's feature is off.
-    final pairs = <(Widget, Widget?)>[
+    final rows = <(Widget?, Widget?)>[
       (const CompanyInfoCard(), store.allows(AppFeature.branding) ? const AppearanceCard() : null),
       (_cashierPanel(store), store.allows(AppFeature.paymentTypes) ? const PaymentTypesCard() : null),
-      // Ordering has nothing to show when neither of its features is on.
-      (_languagePanel(store), store.allows(AppFeature.locationCheck) || store.allows(AppFeature.qrOrdering) ? const OrderingCard() : null),
+      // "Ordering online": the guest location check and the cashier-online rule for QR orders.
+      (store.allows(AppFeature.languages) ? _languagePanel(store) : null, store.allows(AppFeature.locationCheck) ? const OrderingCard() : null),
       (_passwordPanel(store), store.allows(AppFeature.expenses) ? const ExpenseCategoriesCard() : null),
       (const PrintersKitchensCard(), store.isLocalMode ? null : const FeedbackCard()),
-      (const TakeoutLayoutCard(), store.allows(AppFeature.serviceCharge) || store.savedServiceChargeRate > 0 ? const ServiceChargeCard() : null),
-      // Local mode has no guest QR menu.
-      (const ReceiptEditorCard(), store.isLocalMode ? null : const GuestMenuLayoutCard()),
+      (
+        store.allows(AppFeature.takeoutLayout) ? const TakeoutLayoutCard() : null,
+        store.allows(AppFeature.serviceCharge) || store.savedServiceChargeRate > 0 ? const ServiceChargeCard() : null,
+      ),
+      // Local mode has no guest QR menu, so menuDesign is never allowed there.
+      (store.allows(AppFeature.receiptEditor) ? const ReceiptEditorCard() : null, store.allows(AppFeature.menuDesign) ? const GuestMenuLayoutCard() : null),
     ];
+    final left = [for (final (card, _) in rows) ?card];
+    final right = [for (final (_, card) in rows) ?card];
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 1000) {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              for (final (left, right) in pairs) ...[
-                left,
-                const SizedBox(height: 16),
-                if (right != null) ...[right, const SizedBox(height: 16)],
+              for (final (first, second) in rows) ...[
+                if (first != null) ...[first, const SizedBox(height: 16)],
+                if (second != null) ...[second, const SizedBox(height: 16)],
               ],
               const _SoonCard(),
             ],
@@ -430,7 +438,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [for (final (left, _) in pairs) ...[left, const SizedBox(height: 16)]],
+                  children: [for (final card in left) ...[card, const SizedBox(height: 16)]],
                 ),
               ),
               const SizedBox(width: 16),
@@ -438,7 +446,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final (_, right) in pairs) if (right != null) ...[right, const SizedBox(height: 16)],
+                    for (final card in right) ...[card, const SizedBox(height: 16)],
                     const _SoonCard(),
                   ],
                 ),
@@ -639,32 +647,47 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Widget _passwordPanel(CafeStore store) {
-    final rules = [
-      context.l10n.authReqMinLength,
-      context.l10n.authReqCapital,
-      context.l10n.authReqNumber,
-      context.l10n.authReqSymbol,
-    ].join(' · ');
+    // Offline the admin has a PIN of digits instead of a password.
+    final local = store.isLocalMode;
+    final rules = local
+        ? context.l10n.authPinHint('${Secrets.minAdminPin}')
+        : [
+            context.l10n.authReqMinLength,
+            context.l10n.authReqCapital,
+            context.l10n.authReqNumber,
+            context.l10n.authReqSymbol,
+          ].join(' · ');
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PanelTitle(context.l10n.catalogChangePassword, size: 18),
+          PanelTitle(local ? context.l10n.catalogChangePin : context.l10n.catalogChangePassword, size: 18),
           const SizedBox(height: 12),
           LabeledField(
-            label: context.l10n.catalogCurrentPassword,
-            child: TextField(controller: currentPassword, obscureText: true, autofillHints: const [AutofillHints.password]),
+            label: local ? context.l10n.catalogCurrentPin : context.l10n.catalogCurrentPassword,
+            child: TextField(
+              controller: currentPassword,
+              obscureText: true,
+              keyboardType: local ? TextInputType.number : null,
+              autofillHints: local ? null : const [AutofillHints.password],
+            ),
           ),
           const SizedBox(height: 12),
           LabeledField(
-            label: context.l10n.catalogNewPassword,
-            child: TextField(controller: newPassword, obscureText: true, autofillHints: const [AutofillHints.newPassword]),
+            label: local ? context.l10n.authNewPin : context.l10n.catalogNewPassword,
+            child: TextField(
+              controller: newPassword,
+              obscureText: true,
+              keyboardType: local ? TextInputType.number : null,
+              inputFormatters: local ? [FilteringTextInputFormatter.digitsOnly] : null,
+              autofillHints: local ? null : const [AutofillHints.newPassword],
+            ),
           ),
           const SizedBox(height: 10),
           Text(rules, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted)),
           const SizedBox(height: 14),
           NavyButton(
-            label: context.l10n.catalogUpdatePassword,
+            label: local ? context.l10n.catalogUpdatePin : context.l10n.catalogUpdatePassword,
             onPressed: changingPassword ? null : () => _changePassword(store),
           ),
         ],

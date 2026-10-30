@@ -20,21 +20,23 @@ enum InstallMode {
 /// Optional parts of the app, ticked per install in the Windows setup.
 ///
 /// Core screens (login, menu, quick takeout, payment, receipts, cashier log,
-/// shifts, settings) are always on and are not listed here. [key] is the name written
+/// shifts, settings) are always on and are not listed here. [standard] ones are always on too
+/// but kept as keys so older `features.json` files still read. [key] is the name written
 /// to `features.json` by the installer, so never rename one.
 enum AppFeature {
-  /// Tables & floor. Offline the cashier enters each table's dishes (open tab, pay later).
+  /// Tables & floor, and the live alerts screen. Offline the cashier enters each table's dishes
+  /// (open tab, pay later).
   tables('tables', worksOffline: true),
   qrOrdering('qr_ordering'),
   locationCheck('location_check'),
   discounts('discounts', worksOffline: true),
   dishToggle('dish_toggle', worksOffline: true),
   /// Expense entry, expense categories and the expenses ledger ("Wages" screen).
-  expenses('expenses', worksOffline: true),
-  reports('reports', worksOffline: true),
+  expenses('expenses', worksOffline: true, standard: true),
+  reports('reports', worksOffline: true, standard: true),
   /// Custom app colours (the logo stays with the cafe name, which is core).
   branding('branding', worksOffline: true),
-  paymentTypes('payment_types', worksOffline: true),
+  paymentTypes('payment_types', worksOffline: true, standard: true),
   /// Counted dish stock: the admin's Stock page; at 0 a dish is sold out.
   stock('stock', worksOffline: true, addedLater: true),
   /// Kitchen tickets on this till's kitchen printer.
@@ -50,11 +52,23 @@ enum AppFeature {
   /// Move a table's tab to another table, or merge it into one that is eating.
   moveTables('move_tables', worksOffline: true, addedLater: true),
   /// A percent added to dine-in bills; the admin sets it and the cashier may leave it off a bill.
-  serviceCharge('service_charge', worksOffline: true, addedLater: true);
+  serviceCharge('service_charge', worksOffline: true, addedLater: true),
+  /// The language switch in Settings (English and Arabic). Off, the app stays in its language.
+  languages('languages', worksOffline: true, addedLater: true),
+  /// The choice between the two takeout screen designs in Settings.
+  takeoutLayout('takeout_layout', worksOffline: true, addedLater: true),
+  /// The choice of how guests see the menu after scanning a table's QR code.
+  menuDesign('menu_design', addedLater: true),
+  /// The receipts and printouts editor in Settings.
+  receiptEditor('receipt_editor', worksOffline: true, addedLater: true);
 
-  const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false});
+  const AppFeature(this.key, {this.worksOffline = false, this.addedLater = false, this.standard = false});
 
   final String key;
+
+  /// Always on in every install: the setup does not list it and an unticked one in an older
+  /// `features.json` still counts as on.
+  final bool standard;
 
   /// Whether this works in offline mode (local database, no internet).
   final bool worksOffline;
@@ -70,6 +84,7 @@ enum AppFeature {
         moveTables => tables,
         serviceCharge => tables,
         locationCheck => qrOrdering,
+        menuDesign => qrOrdering,
         _ => null,
       };
 
@@ -138,7 +153,7 @@ class FeatureSet {
 
   /// On only when the feature and everything it needs are on, and the mode offers it.
   bool allows(AppFeature feature) {
-    if (!_enabled.contains(feature)) return false;
+    if (!feature.standard && !_enabled.contains(feature)) return false;
     if (mode == InstallMode.offline && !feature.worksOffline) return false;
     final needed = feature.requires;
     return needed == null || allows(needed);

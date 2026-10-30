@@ -46,12 +46,21 @@ void main() {
     expect(set.allows(AppFeature.tables), isFalse);
   });
 
-  test('fromJson with an empty list allows only core', () {
+  test('fromJson with an empty list allows only core and the standard features', () {
     final listed = [for (final feature in AppFeature.values) '"${feature.key}"'].join(', ');
     final set = FeatureSet.fromJson('{"features": [], "listed": [$listed]}');
     for (final feature in AppFeature.values) {
-      expect(set.allows(feature), isFalse, reason: feature.key);
+      expect(set.allows(feature), feature.standard, reason: feature.key);
     }
+    expect([for (final f in AppFeature.values) if (f.standard) f], [AppFeature.expenses, AppFeature.reports, AppFeature.paymentTypes]);
+  });
+
+  test('menu design is online only and needs QR ordering', () {
+    final online = FeatureSet.fromKeys(['menu_design']);
+    expect(online.allows(AppFeature.menuDesign), isFalse, reason: 'no QR ordering');
+    expect(FeatureSet.fromKeys(['menu_design', 'qr_ordering', 'tables']).allows(AppFeature.menuDesign), isTrue);
+    final offline = FeatureSet.fromKeys(['menu_design', 'qr_ordering', 'tables'], mode: InstallMode.offline);
+    expect(offline.allows(AppFeature.menuDesign), isFalse);
   });
 
   test('a file from before stock, kitchen printing and dish choices keeps all three on', () {
@@ -145,6 +154,9 @@ void main() {
       AppFeature.cashDrawer,
       AppFeature.moveTables,
       AppFeature.serviceCharge,
+      AppFeature.languages,
+      AppFeature.takeoutLayout,
+      AppFeature.receiptEditor,
     ]);
     expect(AppFeature.offeredIn(InstallMode.online), AppFeature.values);
   });
@@ -176,11 +188,11 @@ void main() {
   });
 
   test('intersect keeps only features both sets allow', () {
-    final installer = FeatureSet.fromKeys(['tables', 'expenses']);
+    final installer = FeatureSet.fromKeys(['tables', 'stock']);
     final paid = FeatureSet.fromKeys(['tables', 'discounts']);
     final both = installer.intersect(paid);
     expect(both.allows(AppFeature.tables), isTrue);
-    expect(both.allows(AppFeature.expenses), isFalse);
+    expect(both.allows(AppFeature.stock), isFalse);
     expect(both.allows(AppFeature.discounts), isFalse);
   });
 

@@ -67,21 +67,6 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
           const SizedBox(height: 14),
           LabeledField(label: context.l10n.catalogCafeName, child: TextField(controller: name)),
           const SizedBox(height: 14),
-          // Read-only: only the developer changes it, on the dev screen.
-          LabeledField(
-            label: context.l10n.catalogPublicMenuUrl,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(color: CafeColors.key, borderRadius: BorderRadius.circular(10), border: Border.all(color: TawlaTokens.border)),
-              child: SelectableText(store.guestMenuBase, style: const TextStyle(fontWeight: FontWeight.w600)),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            store.publicMenuUrl.isEmpty ? context.l10n.catalogPublicMenuUrlDefault : context.l10n.catalogPublicMenuUrlReadOnly,
-            style: const TextStyle(color: TawlaTokens.muted, fontSize: 12),
-          ),
           const SizedBox(height: 14),
           NavyButton(
             label: context.l10n.catalogSaveCompany,

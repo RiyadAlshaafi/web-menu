@@ -2902,4 +2902,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSoonHint => 'A new feature is on the way';
+
+  @override
+  String get errPinsMismatch => 'The PINs don\'t match.';
+
+  @override
+  String errWeakAdminPin(String min) {
+    return 'Use at least $min digits.';
+  }
+
+  @override
+  String get authAdminPin => 'Admin PIN';
+
+  @override
+  String get authConfirmPin => 'Confirm PIN';
+
+  @override
+  String get authRepeatPin => 'Type the PIN again';
+
+  @override
+  String get authNewPin => 'New PIN';
+
+  @override
+  String authPinHint(String min) {
+    return 'Digits only, at least $min';
+  }
+
+  @override
+  String get authResetPinTitle => 'Set a New Admin PIN';
+
+  @override
+  String get authResetPinBody =>
+      'The setup unlocked a one-time PIN reset. Sales, menu and settings stay as they are.';
+
+  @override
+  String get catalogChangePin => 'Change PIN';
+
+  @override
+  String get catalogCurrentPin => 'Current PIN';
+
+  @override
+  String get catalogUpdatePin => 'Update PIN';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'What\'s new in $version';
+  }
+
+  @override
+  String get whatsNewAdded => 'Added';
+
+  @override
+  String get whatsNewFixed => 'Fixed';
+
+  @override
+  String get whatsNewGotIt => 'Got it';
 }

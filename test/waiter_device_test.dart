@@ -130,23 +130,11 @@ void main() {
       return store;
     }
 
-    test('a device server signs in as a waiter, a cashier as a till', () async {
+    test('a cashier signs in as a till', () async {
       db.closeLocal();
       final store = CafeStore(db);
       await store.load(localStore: openMemoryLocalStateStore());
-      await store.addCashier(name: 'Omar', pin: '2222', role: StaffJob.server, usesDevice: true);
       await store.addCashier(name: 'Sara', pin: '1111');
-      final omar = store.cashiers.firstWhere((c) => c.name == 'Omar');
-      expect(omar.isWaiter, isTrue);
-
-      store.selectCashier(omar.id);
-      for (final digit in '2222'.split('')) {
-        store.enterPinDigit(digit);
-      }
-      expect(await store.signInCashier(), isTrue);
-      expect(store.authKind, AuthKind.waiter);
-      expect(store.currentShift, isNull, reason: 'a waiter opens no shift');
-      store.signOut();
 
       store.selectCashier(store.cashiers.firstWhere((c) => c.name == 'Sara').id);
       for (final digit in '1111'.split('')) {
@@ -155,6 +143,25 @@ void main() {
       expect(await store.signInCashier(), isTrue);
       expect(store.authKind, AuthKind.cashier);
       store.signOut();
+    });
+
+    test('offline a server never signs in on the till: the waiter app needs no PIN', () async {
+      db.closeLocal();
+      final store = CafeStore(db);
+      await store.load(localStore: openMemoryLocalStateStore());
+      await store.addCashier(name: 'Omar', pin: '', role: StaffJob.server, usesDevice: true);
+      await store.addCashier(name: 'Sara', pin: '1111');
+      final omar = store.cashiers.firstWhere((c) => c.name == 'Omar');
+      final sara = store.cashiers.firstWhere((c) => c.name == 'Sara');
+      expect(store.signsInHere(omar), isFalse);
+      expect(store.signsInHere(sara), isTrue);
+
+      store.selectCashier(omar.id);
+      for (final digit in '0000'.split('')) {
+        store.enterPinDigit(digit);
+      }
+      expect(await store.signInCashier(), isFalse);
+      expect(store.authKind, isNot(AuthKind.waiter));
     });
 
     test('a waiter cannot clear an unpaid table, but can clear one with nothing unpaid', () async {

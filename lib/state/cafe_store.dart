@@ -587,6 +587,9 @@ class CafeStore extends ChangeNotifier {
 
   AppLocalizations get l10n => lookupAppLocalizations(Locale(locale));
 
+  /// The name an offline admin account carries where an online one has its email.
+  static const localAdminName = 'admin';
+
   /// Whether this install is linked to one of the cafe slots.
   bool get deviceLinked => db.isLocal || db.boundSlot != null;
 
@@ -598,12 +601,11 @@ class CafeStore extends ChangeNotifier {
   }) async {
     if (admin != null) return l10n.errAdminExists;
     if (!db.isLocal && db.boundSlot == null) return l10n.authDeviceNotLinked;
-    final trimmed = email.trim().toLowerCase();
-    if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
-    if (password != confirm) return l10n.errPasswordsMismatch;
-    if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
     if (db.isLocal) {
-      if (db.createLocalAdmin(email: trimmed, password: password) != null) return l10n.errAdminExists;
+      // Offline the admin has only a PIN; the account keeps a fixed name in place of an email.
+      if (password != confirm) return l10n.errPinsMismatch;
+      if (!Secrets.validAdminPin(password)) return l10n.errWeakAdminPin('${Secrets.minAdminPin}');
+      if (db.createLocalAdmin(email: localAdminName, password: password) != null) return l10n.errAdminExists;
       _hydrateOperational();
       _syncStampCache = null;
       admin = db.admin;
@@ -611,6 +613,10 @@ class CafeStore extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+    final trimmed = email.trim().toLowerCase();
+    if (!_validEmail(trimmed)) return l10n.errInvalidEmail;
+    if (password != confirm) return l10n.errPasswordsMismatch;
+    if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
     if (db.client == null) {
       return l10n.errNotConfigured;
     }
@@ -651,7 +657,8 @@ class CafeStore extends ChangeNotifier {
     String password, {
     bool remember = false,
   }) async {
-    if (db.isLocal) return _signInLocalAdmin(email, password, remember: remember);
+    // Offline there is one admin and only a PIN: the email is the saved one, whatever was typed.
+    if (db.isLocal) return _signInLocalAdmin(db.localAdminEmail ?? '', password, remember: remember);
     if (db.client == null) {
       return l10n.errNotConfigured;
     }
@@ -729,8 +736,8 @@ class CafeStore extends ChangeNotifier {
       notifyListeners();
       return l10n.authResetUnavailable;
     }
-    if (password != confirm) return l10n.errPasswordsMismatch;
-    if (!Secrets.validPassword(password)) return l10n.errWeakPassword;
+    if (password != confirm) return l10n.errPinsMismatch;
+    if (!Secrets.validAdminPin(password)) return l10n.errWeakAdminPin('${Secrets.minAdminPin}');
     if (!db.resetLocalAdminPassword(nonce: ticket.nonce, next: password)) return l10n.authResetUnavailable;
     adminResetTicket = null;
     await _adminResetFile.delete();
@@ -812,6 +819,11 @@ class CafeStore extends ChangeNotifier {
     return null;
   }
 
+  /// Who may sign in on this till. Offline a server never does: their phone runs the waiter app,
+  /// which the cashier allows once and which asks for nothing. Online a device server signs in
+  /// as a waiter with their PIN.
+  bool signsInHere(Cashier member) => member.active && member.canSignIn && !(db.isLocal && member.isWaiter);
+
   void selectCashier(String id) {
     selectedCashierId = id;
     loginError = null;
@@ -847,6 +859,12 @@ class CafeStore extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+    final member = cashiers.where((item) => item.id == selectedCashierId).firstOrNull;
+    if (member != null && !signsInHere(member)) {
+      loginError = l10n.errSelectCashier;
+      notifyListeners();
+      return false;
+    }
     if (pinBuffer.length != 4) {
       loginError = l10n.errEnterPin;
       notifyListeners();
@@ -854,8 +872,7 @@ class CafeStore extends ChangeNotifier {
     }
     final result = await db.loginCashier(selectedCashierId, pinBuffer);
     if (result['ok'] != true) {
-      final member = cashiers.where((item) => item.id == selectedCashierId);
-      final name = member.isEmpty ? '' : member.first.name;
+      final name = member?.name ?? '';
       if (result['code'] == 'locked') {
         final seconds = (result['retry_after_seconds'] as num?)?.toInt() ?? 900;
         loginError = l10n.errPinLocked(name, (seconds / 60).ceil());
@@ -1018,7 +1035,7 @@ class CafeStore extends ChangeNotifier {
   /// Changes the signed-in admin's password after checking the current one.
   Future<String?> changeAdminPassword({required String current, required String next}) async {
     if (db.isLocal) {
-      if (!Secrets.validPassword(next)) return l10n.errWeakPassword;
+      if (!Secrets.validAdminPin(next)) return l10n.errWeakAdminPin('${Secrets.minAdminPin}');
       return db.changeLocalAdminPassword(current: current, next: next) ? null : l10n.catalogCurrentPasswordWrong;
     }
     final client = db.client;

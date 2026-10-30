@@ -10,6 +10,7 @@ import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../update/whats_new.dart';
 import '../widgets/cafe_widgets.dart';
 import '../widgets/tawla_mark.dart';
 import '../widgets/update_panel.dart';
@@ -46,11 +47,15 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final cashiers = store.cashiers.where((item) => item.active && item.canSignIn).toList();
+    final cashiers = store.cashiers.where(store.signsInHere).toList();
     final selected = cashiers.where((item) => item.id == store.selectedCashierId);
     final selectedName = selected.isEmpty ? context.l10n.authGuestCashier : selected.first.name;
 
-    return KeyboardListener(
+    // The till's first screen after it starts: this version's notes show here once.
+    return WhatsNewGate(
+      audience: WhatsNewAudience.till,
+      updated: store.hasAdmin,
+      child: KeyboardListener(
       focusNode: focusNode,
       autofocus: true,
       onKeyEvent: (event) {
@@ -239,6 +244,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -464,7 +470,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   @override
   void initState() {
     super.initState();
-    if (!widget.setup) _loadSavedEmail();
+    if (!widget.setup && !context.read<CafeStore>().isLocalMode) _loadSavedEmail();
   }
 
   Future<void> _loadSavedEmail() async {
@@ -568,25 +574,26 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   child: const Icon(Icons.lock_reset, color: CafeColors.terracotta),
                 ),
                 const SizedBox(height: 14),
-                Text(context.l10n.authResetTitle, style: CafeTheme.display.copyWith(fontSize: 30), textAlign: TextAlign.center),
+                Text(context.l10n.authResetPinTitle, style: CafeTheme.display.copyWith(fontSize: 30), textAlign: TextAlign.center),
                 const SizedBox(height: 10),
                 Text(
-                  context.l10n.authResetBody(store.adminResetEmail),
+                  context.l10n.authResetPinBody,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: CafeColors.inkMuted, height: 1.35),
                 ),
                 const SizedBox(height: 22),
-                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authResetNewPassword, style: fieldLabel)),
+                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authNewPin, style: fieldLabel)),
                 const SizedBox(height: 6),
                 TextField(
                   key: const Key('reset-password'),
                   controller: password,
                   obscureText: obscure,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   textInputAction: TextInputAction.next,
-                  autofillHints: const [AutofillHints.newPassword],
                   onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: InputDecoration(
-                    hintText: context.l10n.authCreateStrongPassword,
+                    hintText: context.l10n.authPinHint('${Secrets.minAdminPin}'),
                     prefixIcon: const Icon(Icons.lock_outline, size: 18),
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => obscure = !obscure),
@@ -595,17 +602,18 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authConfirmPassword, style: fieldLabel)),
+                Align(alignment: Alignment.centerLeft, child: Text(context.l10n.authConfirmPin, style: fieldLabel)),
                 const SizedBox(height: 6),
                 TextField(
                   key: const Key('reset-confirm'),
                   controller: confirm,
                   obscureText: true,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   textInputAction: TextInputAction.done,
-                  autofillHints: const [AutofillHints.newPassword],
                   onSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
-                    hintText: context.l10n.authRepeatPassword,
+                    hintText: context.l10n.authRepeatPin,
                     prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
                   ),
                 ),
@@ -632,6 +640,9 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
     final store = context.watch<CafeStore>();
     final setup = widget.setup;
     if (!setup && store.adminResetReady) return _resetForm(store);
+    // Offline the admin has no email: one PIN of digits, any length from the minimum up.
+    final local = store.isLocalMode;
+    final digitsOnly = [FilteringTextInputFormatter.digitsOnly];
 
     return CafeAuthFrame(
       child: AutofillGroup(
@@ -665,26 +676,28 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   style: CafeTheme.display.copyWith(fontSize: 30),
                 ),
                 const SizedBox(height: 22),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(context.l10n.authManagerEmail, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: email,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  autofillHints: const [AutofillHints.email],
-                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                  decoration: const InputDecoration(
-                    hintText: 'admin@cafeitaliano.com',
-                    prefixIcon: Icon(Icons.mail_outline, size: 18),
+                if (!local) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(context.l10n.authManagerEmail, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: email,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.email],
+                    onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                    decoration: const InputDecoration(
+                      hintText: 'admin@cafeitaliano.com',
+                      prefixIcon: Icon(Icons.mail_outline, size: 18),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 Row(
                   children: [
-                    Text(context.l10n.authPassword, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    Text(local ? context.l10n.authAdminPin : context.l10n.authPassword, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                     const Spacer(),
                     // Offline mode has no email service to send a recovery code.
                     if (!setup && !store.isLocalMode)
@@ -699,11 +712,17 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                 TextField(
                   controller: password,
                   obscureText: obscure,
+                  autofocus: local && !setup,
+                  keyboardType: local ? TextInputType.number : null,
+                  // A secret made before PINs existed may hold letters, so only a new PIN is digits-only.
+                  inputFormatters: local && setup ? digitsOnly : null,
                   textInputAction: setup ? TextInputAction.next : TextInputAction.done,
-                  autofillHints: [setup ? AutofillHints.newPassword : AutofillHints.password],
+                  autofillHints: local ? null : [setup ? AutofillHints.newPassword : AutofillHints.password],
                   onSubmitted: (_) => setup ? FocusScope.of(context).nextFocus() : _submit(),
                   decoration: InputDecoration(
-                    hintText: setup ? context.l10n.authCreateStrongPassword : '••••••••',
+                    hintText: local
+                        ? (setup ? context.l10n.authPinHint('${Secrets.minAdminPin}') : '••••')
+                        : (setup ? context.l10n.authCreateStrongPassword : '••••••••'),
                     prefixIcon: const Icon(Icons.lock_outline, size: 18),
                     suffixIcon: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -725,17 +744,22 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   const SizedBox(height: 14),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(context.l10n.authConfirmPassword, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    child: Text(
+                      local ? context.l10n.authConfirmPin : context.l10n.authConfirmPassword,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: confirm,
                     obscureText: true,
+                    keyboardType: local ? TextInputType.number : null,
+                    inputFormatters: local ? digitsOnly : null,
                     textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.newPassword],
+                    autofillHints: local ? null : const [AutofillHints.newPassword],
                     onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     decoration: InputDecoration(
-                      hintText: context.l10n.authRepeatPassword,
+                      hintText: local ? context.l10n.authRepeatPin : context.l10n.authRepeatPassword,
                       prefixIcon: const Icon(Icons.verified_user_outlined, size: 18),
                     ),
                   ),
@@ -764,7 +788,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   ],
                 ],
                 const SizedBox(height: 12),
-                if (!setup)
+                if (!setup && !local)
                   Row(
                     children: [
                       SizedBox(

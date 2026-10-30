@@ -2571,6 +2571,11 @@ class Secrets {
     return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
 
+  /// The offline admin signs in with a PIN: digits only, at least [minAdminPin] of them, any length.
+  static const minAdminPin = 4;
+
+  static bool validAdminPin(String value) => RegExp('^[0-9]{$minAdminPin,}\$').hasMatch(value);
+
   static bool validPassword(String value) {
     return value.length >= 8 &&
         RegExp(r'[A-Z]').hasMatch(value) &&

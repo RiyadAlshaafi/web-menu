@@ -12,6 +12,7 @@ import '../models/models.dart';
 import '../navigation/app_sections.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../update/whats_new.dart';
 import '../widgets/app_header.dart';
 import '../widgets/cafe_dialogs.dart';
 import '../widgets/cafe_widgets.dart';
@@ -83,7 +84,11 @@ class AdminShell extends StatelessWidget {
               ),
             ),
           );
-    return AdminIdleLock(
+    return WhatsNewGate(
+      audience: WhatsNewAudience.admin,
+      // Reaching the console means this cafe was set up before, unless the admin was made just now.
+      updated: true,
+      child: AdminIdleLock(
       child: ShellFrame(
       drawer: drawer,
       drawerWidth: 260,
@@ -94,6 +99,7 @@ class AdminShell extends StatelessWidget {
       ),
       // A short or narrow window scrolls the page instead of cutting its bottom off.
       body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),
+      ),
       ),
     );
   }

@@ -12,31 +12,26 @@ void main() {
     expect(AppSections.visible(AppSections.cashier, FeatureSet.all).length, AppSections.cashier.length);
   });
 
-  test('core only keeps the always-on sections', () {
-    expect(_paths(AppSections.visible(AppSections.admin, coreOnly)), ['/admin/menu', '/admin/settings']);
+  test('core only keeps the always-on and standard sections', () {
+    expect(
+      _paths(AppSections.visible(AppSections.admin, coreOnly)),
+      ['/admin/dashboard', '/admin/menu', '/admin/sales', '/admin/wages', '/admin/settings'],
+    );
     expect(_paths(AppSections.visible(AppSections.cashier, coreOnly)), ['/pos/takeout', '/pos/log', '/pos/shifts']);
   });
 
-  test('live alerts need QR ordering, which needs tables', () {
+  test('live alerts come with tables', () {
     final qrWithoutTables = FeatureSet.fromKeys(['qr_ordering']);
     expect(_paths(AppSections.visible(AppSections.cashier, qrWithoutTables)), isNot(contains('/pos')));
-    final both = FeatureSet.fromKeys(['tables', 'qr_ordering']);
-    expect(_paths(AppSections.visible(AppSections.cashier, both)), containsAll(['/pos', '/pos/tables']));
-  });
-
-  test('an offline till with waiter phones gets the alerts screen to accept their orders', () {
-    final offline = FeatureSet.fromKeys(['tables', 'waiter_phones'], mode: InstallMode.offline);
-    expect(_paths(AppSections.visible(AppSections.cashier, offline)), containsAll(['/pos', '/pos/tables']));
-    expect(AppSections.blockedRedirect('/pos', offline), isNull);
-    final noPhones = FeatureSet.fromKeys(['tables'], mode: InstallMode.offline);
-    expect(_paths(AppSections.visible(AppSections.cashier, noPhones)), isNot(contains('/pos')));
+    final tables = FeatureSet.fromKeys(['tables'], mode: InstallMode.offline);
+    expect(_paths(AppSections.visible(AppSections.cashier, tables)), containsAll(['/pos', '/pos/tables']));
+    expect(AppSections.blockedRedirect('/pos', tables), isNull);
     expect(FeatureSet.fromKeys(['waiter_phones']).allows(AppFeature.waiterPhones), isFalse, reason: 'needs tables');
   });
 
   test('a page whose feature is off goes to the first page that is on', () {
-    expect(AppSections.blockedRedirect('/admin/dashboard', coreOnly), '/admin/menu');
-    expect(AppSections.blockedRedirect('/admin/wages', coreOnly), '/admin/menu');
-    expect(AppSections.blockedRedirect('/admin/categories', coreOnly), '/admin/menu');
+    expect(AppSections.blockedRedirect('/admin/stock', coreOnly), '/admin/dashboard');
+    expect(AppSections.blockedRedirect('/admin/categories', coreOnly), '/admin/dashboard');
     expect(AppSections.blockedRedirect('/pos', coreOnly), '/pos/takeout');
     expect(AppSections.blockedRedirect('/pos/dishes', coreOnly), '/pos/takeout');
   });
@@ -57,6 +52,6 @@ void main() {
     );
     final cashier = _paths(AppSections.visible(AppSections.cashier, offline));
     expect(cashier, contains('/pos/tables'), reason: 'tables work offline as open tabs');
-    expect(cashier, isNot(contains('/pos')), reason: 'live alerts need QR ordering');
+    expect(cashier, contains('/pos'), reason: 'live alerts come with tables');
   });
 }

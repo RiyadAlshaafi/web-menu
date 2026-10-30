@@ -108,8 +108,8 @@ class AppSections {
     ),
     AppSection(
       path: '/pos',
-      feature: AppFeature.qrOrdering,
-      orFeature: AppFeature.waiterPhones,
+      // The alerts screen comes with tables: bill requests, guest calls and waiter orders.
+      feature: AppFeature.tables,
       labelOf: (l) => l.navLiveAlerts,
       crumbOf: (l) => l.navLiveAlerts,
       icon: Icons.notifications_none_outlined,

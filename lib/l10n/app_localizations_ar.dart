@@ -2886,4 +2886,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsSoonHint => 'ميزة جديدة في الطريق';
+
+  @override
+  String get errPinsMismatch => 'الرمزان غير متطابقين.';
+
+  @override
+  String errWeakAdminPin(String min) {
+    return 'استخدم $min أرقام على الأقل.';
+  }
+
+  @override
+  String get authAdminPin => 'رمز المدير';
+
+  @override
+  String get authConfirmPin => 'تأكيد الرمز';
+
+  @override
+  String get authRepeatPin => 'اكتب الرمز مرة أخرى';
+
+  @override
+  String get authNewPin => 'الرمز الجديد';
+
+  @override
+  String authPinHint(String min) {
+    return 'أرقام فقط، $min على الأقل';
+  }
+
+  @override
+  String get authResetPinTitle => 'تعيين رمز جديد للمدير';
+
+  @override
+  String get authResetPinBody =>
+      'فتح الإعداد إعادة تعيين الرمز لمرة واحدة. تبقى المبيعات والقائمة والإعدادات كما هي.';
+
+  @override
+  String get catalogChangePin => 'تغيير الرمز';
+
+  @override
+  String get catalogCurrentPin => 'الرمز الحالي';
+
+  @override
+  String get catalogUpdatePin => 'تحديث الرمز';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'الجديد في $version';
+  }
+
+  @override
+  String get whatsNewAdded => 'أُضيف';
+
+  @override
+  String get whatsNewFixed => 'أُصلح';
+
+  @override
+  String get whatsNewGotIt => 'حسناً';
 }

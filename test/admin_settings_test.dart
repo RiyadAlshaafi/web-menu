@@ -148,27 +148,17 @@ void main() {
     expect(find.text(l10n.adminAutoPrintReceipt), findsOneWidget);
   });
 
-  testWidgets('the admin sees the guest menu address read-only, and saving cafe info keeps it', (tester) async {
+  testWidgets('cafe info hides the guest menu address, and saving cafe info keeps it', (tester) async {
     final store = _SettingsStore()..cafe = {'name': 'Test Cafe', 'publicMenuUrl': 'https://menu.example.com'};
     await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
 
-    expect(find.text(l10n.catalogPublicMenuUrl), findsOneWidget);
-    expect(find.widgetWithText(SelectableText, 'https://menu.example.com'), findsOneWidget);
-    expect(find.text(l10n.catalogPublicMenuUrlReadOnly), findsOneWidget);
-    expect(find.widgetWithText(TextField, l10n.catalogPublicMenuUrlHint), findsNothing, reason: 'no field to type an address');
+    expect(find.text(l10n.catalogPublicMenuUrl), findsNothing);
+    expect(find.text('https://menu.example.com'), findsNothing);
 
     await tester.enterText(find.widgetWithText(TextField, 'Test Cafe'), 'New Name');
     await tester.pumpAndSettle();
     await tapVisible(tester, find.text(l10n.catalogSaveCompany));
     expect(store.cafe['name'], 'New Name');
     expect(store.cafe['publicMenuUrl'], 'https://menu.example.com');
-  });
-
-  testWidgets('a cafe without its own address shows the default one', (tester) async {
-    final store = _SettingsStore();
-    await pumpAdminScreen(tester, const AdminSettingsScreen(), store, size: _tall);
-
-    expect(find.widgetWithText(SelectableText, defaultGuestMenuUrl), findsOneWidget);
-    expect(find.text(l10n.catalogPublicMenuUrlDefault), findsOneWidget);
   });
 }

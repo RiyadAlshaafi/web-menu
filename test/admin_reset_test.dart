@@ -205,34 +205,33 @@ void main() {
       }
     });
 
-    test('the forgotten password is replaced once and the admin is signed in', () async {
+    test('the forgotten PIN is replaced once and the admin is signed in', () async {
       final first = await start(_FakeResetFile(null));
-      await first.createAdmin(email: 'owner@cafe.ly', password: 'Secret#123', confirm: 'Secret#123');
+      expect(await first.createAdmin(email: '', password: '1234', confirm: '1234'), isNull);
       await _sell();
       first.signOut();
 
       final file = _FakeResetFile(_ticket());
       final store = await start(file);
       expect(store.adminResetReady, isTrue);
-      expect(store.adminResetEmail, 'owner@cafe.ly');
-      expect(await store.resetAdminPassword(password: 'Better#456', confirm: 'Other#456'), store.l10n.errPasswordsMismatch);
-      expect(await store.resetAdminPassword(password: 'weak', confirm: 'weak'), store.l10n.errWeakPassword);
+      expect(await store.resetAdminPassword(password: '567890', confirm: '567891'), store.l10n.errPinsMismatch);
+      expect(await store.resetAdminPassword(password: '12', confirm: '12'), store.l10n.errWeakAdminPin('4'));
       expect(store.adminResetReady, isTrue, reason: 'a typo does not use up the ticket');
 
-      expect(await store.resetAdminPassword(password: 'Better#456', confirm: 'Better#456'), isNull);
+      expect(await store.resetAdminPassword(password: '567890', confirm: '567890'), isNull);
       expect(store.authKind, AuthKind.admin);
       expect(store.adminResetReady, isFalse);
       expect(file.text, isNull, reason: 'the ticket file is removed');
       expect(store.payments.single.totalDue, 15);
       store.signOut();
-      expect(await store.signInAdmin('owner@cafe.ly', 'Secret#123'), isNotNull);
-      expect(await store.signInAdmin('owner@cafe.ly', 'Better#456'), isNull);
+      expect(await store.signInAdmin('', '1234'), isNotNull);
+      expect(await store.signInAdmin('', '567890'), isNull, reason: 'offline the admin signs in with the PIN alone');
 
       final copy = _FakeResetFile(_ticket());
       final again = await start(copy);
       expect(again.adminResetReady, isFalse, reason: 'a copied ticket cannot be used twice');
       expect(copy.text, isNull);
-      expect(await again.resetAdminPassword(password: 'Other#789', confirm: 'Other#789'), again.l10n.authResetUnavailable);
+      expect(await again.resetAdminPassword(password: '4321', confirm: '4321'), again.l10n.authResetUnavailable);
     });
 
     test('a ticket with no admin yet is dropped and setup stays as normal', () async {
@@ -243,21 +242,30 @@ void main() {
       expect(file.text, isNull);
     });
 
-    test('a forged ticket is dropped and the old password still works', () async {
+    test('a forged ticket is dropped and the old PIN still works', () async {
       final first = await start(_FakeResetFile(null));
-      await first.createAdmin(email: 'owner@cafe.ly', password: 'Secret#123', confirm: 'Secret#123');
+      await first.createAdmin(email: '', password: '1234', confirm: '1234');
       first.signOut();
 
       final forged = _FakeResetFile(_ticket(sig: 'f' * 128));
       final store = await start(forged);
       expect(store.adminResetReady, isFalse);
       expect(forged.text, isNull);
-      expect(await store.signInAdmin('owner@cafe.ly', 'Secret#123'), isNull);
+      expect(await store.signInAdmin('', '1234'), isNull);
+    });
+
+    test('an admin made with a password before PINs still signs in with it, without the email', () async {
+      final first = await start(_FakeResetFile(null));
+      expect(await first.createAdmin(email: 'owner@cafe.ly', password: 'Secret#123', confirm: 'Secret#123'), first.l10n.errWeakAdminPin('4'));
+      first.db.createLocalAdmin(email: 'owner@cafe.ly', password: 'Secret#123');
+      first.signOut();
+      final store = await start(_FakeResetFile(null));
+      expect(await store.signInAdmin('', 'Secret#123'), isNull);
     });
   });
 
   group('admin sign-in screen', () {
-    testWidgets('asks for a new password while a reset is ready', (tester) async {
+    testWidgets('asks for a new PIN while a reset is ready', (tester) async {
       tester.view.physicalSize = const Size(1200, 1600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -279,14 +287,14 @@ void main() {
       await tester.pumpAndSettle();
       while (tester.takeException() != null) {} // test font is wider, so the header row overflows
 
-      expect(find.textContaining('owner@cafe.ly'), findsOneWidget);
+      expect(find.text(store.l10n.authResetPinTitle), findsOneWidget);
       expect(find.text('Forgot password?'), findsNothing);
-      await tester.enterText(find.byKey(const Key('reset-password')), 'Better#456');
-      await tester.enterText(find.byKey(const Key('reset-confirm')), 'Better#456');
+      await tester.enterText(find.byKey(const Key('reset-password')), '567890');
+      await tester.enterText(find.byKey(const Key('reset-confirm')), '567890');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(store.resets, [('Better#456', 'Better#456')]);
+      expect(store.resets, [('567890', '567890')]);
       expect(find.text('dashboard'), findsOneWidget);
     });
   });

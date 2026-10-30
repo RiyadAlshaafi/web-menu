@@ -5137,6 +5137,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A new feature is on the way'**
   String get settingsSoonHint;
+
+  /// No description provided for @errPinsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The PINs don\'t match.'**
+  String get errPinsMismatch;
+
+  /// No description provided for @errWeakAdminPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least {min} digits.'**
+  String errWeakAdminPin(String min);
+
+  /// No description provided for @authAdminPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN'**
+  String get authAdminPin;
+
+  /// No description provided for @authConfirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get authConfirmPin;
+
+  /// No description provided for @authRepeatPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the PIN again'**
+  String get authRepeatPin;
+
+  /// No description provided for @authNewPin.
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get authNewPin;
+
+  /// No description provided for @authPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits only, at least {min}'**
+  String authPinHint(String min);
+
+  /// No description provided for @authResetPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a New Admin PIN'**
+  String get authResetPinTitle;
+
+  /// No description provided for @authResetPinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The setup unlocked a one-time PIN reset. Sales, menu and settings stay as they are.'**
+  String get authResetPinBody;
+
+  /// No description provided for @catalogChangePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get catalogChangePin;
+
+  /// No description provided for @catalogCurrentPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN'**
+  String get catalogCurrentPin;
+
+  /// No description provided for @catalogUpdatePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Update PIN'**
+  String get catalogUpdatePin;
+
+  /// No description provided for @whatsNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new in {version}'**
+  String whatsNewTitle(String version);
+
+  /// No description provided for @whatsNewAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get whatsNewAdded;
+
+  /// No description provided for @whatsNewFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get whatsNewFixed;
+
+  /// No description provided for @whatsNewGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get whatsNewGotIt;
 }
 
 class _AppLocalizationsDelegate
