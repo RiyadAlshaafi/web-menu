@@ -5233,6 +5233,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get whatsNewGotIt;
+
+  /// No description provided for @errBadAdminPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN.'**
+  String get errBadAdminPin;
+
+  /// No description provided for @devNeedsOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'The developer screen needs the online version.'**
+  String get devNeedsOnline;
+
+  /// No description provided for @devWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong developer password.'**
+  String get devWrongPassword;
 }
 
 class _AppLocalizationsDelegate

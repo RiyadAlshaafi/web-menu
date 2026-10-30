@@ -747,7 +747,7 @@ class CafeStore extends ChangeNotifier {
   String? _signInLocalAdmin(String email, String password, {required bool remember}) {
     if (!db.signInLocalAdmin(email: email, password: password, remember: remember)) {
       final locked = db.localAdminLockedFor;
-      adminError = locked == null ? l10n.errBadCredentials : l10n.errAdminLocked('${locked.inMinutes + 1}');
+      adminError = locked == null ? l10n.errBadAdminPin : l10n.errAdminLocked('${locked.inMinutes + 1}');
       notifyListeners();
       return adminError;
     }

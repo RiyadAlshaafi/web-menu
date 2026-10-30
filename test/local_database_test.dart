@@ -729,7 +729,7 @@ void main() {
       await store.syncFromDisk();
       store.signOut();
       expect(store.hasAdmin, isTrue);
-      expect(await store.signInAdmin('', '2468'), isNotNull);
+      expect(await store.signInAdmin('', '2468'), store.l10n.errBadAdminPin, reason: 'offline says PIN, not email');
       expect(await store.signInAdmin('', '13572468'), isNull, reason: 'a PIN of any length, no email');
       store.signOut();
 

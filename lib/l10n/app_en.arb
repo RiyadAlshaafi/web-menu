@@ -1319,5 +1319,8 @@
   "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}},
   "whatsNewAdded": "Added",
   "whatsNewFixed": "Fixed",
-  "whatsNewGotIt": "Got it"
+  "whatsNewGotIt": "Got it",
+  "errBadAdminPin": "Wrong PIN.",
+  "devNeedsOnline": "The developer screen needs the online version.",
+  "devWrongPassword": "Wrong developer password."
 }

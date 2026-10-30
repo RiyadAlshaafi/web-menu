@@ -1271,8 +1271,19 @@ class _DevLogoState extends State<_DevLogo> {
     final value = entered ?? '';
     password.dispose();
     if (!mounted || value.isEmpty) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    // An offline till never connects to the server, which is where the password is checked.
+    if (AppDatabase.instance.client == null) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.devNeedsOnline)));
+      return;
+    }
     final allowed = await AppDatabase.instance.checkDevAccess(value);
-    if (!mounted || !allowed) return;
+    if (!mounted) return;
+    if (!allowed) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.devWrongPassword)));
+      return;
+    }
     context.go('/dev', extra: value);
   }
 

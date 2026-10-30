@@ -2941,4 +2941,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get whatsNewGotIt => 'حسناً';
+
+  @override
+  String get errBadAdminPin => 'الرمز غير صحيح.';
+
+  @override
+  String get devNeedsOnline => 'شاشة المطور تحتاج النسخة المتصلة بالإنترنت.';
+
+  @override
+  String get devWrongPassword => 'كلمة مرور المطور غير صحيحة.';
 }

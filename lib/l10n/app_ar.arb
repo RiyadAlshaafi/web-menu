@@ -928,5 +928,8 @@
   "whatsNewTitle": "الجديد في {version}",
   "whatsNewAdded": "أُضيف",
   "whatsNewFixed": "أُصلح",
-  "whatsNewGotIt": "حسناً"
+  "whatsNewGotIt": "حسناً",
+  "errBadAdminPin": "الرمز غير صحيح.",
+  "devNeedsOnline": "شاشة المطور تحتاج النسخة المتصلة بالإنترنت.",
+  "devWrongPassword": "كلمة مرور المطور غير صحيحة."
 }

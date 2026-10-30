@@ -2957,4 +2957,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewGotIt => 'Got it';
+
+  @override
+  String get errBadAdminPin => 'Wrong PIN.';
+
+  @override
+  String get devNeedsOnline => 'The developer screen needs the online version.';
+
+  @override
+  String get devWrongPassword => 'Wrong developer password.';
 }
