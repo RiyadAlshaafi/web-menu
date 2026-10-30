@@ -27,6 +27,15 @@ SalesSlice<Payment> slicePayments(
   return SalesSlice(rows.take(limit).toList(), rows.length > limit);
 }
 
+/// The orders [payments] point to that [loaded] does not hold.
+Set<String> orderIdsMissingFor(List<Payment> payments, List<CafeOrder> loaded) {
+  final have = {for (final order in loaded) order.id};
+  return {
+    for (final payment in payments)
+      if (!have.contains(payment.orderId)) payment.orderId,
+  };
+}
+
 List<CafeOrder> ordersForLive(
   List<CafeOrder> all, {
   required DateTime from,

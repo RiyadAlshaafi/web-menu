@@ -85,4 +85,33 @@ void main() {
     final withOld = ordersForLive(orders, from: from, extraIds: {'old'});
     expect(withOld.map((order) => order.id), contains('old'));
   });
+
+  test('only orders of the payments on screen are fetched, each once', () {
+    final now = DateTime.utc(2026, 10, 2);
+    Payment payment(String id, String orderId) => Payment(
+          id: id,
+          orderId: orderId,
+          tableId: 't',
+          totalDue: 1,
+          cashReceived: 1,
+          changeDue: 0,
+          cashierId: 'c',
+          paidAt: now,
+          shiftId: 's',
+          yearMonth: '2610',
+          monthlyOrderNumber: 1,
+          shiftOrderNumber: 1,
+        );
+    final loaded = [
+      CafeOrder(id: 'open', tableId: 't', tableNumber: '1', status: OrderStatus.served, createdAt: now, lines: const []),
+    ];
+
+    final missing = orderIdsMissingFor(
+      [payment('a', 'open'), payment('b', 'paid-1'), payment('c', 'paid-1'), payment('d', 'paid-2')],
+      loaded,
+    );
+
+    expect(missing, {'paid-1', 'paid-2'});
+    expect(orderIdsMissingFor(const [], loaded), isEmpty);
+  });
 }
