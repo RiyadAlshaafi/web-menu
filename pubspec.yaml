@@ -18,7 +18,7 @@ dependencies:
   qr_flutter: ^4.1.0
   provider: ^6.1.5
   supabase_flutter: ^2.10.2
-  file_picker: ^8.3.7
+  file_picker: ^11.0.3
   web: ^1.1.1
   printing: ^5.15.1
   flutter_colorpicker: ^1.1.0
