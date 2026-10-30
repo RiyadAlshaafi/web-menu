@@ -31,10 +31,16 @@ class _DevScreenState extends State<DevScreen> {
   int? selectedSlot;
   bool slotsLoading = true;
 
+  /// Offline mode: one cafe on this PC, so no slots or tills; the tools work on its local data.
+  final bool _local = AppDatabase.instance.isLocal;
+
+  /// Whether the tools know which cafe to work on.
+  bool get _hasCafe => _local || selectedSlot != null;
+
   @override
   void initState() {
     super.initState();
-    unawaited(_loadSlots());
+    if (!_local) unawaited(_loadSlots());
   }
 
   @override
@@ -181,7 +187,9 @@ class _DevScreenState extends State<DevScreen> {
     final store = context.read<CafeStore>();
     final go = await _confirm(
       title: 'Reset admin',
-      body: 'This deletes the admin profile and the matching auth user for this restaurant. You will have to create a new admin. This cannot be undone.',
+      body: _local
+          ? 'This removes the admin of this PC, so a new admin PIN must be set. Sales, menu, cashiers and settings stay.'
+          : 'This deletes the admin profile and the matching auth user for this restaurant. You will have to create a new admin. This cannot be undone.',
     );
     if (!go || !mounted) return;
     final result = await AppDatabase.instance.devCall('dev_reset_admin', widget.password);
@@ -193,6 +201,10 @@ class _DevScreenState extends State<DevScreen> {
     await store.db.refreshFromDisk();
     store.admin = null;
     store.signOut();
+    if (_local) {
+      if (mounted) context.go('/admin/setup');
+      return;
+    }
     // A new admin now needs a setup code, so issue one right away.
     final slot = selectedSlot;
     if (slot != null) {
@@ -318,6 +330,7 @@ class _DevScreenState extends State<DevScreen> {
         _fail(result?['error'] ?? 'Import did not run.');
         return;
       }
+      context.read<CafeStore>().reloadLocalData();
       setState(() => notice = 'Imported ${result['receipts']} receipts and ${result['expenses']} expenses.');
     } catch (error) {
       _fail(error);
@@ -333,6 +346,7 @@ class _DevScreenState extends State<DevScreen> {
     if (!go || !mounted) return;
     final result = await AppDatabase.instance.devCall('dev_wipe_logs', widget.password);
     if (!mounted) return;
+    context.read<CafeStore>().reloadLocalData();
     setState(() => notice = result?['ok'] == true ? 'Logs deleted.' : 'Delete did not run.');
   }
 
@@ -344,6 +358,7 @@ class _DevScreenState extends State<DevScreen> {
     if (!go || !mounted) return;
     final result = await AppDatabase.instance.devCall('dev_wipe_menu', widget.password);
     if (!mounted) return;
+    context.read<CafeStore>().reloadLocalData();
     setState(() => notice = result?['ok'] == true ? 'Menu deleted.' : 'Delete did not run.');
   }
 
@@ -365,48 +380,52 @@ class _DevScreenState extends State<DevScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text('These tools are not linked from the rest of the app.'),
+          Text(
+            _local
+                ? 'These tools are not linked from the rest of the app. They work on the data saved on this PC.'
+                : 'These tools are not linked from the rest of the app.',
+          ),
           if (notice != null) ...[
             const SizedBox(height: 12),
             Text(notice!, style: const TextStyle(fontWeight: FontWeight.w700)),
           ],
           const SizedBox(height: 16),
-          _slotCard(),
-          if (selectedSlot != null) _DevicesCard(key: ValueKey(selectedSlot), password: widget.password),
+          if (!_local) _slotCard(),
+          if (!_local && selectedSlot != null) _DevicesCard(key: ValueKey(selectedSlot), password: widget.password),
           _card(
             title: 'Reset admin',
             body: 'Removes the current admin account so a new one can be created.',
             label: 'Reset admin',
             danger: true,
-            onPressed: selectedSlot == null ? null : _resetAdmin,
+            onPressed: _hasCafe ? _resetAdmin : null,
           ),
           _card(
             title: 'Download all logs',
             body: 'Saves every receipt and every expense for this restaurant, with no date filter.',
             label: exporting ? 'Exporting…' : 'Export',
             danger: false,
-            onPressed: exporting || selectedSlot == null ? null : _export,
+            onPressed: exporting || !_hasCafe ? null : _export,
           ),
           _card(
             title: 'Import logs',
             body: 'Restores receipts and expenses from the files saved by Download all logs.',
             label: 'Import',
             danger: true,
-            onPressed: selectedSlot == null ? null : _import,
+            onPressed: _hasCafe ? _import : null,
           ),
           _card(
             title: 'Delete all logs',
             body: 'Permanently deletes every receipt, order, and expense.',
             label: 'Delete all logs',
             danger: true,
-            onPressed: selectedSlot == null ? null : _wipeLogs,
+            onPressed: _hasCafe ? _wipeLogs : null,
           ),
           _card(
             title: 'Delete all dishes',
             body: 'Permanently empties the menu. Past receipts keep their item text.',
             label: 'Delete all dishes',
             danger: true,
-            onPressed: selectedSlot == null ? null : _wipeMenu,
+            onPressed: _hasCafe ? _wipeMenu : null,
           ),
         ],
       ),

@@ -22,6 +22,27 @@ import 'local_state_store.dart';
 import 'sales_history.dart';
 
 part 'app_database_local.dart';
+part 'app_database_local_dev.dart';
+
+/// Asks the server at [origin] whether [password] is the developer password, without a Supabase
+/// connection: offline mode never opens one, so this works like the Windows setup's check. Null
+/// when the server can't be asked.
+Future<bool?> askDevAccess(String origin, String anonKey, String password) async {
+  try {
+    final response = await http
+        .post(
+          Uri.parse('$origin/rest/v1/rpc/check_dev_access'),
+          headers: {'apikey': anonKey, 'Content-Type': 'application/json'},
+          body: jsonEncode({'p_password': password}),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) return null;
+    return jsonDecode(response.body) == true;
+  } catch (error, stackTrace) {
+    reportError('dev access', error, stackTrace);
+    return null;
+  }
+}
 
 double? _asDouble(Object? value) {
   if (value is num) return value.toDouble();
@@ -1823,18 +1844,31 @@ class AppDatabase {
     return _failure(result, ErrorCodes.failed);
   }
 
-  Future<bool> checkDevAccess(String password) async {
-    if (client == null) return false;
+  /// Whether [password] is the developer password. The server always decides, offline mode too, so
+  /// this PC holds no copy of it. Null when the server can't be asked.
+  Future<bool?> checkDevAccess(String password) async {
+    if (client == null) {
+      if (!isConfigured) return null;
+      return askDevAccess(supabaseUrl, supabaseAnonKey, password);
+    }
     try {
       final raw = await client!.rpc('check_dev_access', params: {'p_password': password});
       return raw == true;
     } catch (error, stackTrace) {
       reportError('dev access', error, stackTrace);
-      return false;
+      return null;
     }
   }
 
   Future<Map<String, dynamic>?> devCall(String name, String password, [Map<String, dynamic>? extra]) async {
+    if (isLocal) {
+      try {
+        return _localDevCall(name, extra);
+      } catch (error, stackTrace) {
+        reportError(name, error, stackTrace);
+        return {'ok': false, 'error': '$name did not run.'};
+      }
+    }
     if (client == null) return {'ok': false, 'error': ErrorCodes.notConfigured};
     try {
       _applyHeaders();

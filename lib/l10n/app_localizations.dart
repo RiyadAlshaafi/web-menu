@@ -5243,7 +5243,7 @@ abstract class AppLocalizations {
   /// No description provided for @devNeedsOnline.
   ///
   /// In en, this message translates to:
-  /// **'The developer screen needs the online version.'**
+  /// **'Could not check the developer password. Connect this device to the internet and try again.'**
   String get devNeedsOnline;
 
   /// No description provided for @devWrongPassword.

@@ -2946,7 +2946,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errBadAdminPin => 'الرمز غير صحيح.';
 
   @override
-  String get devNeedsOnline => 'شاشة المطور تحتاج النسخة المتصلة بالإنترنت.';
+  String get devNeedsOnline =>
+      'تعذر التحقق من كلمة مرور المطور. صِل هذا الجهاز بالإنترنت وحاول مرة أخرى.';
 
   @override
   String get devWrongPassword => 'كلمة مرور المطور غير صحيحة.';

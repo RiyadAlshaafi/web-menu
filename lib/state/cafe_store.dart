@@ -558,6 +558,13 @@ class CafeStore extends ChangeNotifier {
     }
   }
 
+  /// Offline mode: shows what the developer tools just changed in the local database.
+  void reloadLocalData() {
+    if (!db.isLocal) return;
+    _hydrateOperational();
+    notifyListeners();
+  }
+
   bool get hasAdmin => admin != null || db.anyAdmin;
 
   /// The cafe slot (1-8) this install is linked to, or null if unlinked.

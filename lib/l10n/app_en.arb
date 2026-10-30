@@ -1321,6 +1321,6 @@
   "whatsNewFixed": "Fixed",
   "whatsNewGotIt": "Got it",
   "errBadAdminPin": "Wrong PIN.",
-  "devNeedsOnline": "The developer screen needs the online version.",
+  "devNeedsOnline": "Could not check the developer password. Connect this device to the internet and try again.",
   "devWrongPassword": "Wrong developer password."
 }

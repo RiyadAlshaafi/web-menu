@@ -2962,7 +2962,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errBadAdminPin => 'Wrong PIN.';
 
   @override
-  String get devNeedsOnline => 'The developer screen needs the online version.';
+  String get devNeedsOnline =>
+      'Could not check the developer password. Connect this device to the internet and try again.';
 
   @override
   String get devWrongPassword => 'Wrong developer password.';
