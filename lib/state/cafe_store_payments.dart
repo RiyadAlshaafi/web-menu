@@ -76,12 +76,13 @@ extension CafeStorePayments on CafeStore {
   Future<String?> savePaymentType(PaymentType type) =>
       _refreshAfter(db.savePaymentType(type));
 
-  Future<String?> deletePaymentType(String id) {
+  Future<String?> deletePaymentType(String id) async {
+    final match = paymentTypes.where((type) => type.id == id);
+    if (match.isEmpty) return null;
     final used =
         payments.any((payment) => payment.paymentTypeId == id) ||
-        orders.any((order) => order.paymentTypeId == id);
-    final match = paymentTypes.where((type) => type.id == id);
-    if (match.isEmpty) return Future.value(null);
+        orders.any((order) => order.paymentTypeId == id) ||
+        await db.paymentTypeUsedOnServer(id);
     if (used) {
       final type = match.first;
       type

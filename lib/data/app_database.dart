@@ -800,7 +800,7 @@ class AppDatabase {
                 .gte('created_at', historyFrom.toUtc().toIso8601String())
                 .order('created_at')
           : Future<dynamic>.value(null),
-      _loadOrders(historyFrom, const {}),
+      _loadOpenOrders(),
       staffed ? _selectShifts(historyFrom) : Future<dynamic>.value(null),
       // An unlinked device has no cafe to list cashiers for.
       (!liveOnly && restaurantId != null)
@@ -938,10 +938,7 @@ class AppDatabase {
         for (final row in paymentRows)
           _mapPayment(Map<String, dynamic>.from(row as Map), changes),
       ];
-      final missingOrders = _payments
-          .map((payment) => payment.orderId)
-          .where((id) => _orders.every((order) => order.id != id))
-          .toSet();
+      final missingOrders = orderIdsMissingFor(_payments, _orders);
       if (missingOrders.isNotEmpty) {
         final extra = await _ordersById(missingOrders);
         _orders = [..._orders, ...extra];
@@ -1112,29 +1109,33 @@ class AppDatabase {
     );
   }
 
-  Future<List<CafeOrder>> _loadOrders(
-    DateTime from,
-    Set<String> extraIds,
-  ) async {
-    final openRows = await client!
+  /// Open orders only: this runs on every live update, so paid orders are fetched just for the
+  /// payments on screen (see [orderIdsMissingFor]) instead of the whole sales window.
+  Future<List<CafeOrder>> _loadOpenOrders() async {
+    final rows = await client!
         .from('orders')
         .select('*, order_lines(*)')
         .neq('status', 'paid');
-    final paidRows = await client!
-        .from('orders')
-        .select('*, order_lines(*)')
-        .eq('status', 'paid')
-        .gte('created_at', from.toUtc().toIso8601String());
-    final mapped = <String, CafeOrder>{};
-    for (final row in [...openRows as List, ...paidRows as List]) {
-      final order = _mapOrder(Map<String, dynamic>.from(row as Map));
-      mapped[order.id] = order;
+    return [
+      for (final row in rows as List)
+        _mapOrder(Map<String, dynamic>.from(row as Map)),
+    ];
+  }
+
+  /// Whether any sale on the server uses this payment type, including sales not loaded here.
+  /// Deleting a used type would blank it on those sales. Unknown counts as used, which archives.
+  Future<bool> paymentTypeUsedOnServer(String id) async {
+    if (isLocal || client == null) return false;
+    try {
+      final found = await Future.wait<dynamic>([
+        client!.from('payments').select('id').eq('payment_type_id', id).limit(1),
+        client!.from('orders').select('id').eq('payment_type_id', id).limit(1),
+      ]);
+      return found.any((rows) => (rows as List).isNotEmpty);
+    } catch (error, stackTrace) {
+      reportError('payment type used', error, stackTrace);
+      return true;
     }
-    final missing = extraIds.where((id) => !mapped.containsKey(id)).toSet();
-    for (final order in await _ordersById(missing)) {
-      mapped[order.id] = order;
-    }
-    return mapped.values.toList();
   }
 
   Future<List<CafeOrder>> _ordersById(Set<String> ids) async {
