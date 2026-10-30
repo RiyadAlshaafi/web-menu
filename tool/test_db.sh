@@ -78,6 +78,7 @@ loud -d "$DB" -f supabase/tests/guest_menu_url_dev_only_test.sql
 loud -d "$DB" -f supabase/tests/receipt_settings_test.sql
 loud -d "$DB" -f supabase/tests/sales_report_test.sql
 loud -d "$DB" -f supabase/tests/dish_sales_test.sql
+loud -d "$DB" -f supabase/tests/receipt_counter_floor_test.sql
 loud -d "$DB" -f supabase/tests/refund_line_test.sql
 loud -d "$DB" -f supabase/tests/move_table_test.sql
 loud -d "$DB" -f supabase/tests/settle_part_test.sql
@@ -109,6 +110,7 @@ loud -d "$DB" -f supabase/tests/guest_menu_url_dev_only_test.sql
 loud -d "$DB" -f supabase/tests/receipt_settings_test.sql
 loud -d "$DB" -f supabase/tests/sales_report_test.sql
 loud -d "$DB" -f supabase/tests/dish_sales_test.sql
+loud -d "$DB" -f supabase/tests/receipt_counter_floor_test.sql
 loud -d "$DB" -f supabase/tests/refund_line_test.sql
 loud -d "$DB" -f supabase/tests/move_table_test.sql
 loud -d "$DB" -f supabase/tests/settle_part_test.sql
