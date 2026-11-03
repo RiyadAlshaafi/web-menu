@@ -67,6 +67,17 @@ jobs:
 
       - run: flutter build windows --release --dart-define-from-file=.env
 
+      # The app needs the Visual C++ runtime, which a fresh Windows PC may not have ("MSVCP140.dll
+      # was not found"). Setup runs without admin, so it can't install vc_redist; the DLLs ship
+      # next to the exe instead (app-local deployment, allowed by Microsoft).
+      - name: Bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $release = "build\windows\x64\runner\Release"
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            Copy-Item "$env:SystemRoot\System32\$dll" $release -ErrorAction Stop
+          }
+
       - name: Build the installer
         shell: pwsh
         run: |
