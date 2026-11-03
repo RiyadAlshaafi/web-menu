@@ -119,6 +119,10 @@ class CafeStore extends ChangeNotifier {
 
   bool allows(AppFeature feature) => features.allows(feature);
 
+  /// The saved language, or Arabic when the install has no language switch: the cashier and
+  /// admin then have no way to change it, so it must not stay on English.
+  String _startLocale(String saved) => allows(AppFeature.languages) ? saved : defaultLocale;
+
   /// The admin's summary report of the Tripoli days [from] to [to]; see [AppDatabase.salesReport].
   Future<({SalesReport? report, String? error})> salesReport(DateTime from, DateTime to) => db.salesReport(from, to);
 
@@ -194,7 +198,7 @@ class CafeStore extends ChangeNotifier {
       if (!serverUnreachable) await db.waitForFirstLoad(const Duration(seconds: 15));
     }
     cafe = db.cafe;
-    locale = db.locale;
+    locale = _startLocale(db.locale);
     admin = db.admin;
     cashiers = db.cashiers;
     tables = db.tables;
@@ -537,7 +541,7 @@ class CafeStore extends ChangeNotifier {
 
   void _hydrateOperational() {
     cafe = db.cafe;
-    locale = db.locale;
+    locale = _startLocale(db.locale);
     admin = db.admin;
     cashiers = db.cashiers;
     tables = db.tables;

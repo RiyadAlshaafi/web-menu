@@ -183,4 +183,15 @@ void main() {
     expect(find.descendant(of: find.byType(TicketLineName), matching: find.byIcon(Icons.tune)), findsNothing);
     expect(store.hasChoices(store.menuItems.single), isFalse);
   });
+
+  testWidgets('the cashier header has a language switch only when the languages feature is on', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    const shell = CashierShell(location: '/cashier/takeout', child: SizedBox());
+    await pumpAdminScreen(tester, shell, store);
+    expect(find.byType(LanguageButton), findsOneWidget);
+
+    store.features = FeatureSet.fromKeys(const ['tables']);
+    await pumpAdminScreen(tester, shell, store);
+    expect(find.byType(LanguageButton), findsNothing);
+  });
 }
