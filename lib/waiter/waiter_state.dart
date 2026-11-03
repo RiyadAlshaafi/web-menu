@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/default_locale.dart';
 import '../core/money.dart';
 import '../lan/lan_protocol.dart';
 import '../models/models.dart';
@@ -145,7 +146,7 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
   static const _failuresBeforeSearch = 3;
 
   WaiterPhase phase = WaiterPhase.starting;
-  String locale = 'en';
+  String locale = defaultLocale;
 
   /// The admin's colours from the till, so the phone looks like the rest of the cafe's system.
   CafeSurfaces surfaces = CafeSurfaces.defaults;
@@ -188,7 +189,7 @@ class WaiterController extends ChangeNotifier with WidgetsBindingObserver {
     });
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_localeKey);
-    locale = languages.containsKey(saved) ? saved! : 'en';
+    locale = languages.containsKey(saved) ? saved! : defaultLocale;
     _applyBrand(prefs.getString(_brandKey));
     soundOn = prefs.getBool(_soundKey) ?? true;
     deviceName = prefs.getString(_nameKey) ?? '';

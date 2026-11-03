@@ -27,7 +27,7 @@ extension AppDatabaseLocal on AppDatabase {
     restaurantId = _localCafeId;
     final cafe = _store.readDoc('cafe');
     if (cafe is Map) _cafe = {..._cafe, ...Map<String, dynamic>.from(cafe)};
-    _locale = _store.readDoc('locale') as String? ?? 'en';
+    _locale = _store.readDoc('locale') as String? ?? defaultLocale;
     final admin = _localAdminDoc();
     anyAdmin = admin != null;
     // "Remember me" lasts until rememberUntil (half a day), not forever; older saves without

@@ -26,7 +26,7 @@ class WaiterApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: CafeTheme.forSurfaces(look.$2),
           locale: Locale(look.$1),
-          supportedLocales: const [Locale('en'), Locale('ar')],
+          supportedLocales: const [Locale('ar'), Locale('en')],
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

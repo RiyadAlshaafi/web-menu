@@ -141,9 +141,10 @@ Future<Uint8List> slipPdf(List<SlipLine> lines, {required int paperMm}) async {
 
 /// Label and value on one line; with Arabic in either, the value goes to the left.
 pw.Widget _pair(String label, String value, {required bool bold, required double size}) {
-  final labelText = pdfText(label, size: size, bold: bold);
-  final valueText = pdfText(value, size: size, bold: bold);
   final arabic = pdfHasArabic(label) || pdfHasArabic(value);
+  // On an Arabic line an English label (a dish with no Arabic name) still sits on the right.
+  final labelText = pdfText(label, size: size, bold: bold, align: arabic ? pw.TextAlign.right : null);
+  final valueText = pdfText(value, size: size, bold: bold, fixedWidth: true);
   return pw.Row(
     children: arabic ? [valueText, pw.Expanded(child: labelText)] : [pw.Expanded(child: labelText), valueText],
   );

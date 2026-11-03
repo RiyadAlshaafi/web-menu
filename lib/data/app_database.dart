@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/default_locale.dart';
 import '../core/money.dart';
 import '../core/sales_report.dart';
 import '../models/models.dart';
@@ -158,7 +159,7 @@ class AppDatabase {
     'taxRate': 0,
     'autoPrintReceipt': true,
   };
-  String _locale = 'en';
+  String _locale = defaultLocale;
   AdminAccount? _admin;
   bool _rememberAdmin = false;
   List<Cashier> _cashiers = [];
@@ -329,7 +330,7 @@ class AppDatabase {
     anyAdmin = false;
     adminFromOtherCafe = false;
     _cafe = {'name': '', 'serviceChargeRate': 0.0, 'taxRate': 0, 'autoPrintReceipt': true};
-    _locale = 'en';
+    _locale = defaultLocale;
     _admin = null;
     _cashiers = [];
     _tables = [];
@@ -619,7 +620,7 @@ class AppDatabase {
         .eq('id', id)
         .maybeSingle();
     if (restaurant == null) return;
-    _locale = restaurant['locale'] as String? ?? 'en';
+    _locale = restaurant['locale'] as String? ?? defaultLocale;
     _cafe = {
       'name': restaurant['name'] ?? '',
       'logoUrl': restaurant['logo_url'] ?? '',
@@ -2276,7 +2277,7 @@ class AppDatabase {
     boundHasAdmin = s['boundHasAdmin'] as bool? ?? false;
     anyAdmin = s['anyAdmin'] as bool? ?? false;
     _cafe = Map<String, dynamic>.from(s['cafe'] as Map? ?? const {});
-    _locale = s['locale'] as String? ?? 'en';
+    _locale = s['locale'] as String? ?? defaultLocale;
     _tables = [for (final r in rows('tables')) CafeTable.fromJson(r)];
     _categories = [for (final r in rows('categories')) MenuCategory.fromJson(r)];
     _kitchens = [for (final r in rows('kitchens')) Kitchen.fromJson(r)];

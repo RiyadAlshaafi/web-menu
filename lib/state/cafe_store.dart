@@ -7,6 +7,7 @@ import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/default_locale.dart';
 import '../platform/alert_sound.dart';
 import '../data/admin_reset.dart';
 import '../data/app_database.dart';
@@ -53,7 +54,7 @@ class CafeStore extends ChangeNotifier {
   CafeMoney get currency => CafeMoney(locale);
 
   late Map<String, dynamic> cafe;
-  String locale = 'en';
+  String locale = defaultLocale;
   AdminAccount? admin;
   List<Cashier> cashiers = [];
   List<CafeTable> tables = [];
