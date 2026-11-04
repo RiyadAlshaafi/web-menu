@@ -191,7 +191,7 @@ class CafeStore extends ChangeNotifier {
       await db.initLocal(await openLocalStateStore());
       await _checkAdminReset(resetFile ?? const AdminResetFile());
     } else {
-      await db.init(slot: features.slot);
+      await db.init(slot: features.slot, serverUrl: features.server?.url, serverKey: features.server?.key);
       await _initOffline();
       await _checkConnectionAtStart();
       // Don't open on an empty app: give the first data load up to 15 seconds.

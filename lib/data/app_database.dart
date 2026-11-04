@@ -72,12 +72,18 @@ class AppDatabase {
   static String _fileUrl = '';
   static String _fileAnonKey = '';
 
+  /// URL and key of the extra server picked in setup; empty means the built-in main server.
+  static String _serverUrl = '';
+  static String _serverKey = '';
+
   static String get _rawSupabaseUrl {
+    if (_serverUrl.isNotEmpty) return _serverUrl;
     if (_compiledUrl.trim().isNotEmpty) return _compiledUrl.trim();
     return _fileUrl.trim();
   }
 
   static String get supabaseAnonKey {
+    if (_serverKey.isNotEmpty) return _serverKey;
     if (_compiledAnonKey.trim().isNotEmpty) return _compiledAnonKey.trim();
     return _fileAnonKey.trim();
   }
@@ -206,11 +212,14 @@ class AppDatabase {
   }
 
   /// [slot] is the cafe slot picked in setup; it wins over a link saved earlier on this device.
-  Future<void> init({bool memory = false, int? slot}) async {
+  /// [serverUrl]/[serverKey] point at an extra server picked in setup; null means the main one.
+  Future<void> init({bool memory = false, int? slot, String? serverUrl, String? serverKey}) async {
     if (memory) {
       _clear();
       return;
     }
+    _serverUrl = serverUrl ?? '';
+    _serverKey = serverUrl == null ? '' : serverKey ?? '';
     if (_compiledUrl.trim().isEmpty || _compiledAnonKey.trim().isEmpty) {
       final env = await loadLocalEnv();
       _fileUrl = env['SUPABASE_URL'] ?? env['NEXT_PUBLIC_SUPABASE_URL'] ?? '';

@@ -102,7 +102,7 @@ enum AppFeature {
 
 /// The features one install may show. Immutable.
 class FeatureSet {
-  const FeatureSet._(this.mode, this._enabled, [this.slot]);
+  const FeatureSet._(this.mode, this._enabled, [this.slot, this.server]);
 
   /// Highest cafe slot number (slots are 1-8).
   static const maxSlot = 8;
@@ -111,14 +111,21 @@ class FeatureSet {
   static final FeatureSet all = FeatureSet._(InstallMode.online, Set.unmodifiable(AppFeature.values));
 
   /// Listed keys are on; unknown keys are ignored. [slot] counts only online and only 1-8.
-  factory FeatureSet.fromKeys(Iterable<String> keys, {InstallMode mode = InstallMode.online, int? slot}) {
+  factory FeatureSet.fromKeys(
+    Iterable<String> keys, {
+    InstallMode mode = InstallMode.online,
+    int? slot,
+    InstallServer? server,
+  }) {
     final enabled = keys.map(AppFeature.fromKey).whereType<AppFeature>().toSet();
-    final validSlot = mode == InstallMode.online && slot != null && slot >= 1 && slot <= maxSlot ? slot : null;
-    return FeatureSet._(mode, Set.unmodifiable(enabled), validSlot);
+    final online = mode == InstallMode.online;
+    final validSlot = online && slot != null && slot >= 1 && slot <= maxSlot ? slot : null;
+    return FeatureSet._(mode, Set.unmodifiable(enabled), validSlot, online ? server : null);
   }
 
   /// Reads the installer's `features.json`
-  /// (`{"mode": "online", "features": [...], "listed": [...], "slot": 3}`). "listed" names the
+  /// (`{"mode": "online", "features": [...], "listed": [...], "slot": 3}`, plus
+  /// `"server": 2, "server_url": ..., "server_key": ...` when set up on an extra server). "listed" names the
   /// boxes the setup showed; a file without it predates the [AppFeature.addedLater] features, which
   /// then stay on. A missing or broken file means every feature is on, so a bad write never
   /// takes features away from a cafe.
@@ -139,6 +146,7 @@ class FeatureSet {
         ],
         mode: mode,
         slot: slot is int ? slot : null,
+        server: InstallServer.fromJson(decoded),
       );
     } on FormatException {
       return all;
@@ -150,6 +158,9 @@ class FeatureSet {
 
   /// The cafe slot picked in an online setup; the till links to it at every start. Null when none.
   final int? slot;
+
+  /// The extra server (Supabase project) picked in setup; null means the built-in main one.
+  final InstallServer? server;
 
   /// On only when the feature and everything it needs are on, and the mode offers it.
   bool allows(AppFeature feature) {
@@ -165,5 +176,32 @@ class FeatureSet {
         mode == InstallMode.offline || other.mode == InstallMode.offline ? InstallMode.offline : InstallMode.online,
         Set.unmodifiable(_enabled.intersection(other._enabled)),
         slot ?? other.slot,
+        server ?? other.server,
       );
+}
+
+/// An extra Supabase project picked in setup (server 2 and up). Server 1 is built into the app.
+/// Only the publishable key is stored: it is public by design.
+class InstallServer {
+  const InstallServer._(this.id, this.url, this.key);
+
+  final int id;
+  final String url;
+  final String key;
+
+  static final _url = RegExp(r'^https://[a-z0-9-]+\.supabase\.co$');
+  static final _key = RegExp(r'^sb_publishable_[A-Za-z0-9_-]+$');
+
+  /// Reads `server`, `server_url` and `server_key` from features.json. Anything missing or
+  /// malformed means the main server, so a bad file never points a till somewhere odd.
+  static InstallServer? fromJson(Map<dynamic, dynamic> json) {
+    final id = json['server'];
+    final url = json['server_url'];
+    final key = json['server_key'];
+    if (id is! int || id < 2 || url is! String || key is! String) return null;
+    final cleanUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+    final cleanKey = key.trim();
+    if (!_url.hasMatch(cleanUrl) || !_key.hasMatch(cleanKey)) return null;
+    return InstallServer._(id, cleanUrl, cleanKey);
+  }
 }

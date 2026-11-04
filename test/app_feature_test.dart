@@ -203,4 +203,45 @@ void main() {
     expect(both.allows(AppFeature.qrOrdering), isFalse);
     expect(both.allows(AppFeature.expenses), isTrue);
   });
+
+  group('server', () {
+    const url = 'https://abcdefgh.supabase.co';
+    const key = 'sb_publishable_AbC_12-x';
+
+    test('file without server keys stays on the main server', () {
+      final set = FeatureSet.fromJson('{"mode": "online", "features": [], "slot": 2}');
+      expect(set.server, isNull);
+      expect(set.slot, 2);
+    });
+
+    test('reads an extra server picked in setup', () {
+      final set = FeatureSet.fromJson(
+        '{"mode": "online", "features": [], "slot": 3, "server": 2, "server_url": "$url/", "server_key": "$key"}',
+      );
+      expect(set.server?.id, 2);
+      expect(set.server?.url, url);
+      expect(set.server?.key, key);
+    });
+
+    test('ignores a non-Supabase url', () {
+      final set = FeatureSet.fromJson(
+        '{"mode": "online", "features": [], "server": 2, "server_url": "http://evil.example.com", "server_key": "$key"}',
+      );
+      expect(set.server, isNull);
+    });
+
+    test('ignores a secret key', () {
+      final set = FeatureSet.fromJson(
+        '{"mode": "online", "features": [], "server": 2, "server_url": "$url", "server_key": "sb_secret_xyz"}',
+      );
+      expect(set.server, isNull);
+    });
+
+    test('offline installs never use a server', () {
+      final set = FeatureSet.fromJson(
+        '{"mode": "offline", "features": [], "server": 2, "server_url": "$url", "server_key": "$key"}',
+      );
+      expect(set.server, isNull);
+    });
+  });
 }

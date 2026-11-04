@@ -59,7 +59,9 @@ Type: files; Name: "{app}\admin_reset.json"
 
 [Code]
 // Pages: update choice (only when Cafe POS is already installed) -> password (checked online) ->
-// Online/Offline -> cafe slot (online only) -> admin reset (offline only) -> feature checkboxes.
+// Online/Offline -> server (online, only when extra servers exist) -> cafe slot (online only) ->
+// admin reset (offline only) -> feature checkboxes. Server 1 is the built-in project; extra ones are
+// rows in public.servers on it (read via list_servers), so adding a server needs no new build.
 // Updating with "keep settings" on a till that was set up (it has features.json) asks no password and
 // skips the rest like a silent update: nothing rewritten. Without features.json the app would turn every
 // feature on, so there the password is still asked. The answers are written to {app}\features.json, which
@@ -81,8 +83,13 @@ var
   UpdatePage: TInputOptionWizardPage;
   PasswordPage: TInputQueryWizardPage;
   ModePage: TInputOptionWizardPage;
+  ServerPage: TInputOptionWizardPage;
+  ServersLoaded: Boolean;
+  ServerIds: array of Integer;
+  ServerUrls: array of String;
+  ServerKeys: array of String;
   SlotPage: TInputOptionWizardPage;
-  SlotNamesLoaded: Boolean;
+  SlotNamesFor: Integer;
   ResetPage: TInputOptionWizardPage;
   ResetTicket: String;
   FeaturePage: TWizardPage;
@@ -162,6 +169,116 @@ begin
   if At > 0 then Result := Copy(Json, 1, At - 1);
 end;
 
+function FeaturesFile: String;
+begin
+  Result := AddBackslash(WizardDirValue) + 'features.json';
+end;
+
+function SavedFeatures: String;
+var
+  Text: AnsiString;
+begin
+  Result := '';
+  if LoadStringFromFile(FeaturesFile, Text) then Result := String(Text);
+end;
+
+// Value of the number field Name in a compact JSON answer ("name":12 or "name": 12; 0 when missing).
+function JsonNumberField(Json, Name: String): Integer;
+var
+  At, I: Integer;
+  Digits: String;
+begin
+  Result := 0;
+  At := Pos('"' + Name + '":', Json);
+  if At = 0 then Exit;
+  Digits := '';
+  for I := At + Length(Name) + 3 to Length(Json) do
+    if (Json[I] >= '0') and (Json[I] <= '9') then Digits := Digits + Json[I]
+    else if (Json[I] <> ' ') or (Digits <> '') then Break;
+  Result := StrToIntDef(Digits, 0);
+end;
+
+// Index in ServerIds of the server picked on the server page (0 = built-in server 1).
+function ChosenServer: Integer;
+begin
+  Result := ServerPage.SelectedValueIndex;
+  if (Result < 0) or (Result >= GetArrayLength(ServerIds)) then Result := 0;
+end;
+
+function ServerUrl: String;
+begin
+  if GetArrayLength(ServerUrls) = 0 then Result := ServerOrigin('{#SupabaseUrl}')
+  else Result := ServerUrls[ChosenServer];
+end;
+
+function ServerKey: String;
+begin
+  if GetArrayLength(ServerKeys) = 0 then Result := '{#SupabaseKey}'
+  else Result := ServerKeys[ChosenServer];
+end;
+
+// The server saved by an earlier setup ("server": 2), or 1.
+function SavedServer: Integer;
+begin
+  Result := JsonNumberField(SavedFeatures, 'server');
+  if Result < 2 then Result := 1;
+end;
+
+procedure AddServer(Id: Integer; Name, Url, Key: String);
+var
+  N: Integer;
+begin
+  N := GetArrayLength(ServerIds);
+  SetArrayLength(ServerIds, N + 1);
+  SetArrayLength(ServerUrls, N + 1);
+  SetArrayLength(ServerKeys, N + 1);
+  ServerIds[N] := Id;
+  ServerUrls[N] := Url;
+  ServerKeys[N] := Key;
+  ServerPage.Add('Server ' + IntToStr(Id) + ' - ' + Name);
+end;
+
+// Server 1 is built in; extra servers come from public.list_servers on it. When that list can't be
+// read, only server 1 is offered.
+procedure LoadServers;
+var
+  Http: Variant;
+  Answer, Row: String;
+  At, Id, I: Integer;
+begin
+  if ServersLoaded then Exit;
+  ServersLoaded := True;
+  AddServer(1, 'main', ServerOrigin('{#SupabaseUrl}'), '{#SupabaseKey}');
+  try
+    Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
+    Http.Open('POST', ServerOrigin('{#SupabaseUrl}') + '/rest/v1/rpc/list_servers', False);
+    Http.SetTimeouts(5000, 5000, 8000, 8000);
+    Http.SetRequestHeader('apikey', '{#SupabaseKey}');
+    Http.SetRequestHeader('Content-Type', 'application/json');
+    Http.Send('{}');
+    if Http.Status = 200 then Answer := Http.ResponseText else Answer := '';
+  except
+    Answer := '';
+  end;
+  // A compact JSON list of flat objects: take each {...} in turn.
+  At := Pos('{', Answer);
+  while At > 0 do
+  begin
+    Answer := Copy(Answer, At + 1, Length(Answer));
+    At := Pos('}', Answer);
+    if At = 0 then Break;
+    Row := Copy(Answer, 1, At - 1);
+    Answer := Copy(Answer, At + 1, Length(Answer));
+    Id := JsonNumberField(Row, 'id');
+    if (Id >= 2) and (JsonTextField(Row, 'url') <> '') and (JsonTextField(Row, 'publishable_key') <> '') then
+      AddServer(Id, JsonTextField(Row, 'name'), JsonTextField(Row, 'url'), JsonTextField(Row, 'publishable_key'));
+    At := Pos('{', Answer);
+  end;
+  ServerPage.SelectedValueIndex := 0;
+  for I := 0 to GetArrayLength(ServerIds) - 1 do
+    if ServerIds[I] = SavedServer then ServerPage.SelectedValueIndex := I;
+end;
+
 // "Slot 3 - Cafe name (in use)" from public.restaurant_for_slot; just "Slot 3" when the server can't say.
 function SlotLabel(Slot: Integer): String;
 var
@@ -171,9 +288,9 @@ begin
   Result := 'Slot ' + IntToStr(Slot);
   try
     Http := CreateOleObject('WinHttp.WinHttpRequest.5.1');
-    Http.Open('POST', ServerOrigin('{#SupabaseUrl}') + '/rest/v1/rpc/restaurant_for_slot', False);
+    Http.Open('POST', ServerUrl + '/rest/v1/rpc/restaurant_for_slot', False);
     Http.SetTimeouts(5000, 5000, 8000, 8000);
-    Http.SetRequestHeader('apikey', '{#SupabaseKey}');
+    Http.SetRequestHeader('apikey', ServerKey);
     Http.SetRequestHeader('Content-Type', 'application/json');
     Http.Send('{"p_slot": ' + IntToStr(Slot) + '}');
     if Http.Status <> 200 then Exit;
@@ -191,27 +308,19 @@ begin
     Result := Result + ' - empty';
 end;
 
+// Names come from the chosen server. Picking another server clears the slot: slot 3 there is
+// a different cafe.
 procedure LoadSlotNames;
 var
   I: Integer;
 begin
-  if SlotNamesLoaded then Exit;
+  if SlotNamesFor = ChosenServer + 1 then Exit;
   for I := 0 to SlotCount - 1 do
+  begin
+    if SlotNamesFor <> 0 then SlotPage.Values[I] := False;
     SlotPage.CheckListBox.ItemCaption[I] := SlotLabel(I + 1);
-  SlotNamesLoaded := True;
-end;
-
-function FeaturesFile: String;
-begin
-  Result := AddBackslash(WizardDirValue) + 'features.json';
-end;
-
-function SavedFeatures: String;
-var
-  Text: AnsiString;
-begin
-  Result := '';
-  if LoadStringFromFile(FeaturesFile, Text) then Result := String(Text);
+  end;
+  SlotNamesFor := ChosenServer + 1;
 end;
 
 function FeatureLabel(Key: String): String;
@@ -459,6 +568,10 @@ begin
   Result := '{"mode": "' + Mode + '", "features": [' + List + '], "listed": [' + Listed + ']';
   if not OfflineChosen and (SlotPage.SelectedValueIndex >= 0) then
     Result := Result + ', "slot": ' + IntToStr(SlotPage.SelectedValueIndex + 1);
+  if not OfflineChosen and (ChosenServer > 0) then
+    Result := Result + ', "server": ' + IntToStr(ServerIds[ChosenServer]) +
+      ', "server_url": ' + JsonText(ServerUrls[ChosenServer]) +
+      ', "server_key": ' + JsonText(ServerKeys[ChosenServer]);
   Result := Result + '}';
 end;
 
@@ -512,7 +625,12 @@ begin
   if Pos('"offline"', SavedFeatures) > 0 then ModePage.SelectedValueIndex := 1
   else ModePage.SelectedValueIndex := 0;
 
-  SlotPage := CreateInputOptionPage(ModePage.ID, 'Cafe slot',
+  ServerPage := CreateInputOptionPage(ModePage.ID, 'Server',
+    'Which server is this cafe on?',
+    'Each server holds up to 8 cafes. Pick the one where this cafe''s slot is.',
+    True, False);
+
+  SlotPage := CreateInputOptionPage(ServerPage.ID, 'Cafe slot',
     'Which cafe is this till for?',
     'Pick the cafe slot this till belongs to. Its sales and menu come from that cafe.',
     True, False);
@@ -520,6 +638,7 @@ begin
     SlotPage.Add('Slot ' + IntToStr(I));
   // No default: a wrong slot would show another cafe's data.
   if SavedSlot > 0 then SlotPage.SelectedValueIndex := SavedSlot - 1;
+  SlotNamesFor := 0;
 
   ResetPage := CreateInputOptionPage(SlotPage.ID, 'Admin PIN',
     'Forgot the offline admin PIN?',
@@ -543,10 +662,16 @@ begin
   if PageID = UpdatePage.ID then
     Result := not (Installed and SetUpTill)
   else if KeepSettings then
-    Result := (PageID = PasswordPage.ID) or (PageID = ModePage.ID) or (PageID = SlotPage.ID) or
+    Result := (PageID = PasswordPage.ID) or (PageID = ModePage.ID) or (PageID = ServerPage.ID) or
+      (PageID = SlotPage.ID) or
       (PageID = ResetPage.ID) or (PageID = FeaturePage.ID)
   else
-    Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen);
+  begin
+    // The server list is read once online is picked; with only server 1 the page is skipped.
+    if (PageID = ServerPage.ID) and not OfflineChosen then LoadServers;
+    Result := ((PageID = SlotPage.ID) and OfflineChosen) or ((PageID = ResetPage.ID) and not OfflineChosen) or
+      ((PageID = ServerPage.ID) and (OfflineChosen or (GetArrayLength(ServerIds) < 2)));
+  end;
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
