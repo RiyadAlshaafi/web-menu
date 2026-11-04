@@ -2843,6 +2843,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get soundSettingsTitle => 'أصوات التنبيه';
 
   @override
+  String get windowFullScreen => 'ملء الشاشة';
+
+  @override
+  String get windowExitFullScreen => 'الخروج من ملء الشاشة';
+
+  @override
   String get soundSettingsAll => 'تشغيل أصوات التنبيه';
 
   @override

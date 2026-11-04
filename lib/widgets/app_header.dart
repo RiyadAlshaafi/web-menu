@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n_ext.dart';
+import '../platform/app_window.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../core/time_format.dart';
@@ -116,6 +118,26 @@ class HeaderAction extends StatelessWidget {
       ),
     );
     return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
+  }
+}
+
+/// Switches the Windows till between full screen and a normal window by touch; hidden elsewhere.
+class FullscreenButton extends StatelessWidget {
+  const FullscreenButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final window = AppWindow.instance;
+    if (!window.supported) return const SizedBox.shrink();
+    window.load();
+    return ListenableBuilder(
+      listenable: window,
+      builder: (context, _) => HeaderAction(
+        icon: window.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+        tooltip: window.fullscreen ? context.l10n.windowExitFullScreen : context.l10n.windowFullScreen,
+        onPressed: window.toggle,
+      ),
+    );
   }
 }
 

@@ -52,6 +52,13 @@ class Win32Window {
   // If true, closing this window will quit the application.
   void SetQuitOnClose(bool quit_on_close);
 
+  // Covers the whole monitor with no frame or title bar (a till screen), or
+  // goes back to the normal window it had before.
+  void SetFullscreen(bool fullscreen);
+
+  // True while the window covers the whole monitor.
+  bool IsFullscreen() const;
+
   // Return a RECT representing the bounds of the current client area.
   RECT GetClientArea();
 
@@ -91,6 +98,11 @@ class Win32Window {
   static void UpdateTheme(HWND const window);
 
   bool quit_on_close_ = false;
+
+  bool fullscreen_ = false;
+
+  // Where the window was before going full screen, to go back to it.
+  WINDOWPLACEMENT windowed_placement_ = {sizeof(WINDOWPLACEMENT)};
 
   // window handle for top level window.
   HWND window_handle_ = nullptr;

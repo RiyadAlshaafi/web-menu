@@ -1286,6 +1286,8 @@
   "waiterSoundOn": "Sound on",
   "waiterSoundOff": "Sound off",
   "soundSettingsTitle": "Alert sounds",
+  "windowFullScreen": "Full screen",
+  "windowExitFullScreen": "Exit full screen",
   "soundSettingsAll": "Play alert sounds",
   "soundSettingsOrders": "New orders",
   "soundSettingsCalls": "Guest calls",

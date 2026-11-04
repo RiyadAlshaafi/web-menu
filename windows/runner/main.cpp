@@ -31,6 +31,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
+  // A till fills its screen; the full-screen button in the app's top bar
+  // switches back to a normal window.
+  window.SetFullscreen(true);
 
   ::MSG msg;
   while (::GetMessage(&msg, nullptr, 0, 0)) {

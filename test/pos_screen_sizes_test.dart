@@ -8,6 +8,7 @@ import 'package:menu_web_v1/data/app_database.dart';
 import 'package:menu_web_v1/data/local_state_store.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
+import 'package:menu_web_v1/platform/app_window.dart';
 import 'package:menu_web_v1/screens/cashier_screens.dart';
 import 'package:menu_web_v1/screens/dish_availability_screen.dart';
 import 'package:menu_web_v1/screens/sales_log_screen.dart';
@@ -168,6 +169,8 @@ void main() {
 
   setUpAll(() async {
     await loadAppFonts();
+    // Lay out the till's full-screen button too, as on Windows.
+    AppWindow.debugSupported = true;
     appData = Directory.systemTemp.createTempSync('pos_screen_sizes_test');
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(

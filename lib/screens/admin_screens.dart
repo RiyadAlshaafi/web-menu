@@ -96,6 +96,7 @@ class AdminShell extends StatelessWidget {
       header: AppHeader(
         title: section.crumb(context),
         showMenu: drawer,
+        actions: const [FullscreenButton()],
       ),
       // A short or narrow window scrolls the page instead of cutting its bottom off.
       body: ScrollWhenShort(minHeightOf: (c) => c.maxWidth < 900 ? 900 : 620, child: child),

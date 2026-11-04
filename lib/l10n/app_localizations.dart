@@ -5054,6 +5054,18 @@ abstract class AppLocalizations {
   /// **'Alert sounds'**
   String get soundSettingsTitle;
 
+  /// No description provided for @windowFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get windowFullScreen;
+
+  /// No description provided for @windowExitFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit full screen'**
+  String get windowExitFullScreen;
+
   /// No description provided for @soundSettingsAll.
   ///
   /// In en, this message translates to:

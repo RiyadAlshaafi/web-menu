@@ -263,6 +263,40 @@ void Win32Window::SetQuitOnClose(bool quit_on_close) {
   quit_on_close_ = quit_on_close;
 }
 
+void Win32Window::SetFullscreen(bool fullscreen) {
+  if (!window_handle_ || fullscreen == fullscreen_) {
+    return;
+  }
+  const LONG style = GetWindowLong(window_handle_, GWL_STYLE);
+  if (fullscreen) {
+    MONITORINFO monitor = {sizeof(monitor)};
+    if (!GetWindowPlacement(window_handle_, &windowed_placement_) ||
+        !GetMonitorInfo(
+            MonitorFromWindow(window_handle_, MONITOR_DEFAULTTOPRIMARY),
+            &monitor)) {
+      return;
+    }
+    SetWindowLong(window_handle_, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+    const RECT area = monitor.rcMonitor;
+    SetWindowPos(window_handle_, HWND_TOP, area.left, area.top,
+                 area.right - area.left, area.bottom - area.top,
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  } else {
+    SetWindowLong(window_handle_, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+    // The placement saved before the window was first shown says "hidden".
+    windowed_placement_.showCmd = SW_SHOWNORMAL;
+    SetWindowPlacement(window_handle_, &windowed_placement_);
+    SetWindowPos(window_handle_, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER |
+                     SWP_FRAMECHANGED);
+  }
+  fullscreen_ = fullscreen;
+}
+
+bool Win32Window::IsFullscreen() const {
+  return fullscreen_;
+}
+
 bool Win32Window::OnCreate() {
   // No-op; provided for subclasses.
   return true;

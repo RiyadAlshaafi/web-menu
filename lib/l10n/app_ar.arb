@@ -898,6 +898,8 @@
   "waiterAlertGo": "اضغط لفتح الطاولة",
   "waiterSoundOn": "الصوت يعمل",
   "waiterSoundOff": "الصوت متوقف",
+  "windowFullScreen": "ملء الشاشة",
+  "windowExitFullScreen": "الخروج من ملء الشاشة",
   "soundSettingsTitle": "أصوات التنبيه",
   "soundSettingsAll": "تشغيل أصوات التنبيه",
   "soundSettingsOrders": "الطلبات الجديدة",

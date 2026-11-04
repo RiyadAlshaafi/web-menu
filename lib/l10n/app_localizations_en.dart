@@ -2859,6 +2859,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soundSettingsTitle => 'Alert sounds';
 
   @override
+  String get windowFullScreen => 'Full screen';
+
+  @override
+  String get windowExitFullScreen => 'Exit full screen';
+
+  @override
   String get soundSettingsAll => 'Play alert sounds';
 
   @override

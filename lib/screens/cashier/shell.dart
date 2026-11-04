@@ -104,7 +104,7 @@ class CashierShell extends StatelessWidget {
       header: AppHeader(
         title: section.crumb(context),
         showMenu: drawer,
-        actions: [const HeaderClock(), if (!waiter) const SoundSettingsButton(), if (!waiter) const WaiterPhonesButton(), if (context.select<CafeStore, bool>((store) => store.allows(AppFeature.languages))) const LanguageButton()],
+        actions: [const HeaderClock(), const FullscreenButton(), if (!waiter) const SoundSettingsButton(), if (!waiter) const WaiterPhonesButton(), if (context.select<CafeStore, bool>((store) => store.allows(AppFeature.languages))) const LanguageButton()],
       ),
       banners: const [OfflineStatusBanner(), UpdateReadyStrip(), WaiterHubBanner(), NewOrderToaster()],
       // A short or narrow window scrolls the page instead of cutting its bottom off;
