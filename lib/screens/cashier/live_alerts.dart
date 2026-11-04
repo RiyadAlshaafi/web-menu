@@ -37,7 +37,8 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = constraints.maxWidth < 900;
+              final stacked = constraints.maxWidth < 600;
+              final slim = constraints.maxWidth < 900;
               final cards = [
                 _stat(
                   context.l10n.cashierAssistanceCalls,
@@ -46,6 +47,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                   Icons.notifications_none_outlined,
                   _AlertTone.call,
                   expand: !stacked,
+                  slim: slim,
                 ),
                 _stat(
                   context.l10n.cashierIncomingOrders,
@@ -56,6 +58,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                   Icons.receipt_outlined,
                   _AlertTone.order,
                   expand: !stacked,
+                  slim: slim,
                 ),
                 _stat(
                   context.l10n.cashierBillOutRequests,
@@ -64,6 +67,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                   Icons.payments_outlined,
                   _AlertTone.bill,
                   expand: !stacked,
+                  slim: slim,
                 ),
               ];
               if (stacked) {
@@ -96,7 +100,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final stack = constraints.maxWidth < 980;
+                final stack = constraints.maxWidth < 640;
                 final alerts = ListView(
                     children: [
                       if (store.activeTables.isEmpty)
@@ -199,10 +203,18 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
                       ],
                     ],
                 );
+                final current = selected;
                 final side = TawlaPanel(
-                  child: selected == null
+                  child: current == null
                       ? EmptyHint(orders.isEmpty && bills.isEmpty ? context.l10n.noOrders : context.l10n.cashierTapOrderHint)
-                      : _detail(context, store, selected),
+                      : LayoutBuilder(
+                          builder: (context, box) {
+                            // A short panel scrolls as a whole so the pay and print buttons stay reachable.
+                            final tall = box.maxHeight >= 460;
+                            final detail = _detail(context, store, current, scrollLines: tall);
+                            return tall ? detail : SingleChildScrollView(child: detail);
+                          },
+                        ),
                 );
                 if (stack) {
                   return Column(
@@ -275,10 +287,10 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     };
   }
 
-  Widget _stat(String label, String value, String? badge, IconData icon, _AlertTone tone, {bool expand = true}) {
+  Widget _stat(String label, String value, String? badge, IconData icon, _AlertTone tone, {bool expand = true, bool slim = false}) {
     final (_, soft, ink) = tone.colors;
     final card = Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      padding: slim ? const EdgeInsets.all(12) : const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -287,23 +299,23 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
       child: Row(
         children: [
           Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, color: ink, size: 24),
+            width: slim ? 40 : 52,
+            height: slim ? 40 : 52,
+            decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(slim ? 12 : 14)),
+            child: Icon(icon, color: ink, size: slim ? 20 : 24),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: slim ? 10 : 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: TawlaTokens.muted, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: CafeColors.ink)),
+                Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: slim ? 20 : 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: CafeColors.ink)),
               ],
             ),
           ),
-          if (badge != null) ...[
+          if (badge != null && !slim) ...[
             const SizedBox(width: 8),
             Container(
               height: 26,
@@ -512,7 +524,7 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
     );
   }
 
-  Widget _detail(BuildContext context, CafeStore store, CafeOrder order) {
+  Widget _detail(BuildContext context, CafeStore store, CafeOrder order, {bool scrollLines = true}) {
     final subtotal = store.tabSubtotal(order.tableId);
     final service = store.serviceCharge(subtotal);
     final total = store.tabTotal(order.tableId);
@@ -570,12 +582,15 @@ class _CashierDashboardScreenState extends State<CashierDashboardScreen> {
         const SizedBox(height: 14),
         EyebrowLabel(context.l10n.cashierOrderItemsCount('${order.itemCount}')),
         const SizedBox(height: 10),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.only(right: 4),
-            children: _orderLineRows(context, store, order),
-          ),
-        ),
+        if (scrollLines)
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.only(right: 4),
+              children: _orderLineRows(context, store, order),
+            ),
+          )
+        else
+          ..._orderLineRows(context, store, order),
         const Divider(),
         _cashKv(context.l10n.cashierSubtotal, store.currency.format(subtotal)),
         if (store.serviceChargeRate > 0)

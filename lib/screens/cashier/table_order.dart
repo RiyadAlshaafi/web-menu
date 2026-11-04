@@ -85,7 +85,8 @@ class _TableOrderScreenState extends State<TableOrderScreen> {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 260,
-              mainAxisExtent: 124,
+              // Room for the category line and a two-line name in the taller Arabic font.
+              mainAxisExtent: 132,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),

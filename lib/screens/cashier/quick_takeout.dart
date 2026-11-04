@@ -449,6 +449,9 @@ class _TakeoutDishButton extends StatelessWidget {
   /// Set when the dish has ingredients or extras: holding the card opens them.
   final VoidCallback? onHold;
 
+  /// Inner height a card needs to show a description under a category and a two-line name.
+  static const _descriptionMinHeight = 112.0;
+
   @override
   Widget build(BuildContext context) {
     final surfaces = CafeSurfaces.of(context);
@@ -488,7 +491,9 @@ class _TakeoutDishButton extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.all(14),
-                child: Column(
+                // A short card keeps the name and price; the description shows only when it fits.
+                child: LayoutBuilder(
+                  builder: (context, box) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (category.isNotEmpty) ...[
@@ -498,7 +503,7 @@ class _TakeoutDishButton extends StatelessWidget {
                           category.toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: TawlaTokens.muted),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, height: 1.25, letterSpacing: 1.2, color: TawlaTokens.muted),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -512,13 +517,14 @@ class _TakeoutDishButton extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, height: 1.25, color: enabled ? CafeColors.ink : CafeColors.inkMuted),
                       ),
                     ),
-                    if (description.isNotEmpty) ...[
+                    if (description.isNotEmpty && box.maxHeight >= _descriptionMinHeight) ...[
                       const SizedBox(height: 4),
-                      Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12)),
+                      Text(description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: CafeColors.inkMuted, fontSize: 12, height: 1.25)),
                     ],
                     const Spacer(),
-                    Text(price, style: TextStyle(color: surfaces.header, fontWeight: FontWeight.w800, fontSize: 18)),
+                    Text(price, style: TextStyle(color: surfaces.header, fontWeight: FontWeight.w800, fontSize: 18, height: 1.25)),
                   ],
+                ),
                 ),
               ),
               if (picked)

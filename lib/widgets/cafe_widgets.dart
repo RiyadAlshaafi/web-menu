@@ -101,23 +101,40 @@ class CafeLogo extends StatelessWidget {
 }
 
 /// Keeps a wide table readable and scrolls sideways when the window is narrow.
-class WideTable extends StatelessWidget {
+class WideTable extends StatefulWidget {
   const WideTable({super.key, required this.minWidth, required this.child});
 
   final double minWidth;
   final Widget child;
 
   @override
+  State<WideTable> createState() => _WideTableState();
+}
+
+class _WideTableState extends State<WideTable> {
+  // One controller shared by the Scrollbar and the scroll view, so the bar always has a position.
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth < minWidth ? minWidth : constraints.maxWidth;
+        final narrow = constraints.maxWidth < widget.minWidth;
+        final width = narrow ? widget.minWidth : constraints.maxWidth;
         return Scrollbar(
-          thumbVisibility: constraints.maxWidth < minWidth,
+          controller: _controller,
+          thumbVisibility: narrow,
           notificationPredicate: (notification) => notification.metrics.axis == Axis.horizontal,
           child: SingleChildScrollView(
+            controller: _controller,
             scrollDirection: Axis.horizontal,
-            child: SizedBox(width: width, height: constraints.maxHeight, child: child),
+            child: SizedBox(width: width, height: constraints.maxHeight, child: widget.child),
           ),
         );
       },
