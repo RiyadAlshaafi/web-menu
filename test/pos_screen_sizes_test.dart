@@ -13,6 +13,7 @@ import 'package:menu_web_v1/screens/dish_availability_screen.dart';
 import 'package:menu_web_v1/screens/sales_log_screen.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 import 'package:menu_web_v1/theme/cafe_theme.dart';
+import 'package:menu_web_v1/widgets/cafe_widgets.dart';
 import 'package:provider/provider.dart';
 
 final db = AppDatabase.instance;
@@ -90,6 +91,21 @@ Future<CafeStore> seedBusyCafe(String locale) async {
   }
   expect(await store.signInCashier(), isTrue, reason: store.loginError);
   store.locale = locale;
+
+  // A settled sale (print, refund and void buttons) and an expense, so Shift Sales has rows.
+  store.addToCart('t2', dishes.first);
+  store.addToCart('t2', dishes.last);
+  expect(await store.sendCartToKitchen('t2'), isNotNull);
+  expect(await store.settleCash(tableId: 't2', cashReceived: 100000), isNull);
+  expect(store.expenseCategories, isNotEmpty);
+  expect(
+    await store.addShiftExpense(
+      categoryId: store.expenseCategories.first.id,
+      amount: 245.75,
+      description: 'Fresh vegetables, milk and bread from the morning market delivery',
+    ),
+    isNull,
+  );
   return store;
 }
 
@@ -127,6 +143,23 @@ List<String> takeErrors(WidgetTester tester) {
     errors.add(error.toString().split('\n').take(3).join(' '));
   }
   return errors;
+}
+
+/// The Shift Sales ledger lists sales and expenses. From 1024px wide every column, Edit button
+/// included, must show without scrolling sideways, and the totals must leave the list room.
+List<String> shiftLedgerProblems(WidgetTester tester, Size size) {
+  final problems = <String>[];
+  final table = find.byType(WideTable);
+  if (table.evaluate().isEmpty) return ['the ledger is missing'];
+  final sideways = find.descendant(of: table, matching: find.byType(Scrollable)).evaluate()
+      .map((element) => (element as StatefulElement).state as ScrollableState)
+      .where((state) => state.position.axis == Axis.horizontal);
+  if (size.width >= 1024 && sideways.any((state) => state.position.maxScrollExtent > 0)) {
+    problems.add('the ledger scrolls sideways');
+  }
+  final height = tester.getSize(table).height;
+  if (height < 0.3 * size.height) problems.add('the ledger is only ${height.toInt()}px tall');
+  return problems;
 }
 
 void main() {
@@ -173,6 +206,11 @@ void main() {
           }
           for (final error in takeErrors(tester)) {
             failures.add('$locale ${size.width.toInt()}x${size.height.toInt()} $page: $error');
+          }
+          if (page == '/pos/shifts') {
+            for (final problem in shiftLedgerProblems(tester, size)) {
+              failures.add('$locale ${size.width.toInt()}x${size.height.toInt()} $page: $problem');
+            }
           }
           // A fresh router per page: drop the old tree so its state does not carry over.
           await tester.pumpWidget(const SizedBox());

@@ -28,7 +28,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
           const SizedBox(height: 4),
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = constraints.maxWidth < 900;
+              final stacked = constraints.maxWidth < 600;
               final cards = [
                 _mini(
                   context.l10n.cashierTotalShiftGrossSales,
@@ -82,8 +82,11 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                     DateTime at(Object item) => item is Payment ? item.paidAt : (item as ShiftExpense).createdAt;
                     return at(b).compareTo(at(a));
                   });
+                // Below the full width the columns tighten and row buttons show icons only, so a
+                // 1024px till sees every column without scrolling sideways.
+                final compact = constraints.maxWidth < _fullLedgerWidth;
                 final ledger = WideTable(
-                  minWidth: 920,
+                  minWidth: compact ? 700 : _fullLedgerWidth,
                   child: Container(
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -93,6 +96,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                             children: [
                               _ledgerRow(
                                 header: true,
+                                compact: compact,
                                 first: TableHead(context.l10n.cashierColOrderTable),
                                 time: TableHead(context.l10n.cashierColTime),
                                 method: TableHead(context.l10n.salesColMethod),
@@ -102,9 +106,9 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                               ),
                               for (final event in events)
                                 if (event is ShiftExpense)
-                                  _expenseLedgerRow(context, store, event)
+                                  _expenseLedgerRow(context, store, event, compact: compact)
                                 else
-                                  _paymentLedgerRow(context, store, event as Payment),
+                                  _paymentLedgerRow(context, store, event as Payment, compact: compact),
                               if (store.salesHasMore)
                                 Padding(
                                   padding: const EdgeInsets.all(8),
@@ -186,6 +190,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
   /// One line of the shift ledger; the header uses the same column widths.
   Widget _ledgerRow({
     bool header = false,
+    bool compact = false,
     Color? background,
     required Widget first,
     required Widget time,
@@ -203,13 +208,41 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
       child: Row(
         children: [
           Expanded(child: first),
-          SizedBox(width: 90, child: time),
-          SizedBox(width: 120, child: Align(alignment: AlignmentDirectional.centerStart, child: method)),
-          SizedBox(width: 110, child: Align(alignment: AlignmentDirectional.centerStart, child: status)),
-          SizedBox(width: 120, child: amount),
-          SizedBox(width: 210, child: Align(alignment: AlignmentDirectional.centerEnd, child: actions)),
+          SizedBox(width: compact ? 64 : 90, child: time),
+          SizedBox(width: compact ? 104 : 120, child: Align(alignment: AlignmentDirectional.centerStart, child: method)),
+          SizedBox(width: compact ? 100 : 110, child: Align(alignment: AlignmentDirectional.centerStart, child: status)),
+          SizedBox(width: compact ? 110 : 120, child: amount),
+          // Arabic button labels run wider: the column has room for print, refund and void, and
+          // shrinks them a little rather than overflow if a label is longer still.
+          SizedBox(
+            width: compact ? 150 : 240,
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerEnd, child: actions),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  /// A row button with its label, or only its icon (the label as tooltip) in the tight ledger.
+  Widget _rowAction({required bool compact, required IconData icon, required String label, required VoidCallback onPressed}) {
+    if (compact) {
+      return Tooltip(
+        message: label,
+        child: OutlinedButton(
+          style: _rowActionStyle,
+          onPressed: onPressed,
+          child: Semantics(label: label, child: Icon(icon, size: 18)),
+        ),
+      );
+    }
+    return OutlinedButton.icon(
+      style: _rowActionStyle,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
     );
   }
 
@@ -223,9 +256,10 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
     );
   }
 
-  Widget _paymentLedgerRow(BuildContext context, CafeStore store, Payment payment) {
+  Widget _paymentLedgerRow(BuildContext context, CafeStore store, Payment payment, {bool compact = false}) {
     final place = payment.isTakeout || store.paymentIsTakeout(payment) ? context.l10n.serviceTakeout : context.l10n.cashierTableNumber(payment.tableNumber);
     return _ledgerRow(
+      compact: compact,
       first: _twoLines(
         context.l10n.salesReceiptLine(store.receiptNumber(payment)),
         '$place  ·  ${context.l10n.cashierOrderNumber(store.orderNumber(payment.shiftOrderNumber))}',
@@ -252,8 +286,10 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!payment.isVoided)
-            OutlinedButton.icon(
-              style: _rowActionStyle,
+            _rowAction(
+              compact: compact,
+              icon: Icons.print_outlined,
+              label: context.l10n.cashierPrintChit,
               onPressed: () {
                 final host = context;
                 showReceiptPrint(store, payment, host.l10n).catchError((error) {
@@ -261,8 +297,6 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                   ScaffoldMessenger.of(host).showSnackBar(SnackBar(content: Text(host.l10n.receiptReprintFailed)));
                 });
               },
-              icon: const Icon(Icons.print_outlined, size: 16),
-              label: Text(context.l10n.cashierPrintChit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             ),
           if (store.canRefund(payment)) ...[
             const SizedBox(width: 6),
@@ -294,8 +328,9 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
   Widget _expenseLedgerRow(
     BuildContext context,
     CafeStore store,
-    ShiftExpense expense,
-  ) {
+    ShiftExpense expense, {
+    bool compact = false,
+  }) {
     final open = store.currentShift ?? store.openShift;
     final mine = store.currentCashier?.id == expense.cashierId;
     final canEdit = mine &&
@@ -304,6 +339,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         open.id == expense.shiftId &&
         !expense.voided;
     return _ledgerRow(
+      compact: compact,
       background: CafeColors.card,
       first: _twoLines(
         store.expenseCategoryLabel(expense),
@@ -323,11 +359,11 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: CafeColors.alert),
       ),
       actions: canEdit
-          ? OutlinedButton.icon(
-              style: _rowActionStyle,
+          ? _rowAction(
+              compact: compact,
+              icon: Icons.edit_outlined,
+              label: context.l10n.expenseEdit,
               onPressed: () => _addExpense(context, store, editing: expense),
-              icon: const Icon(Icons.edit_outlined, size: 16),
-              label: Text(context.l10n.expenseEdit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             )
           : const SizedBox.shrink(),
     );
@@ -700,6 +736,9 @@ class _ExpenseDialogState extends State<_ExpenseDialog> {
     );
   }
 }
+
+/// Width at which the ledger shows every column and labelled row buttons.
+const _fullLedgerWidth = 960.0;
 
 final _rowActionStyle = OutlinedButton.styleFrom(
   minimumSize: const Size(0, 40),
