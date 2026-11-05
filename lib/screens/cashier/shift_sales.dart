@@ -75,9 +75,16 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final shiftId = shift?.id;
+                // The cashier's list starts empty each day; older receipts and expenses stay in the
+                // database and on the admin screens.
+                final today = formatTripoliDate(DateTime.now());
+                bool isToday(DateTime at) => formatTripoliDate(at) == today;
+                final allLoadedAreToday = store.payments.every((payment) => isToday(payment.paidAt));
                 final events = <Object>[
-                  ...store.payments,
-                  ...store.expenses.where((item) => !item.voided && (shiftId == null || item.shiftId == shiftId)),
+                  ...store.payments.where((payment) => isToday(payment.paidAt)),
+                  ...store.expenses.where(
+                    (item) => !item.voided && (shiftId == null || item.shiftId == shiftId) && isToday(item.createdAt),
+                  ),
                 ]..sort((a, b) {
                     DateTime at(Object item) => item is Payment ? item.paidAt : (item as ShiftExpense).createdAt;
                     return at(b).compareTo(at(a));
@@ -109,7 +116,7 @@ class _CashierShiftsScreenState extends State<CashierShiftsScreen> {
                                   _expenseLedgerRow(context, store, event, compact: compact)
                                 else
                                   _paymentLedgerRow(context, store, event as Payment, compact: compact),
-                              if (store.salesHasMore)
+                              if (store.salesHasMore && allLoadedAreToday)
                                 Padding(
                                   padding: const EdgeInsets.all(8),
                                   child: Align(
