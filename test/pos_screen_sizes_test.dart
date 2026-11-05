@@ -9,6 +9,7 @@ import 'package:menu_web_v1/data/local_state_store.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/platform/app_window.dart';
+import 'package:menu_web_v1/screens/auth_screens.dart';
 import 'package:menu_web_v1/screens/cashier_screens.dart';
 import 'package:menu_web_v1/screens/dish_availability_screen.dart';
 import 'package:menu_web_v1/screens/sales_log_screen.dart';
@@ -216,6 +217,52 @@ void main() {
             }
           }
           // A fresh router per page: drop the old tree so its state does not carry over.
+          await tester.pumpWidget(const SizedBox());
+          takeErrors(tester);
+        }
+      }
+      expect(failures, isEmpty, reason: failures.join('\n'));
+    });
+
+    testWidgets('sign-in screens fit every till size with the full-screen button in $locale', (tester) async {
+      final store = (await tester.runAsync(() async {
+        db.closeLocal();
+        final store = CafeStore(db);
+        await store.load(localStore: openMemoryLocalStateStore());
+        await store.addCashier(name: 'Maximilian Alexander Abdulrahman Al-Khatib', pin: '1234');
+        await store.syncFromDisk();
+        store.locale = locale;
+        return store;
+      }))!;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final failures = <String>[];
+      for (final size in sizes) {
+        tester.view.physicalSize = size;
+        for (final screen in const [PinLoginScreen(), AdminAuthScreen()]) {
+          await tester.pumpWidget(
+            ChangeNotifierProvider<CafeStore>.value(
+              value: store,
+              child: MaterialApp(
+                theme: CafeTheme.light,
+                locale: Locale(locale),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: screen,
+              ),
+            ),
+            duration: Duration.zero,
+          );
+          for (var i = 0; i < 5; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+          final where = '$locale ${size.width.toInt()}x${size.height.toInt()} ${screen.runtimeType}';
+          for (final error in takeErrors(tester)) {
+            failures.add('$where: $error');
+          }
+          if (find.byIcon(Icons.fullscreen_exit).evaluate().isEmpty) failures.add('$where: no full-screen button');
           await tester.pumpWidget(const SizedBox());
           takeErrors(tester);
         }

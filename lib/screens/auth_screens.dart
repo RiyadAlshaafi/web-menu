@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/app_database.dart';
 import '../l10n/l10n_ext.dart';
+import '../platform/app_window.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../update/whats_new.dart';
@@ -97,6 +98,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
                   child: _AuthBrand(subtitle: context.l10n.authPosTerminalSubtitle.replaceAll('\n', ' ')),
                 ),
                 const Spacer(),
+                const _FullscreenChip(),
                 GhostChip(
                   label: context.l10n.authSwitchToAdminSignIn,
                   icon: Icons.shield_outlined,
@@ -263,6 +265,42 @@ class _PinLoginScreenState extends State<PinLoginScreen> with SingleTickerProvid
 }
 
 /// Shown at startup when the server can't be reached: offers to keep selling offline.
+/// Full screen / window switch for the Windows till's sign-in screens; hidden elsewhere.
+class _FullscreenChip extends StatelessWidget {
+  const _FullscreenChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final window = AppWindow.instance;
+    if (!window.supported) return const SizedBox.shrink();
+    window.load();
+    return ListenableBuilder(
+      listenable: window,
+      builder: (context, _) {
+        final label = window.fullscreen ? context.l10n.windowExitFullScreen : context.l10n.windowFullScreen;
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(end: 8),
+          child: Tooltip(
+            message: label,
+            child: OutlinedButton(
+              onPressed: window.toggle,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(44, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+              child: Semantics(
+                label: label,
+                child: Icon(window.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen, size: 18),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _OfflineStartCard extends StatelessWidget {
   const _OfflineStartCard({required this.store});
   final CafeStore store;
@@ -555,6 +593,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
             children: [
               const _DevLogo(child: _AuthBrand()),
               const Spacer(),
+              const _FullscreenChip(),
               GhostChip(
                 label: context.l10n.authStaffPos,
                 icon: Icons.point_of_sale,
@@ -652,6 +691,7 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
             children: [
               const _DevLogo(child: _AuthBrand()),
               const Spacer(),
+              const _FullscreenChip(),
               GhostChip(
                 label: context.l10n.authStaffPos,
                 icon: Icons.point_of_sale,
