@@ -20,8 +20,6 @@ enum OrderStatus {
 
 enum TableStatus { free, dining, billRequested }
 
-enum StaffRole { admin, cashier }
-
 class AdminAccount {
   AdminAccount({
     required this.email,

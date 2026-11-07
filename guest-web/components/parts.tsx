@@ -7,7 +7,7 @@ import { Icon } from "./icons";
 
 // Shared pieces of the guest pages (lib/screens/customer/guest_parts.dart).
 
-export function cafeInitials(name: string): string {
+function cafeInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   return words
     .slice(0, 2)
@@ -81,7 +81,7 @@ export function ChoiceNotes({ choices, lang }: { choices: LineChoice[]; lang: La
   );
 }
 
-export function TawlaMark({ size = 18 }: { size?: number }) {
+function TawlaMark({ size = 18 }: { size?: number }) {
   const simple = size < 24;
   const corners = [
     [8, 8],
