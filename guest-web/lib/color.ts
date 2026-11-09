@@ -3,8 +3,8 @@
 export const INK = "#1C1C18";
 export const PAPER = "#FFFFFF";
 export const PAGE = "#FDF9F2";
-export const DEFAULT_HEADER = "#1B3A4B";
-export const DEFAULT_BUTTON = "#BA5333";
+const DEFAULT_HEADER = "#1B3A4B";
+const DEFAULT_BUTTON = "#BA5333";
 
 type Rgb = [number, number, number];
 
