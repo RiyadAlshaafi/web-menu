@@ -73,6 +73,8 @@
 .lp-cta:hover { transform: scale(1.05) rotate(-1deg); }
 .lp-cta:active { transform: scale(0.97); }
 .lp-hero .lp-cta { width: 100%; max-width: 360px; }
+.lp-hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.lp-cta-contact { border: 1px solid var(--lp-mint); background: transparent; color: #fff; }
 .lp-hero :focus-visible, .lp-band :focus-visible { outline-color: #fac775; }
 
 /* ---------- hero scene ---------- */

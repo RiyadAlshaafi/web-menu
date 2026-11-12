@@ -15,6 +15,7 @@ export interface LandingCopy {
   heroSub: string;
   demoCta: string;
   interactiveDemoCta: string;
+  setupCta: string;
   sceneLabel: string;
   stats: readonly { value: string; label: string; tone: Tone }[];
   howTitle: string;
@@ -41,6 +42,7 @@ export const landingCopy: Record<LandingLang, LandingCopy> = {
     heroSub: "QR ordering and a cashier system for cafés, in Arabic and English.",
     demoCta: "Try a live menu",
     interactiveDemoCta: "Try the demo",
+    setupCta: "Set up Tawla for my café",
     sceneLabel: "A guest sends an order from their phone and it appears on the cashier's floor screen.",
     stats: [
       { value: "3 s", label: "order to cashier", tone: "coral" },
@@ -62,7 +64,7 @@ export const landingCopy: Record<LandingLang, LandingCopy> = {
     pills: ["Works offline", "Arabic and English", "Prints receipts", "Windows or web", "Daily reports"],
     bandTitle: "Want it in your café?",
     bandCta: "Message us on WhatsApp",
-    whatsappText: "Hi, I'd like to see Tawla in my café.",
+    whatsappText: "Hi, I'd like to set up Tawla for my café. Can you share the next steps?",
     footer: "© Tawla",
   },
   ar: {
@@ -77,6 +79,7 @@ export const landingCopy: Record<LandingLang, LandingCopy> = {
     heroSub: "نظام طلب عبر QR وكاشير للمقاهي، بالعربية والإنجليزية.",
     demoCta: "جرّب قائمة حقيقية",
     interactiveDemoCta: "جرّب العرض التجريبي",
+    setupCta: "إعداد Tawla لمقهاي",
     sceneLabel: "زبون يرسل طلبه من هاتفه فيظهر مباشرة على شاشة الصالة عند الكاشير.",
     stats: [
       { value: "3 ث", label: "من الطلب إلى الكاشير", tone: "coral" },
@@ -98,7 +101,7 @@ export const landingCopy: Record<LandingLang, LandingCopy> = {
     pills: ["يعمل بدون إنترنت", "عربي وإنجليزي", "يطبع الفواتير", "ويندوز أو ويب", "تقارير يومية"],
     bandTitle: "تريد Tawla في مقهاك؟",
     bandCta: "راسلنا على واتساب",
-    whatsappText: "مرحباً، أريد تجربة Tawla في مقهاي.",
+    whatsappText: "مرحبًا، أودّ إعداد Tawla لمقهاي. ما الخطوات التالية؟",
     footer: "© Tawla",
   },
 };

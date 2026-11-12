@@ -70,6 +70,7 @@ describe("LandingPage", () => {
     render(<LandingPage lang="en" />);
     expect(screen.queryByRole("link", { name: /live menu/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /whatsapp/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: landingCopy.en.setupCta })).toBeNull();
   });
 
   it("links the demo menu and WhatsApp when configured", () => {
@@ -77,6 +78,10 @@ describe("LandingPage", () => {
     vi.stubEnv("NEXT_PUBLIC_DEMO_MENU_PATH", "/t/demotable0001");
     render(<LandingPage lang="en" />);
     expect(screen.getByRole("link", { name: /live menu/i })).toHaveAttribute("href", "/t/demotable0001");
+    expect(screen.getByRole("link", { name: landingCopy.en.setupCta })).toHaveAttribute(
+      "href",
+      whatsappLink(landingCopy.en.whatsappText, "218910000000"),
+    );
     const chat = screen.getAllByRole("link", { name: /whatsapp/i });
     expect(chat.length).toBeGreaterThan(0);
     for (const link of chat) {
