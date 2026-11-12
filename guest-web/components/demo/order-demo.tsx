@@ -22,7 +22,6 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   const [view, setView] = useState<View>("guest");
   const [category, setCategory] = useState<Category>("all");
   const [quantities, setQuantities] = useState<Partial<Record<DishId, number>>>({});
-  const [note, setNote] = useState("");
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
   const [billRequested, setBillRequested] = useState(false);
   const [payment, setPayment] = useState<PaymentMethod>("cash");
@@ -89,7 +88,6 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   function reset() {
     setCategory("all");
     setQuantities({});
-    setNote("");
     setOrderStatus(null);
     setBillRequested(false);
     setPayment("cash");
@@ -122,18 +120,6 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
         <span className="whitespace-nowrap">{money(total, lang)}</span>
       </div>
     </GuestCard>
-  );
-
-  const orderDetails = (
-    <>
-      {ticket}
-      {note.trim() && (
-        <GuestCard>
-          <h3 className="text-sm font-extrabold">{copy.note}</h3>
-          <p dir="auto" className="mt-1 wrap-anywhere whitespace-pre-wrap text-sm text-muted">{note.trim()}</p>
-        </GuestCard>
-      )}
-    </>
   );
 
   return (
@@ -180,8 +166,8 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
               billRequested={billRequested}
               payment={payment}
               total={total}
-              details={orderDetails}
-              loadSample={count === 0 && !note ? loadSampleOrder : undefined}
+              details={ticket}
+              loadSample={count === 0 ? loadSampleOrder : undefined}
               openGuest={() => openView("guest")}
               onStatus={setOrderStatus}
               onPayment={setPayment}
@@ -283,12 +269,6 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
               {stage === "review" && (
                 <form onSubmit={sendOrder} className="space-y-3">
                   {ticket}
-                  <GuestCard>
-                    <label htmlFor="demo-note" className="block text-sm font-extrabold">{copy.note}</label>
-                    <textarea id="demo-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={160}
-                      placeholder={copy.notePlaceholder} rows={2} dir="auto"
-                      className="mt-2 w-full resize-y rounded-xl border border-border bg-page px-3 py-2 text-base" />
-                  </GuestCard>
                   <PrimaryButton type="submit">{t(lang, "guestConfirmSendKitchen")}</PrimaryButton>
                   <OutlineButton onClick={() => goTo("browse")}>{t(lang, "guestModifyOrder")}</OutlineButton>
                 </form>
@@ -300,7 +280,7 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
                     <span>{t(lang, "guestOrderNumber", { id: orderNumber(demoOrderNumber) })}</span>
                     <span>{orderStatusLabel(lang, orderStatus)}</span>
                   </div>
-                  {orderDetails}
+                  {ticket}
                   {orderStatus === "served" && (
                     <PrimaryButton onClick={() => setBillRequested(true)} disabled={billRequested}>
                       {billRequested ? cashier.billRequested : t(lang, "guestRequestBill")}
