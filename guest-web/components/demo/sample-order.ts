@@ -2,46 +2,67 @@ export const sampleTable = 7;
 
 export const sampleCafe = { en: "Medina Café", ar: "مقهى المدينة" };
 
+export const sampleCategories = [
+  { id: "coffee", en: "Coffee", ar: "قهوة" },
+  { id: "pizza", en: "Pizza", ar: "بيتزا" },
+  { id: "desserts", en: "Desserts", ar: "حلويات" },
+] as const;
+
+export const sampleTicket = { "margherita-pizza": 1, cappuccino: 2 };
+
 export const sampleMenu = [
   {
-    id: "shakshuka",
-    nameEn: "Shakshuka",
-    nameAr: "شكشوكة",
+    id: "espresso",
+    category: "coffee",
+    nameEn: "Espresso",
+    nameAr: "إسبريسو",
     description: {
-      en: "Eggs simmered with tomato and peppers, served with warm bread.",
-      ar: "بيض مطهو مع الطماطم والفلفل، يُقدّم مع خبز ساخن.",
+      en: "A single shot of espresso with a rich crema.",
+      ar: "جرعة إسبريسو واحدة بطبقة كريما غنية.",
     },
-    price: 18,
+    price: 7,
+    photoCredit: { author: "Berthold Werner", file: "Espresso_BW_1.jpg", license: "Public domain", licensePath: null },
   },
   {
-    id: "chicken-ciabatta",
-    nameEn: "Grilled chicken ciabatta",
-    nameAr: "تشاباتا بالدجاج المشوي",
+    id: "cappuccino",
+    category: "coffee",
+    nameEn: "Cappuccino",
+    nameAr: "كابتشينو",
     description: {
-      en: "Grilled chicken, rocket and lemon aioli on toasted ciabatta.",
-      ar: "دجاج مشوي وجرجير وأيولي بالليمون في خبز تشاباتا محمّص.",
+      en: "Espresso with steamed milk and silky foam.",
+      ar: "إسبريسو مع حليب مبخّر ورغوة ناعمة.",
     },
-    price: 24,
+    price: 10,
+    photoCredit: { author: "Blanka Novotná", file: "Cappuchino_latte_art.jpg", license: "Public domain", licensePath: null },
   },
   {
-    id: "mint-lemonade",
-    nameEn: "Mint lemonade",
-    nameAr: "ليمون بالنعناع",
+    id: "margherita-pizza",
+    category: "pizza",
+    nameEn: "Margherita pizza",
+    nameAr: "بيتزا مارغريتا",
     description: {
-      en: "Fresh lemon blended with mint and crushed ice.",
-      ar: "ليمون طازج ممزوج بالنعناع والثلج المجروش.",
+      en: "Tomato sauce, fresh mozzarella and basil.",
+      ar: "صلصة طماطم وموزاريلا طازجة وريحان.",
     },
-    price: 9.5,
+    price: 28,
+    photoCredit: {
+      author: "City Foodsters",
+      file: "Our_Original_Margherita_Pizza_-_Large_8_slices._Made_with_fresh_mozzarella_San_Marzano_tomato_sauce_and_topped_with_pecorino_Romano_and_fresh_basil_-_9345776001.jpg",
+      license: "CC BY 2.0",
+      licensePath: "by/2.0",
+    },
   },
   {
-    id: "date-cake",
-    nameEn: "Warm date cake",
-    nameAr: "كيكة التمر الدافئة",
+    id: "cheesecake",
+    category: "desserts",
+    nameEn: "Blueberry cheesecake",
+    nameAr: "تشيز كيك بالتوت الأزرق",
     description: {
-      en: "Date sponge with tahini caramel and toasted sesame.",
-      ar: "كيكة تمر مع كراميل الطحينة وسمسم محمّص.",
+      en: "Creamy cheesecake with a biscuit crust and blueberry topping.",
+      ar: "تشيز كيك كريمي بقاعدة بسكويت وطبقة توت أزرق.",
     },
-    price: 12,
+    price: 14,
+    photoCredit: { author: "EvanProdromou", file: "New_York_cheesecake_2.jpg", license: "CC BY-SA 4.0", licensePath: "by-sa/4.0" },
   },
 ] as const;
 
@@ -60,6 +81,9 @@ export const demoCopy = {
     progress: "Order progress",
     empty: "Your order is empty",
     done: "Start again",
+    categories: "Menu categories",
+    credits: "Photo credits",
+    photoChanges: "Cropped and resized",
   },
   ar: {
     label: "عرض تجريبي · بيانات نموذجية",
@@ -75,5 +99,8 @@ export const demoCopy = {
     progress: "مراحل الطلب",
     empty: "طلبك فارغ",
     done: "ابدأ من جديد",
+    categories: "أقسام القائمة",
+    credits: "مصادر الصور",
+    photoChanges: "قُصّت الصور وغُيّر حجمها",
   },
 } as const;

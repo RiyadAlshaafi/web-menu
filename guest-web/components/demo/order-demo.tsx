@@ -1,15 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { DishPhoto, GuestCard, GuestHeader, OutlineButton, PrimaryButton, TawlaMark, TicketLine } from "@/components/parts";
+import { GuestCard, GuestHeader, OutlineButton, PrimaryButton, TawlaMark, TicketLine } from "@/components/parts";
 import { dishName, lineTotal, money, orderNumber } from "@/lib/format";
 import { t, type Lang } from "@/lib/i18n";
 import { CashierDemo, cashierCopy, demoOrderNumber, orderStatusLabel, type OrderStatus, type PaymentMethod } from "./cashier-demo";
-import { demoCopy, sampleCafe, sampleMenu, sampleTable } from "./sample-order";
+import { demoCopy, sampleCafe, sampleCategories, sampleMenu, sampleTable, sampleTicket } from "./sample-order";
 
 type DishId = (typeof sampleMenu)[number]["id"];
 type Stage = "browse" | "review" | "sent";
 type View = "guest" | "cashier";
+type Category = "all" | (typeof sampleCategories)[number]["id"];
 
 const stages: Stage[] = ["browse", "review", "sent"];
 const quantityButton = "press grid size-11 shrink-0 place-items-center rounded-xl bg-key text-lg font-extrabold text-brand-ink disabled:opacity-40";
@@ -18,6 +20,7 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   const [lang, setLang] = useState(initialLang);
   const [stage, setStage] = useState<Stage>("browse");
   const [view, setView] = useState<View>("guest");
+  const [category, setCategory] = useState<Category>("all");
   const [quantities, setQuantities] = useState<Partial<Record<DishId, number>>>({});
   const [note, setNote] = useState("");
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
@@ -27,6 +30,8 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   const focusHeading = useRef(false);
   const copy = demoCopy[lang];
   const cashier = cashierCopy[lang];
+  const categoryOptions = [{ id: "all", en: "All", ar: "الكل" } as const, ...sampleCategories];
+  const visibleMenu = category === "all" ? sampleMenu : sampleMenu.filter((dish) => dish.category === category);
   const rows = sampleMenu.flatMap((dish) => {
     const qty = quantities[dish.id] ?? 0;
     return qty ? [{ dish, qty, amount: lineTotal(dish.price, qty) }] : [];
@@ -82,6 +87,7 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   }
 
   function reset() {
+    setCategory("all");
     setQuantities({});
     setNote("");
     setOrderStatus(null);
@@ -92,7 +98,7 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   }
 
   function loadSampleOrder() {
-    setQuantities({ shakshuka: 1, "mint-lemonade": 2 });
+    setQuantities(sampleTicket);
     setOrderStatus("received");
     setStage("sent");
   }
@@ -202,15 +208,30 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
               </p>
 
               {stage === "browse" && (
+                <div role="group" aria-label={copy.categories} className="mb-4 flex flex-wrap gap-2">
+                  {categoryOptions.map((option) => (
+                    <button key={option.id} type="button" aria-pressed={category === option.id}
+                      onClick={() => setCategory(option.id)}
+                      className={`press min-h-11 rounded-full border px-4 text-sm font-extrabold ${category === option.id
+                        ? "border-brand-header bg-brand-header text-on-header"
+                        : "border-border bg-white text-brand-header hover:bg-key"}`}>
+                      {option[lang]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {stage === "browse" && (
                 <ul className="grid gap-3 sm:grid-cols-2">
-                  {sampleMenu.map((dish) => {
+                  {visibleMenu.map((dish) => {
                     const qty = quantities[dish.id] ?? 0;
                     const name = dishName(dish, lang);
                     return (
                       <li key={dish.id} className="flex [&>section]:flex [&>section]:flex-col">
                         <GuestCard className="border border-line">
                           <div className="flex flex-1 items-start gap-3">
-                            <DishPhoto url="" size={54} radius={12} />
+                            <Image src={`/demo-assets/${dish.id}.webp`} alt="" width={80} height={80} unoptimized
+                              className="size-20 shrink-0 rounded-xl bg-key object-cover" />
                             <div className="min-w-0">
                               <h3 className="font-extrabold">{name}</h3>
                               <p className="mt-0.5 text-sm leading-relaxed text-muted">{dish.description[lang]}</p>
@@ -235,6 +256,28 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
                     );
                   })}
                 </ul>
+              )}
+
+              {stage === "browse" && (
+                <details className="mt-4 text-xs text-muted">
+                  <summary className="w-fit cursor-pointer py-2">{copy.credits}</summary>
+                  <ul className="space-y-1.5 py-2">
+                    {sampleMenu.map((dish) => (
+                      <li key={dish.id}>
+                        <a href={`https://commons.wikimedia.org/wiki/File:${dish.photoCredit.file}`} className="underline">
+                          {dishName(dish, lang)} · <bdi>{dish.photoCredit.author}</bdi>
+                        </a>
+                        {" · "}
+                        {dish.photoCredit.licensePath ? (
+                          <a href={`https://creativecommons.org/licenses/${dish.photoCredit.licensePath}/`} className="underline">
+                            <bdi>{dish.photoCredit.license}</bdi>
+                          </a>
+                        ) : <bdi>{dish.photoCredit.license}</bdi>}
+                        {" · "}{copy.photoChanges}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
 
               {stage === "review" && (
