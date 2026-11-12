@@ -4,10 +4,12 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { DishPhoto, GuestCard, GuestHeader, OutlineButton, PrimaryButton, TawlaMark, TicketLine } from "@/components/parts";
 import { dishName, lineTotal, money, orderNumber } from "@/lib/format";
 import { t, type Lang } from "@/lib/i18n";
+import { CashierDemo, cashierCopy, demoOrderNumber, orderStatusLabel, type OrderStatus, type PaymentMethod } from "./cashier-demo";
 import { demoCopy, sampleCafe, sampleMenu, sampleTable } from "./sample-order";
 
 type DishId = (typeof sampleMenu)[number]["id"];
 type Stage = "browse" | "review" | "sent";
+type View = "guest" | "cashier";
 
 const stages: Stage[] = ["browse", "review", "sent"];
 const quantityButton = "press grid size-11 shrink-0 place-items-center rounded-xl bg-key text-lg font-extrabold text-brand-ink disabled:opacity-40";
@@ -15,11 +17,16 @@ const quantityButton = "press grid size-11 shrink-0 place-items-center rounded-x
 export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   const [lang, setLang] = useState(initialLang);
   const [stage, setStage] = useState<Stage>("browse");
+  const [view, setView] = useState<View>("guest");
   const [quantities, setQuantities] = useState<Partial<Record<DishId, number>>>({});
   const [note, setNote] = useState("");
+  const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
+  const [billRequested, setBillRequested] = useState(false);
+  const [payment, setPayment] = useState<PaymentMethod>("cash");
   const heading = useRef<HTMLHeadingElement>(null);
   const focusHeading = useRef(false);
   const copy = demoCopy[lang];
+  const cashier = cashierCopy[lang];
   const rows = sampleMenu.flatMap((dish) => {
     const qty = quantities[dish.id] ?? 0;
     return qty ? [{ dish, qty, amount: lineTotal(dish.price, qty) }] : [];
@@ -44,12 +51,18 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
       heading.current?.focus();
       heading.current?.scrollIntoView({ block: "nearest" });
     }
-  }, [stage]);
+  }, [stage, view]);
 
   function goTo(next: Stage) {
     if (next === stage) return;
     focusHeading.current = true;
     setStage(next);
+  }
+
+  function openView(next: View) {
+    if (next === view) return;
+    focusHeading.current = true;
+    setView(next);
   }
 
   function switchLanguage() {
@@ -71,12 +84,25 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
   function reset() {
     setQuantities({});
     setNote("");
+    setOrderStatus(null);
+    setBillRequested(false);
+    setPayment("cash");
+    openView("guest");
     goTo("browse");
+  }
+
+  function loadSampleOrder() {
+    setQuantities({ shakshuka: 1, "mint-lemonade": 2 });
+    setOrderStatus("received");
+    setStage("sent");
   }
 
   function sendOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (stage === "review" && count > 0) goTo("sent");
+    if (stage === "review" && count > 0) {
+      setOrderStatus("received");
+      goTo("sent");
+    }
   }
 
   const ticket = (
@@ -90,6 +116,18 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
         <span className="whitespace-nowrap">{money(total, lang)}</span>
       </div>
     </GuestCard>
+  );
+
+  const orderDetails = (
+    <>
+      {ticket}
+      {note.trim() && (
+        <GuestCard>
+          <h3 className="text-sm font-extrabold">{copy.note}</h3>
+          <p dir="auto" className="mt-1 wrap-anywhere whitespace-pre-wrap text-sm text-muted">{note.trim()}</p>
+        </GuestCard>
+      )}
+    </>
   );
 
   return (
@@ -114,93 +152,132 @@ export function OrderDemo({ initialLang }: { initialLang: Lang }) {
           <GuestHeader cafeName={sampleCafe[lang]} logoUrl="" subtitle={t(lang, "guestTableDineIn", { number: sampleTable })} />
         </div>
 
-        <ol aria-label={copy.progress} className="my-4 grid grid-cols-3 gap-1 rounded-xl bg-key p-1 text-center text-xs font-extrabold sm:text-sm">
-          {stages.map((step) => (
-            <li key={step} aria-current={step === stage ? "step" : undefined}
-              className={step === stage ? "rounded-lg bg-brand-header px-1 py-2 text-on-header" : "px-1 py-2 text-muted"}>
-              {copy[step]}
-            </li>
+        <nav aria-label={cashier.view} className="mt-4 flex gap-2">
+          {(["guest", "cashier"] as const).map((option) => (
+            <button key={option} type="button" aria-pressed={view === option} onClick={() => openView(option)}
+              className={`min-h-11 rounded-xl border px-5 text-sm font-extrabold ${view === option
+                ? "border-brand-header bg-brand-header text-on-header"
+                : "border-border bg-white text-brand-header hover:bg-key"}`}>
+              {cashier[option]}
+            </button>
           ))}
-        </ol>
+        </nav>
 
-        <div className={stage === "browse" ? "" : "mx-auto max-w-xl"}>
-          <h2 ref={heading} tabIndex={-1} className="scroll-mt-28 rounded text-2xl font-extrabold text-brand-header">
-            {copy[stage]}
-          </h2>
-          <p className="mt-1 mb-4 text-sm leading-relaxed text-muted">
-            {stage === "browse" ? copy.browseHint : stage === "review" ? copy.reviewHint : copy.sentHint}
-          </p>
+        {view === "cashier" ? (
+          <div className="mt-5">
+            <h2 ref={heading} tabIndex={-1} className="scroll-mt-28 rounded text-2xl font-extrabold text-brand-header">
+              {cashier.floor}
+            </h2>
+            <CashierDemo
+              lang={lang}
+              status={orderStatus}
+              billRequested={billRequested}
+              payment={payment}
+              total={total}
+              details={orderDetails}
+              loadSample={count === 0 && !note ? loadSampleOrder : undefined}
+              openGuest={() => openView("guest")}
+              onStatus={setOrderStatus}
+              onPayment={setPayment}
+              onSettle={() => setOrderStatus("paid")}
+            />
+          </div>
+        ) : (
+          <>
+            <ol aria-label={copy.progress} className="my-4 grid grid-cols-3 gap-1 rounded-xl bg-key p-1 text-center text-xs font-extrabold sm:text-sm">
+              {stages.map((step) => (
+                <li key={step} aria-current={step === stage ? "step" : undefined}
+                  className={step === stage ? "rounded-lg bg-brand-header px-1 py-2 text-on-header" : "px-1 py-2 text-muted"}>
+                  {copy[step]}
+                </li>
+              ))}
+            </ol>
 
-          {stage === "browse" && (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {sampleMenu.map((dish) => {
-                const qty = quantities[dish.id] ?? 0;
-                const name = dishName(dish, lang);
-                return (
-                  <li key={dish.id} className="flex [&>section]:flex [&>section]:flex-col">
-                    <GuestCard className="border border-line">
-                      <div className="flex flex-1 items-start gap-3">
-                        <DishPhoto url="" size={54} radius={12} />
-                        <div className="min-w-0">
-                          <h3 className="font-extrabold">{name}</h3>
-                          <p className="mt-0.5 text-sm leading-relaxed text-muted">{dish.description[lang]}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <span className="font-extrabold whitespace-nowrap text-brand-header">{money(dish.price, lang)}</span>
-                        <div className="flex items-center gap-2">
-                          {qty > 0 && (
-                            <>
-                              <button type="button" className={quantityButton} aria-label={`${t(lang, "decrease")} · ${name}`}
-                                onClick={() => changeQuantity(dish.id, -1)}>−</button>
-                              <span className="min-w-5 text-center text-sm font-extrabold tabular-nums">{qty}</span>
-                            </>
-                          )}
-                          <button type="button" className={quantityButton} aria-label={t(lang, "addDish", { name })}
-                            disabled={qty === 99} onClick={() => changeQuantity(dish.id, 1)}>+</button>
-                        </div>
-                      </div>
-                    </GuestCard>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+            <div className={stage === "browse" ? "" : "mx-auto max-w-xl"}>
+              <h2 ref={heading} tabIndex={-1} className="scroll-mt-28 rounded text-2xl font-extrabold text-brand-header">
+                {copy[stage]}
+              </h2>
+              <p className="mt-1 mb-4 text-sm leading-relaxed text-muted">
+                {stage === "browse" ? copy.browseHint : stage === "review" ? copy.reviewHint : orderStatus === "received" ? copy.sentHint : null}
+              </p>
 
-          {stage === "review" && (
-            <form onSubmit={sendOrder} className="space-y-3">
-              {ticket}
-              <GuestCard>
-                <label htmlFor="demo-note" className="block text-sm font-extrabold">{copy.note}</label>
-                <textarea id="demo-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={160}
-                  placeholder={copy.notePlaceholder} rows={2} dir="auto"
-                  className="mt-2 w-full resize-y rounded-xl border border-border bg-page px-3 py-2 text-base" />
-              </GuestCard>
-              <PrimaryButton type="submit">{t(lang, "guestConfirmSendKitchen")}</PrimaryButton>
-              <OutlineButton onClick={() => goTo("browse")}>{t(lang, "guestModifyOrder")}</OutlineButton>
-            </form>
-          )}
-
-          {stage === "sent" && (
-            <div className="space-y-3">
-              <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-header px-4 py-3 font-extrabold text-on-header">
-                <span>{t(lang, "guestOrderNumber", { id: orderNumber(12) })}</span>
-                <span>{t(lang, "guestStatusReceived")}</span>
-              </div>
-              {ticket}
-              {note.trim() && (
-                <GuestCard>
-                  <h3 className="text-sm font-extrabold">{copy.note}</h3>
-                  <p dir="auto" className="mt-1 wrap-anywhere whitespace-pre-wrap text-sm text-muted">{note.trim()}</p>
-                </GuestCard>
+              {stage === "browse" && (
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {sampleMenu.map((dish) => {
+                    const qty = quantities[dish.id] ?? 0;
+                    const name = dishName(dish, lang);
+                    return (
+                      <li key={dish.id} className="flex [&>section]:flex [&>section]:flex-col">
+                        <GuestCard className="border border-line">
+                          <div className="flex flex-1 items-start gap-3">
+                            <DishPhoto url="" size={54} radius={12} />
+                            <div className="min-w-0">
+                              <h3 className="font-extrabold">{name}</h3>
+                              <p className="mt-0.5 text-sm leading-relaxed text-muted">{dish.description[lang]}</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <span className="font-extrabold whitespace-nowrap text-brand-header">{money(dish.price, lang)}</span>
+                            <div className="flex items-center gap-2">
+                              {qty > 0 && (
+                                <>
+                                  <button type="button" className={quantityButton} aria-label={`${t(lang, "decrease")} · ${name}`}
+                                    onClick={() => changeQuantity(dish.id, -1)}>−</button>
+                                  <span className="min-w-5 text-center text-sm font-extrabold tabular-nums">{qty}</span>
+                                </>
+                              )}
+                              <button type="button" className={quantityButton} aria-label={t(lang, "addDish", { name })}
+                                disabled={qty === 99} onClick={() => changeQuantity(dish.id, 1)}>+</button>
+                            </div>
+                          </div>
+                        </GuestCard>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
-              <OutlineButton onClick={reset}>{copy.done}</OutlineButton>
+
+              {stage === "review" && (
+                <form onSubmit={sendOrder} className="space-y-3">
+                  {ticket}
+                  <GuestCard>
+                    <label htmlFor="demo-note" className="block text-sm font-extrabold">{copy.note}</label>
+                    <textarea id="demo-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={160}
+                      placeholder={copy.notePlaceholder} rows={2} dir="auto"
+                      className="mt-2 w-full resize-y rounded-xl border border-border bg-page px-3 py-2 text-base" />
+                  </GuestCard>
+                  <PrimaryButton type="submit">{t(lang, "guestConfirmSendKitchen")}</PrimaryButton>
+                  <OutlineButton onClick={() => goTo("browse")}>{t(lang, "guestModifyOrder")}</OutlineButton>
+                </form>
+              )}
+
+              {stage === "sent" && orderStatus && (
+                <div className="space-y-3">
+                  <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-header px-4 py-3 font-extrabold text-on-header">
+                    <span>{t(lang, "guestOrderNumber", { id: orderNumber(demoOrderNumber) })}</span>
+                    <span>{orderStatusLabel(lang, orderStatus)}</span>
+                  </div>
+                  {orderDetails}
+                  {orderStatus === "served" && (
+                    <PrimaryButton onClick={() => setBillRequested(true)} disabled={billRequested}>
+                      {billRequested ? cashier.billRequested : t(lang, "guestRequestBill")}
+                    </PrimaryButton>
+                  )}
+                  {orderStatus === "paid" && (
+                    <p className="text-sm font-bold text-muted">
+                      {t(lang, "guestPaymentSuccessful")} · {cashier.payment[payment]}
+                    </p>
+                  )}
+                  <PrimaryButton onClick={() => openView("cashier")}>{cashier.handoff}</PrimaryButton>
+                  <OutlineButton onClick={reset}>{copy.done}</OutlineButton>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </main>
 
-      {stage === "browse" && (
+      {view === "guest" && stage === "browse" && (
         <footer className="sticky bottom-0 z-10 border-t border-line bg-white pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2.5 sm:px-6">
             <div role="status" className="text-xs text-muted sm:text-sm">
