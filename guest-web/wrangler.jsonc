@@ -6,9 +6,11 @@
   // Flutter staff app keeps everything else. / and /ar are the public sales page (Cloudflare routes
   // cannot match query strings, so /?utm_source=... only reaches it after docs/STAFF_DOMAIN_CUTOVER.md);
   // /_next and /api/guest are the pages' scripts and API.
+  // /demo* includes the language query string and Next.js navigation requests.
   "routes": [
     { "pattern": "tawla.ly/", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/ar", "zone_name": "tawla.ly" },
+    { "pattern": "tawla.ly/demo*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/t/*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/_next/*", "zone_name": "tawla.ly" },
     { "pattern": "tawla.ly/api/guest/*", "zone_name": "tawla.ly" }

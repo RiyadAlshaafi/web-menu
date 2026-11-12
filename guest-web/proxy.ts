@@ -11,4 +11,4 @@ export function proxy(request: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
-export const config = { matcher: ["/t/:path*", "/ar"] };
+export const config = { matcher: ["/t/:path*", "/ar", "/demo"] };

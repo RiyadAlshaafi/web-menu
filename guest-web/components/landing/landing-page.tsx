@@ -47,6 +47,9 @@ export function LandingPage({ lang }: { lang: LandingLang }) {
           <span className="lp-glow lp-glow-b" aria-hidden="true" />
           <Headline words={copy.heroWords} />
           <p className="lp-sub">{copy.heroSub}</p>
+          <Link href={lang === "ar" ? "/demo?lang=ar" : "/demo"} className="lp-cta lp-cta-still mt-5">
+            {copy.interactiveDemoCta}
+          </Link>
           <HeroScene label={copy.sceneLabel} />
           {demo && (
             <a href={demo} className="lp-cta">
