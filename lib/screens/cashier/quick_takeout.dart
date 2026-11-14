@@ -497,7 +497,14 @@ class _TakeoutDishButton extends StatelessWidget {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: DishPhoto(path: imageUrl, size: 96, width: double.infinity, radius: 0),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => DishPhoto(
+                      path: imageUrl,
+                      size: 96,
+                      width: constraints.maxWidth,
+                      radius: 0,
+                    ),
+                  ),
                 ),
               Padding(
                 padding: EdgeInsets.fromLTRB(14, imageUrl.isEmpty ? 14 : 110, 14, 14),

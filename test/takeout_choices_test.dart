@@ -77,6 +77,19 @@ void main() {
     expect(store.takeoutCards, isTrue);
   });
 
+  testWidgets('a takeout dish renders its saved photo at the card width', (tester) async {
+    final store = (await tester.runAsync(storeWithBurger))!;
+    store.cafe = {...store.cafe, 'takeoutLayout': 'classic'};
+    store.menuItems.single.imageUrl =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPioAAAAASUVORK5CYII=';
+    await pumpAdminScreen(tester, const QuickTakeoutScreen(), store);
+    final photo = tester.widget<Image>(find.byWidgetPredicate(
+      (widget) => widget is Image && widget.width != null && widget.height == 96,
+    ));
+    expect(photo.width!.isFinite, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the ticket is still there after leaving the takeout screen and coming back', (tester) async {
     final store = (await tester.runAsync(storeWithBurger))!;
     store.cafe = {...store.cafe, 'takeoutLayout': 'classic'};
