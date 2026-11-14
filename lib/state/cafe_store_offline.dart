@@ -120,7 +120,7 @@ extension CafeStoreOffline on CafeStore {
   Future<void> _queueTableRound(String tableId, List<OrderLine> lines) async {
     final sync = offline;
     final restaurant = db.restaurantId;
-    if (sync == null || !sync.acceptingWork || restaurant == null) {
+    if (sync == null || restaurant == null) {
       throw StateError(ErrorCodes.network);
     }
     final table = diningTables.where((table) => table.id == tableId).firstOrNull;
