@@ -1232,6 +1232,18 @@ abstract class AppLocalizations {
   /// **'No dishes yet. Add dishes from Menu Layout, then apply discounts here.'**
   String get catalogNoDishesHint;
 
+  /// No description provided for @layoutAddCategoryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category photo'**
+  String get layoutAddCategoryPhoto;
+
+  /// No description provided for @layoutChangeCategoryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change category photo'**
+  String get layoutChangeCategoryPhoto;
+
   /// No description provided for @catalogApplyDiscountPromo.
   ///
   /// In en, this message translates to:
@@ -2795,7 +2807,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineOnlyTakeout.
   ///
   /// In en, this message translates to:
-  /// **'You are offline. Only quick takeout and expenses work until the connection returns.'**
+  /// **'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.'**
   String get offlineOnlyTakeout;
 
   /// No description provided for @offlinePendingNumber.
@@ -2825,7 +2837,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineStartBody.
   ///
   /// In en, this message translates to:
-  /// **'You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.'**
+  /// **'You can take table orders, sell quick takeout and record expenses. This device saves them and uploads them when the connection returns.'**
   String get offlineStartBody;
 
   /// No description provided for @offlineStartButton.

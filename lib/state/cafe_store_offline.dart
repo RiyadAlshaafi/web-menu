@@ -52,11 +52,33 @@ extension CafeStoreOffline on CafeStore {
     final orderIds = orders.map((o) => o.id).toSet();
     final expenseIds = expenses.map((e) => e.id).toSet();
     final shiftIds = shifts.map((s) => s.id).toSet();
-    for (final item in _localItems) {
+    for (final item in [..._localItems]..sort((a, b) => a.createdAt.compareTo(b.createdAt))) {
       final local = item.payload['local'];
       if (local is! Map) continue;
       final data = Map<String, dynamic>.from(local);
       switch (item.kind) {
+        case 'table_round':
+          if ((item.payload['params'] as Map)['p_restaurant_id'] != db.restaurantId) continue;
+          final saved = CafeOrder.fromJson(Map<String, dynamic>.from(data['order'] as Map));
+          final existing = openOrderFor(saved.tableId);
+          final merged = existing == null ? saved : CafeOrder.fromJson(existing.toJson());
+          if (existing != null) {
+            merged.lines.addAll([
+              for (final line in saved.lines)
+                OrderLine.fromJson({...line.toJson(), 'round': existing.latestRound + 1}),
+            ]);
+          }
+          orders = [for (final order in orders) if (order.id != merged.id) order, merged];
+          final table = tables.where((table) => table.id == saved.tableId).firstOrNull;
+          if (table?.status == TableStatus.free) {
+            tables = [
+              for (final current in tables)
+                if (current.id == saved.tableId)
+                  CafeTable.fromJson({...current.toJson(), 'status': TableStatus.dining.name})
+                else
+                  current,
+            ];
+          }
         case 'takeout':
           final payment = Payment.fromJson(Map<String, dynamic>.from(data['payment'] as Map));
           final order = CafeOrder.fromJson(Map<String, dynamic>.from(data['order'] as Map));
@@ -79,8 +101,74 @@ extension CafeStoreOffline on CafeStore {
     }
   }
 
-  /// The till shows only takeout and shifts: it started offline, or the connection dropped while signed in.
+  /// The till started offline or lost its connection while signed in.
   bool get offlineLook => offlineSession || isOffline;
+
+  bool get queuesTableOrders => !db.isLocal && offline != null && offlineLook;
+
+  bool hasQueuedTableOrders(String tableId) => _localItems.any((item) =>
+      item.kind == 'table_round' &&
+      (item.payload['params'] as Map)['p_restaurant_id'] == db.restaurantId &&
+      (item.payload['params'] as Map)['p_table_id'] == tableId);
+
+  void _refreshQueuedTableOrders() {
+    final drafts = carts;
+    _hydrateOperational();
+    carts = drafts;
+  }
+
+  Future<void> _queueTableRound(String tableId, List<OrderLine> lines) async {
+    final sync = offline;
+    final restaurant = db.restaurantId;
+    if (sync == null || !sync.acceptingWork || restaurant == null) {
+      throw StateError(ErrorCodes.network);
+    }
+    final table = diningTables.where((table) => table.id == tableId).firstOrNull;
+    if (table == null || lines.isEmpty) throw StateError(ErrorCodes.cartEmpty);
+    final created = DateTime.now().toUtc();
+    final id = Secrets.id();
+    final order = CafeOrder(
+      id: id,
+      tableId: tableId,
+      tableNumber: table.number,
+      status: OrderStatus.preparing,
+      createdAt: created,
+      lines: [
+        for (final line in lines)
+          OrderLine.fromJson({...line.toJson(), 'id': Secrets.id(), 'round': 1}),
+      ],
+    );
+    final item = OutboxItem(
+      id: id,
+      kind: 'table_round',
+      createdAt: created,
+      payload: {
+        'params': {
+          'p_client_id': id,
+          'p_restaurant_id': restaurant,
+          'p_cashier_id': currentCashier?.id,
+          'p_table_id': tableId,
+          'p_lines': [
+            for (final line in lines)
+              {
+                'menu_item_id': line.menuItemId,
+                'qty': line.qty,
+                if (line.choices.isNotEmpty)
+                  'on': onIdsFor(menuItems.firstWhere((item) => item.id == line.menuItemId).options, line.choices).toList(),
+              },
+          ],
+        },
+        'local': {'order': order.toJson()},
+      },
+    );
+    try {
+      await sync.enqueue(item);
+    } catch (error, stackTrace) {
+      reportError('save offline table order', error, stackTrace);
+      throw StateError(ErrorCodes.failed);
+    }
+    _keepLocal(item);
+  }
 
   void _startCashierPulse() {
     _cashierPulse?.cancel();
@@ -407,7 +495,7 @@ extension CafeStoreOffline on CafeStore {
     canStartOffline = true;
   }
 
-  /// Starts selling without internet: takeout and expenses only, no cashier until the connection returns.
+  /// Starts taking orders and recording expenses before a cashier can sign in.
   /// The offline shift is saved for upload first, with no cashier yet; whoever is chosen after the
   /// connection returns gets the shift and everything sold on it.
   Future<void> startOfflineSession() async {

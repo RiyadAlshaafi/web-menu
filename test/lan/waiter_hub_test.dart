@@ -9,6 +9,8 @@ import 'package:menu_web_v1/lan/store_hub_host.dart';
 import 'package:menu_web_v1/lan/waiter_devices.dart';
 import 'package:menu_web_v1/lan/waiter_hub.dart';
 import 'package:menu_web_v1/models/models.dart';
+import 'package:menu_web_v1/offline/offline_sync.dart';
+import 'package:menu_web_v1/offline/outbox_store_io.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 
 import 'fake_hub_host.dart';
@@ -288,5 +290,66 @@ void main() {
     expect(found?.cafeName, 'Caffe test');
     expect(found?.port, LanProtocol.httpPort);
     expect(found?.hubId, hub.hubId);
+  });
+
+  test('an internet outage queues manual and accepted waiter rounds for replay', () async {
+    final db = AppDatabase.instance;
+    db.closeLocal();
+    final table = CafeTable(id: 'table', number: '5', qrSlug: 'table-five');
+    final dish = MenuItem(id: 'tea', nameIt: 'Tea', nameEn: 'Tea', price: 3, categoryId: 'drinks');
+    final snapshot = {
+      'restaurantId': 'cafe',
+      'tables': [table.toJson()],
+      'menuItems': [dish.toJson()],
+    };
+    db.applyOfflineSnapshot(snapshot);
+    final directory = Directory.systemTemp.createTempSync('offline_table_rounds');
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final path = '${directory.path}/outbox.sqlite';
+    final outbox = SqliteOutboxStore.open(path);
+    var open = true;
+    addTearDown(() { if (open) outbox.close(); });
+    final uploads = <String>[];
+    final sync = OfflineSync(store: outbox, rpc: (name, params) async {
+      expect(name, 'sync_offline_table_round');
+      expect(params['p_table_id'], table.id);
+      uploads.add(params['p_client_id'] as String);
+      return {'ok': true};
+    })..online = false;
+    final store = CafeStore(db)
+      ..cafe = {}
+      ..authKind = AuthKind.cashier
+      ..currentCashier = Cashier(id: 'cashier', name: 'Cashier', initials: 'C')
+      ..offline = sync
+      ..tables = db.tables
+      ..menuItems = db.menuItems;
+    addTearDown(store.dispose);
+    store.addToCart(table.id, dish);
+    await store.sendCartToKitchen(table.id);
+    expect(store.cartFor(table.id).lines, isEmpty);
+
+    final hub = WaiterHub(host: StoreHubHost(store), deviceStore: MemoryWaiterDeviceStore());
+    final token = await pairedToken(hub);
+    final reply = await hub.handle(order(token, {
+      'tableId': table.id,
+      'lines': [{'itemId': dish.id, 'qty': 2}],
+    }));
+    expect(reply.status, 200);
+    expect((await hub.accept(hub.pendingOrders.single)).error, isNull);
+    expect(store.openOrderFor(table.id)!.subtotal, 9);
+    expect(store.openOrderFor(table.id)!.lines.map((line) => line.round), [1, 2]);
+    final queued = await outbox.pending();
+    expect(queued, hasLength(2));
+    expect(uploads, isEmpty);
+    outbox.close();
+    open = false;
+    final reopened = SqliteOutboxStore.open(path);
+    addTearDown(reopened.close);
+    final restarted = OfflineSync(store: reopened, rpc: sync.rpc);
+    await restarted.init();
+    expect(restarted.pendingCount, 2);
+    expect(await restarted.flush(), 2);
+    expect(uploads, queued.map((item) => item.id));
+    expect(await restarted.flush(), 0);
   });
 }

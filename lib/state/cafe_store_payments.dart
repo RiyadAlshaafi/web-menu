@@ -113,6 +113,7 @@ extension CafeStorePayments on CafeStore {
     bool applyService = true,
     String? paymentTypeId,
   }) async {
+    if (queuesTableOrders || hasQueuedTableOrders(tableId)) return l10n.errNetwork;
     final cashier = currentCashier;
     final shift = currentShift ?? openShift;
     if (cashier == null || shift == null) return l10n.errCashierSignInFirst;
@@ -147,6 +148,9 @@ extension CafeStorePayments on CafeStore {
     bool applyService = true,
     String? paymentTypeId,
   }) async {
+    if (queuesTableOrders || hasQueuedTableOrders(tableId)) {
+      return (error: l10n.errNetwork, payment: null);
+    }
     final cashier = currentCashier;
     final shift = currentShift ?? openShift;
     if (cashier == null || shift == null) return (error: l10n.errCashierSignInFirst, payment: null);

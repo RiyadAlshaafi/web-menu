@@ -230,6 +230,7 @@ class _CategoryInspector extends StatefulWidget {
 class _CategoryInspectorState extends State<_CategoryInspector> {
   late final TextEditingController nameController = TextEditingController(text: widget.category.nameEn);
   bool renaming = false;
+  bool pickingPicture = false;
 
   @override
   void dispose() {
@@ -262,22 +263,10 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Tooltip(
-                message: context.l10n.layoutDishPictureLabel,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _pickPicture(store),
-                  child: category.imageUrl.isEmpty
-                      ? Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(color: const Color(0xFFFBF6F0), borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.add_photo_alternate_outlined, color: CafeColors.terracotta),
-                        )
-                      : DishPhoto(path: category.imageUrl, size: 56, radius: 12),
-                ),
-              ),
-              const SizedBox(width: 12),
+              if (category.imageUrl.isNotEmpty) ...[
+                DishPhoto(path: category.imageUrl, size: 56, radius: 12),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +322,14 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
               NavyButton(label: context.l10n.layoutAddDish, icon: Icons.add, height: 44, onPressed: () => showAddDishDialog(context, store, categoryId: category.id)),
             ],
           ),
-          const SizedBox(height: 14),
+          TextButton.icon(
+            onPressed: pickingPicture ? null : () => _pickPicture(store),
+            icon: const Icon(Icons.add_photo_alternate_outlined),
+            label: Text(category.imageUrl.isEmpty
+                ? context.l10n.layoutAddCategoryPhoto
+                : context.l10n.layoutChangeCategoryPhoto),
+          ),
+          const SizedBox(height: 8),
           EyebrowLabel(
             context.l10n.layoutDishesInCategory(category.nameEn.toUpperCase(), '${dishes.where((item) => item.available).length}'),
             color: CafeColors.ink,
@@ -367,19 +363,33 @@ class _CategoryInspectorState extends State<_CategoryInspector> {
   }
 
   Future<void> _pickPicture(CafeStore store) async {
+    setState(() => pickingPicture = true);
     try {
       final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true, allowMultiple: false);
       final file = result?.files.isNotEmpty == true ? result!.files.single : null;
       final bytes = file?.bytes;
-      if (bytes == null || bytes.isEmpty) return;
+      if (!mounted || bytes == null || bytes.isEmpty) return;
       if (bytes.length > 10 * 1024 * 1024) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.layoutImageTooLarge)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.layoutImageTooLarge)));
         return;
       }
       final mime = (file!.extension ?? 'jpg').toLowerCase() == 'png' ? 'image/png' : 'image/jpeg';
-      await store.saveCategory(widget.category..imageUrl = 'data:$mime;base64,${base64Encode(bytes)}');
+      final category = widget.category;
+      final previous = category.imageUrl;
+      category.imageUrl = 'data:$mime;base64,${base64Encode(bytes)}';
+      try {
+        await store.saveCategory(category);
+      } catch (_) {
+        category.imageUrl = previous;
+        rethrow;
+      }
     } catch (error, stackTrace) {
       reportError('category photo', error, stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errGeneric)));
+      }
+    } finally {
+      if (mounted) setState(() => pickingPicture = false);
     }
   }
 

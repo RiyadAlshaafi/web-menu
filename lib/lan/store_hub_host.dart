@@ -37,10 +37,10 @@ class StoreHubHost implements WaiterHubHost {
   };
 
   @override
-  bool get holdsOrders => !store.db.isLocal && !store.db.offlineMode;
+  bool get holdsOrders => !store.db.isLocal && !store.offlineLook && !store.db.offlineMode;
 
   @override
-  bool get takesTableOrders => store.db.isLocal || !(store.db.offlineMode || store.isOffline);
+  bool get takesTableOrders => store.db.isLocal || store.queuesTableOrders || !(store.db.offlineMode || store.offlineLook);
 
   @override
   OrderStatus? tillOrderStatus(String orderId) =>

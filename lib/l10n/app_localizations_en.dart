@@ -623,6 +623,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalogApplyDiscountPromo => 'Apply Discount Promo';
+  @override
+  String get layoutAddCategoryPhoto => 'Add category photo';
+
+  @override
+  String get layoutChangeCategoryPhoto => 'Change category photo';
+
 
   @override
   String get catalogTargetCategory => 'TARGET CATEGORY';
@@ -1520,7 +1526,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineOnlyTakeout =>
-      'You are offline. Only quick takeout and expenses work until the connection returns.';
+      'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.';
 
   @override
   String get offlinePendingNumber => 'Pending';
@@ -1537,7 +1543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineStartBody =>
-      'You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.';
+      'You can take table orders, sell quick takeout and record expenses. This device saves them and uploads them when the connection returns.';
 
   @override
   String get offlineStartButton => 'Use offline';

@@ -139,6 +139,7 @@ class OfflineSync {
   final RpcCall rpc;
   final DateTime Function() _clock;
 
+    'table_round': 'sync_offline_table_round',
   /// Last known state of the connection to the server.
   bool online = true;
 
@@ -150,6 +151,8 @@ class OfflineSync {
 
   /// Items made while no cashier was signed in (offline start); they wait until one is chosen.
   int unassignedCount = 0;
+  bool acceptingWork = true;
+  bool uploadsPaused = false;
 
   /// This app's version, sent with the heartbeat so the developer screen sees every till's version.
   String appVersion = '';
@@ -309,6 +312,7 @@ class OfflineSync {
   Future<List<OutboxItem>> pendingItems() => store.pending();
 
   Future<List<OutboxItem>> failedItems() => store.failed();
+    if (!acceptingWork) throw StateError('cafe_move_frozen');
 
   /// Tells the server a cashier is here, which keeps guest ordering open. Returns whether it answered.
   Future<bool> heartbeat() async {

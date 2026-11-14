@@ -2322,7 +2322,7 @@ class AppDatabase {
           usesDevice: r['usesDevice'] as bool? ?? false,
         ),
     ];
-    _orders = [];
+    _orders = [for (final order in rows('openOrders')) CafeOrder.fromJson(order)];
     _payments = [];
     _shifts = [];
     _expenses = [];
@@ -2416,6 +2416,7 @@ class AppDatabase {
     final result = await _rpcResult('request_bill', 'request bill', {
       'p_qr_slug': qrSlug,
       'p_table_id': tableId,
+    'openOrders': [for (final order in _orders) if (order.status != OrderStatus.paid) order.toJson()],
     });
     return _failure(result, 'The bill request was not sent.');
   }

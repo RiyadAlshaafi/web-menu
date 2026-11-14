@@ -207,9 +207,9 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                             )
                           : GridView.builder(
                         // Taller cards with larger text are easier to hit on a touch till.
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 240,
-                          mainAxisExtent: 144,
+                          mainAxisExtent: dishes.any((dish) => dish.imageUrl.isNotEmpty) ? 240 : 144,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -221,6 +221,7 @@ class _QuickTakeoutScreenState extends State<QuickTakeoutScreen> {
                             category: categoryNames[item.categoryId] ?? '',
                             name: item.displayName(store.locale),
                             description: item.description,
+                            imageUrl: item.imageUrl,
                             price: store.currency.format(item.salePrice),
                             count: inTicket,
                             enabled: item.available && !item.soldOut && item.canSellMore(inTicket),
@@ -428,6 +429,7 @@ class _TakeoutDishButton extends StatelessWidget {
     required this.category,
     required this.name,
     required this.description,
+    this.imageUrl = '',
     required this.price,
     required this.count,
     required this.enabled,
@@ -441,6 +443,7 @@ class _TakeoutDishButton extends StatelessWidget {
   final String category;
   final String name;
   final String description;
+  final String imageUrl;
   final String price;
   final int count;
   final bool enabled;
@@ -489,8 +492,15 @@ class _TakeoutDishButton extends StatelessWidget {
           onTap: enabled ? onTap : null,
           child: Stack(
             children: [
+              if (imageUrl.isNotEmpty)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: DishPhoto(path: imageUrl, size: 96, width: double.infinity, radius: 0),
+                ),
               Padding(
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.fromLTRB(14, imageUrl.isEmpty ? 14 : 110, 14, 14),
                 // A short card keeps the name and price; the description shows only when it fits.
                 child: LayoutBuilder(
                   builder: (context, box) => Column(

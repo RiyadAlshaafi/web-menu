@@ -68,7 +68,7 @@ class CashierShell extends StatelessWidget {
                     SyncStatusStrip(disconnected: view.disconnected, compact: compact),
                     const SizedBox(height: 14),
                     for (final item in waiter ? AppSections.waiter : AppSections.visible(AppSections.cashier, store.features))
-                      if (!view.offline || item.path == '/pos/takeout' || item.path == '/pos/shifts')
+                      if (!view.offline || const ['/pos/takeout', '/pos/shifts', '/pos/tables', '/pos'].contains(item.path))
                       ShellNavItem(
                         section: item,
                         active: item.matches(location),

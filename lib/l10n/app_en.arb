@@ -294,6 +294,8 @@
       "error": {
         "type": "String"
       }
+  "layoutAddCategoryPhoto": "Add category photo",
+  "layoutChangeCategoryPhoto": "Change category photo",
     }
   },
   "catalogNewDiscount": "New Discount",
@@ -805,12 +807,12 @@
     }
   },
   "offlineNoNumbers": "No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.",
-  "offlineOnlyTakeout": "You are offline. Only quick takeout and expenses work until the connection returns.",
+  "offlineOnlyTakeout": "You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.",
   "offlinePendingNumber": "Pending",
   "offlineUnassigned": "Offline (no cashier yet)",
   "offlineCloseShiftNeedsConnection": "This shift was started offline. It can be closed after the connection returns and a cashier takes it.",
   "offlineStartTitle": "No internet connection",
-  "offlineStartBody": "You can keep selling quick takeout and recording expenses. Everything is saved on this device and uploaded when the connection returns.",
+  "offlineStartBody": "You can take table orders, sell quick takeout and record expenses. This device saves them and uploads them when the connection returns.",
   "offlineStartButton": "Use offline",
   "offlineNeverOnline": "This device has not been online yet, so it has no saved menu. Connect to the internet once to use offline mode.",
   "offlineReconnectTitle": "The connection is back",

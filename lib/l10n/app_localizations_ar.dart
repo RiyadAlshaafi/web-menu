@@ -622,6 +622,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get catalogApplyDiscountPromo => 'تطبيق عرض خصم';
+  @override
+  String get layoutAddCategoryPhoto => 'إضافة صورة للقسم';
+
+  @override
+  String get layoutChangeCategoryPhoto => 'تغيير صورة القسم';
+
 
   @override
   String get catalogTargetCategory => 'الفئة المستهدفة';
@@ -1512,7 +1518,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offlineOnlyTakeout =>
-      'أنت غير متصل. يعمل التيك أواي السريع والمصروفات فقط حتى يعود الاتصال.';
+      'أنت غير متصل. يمكنك حفظ طلبات الطاولات والتيك أواي السريع والمصروفات. دفع فواتير الطاولات يحتاج إلى اتصال.';
 
   @override
   String get offlinePendingNumber => 'قيد الانتظار';
@@ -1529,7 +1535,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offlineStartBody =>
-      'يمكنك متابعة بيع التيك أواي السريع وتسجيل المصروفات. يُحفظ كل شيء على هذا الجهاز ويُرفع عند عودة الاتصال.';
+      'يمكنك تسجيل طلبات الطاولات وبيع التيك أواي السريع وتسجيل المصروفات. يحفظها هذا الجهاز ويرفعها عند عودة الاتصال.';
 
   @override
   String get offlineStartButton => 'العمل دون اتصال';

@@ -167,8 +167,9 @@ class _TawlaAppState extends State<TawlaApp> {
         if (path.startsWith('/pos') && widget.store.authKind != AuthKind.cashier) {
           return '/login';
         }
-        // Offline (started without internet) only quick takeout and shift expenses work.
-        if (widget.store.offlineLook && path.startsWith('/pos') && path != '/pos/takeout' && path != '/pos/shifts') {
+        if (widget.store.offlineLook && path.startsWith('/pos') &&
+            path != '/pos/takeout' && path != '/pos/shifts' && path != '/pos' &&
+            path != '/pos/tables' && !path.startsWith('/pos/tables/')) {
           return '/pos/takeout';
         }
         if (path.startsWith('/admin') && widget.store.authKind != AuthKind.admin) {

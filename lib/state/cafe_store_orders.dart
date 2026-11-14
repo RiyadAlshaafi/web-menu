@@ -120,6 +120,10 @@ extension CafeStoreOrders on CafeStore {
       cart.lines.where((line) => line.menuItemId == menuItemId).fold<int>(0, (sum, line) => sum + line.qty);
 
   void _saveCarts(String tableId) {
+    if (queuesTableOrders) {
+      notifyListeners();
+      return;
+    }
     _pendingWrites += 1;
     db.writeCarts(carts, tableId: tableId).whenComplete(_writeFinished);
     notifyListeners();
@@ -146,6 +150,12 @@ extension CafeStoreOrders on CafeStore {
     _pendingWrites += 1;
     var dishesChanged = false;
     try {
+      if (queuesTableOrders) {
+        await _queueTableRound(tableId, cartFor(tableId).lines);
+        carts.remove(tableId);
+        _refreshQueuedTableOrders();
+        return openOrderFor(tableId);
+      }
       final table = tables.where((item) => item.id == tableId);
       final slug = table.isEmpty ? '' : table.first.qrSlug;
       final block = slug.isEmpty ? null : await prepareGuestOrderLocation(slug);
@@ -178,6 +188,7 @@ extension CafeStoreOrders on CafeStore {
     } finally {
       _writeFinished();
       _sendingTables.remove(tableId);
+      if (queuesTableOrders) notifyListeners();
       // Reload the menu so the dishes the server refused show as unavailable.
       if (dishesChanged) unawaited(syncFromDisk());
     }
@@ -194,6 +205,19 @@ extension CafeStoreOrders on CafeStore {
     bool forAccept = false,
   }) async {
     if (_sendingTables.contains(tableId)) return (error: 'in_flight', orderId: null);
+    if (queuesTableOrders) {
+      _sendingTables.add(tableId);
+      try {
+        await _queueTableRound(tableId, lines);
+        _refreshQueuedTableOrders();
+        return (error: null, orderId: openOrderFor(tableId)?.id);
+      } on StateError catch (error) {
+        return (error: error.message, orderId: null);
+      } finally {
+        _sendingTables.remove(tableId);
+        notifyListeners();
+      }
+    }
     final kept = [...cartFor(tableId).lines];
     cartFor(tableId).lines
       ..clear()
@@ -353,7 +377,7 @@ extension CafeStoreOrders on CafeStore {
   /// back to free. A waiter's clear is refused while an order is unpaid. Needs the server (or this
   /// PC's own database); returns the error, if any.
   Future<String?> clearTable(String tableId) async {
-    if (db.offlineMode) return ErrorCodes.network;
+    if (offlineLook || hasQueuedTableOrders(tableId)) return ErrorCodes.network;
     final failure = authKind == AuthKind.waiter ? await db.waiterClearTable(tableId) : await db.clearTable(tableId);
     if (failure != null) {
       _sessionExpired(failure); // signs the cashier out when the session ended
@@ -367,7 +391,9 @@ extension CafeStoreOrders on CafeStore {
   /// Moves the tab and cart of [fromId] to [toId], or merges them into its tab. Needs the server
   /// (or this PC's own database); returns the error, if any.
   Future<String?> moveTable(String fromId, String toId) async {
-    if (db.offlineMode) return ErrorCodes.network;
+    if (offlineLook || hasQueuedTableOrders(fromId) || hasQueuedTableOrders(toId)) {
+      return ErrorCodes.network;
+    }
     final failure = await db.moveTable(fromId, toId);
     if (failure != null) {
       _sessionExpired(failure);
@@ -410,6 +436,7 @@ extension CafeStoreOrders on CafeStore {
   /// back if the server refuses; returns the server's error, if any.
   Future<String?> setOrderStatus(String orderId, OrderStatus status) async {
     final order = orders.firstWhere((item) => item.id == orderId);
+    if (offlineLook || hasQueuedTableOrders(order.tableId)) return ErrorCodes.network;
     if (order.status.next != status) return null;
     final previous = order.status;
     order.status = status;
