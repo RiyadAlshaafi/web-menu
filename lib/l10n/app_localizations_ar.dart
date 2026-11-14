@@ -583,6 +583,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get layoutDishPictureLabel => 'صورة الطبق';
 
   @override
+  String get layoutChangeCategoryPhoto => 'تغيير صورة القسم';
+
+  @override
+  String get layoutAddCategoryPhoto => 'إضافة صورة للقسم';
+
+  @override
   String get layoutImageTooLarge => 'يجب ألا يتجاوز حجم الصورة 10 ميغابايت.';
 
   @override
@@ -622,12 +628,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get catalogApplyDiscountPromo => 'تطبيق عرض خصم';
-  @override
-  String get layoutAddCategoryPhoto => 'إضافة صورة للقسم';
-
-  @override
-  String get layoutChangeCategoryPhoto => 'تغيير صورة القسم';
-
 
   @override
   String get catalogTargetCategory => 'الفئة المستهدفة';
@@ -1517,10 +1517,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا توجد أرقام إيصالات محجوزة على هذا الجهاز. اتصل بالإنترنت مرة واحدة لمتابعة البيع دون اتصال.';
 
   @override
-  String get offlineOnlyTakeout =>
-      'أنت غير متصل. يمكنك حفظ طلبات الطاولات والتيك أواي السريع والمصروفات. دفع فواتير الطاولات يحتاج إلى اتصال.';
-
-  @override
   String get offlinePendingNumber => 'قيد الانتظار';
 
   @override
@@ -1536,6 +1532,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get offlineStartBody =>
       'يمكنك تسجيل طلبات الطاولات وبيع التيك أواي السريع وتسجيل المصروفات. يحفظها هذا الجهاز ويرفعها عند عودة الاتصال.';
+
+  @override
+  String get offlineOnlyTakeout =>
+      'أنت غير متصل. يمكنك حفظ طلبات الطاولات والتيك أواي السريع والمصروفات. دفع فواتير الطاولات يحتاج إلى اتصال.';
 
   @override
   String get offlineStartButton => 'العمل دون اتصال';

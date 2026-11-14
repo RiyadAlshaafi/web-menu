@@ -1166,6 +1166,18 @@ abstract class AppLocalizations {
   /// **'DISH PICTURE'**
   String get layoutDishPictureLabel;
 
+  /// No description provided for @layoutChangeCategoryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change category photo'**
+  String get layoutChangeCategoryPhoto;
+
+  /// No description provided for @layoutAddCategoryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category photo'**
+  String get layoutAddCategoryPhoto;
+
   /// No description provided for @layoutImageTooLarge.
   ///
   /// In en, this message translates to:
@@ -1231,18 +1243,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No dishes yet. Add dishes from Menu Layout, then apply discounts here.'**
   String get catalogNoDishesHint;
-
-  /// No description provided for @layoutAddCategoryPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Add category photo'**
-  String get layoutAddCategoryPhoto;
-
-  /// No description provided for @layoutChangeCategoryPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Change category photo'**
-  String get layoutChangeCategoryPhoto;
 
   /// No description provided for @catalogApplyDiscountPromo.
   ///
@@ -2804,12 +2804,6 @@ abstract class AppLocalizations {
   /// **'No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.'**
   String get offlineNoNumbers;
 
-  /// No description provided for @offlineOnlyTakeout.
-  ///
-  /// In en, this message translates to:
-  /// **'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.'**
-  String get offlineOnlyTakeout;
-
   /// No description provided for @offlinePendingNumber.
   ///
   /// In en, this message translates to:
@@ -2839,6 +2833,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can take table orders, sell quick takeout and record expenses. This device saves them and uploads them when the connection returns.'**
   String get offlineStartBody;
+
+  /// No description provided for @offlineOnlyTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.'**
+  String get offlineOnlyTakeout;
 
   /// No description provided for @offlineStartButton.
   ///

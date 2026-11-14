@@ -584,6 +584,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutDishPictureLabel => 'DISH PICTURE';
 
   @override
+  String get layoutChangeCategoryPhoto => 'Change category photo';
+
+  @override
+  String get layoutAddCategoryPhoto => 'Add category photo';
+
+  @override
   String get layoutImageTooLarge => 'Image must be 10MB or smaller.';
 
   @override
@@ -623,12 +629,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalogApplyDiscountPromo => 'Apply Discount Promo';
-  @override
-  String get layoutAddCategoryPhoto => 'Add category photo';
-
-  @override
-  String get layoutChangeCategoryPhoto => 'Change category photo';
-
 
   @override
   String get catalogTargetCategory => 'TARGET CATEGORY';
@@ -1525,10 +1525,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No receipt numbers are reserved on this device. Connect to the internet once to continue selling offline.';
 
   @override
-  String get offlineOnlyTakeout =>
-      'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.';
-
-  @override
   String get offlinePendingNumber => 'Pending';
 
   @override
@@ -1544,6 +1540,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offlineStartBody =>
       'You can take table orders, sell quick takeout and record expenses. This device saves them and uploads them when the connection returns.';
+
+  @override
+  String get offlineOnlyTakeout =>
+      'You are offline. Table orders, quick takeout and expenses can be saved. Table payments need a connection.';
 
   @override
   String get offlineStartButton => 'Use offline';

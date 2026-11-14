@@ -1,10 +1,12 @@
-create table private.offline_table_rounds (
+create table if not exists private.offline_table_rounds (
   restaurant_id uuid not null references public.restaurants(id) on delete cascade,
   client_id uuid not null,
   primary key (restaurant_id, client_id)
 );
 
-create function public.sync_offline_table_round(
+alter table private.offline_table_rounds enable row level security;
+
+create or replace function public.sync_offline_table_round(
   p_client_id uuid, p_restaurant_id uuid, p_cashier_id uuid, p_table_id uuid, p_lines jsonb
 ) returns jsonb
 language plpgsql security definer set search_path = ''
