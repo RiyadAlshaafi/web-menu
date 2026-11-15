@@ -24,9 +24,9 @@ declare
   oid uuid;
   n integer;
 begin
-  insert into public.restaurants (name, service_charge_rate, header_color, location_lat, location_lng,
+  insert into public.restaurants (name, service_charge_rate, qr_theme, location_lat, location_lng,
                                   location_radius_m, location_check_enabled, require_cashier_online)
-  values ('web cafe', 0.10, '#112233', 32.9, 13.18, 30, true, true)
+  values ('web cafe', 0.10, '{"header":"#112233"}', 32.9, 13.18, 30, true, true)
   returning id into rid;
   insert into public.restaurants (name) values ('other cafe') returning id into other_rid;
   insert into public.dining_tables (restaurant_id, number, qr_slug) values (rid, 'W1', 'web-slug-1') returning id into tid;
