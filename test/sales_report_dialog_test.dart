@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:menu_web_v1/core/money.dart';
 import 'package:menu_web_v1/core/sales_report.dart';
 import 'package:menu_web_v1/data/app_database.dart';
@@ -81,9 +82,18 @@ void main() {
     await open(tester, store);
 
     await tapVisible(tester, find.text(l10n.reportRangeMonth));
+    final now = toTripoli(DateTime.now());
+    final previous = DateTime(now.year, now.month - 1);
+    await tapVisible(tester, find.text(DateFormat.yMMMM('en').format(now)));
+    if (previous.year != now.year) {
+      await tapVisible(tester, find.text('${now.year}'));
+      await tapVisible(tester, find.text('${previous.year}'));
+    }
+    await tapVisible(tester, find.text(DateFormat.MMM('en').format(previous)));
+    await tapVisible(tester, find.text(l10n.catalogApply));
     await tapVisible(tester, find.text(l10n.reportPrint));
 
-    expect(store.asked.single.$1.day, 1);
+    expect(store.asked.single.$1, previous);
     expect(sent, hasLength(1));
   });
 
@@ -97,6 +107,22 @@ void main() {
     expect(find.text(l10n.reportPickDays), findsOneWidget);
     expect(store.asked, isEmpty);
     expect(sent, isEmpty);
+  });
+
+  testWidgets('both custom report fields apply dates through the shared picker', (tester) async {
+    final store = _ReportStore();
+    await open(tester, store);
+    await tapVisible(tester, find.text(l10n.reportRangeCustom));
+
+    for (final (label, date) in [(l10n.salesDateFrom, '10/04/2024'), (l10n.salesDateTo, '10/08/2024')]) {
+      await tapVisible(tester, find.text(label));
+      final strings = MaterialLocalizations.of(tester.element(find.text(l10n.catalogApply)));
+      await tapVisible(tester, find.byTooltip(strings.inputDateModeButtonLabel));
+      await tester.enterText(find.byType(TextFormField), date);
+      await tapVisible(tester, find.text(l10n.catalogApply));
+    }
+    await tapVisible(tester, find.text(l10n.reportPrint));
+    expect(store.asked, [(DateTime(2024, 10, 4), DateTime(2024, 10, 8))]);
   });
 
   testWidgets('when the totals can\'t be fetched it says why and prints nothing', (tester) async {

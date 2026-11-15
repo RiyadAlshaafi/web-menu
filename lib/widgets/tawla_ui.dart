@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../theme/cafe_theme.dart';
+import 'cafe_date_picker.dart';
 
 /// Small building blocks of the Tawla staff design, so every console page reads the same:
 /// white panels on the page colour, white search and select boxes, navy segmented pills,
@@ -490,13 +491,11 @@ class DateBox extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () async {
-            final picked = await showDatePicker(
+            final picked = await showCafeDatePicker(
               context: context,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now().add(const Duration(days: 1)),
-              initialDate: value ?? DateTime.now(),
+              value: value,
             );
-            onPicked(picked);
+            if (context.mounted && picked != null) onPicked(picked.start);
           },
           child: ExcludeSemantics(
             child: Container(

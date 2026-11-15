@@ -8,6 +8,7 @@ import '../l10n/l10n_ext.dart';
 import '../printing/report_print.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import 'cafe_date_picker.dart';
 import 'tawla_ui.dart';
 
 /// Which days a report covers.
@@ -84,6 +85,18 @@ class _SalesReportDialogState extends State<SalesReportDialog> {
     };
   }
 
+  Future<void> _pickMonth() async {
+    final now = toTripoli(DateTime.now());
+    final picked = await showCafeMonthPicker(
+      context: context,
+      value: month,
+      firstMonth: DateTime(now.year, now.month - 11),
+      lastMonth: DateTime(now.year, now.month),
+    );
+    if (!mounted || picked == null) return;
+    setState(() => month = picked);
+  }
+
   Future<void> _print() async {
     final range = reportRange(kind, now: DateTime.now(), month: month, from: from, to: to);
     final l10n = context.l10n;
@@ -129,8 +142,6 @@ class _SalesReportDialogState extends State<SalesReportDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final now = toTripoli(DateTime.now());
-    final months = [for (var back = 0; back < 12; back++) DateTime(now.year, now.month - back)];
     final where = target;
     return AlertDialog(
       title: Text(l10n.reportTitle),
@@ -154,11 +165,10 @@ class _SalesReportDialogState extends State<SalesReportDialog> {
             ),
             const SizedBox(height: 12),
             if (kind == ReportRangeKind.month)
-              SelectBox<DateTime>(
-                value: month,
-                height: 48,
-                items: [for (final item in months) DropdownMenuItem(value: item, child: Text(DateFormat.yMMMM(l10n.localeName).format(item)))],
-                onChanged: (value) => setState(() => month = value ?? month),
+              OutlinedButton.icon(
+                onPressed: _pickMonth,
+                icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                label: Text(DateFormat.yMMMM(l10n.localeName).format(month)),
               ),
             if (kind == ReportRangeKind.custom)
               Wrap(

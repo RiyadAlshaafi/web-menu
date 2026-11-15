@@ -96,6 +96,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesDateTo => 'To';
 
   @override
+  String get datePickerClearDate => 'Clear date';
+
+  @override
+  String get datePickerBackToCalendar => 'Back to calendar';
+
+  @override
+  String get datePickerSelectMonth => 'Select month';
+
+  @override
   String get salesAllCashiers => 'All cashiers';
 
   @override
