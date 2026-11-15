@@ -80,17 +80,32 @@ export function accessibleFill(color: string): string {
   return readableOn(color, [PAPER]);
 }
 
-export type Brand = { header: string; onHeader: string; button: string; onButton: string; buttonInk: string };
+export type Brand = { header: string; onHeader: string; button: string; onButton: string; buttonInk: string; page: string };
 
-export function brand(headerColor: string, buttonColor: string): Brand {
+// Keep existing muted text readable on custom page colors.
+function readablePage(color: string): string {
+  if (contrastRatio(color, "#56606A") >= 4.5) return color;
+  const channels = rgb(color);
+  for (let white = 0.05; white < 1; white += 0.05) {
+    const candidate = "#" + channels.map((channel) =>
+      Math.round(channel + (255 - channel) * white).toString(16).padStart(2, "0"),
+    ).join("").toUpperCase();
+    if (contrastRatio(candidate, "#56606A") >= 4.5) return candidate;
+  }
+  return PAPER;
+}
+
+export function brand(headerColor: string, buttonColor: string, backgroundColor?: string): Brand {
   const header = accessibleFill(parseHex(headerColor, DEFAULT_HEADER));
   const button = accessibleFill(parseHex(buttonColor, DEFAULT_BUTTON));
+  const page = readablePage(parseHex(backgroundColor, PAGE));
   return {
     header,
     onHeader: contrastOn(header),
     button,
     onButton: contrastOn(button),
-    buttonInk: readableOn(button, [PAPER, PAGE]),
+    buttonInk: readableOn(button, [PAPER, page]),
+    page,
   };
 }
 
@@ -101,5 +116,6 @@ export function brandStyle(b: Brand): Record<string, string> {
     "--brand-button": b.button,
     "--brand-on-button": b.onButton,
     "--brand-button-ink": b.buttonInk,
+    "--brand-page": b.page,
   };
 }

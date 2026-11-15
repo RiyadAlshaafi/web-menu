@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cartCount, cartKey, cartLines, cartTotal, loadCart, prune, setQty as setCartQty, add as addToCart, type Cart, type CartLine } from "@/lib/cart";
 import { api } from "@/lib/client/api";
+import { brand, brandStyle } from "@/lib/color";
 import { isFresh, pingStamp } from "@/lib/client/freshness";
 import { MENU_TABLES, subscribeLive } from "@/lib/client/live";
 import { errorText } from "@/lib/client/messages";
@@ -431,5 +432,12 @@ export function GuestProvider({
     showToast,
   };
 
-  return <GuestContext.Provider value={value}>{children}</GuestContext.Provider>;
+  const { headerColor, buttonColor, backgroundColor } = menu.cafe;
+  return (
+    <GuestContext.Provider value={value}>
+      <div className="min-h-dvh bg-page" style={brandStyle(brand(headerColor, buttonColor, backgroundColor))}>
+        {children}
+      </div>
+    </GuestContext.Provider>
+  );
 }

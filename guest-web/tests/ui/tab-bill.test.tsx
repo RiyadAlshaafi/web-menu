@@ -203,6 +203,17 @@ describe("live updates and refetching", () => {
     // A ping reloads under a stamp, so the edge cache cannot hand back the menu from before the change.
     expect(calls.find((c) => c.url.includes("/menu"))!.url).toMatch(/&v=\d+$/);
 
+    Object.assign(renamed.cafe, {
+      headerColor: "#173D27",
+      buttonColor: "#442266",
+      backgroundColor: "#DCEFE2",
+    });
+    act(() => fire("cafe:cafe-1", "restaurants"));
+    const theme = (view.container.firstElementChild as HTMLElement).style;
+    await waitFor(() => expect(theme.getPropertyValue("--brand-header")).toBe("#173D27"));
+    expect(theme.getPropertyValue("--brand-button")).toBe("#442266");
+    expect(theme.getPropertyValue("--brand-page")).toBe("#DCEFE2");
+
     act(() => fire("cafe:cafe-1", "cashier_presence"));
     await waitFor(() => expect(calls.some((c) => c.url.includes("/status"))).toBe(true));
     view.unmount();

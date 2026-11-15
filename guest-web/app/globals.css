@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-/* Tawla guest look (lib/screens/customer/guest_parts.dart): cream page, white cards, the cafe's
-   header and button colours from --brand-* (set per cafe on the guest layout). */
+/* Default guest palette. Cafe colors are scoped to the QR pages. */
 @theme {
-  --color-page: #fdf9f2;
   --color-ink: #1c1c18;
   --color-muted: #56606a;
   --color-ink-muted: #56423c;
@@ -18,12 +16,16 @@
   --color-terracotta: #ba5333;
   --color-terracotta-dark: #9a3c1d;
   --color-success: #4f7a45;
+  --font-sans: var(--font-jakarta), var(--font-naskh), system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-page: var(--brand-page, #fdf9f2);
   --color-brand-header: var(--brand-header, #1b3a4b);
   --color-on-header: var(--brand-on-header, #ffffff);
   --color-brand: var(--brand-button, #ba5333);
   --color-on-brand: var(--brand-on-button, #ffffff);
   --color-brand-ink: var(--brand-button-ink, #ba5333);
-  --font-sans: var(--font-jakarta), var(--font-naskh), system-ui, sans-serif;
 }
 
 html {
@@ -32,7 +34,7 @@ html {
 }
 
 body {
-  background: var(--color-page);
+  background: #fdf9f2;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
@@ -43,7 +45,7 @@ body:lang(ar) {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-brand-ink);
+  outline: 3px solid var(--brand-button-ink, #ba5333);
   outline-offset: 2px;
 }
 

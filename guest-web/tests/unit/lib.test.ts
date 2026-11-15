@@ -102,7 +102,14 @@ describe("brand colours", () => {
     expect(contrastRatio(ink, PAPER)).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(ink, PAGE)).toBeGreaterThanOrEqual(4.5);
     expect(readableOn("#1B3A4B", [PAPER])).toBe("#1B3A4B");
-    expect(brand("", "")).toMatchObject({ header: "#1B3A4B", button: "#BA5333", onHeader: PAPER });
+    expect(brand("", "")).toMatchObject({ header: "#1B3A4B", button: "#BA5333", onHeader: PAPER, page: PAGE });
+  });
+
+  it("keeps readable custom backgrounds and lightens dark ones for guest text", () => {
+    expect(brand("", "", "#DCEFE2").page).toBe("#DCEFE2");
+    const custom = brand("", "#FFE066", "#10142A");
+    expect(contrastRatio(custom.page, "#56606A")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(custom.buttonInk, custom.page)).toBeGreaterThanOrEqual(4.5);
   });
 });
 
