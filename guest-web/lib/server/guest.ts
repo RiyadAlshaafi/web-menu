@@ -68,6 +68,8 @@ const menuSchema = z
       header_color: text,
       button_color: text,
       background_color: text,
+      bottom_bar_color: text.optional(),
+      card_color: text.optional(),
       service_charge_rate: money,
       // Missing until the guest_menu_layout migration is applied; anything unknown is the list.
       menu_layout: z.enum(["list", "grid"]).catch("list"),
@@ -101,6 +103,8 @@ const menuSchema = z
         headerColor: m.cafe.header_color,
         buttonColor: m.cafe.button_color,
         backgroundColor: m.cafe.background_color,
+        bottomBarColor: m.cafe.bottom_bar_color,
+        cardColor: m.cafe.card_color,
         serviceChargeRate: m.cafe.service_charge_rate,
         menuLayout: m.cafe.menu_layout,
       },

@@ -80,10 +80,13 @@ export function accessibleFill(color: string): string {
   return readableOn(color, [PAPER]);
 }
 
-export type Brand = { header: string; onHeader: string; button: string; onButton: string; buttonInk: string; page: string };
+export type Brand = {
+  header: string; onHeader: string; button: string; onButton: string;
+  buttonInk: string; page: string; bottomBar: string; card: string;
+};
 
 // Keep existing muted text readable on custom page colors.
-function readablePage(color: string): string {
+function readableSurface(color: string): string {
   if (contrastRatio(color, "#56606A") >= 4.5) return color;
   const channels = rgb(color);
   for (let white = 0.05; white < 1; white += 0.05) {
@@ -95,17 +98,27 @@ function readablePage(color: string): string {
   return PAPER;
 }
 
-export function brand(headerColor: string, buttonColor: string, backgroundColor?: string): Brand {
+export function brand(
+  headerColor: string,
+  buttonColor: string,
+  backgroundColor?: string,
+  bottomBarColor?: string,
+  cardColor?: string,
+): Brand {
   const header = accessibleFill(parseHex(headerColor, DEFAULT_HEADER));
   const button = accessibleFill(parseHex(buttonColor, DEFAULT_BUTTON));
-  const page = readablePage(parseHex(backgroundColor, PAGE));
+  const page = readableSurface(parseHex(backgroundColor, PAGE));
+  const bottomBar = readableSurface(parseHex(bottomBarColor, PAPER));
+  const card = readableSurface(parseHex(cardColor, PAPER));
   return {
     header,
     onHeader: contrastOn(header),
     button,
     onButton: contrastOn(button),
-    buttonInk: readableOn(button, [PAPER, page]),
+    buttonInk: readableOn(button, [PAPER, page, bottomBar, card]),
     page,
+    bottomBar,
+    card,
   };
 }
 
@@ -117,5 +130,7 @@ export function brandStyle(b: Brand): Record<string, string> {
     "--brand-on-button": b.onButton,
     "--brand-button-ink": b.buttonInk,
     "--brand-page": b.page,
+    "--brand-bottom-bar": b.bottomBar,
+    "--brand-dish-card": b.card,
   };
 }

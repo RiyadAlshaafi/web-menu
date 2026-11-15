@@ -39,7 +39,7 @@ export function BottomNav() {
   const cell = "flex min-h-[44px] flex-1 flex-col items-center justify-center";
 
   return (
-    <nav aria-label={text("guestNavMenu")} className="sticky bottom-0 z-20 flex h-[68px] border-t border-line bg-white pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label={text("guestNavMenu")} className="sticky bottom-0 z-20 flex h-[68px] border-t border-line bg-bottom-bar pb-[env(safe-area-inset-bottom)]">
       <Link href={href()} className={cell} aria-current={onMenu ? "page" : undefined}>
         {item("menu", text("guestNavMenu"), onMenu)}
       </Link>

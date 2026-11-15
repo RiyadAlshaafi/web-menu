@@ -286,7 +286,7 @@ class CafeStore extends ChangeNotifier {
 
   String _cafeStamp(Map<String, dynamic> cafe, String locale) =>
       '$locale|${cafe['name']}|${cafe['logoUrl']}|${cafe['headerColor']}|${cafe['sidebarColor']}|${cafe['backgroundColor']}|${cafe['buttonColor']}'
-      '|${jsonEncode(cafe['receiptSettings'])}';
+      '|${cafe['posCardColor']}|${jsonEncode(cafe['qrTheme'])}|${jsonEncode(cafe['receiptSettings'])}';
 
   String _stamp() => _fingerprint(
     cafe: cafe,

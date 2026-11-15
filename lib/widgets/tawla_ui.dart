@@ -20,13 +20,13 @@ class TawlaPanel extends StatelessWidget {
 
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: color ?? CafeSurfaces.of(context).cardSurface, borderRadius: BorderRadius.circular(16)),
       child: child,
     );
   }
@@ -431,7 +431,7 @@ class FigureCard extends StatelessWidget {
     final soft = dark ? const Color(0xFFB9C7CF) : TawlaTokens.muted;
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: dark ? surfaces.header : Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: dark ? surfaces.header : surfaces.cardSurface, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

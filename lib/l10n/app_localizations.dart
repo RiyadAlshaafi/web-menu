@@ -1388,6 +1388,108 @@ abstract class AppLocalizations {
   /// **'Save colors'**
   String get catalogSaveColors;
 
+  /// No description provided for @appearanceQrMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Menu'**
+  String get appearanceQrMenu;
+
+  /// No description provided for @appearanceThemeColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme colors'**
+  String get appearanceThemeColors;
+
+  /// No description provided for @appearanceBottomBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom bar'**
+  String get appearanceBottomBar;
+
+  /// No description provided for @appearanceDishCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish card'**
+  String get appearanceDishCard;
+
+  /// No description provided for @appearancePosCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card color'**
+  String get appearancePosCard;
+
+  /// No description provided for @appearancePosPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'POS preview'**
+  String get appearancePosPreview;
+
+  /// No description provided for @appearanceQrPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'QR menu preview'**
+  String get appearanceQrPreview;
+
+  /// No description provided for @appearanceSavePos.
+  ///
+  /// In en, this message translates to:
+  /// **'Save POS colors'**
+  String get appearanceSavePos;
+
+  /// No description provided for @appearanceSaveQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Save QR colors'**
+  String get appearanceSaveQr;
+
+  /// No description provided for @appearanceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors saved.'**
+  String get appearanceSaved;
+
+  /// No description provided for @appearanceSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the colors. Try again.'**
+  String get appearanceSaveFailed;
+
+  /// No description provided for @appearanceSampleDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Cappuccino'**
+  String get appearanceSampleDish;
+
+  /// No description provided for @appearanceAllDishes.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get appearanceAllDishes;
+
+  /// No description provided for @appearanceViewOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'View order'**
+  String get appearanceViewOrder;
+
+  /// No description provided for @appearanceMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get appearanceMenu;
+
+  /// No description provided for @appearanceTableBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Table Bill'**
+  String get appearanceTableBill;
+
+  /// No description provided for @appearanceContrastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Some QR colors are adjusted for readable text.'**
+  String get appearanceContrastHint;
+
   /// No description provided for @catalogResetColors.
   ///
   /// In en, this message translates to:

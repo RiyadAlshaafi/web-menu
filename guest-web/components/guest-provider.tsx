@@ -432,10 +432,10 @@ export function GuestProvider({
     showToast,
   };
 
-  const { headerColor, buttonColor, backgroundColor } = menu.cafe;
+  const { headerColor, buttonColor, backgroundColor, bottomBarColor, cardColor } = menu.cafe;
   return (
     <GuestContext.Provider value={value}>
-      <div className="min-h-dvh bg-page" style={brandStyle(brand(headerColor, buttonColor, backgroundColor))}>
+      <div className="min-h-dvh bg-page" style={brandStyle(brand(headerColor, buttonColor, backgroundColor, bottomBarColor, cardColor))}>
         {children}
       </div>
     </GuestContext.Provider>

@@ -34,6 +34,17 @@ class CafeColors {
   /// ratio (not a fixed luminance cut-off) keeps mid-tone owner colours at 4.5:1 or better.
   static Color contrastOn(Color color) => contrastRatio(color, ink) >= contrastRatio(color, paper) ? ink : paper;
 
+  static const mutedSurfaceText = Color(0xFF56606A);
+
+  static Color readableSurface(Color color) {
+    if (contrastRatio(color, mutedSurfaceText) >= 4.5) return color;
+    for (var step = 1; step < 20; step++) {
+      final candidate = Color.lerp(color, paper, step / 20)!;
+      if (contrastRatio(candidate, mutedSurfaceText) >= 4.5) return candidate;
+    }
+    return paper;
+  }
+
   /// [color] darkened just enough to be used as text or a border on every one of [surfaces].
   static Color readableOn(Color color, List<Color> surfaces, {double minRatio = 4.5}) {
     bool reads(Color candidate) => surfaces.every((surface) => contrastRatio(candidate, surface) >= minRatio);
@@ -66,12 +77,15 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
     required this.sidebar,
     required this.background,
     required this.button,
+    this.card = CafeColors.paper,
   });
 
   final Color header;
   final Color sidebar;
   final Color background;
   final Color button;
+  final Color card;
+  Color get cardSurface => CafeColors.readableSurface(card);
 
   Color get onHeader => CafeColors.contrastOn(header);
   Color get onSidebar => CafeColors.contrastOn(sidebar);
@@ -79,7 +93,7 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
 
   /// The button colour as text, an icon or an outline on the white and page surfaces.
   /// Equals [button] unless that is too light to read there (a bright yellow, say).
-  Color get buttonInk => CafeColors.readableOn(button, [CafeColors.paper, background]);
+  Color get buttonInk => CafeColors.readableOn(button, [CafeColors.paper, background, cardSurface]);
 
   static const defaults = CafeSurfaces(
     header: CafeColors.defaultHeader,
@@ -95,14 +109,16 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
         sidebar: CafeColors.parseHex(cafe['sidebarColor'] as String?, CafeColors.defaultSidebar),
         background: CafeColors.parseHex(cafe['backgroundColor'] as String?, CafeColors.defaultBackground),
         button: CafeColors.parseHex(cafe['buttonColor'] as String?, CafeColors.defaultButton),
+        card: CafeColors.parseHex(cafe['posCardColor'] as String?, CafeColors.paper),
       );
 
   @override
-  CafeSurfaces copyWith({Color? header, Color? sidebar, Color? background, Color? button}) => CafeSurfaces(
+  CafeSurfaces copyWith({Color? header, Color? sidebar, Color? background, Color? button, Color? card}) => CafeSurfaces(
         header: header ?? this.header,
         sidebar: sidebar ?? this.sidebar,
         background: background ?? this.background,
         button: button ?? this.button,
+        card: card ?? this.card,
       );
 
   @override
@@ -113,6 +129,7 @@ class CafeSurfaces extends ThemeExtension<CafeSurfaces> {
       sidebar: Color.lerp(sidebar, other.sidebar, t) ?? sidebar,
       background: Color.lerp(background, other.background, t) ?? background,
       button: Color.lerp(button, other.button, t) ?? button,
+      card: Color.lerp(card, other.card, t) ?? card,
     );
   }
 }

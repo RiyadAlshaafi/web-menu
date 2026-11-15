@@ -7,6 +7,8 @@ export type Cafe = {
   headerColor: string;
   buttonColor: string;
   backgroundColor: string;
+  bottomBarColor?: string;
+  cardColor?: string;
   serviceChargeRate: number;
   /** How dishes are laid out: rows with a small photo, or two photo cards per row. */
   menuLayout: "list" | "grid";

@@ -148,7 +148,7 @@ class _CashierFloorScreenState extends State<CashierFloorScreen> {
     }
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: CafeSurfaces.of(context).cardSurface, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

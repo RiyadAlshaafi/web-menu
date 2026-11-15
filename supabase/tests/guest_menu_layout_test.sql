@@ -37,6 +37,22 @@ begin
   assert r->'cafe'->>'menu_layout' = 'grid', 'the guest page gets the grid: ' || r::text;
   execute 'reset role';
 
+  -- POS edits and the two additional guest surfaces are independent.
+  execute 'set local role authenticated';
+  update public.restaurants
+    set header_color = '#1B3A4B', pos_card_color = '#F0EBFA',
+        qr_theme = '{"header":"#21463D","bottomBar":"#F4ECE2","card":"#FFF2D8"}'
+    where id = rid;
+  update public.restaurants set header_color = '#544481' where id = rid;
+  execute 'reset role';
+  execute 'set local role anon';
+  r := public.guest_menu('layout-slug-1');
+  assert r->'cafe'->>'header_color' = '#21463D', 'guest header stays independent';
+  assert r->'cafe'->>'bottom_bar_color' = '#F4ECE2', 'guest nav color is public';
+  assert r->'cafe'->>'card_color' = '#FFF2D8', 'guest card color is public';
+  assert not (r->'cafe' ? 'pos_card_color'), 'POS card color is private';
+  execute 'reset role';
+
   -- ---------------------------------------------------------------- only known layouts
   blocked := false;
   begin

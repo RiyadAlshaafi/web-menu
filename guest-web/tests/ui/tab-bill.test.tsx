@@ -207,12 +207,16 @@ describe("live updates and refetching", () => {
       headerColor: "#173D27",
       buttonColor: "#442266",
       backgroundColor: "#DCEFE2",
+      bottomBarColor: "#F4ECE2",
+      cardColor: "#FFF2D8",
     });
     act(() => fire("cafe:cafe-1", "restaurants"));
     const theme = (view.container.firstElementChild as HTMLElement).style;
     await waitFor(() => expect(theme.getPropertyValue("--brand-header")).toBe("#173D27"));
     expect(theme.getPropertyValue("--brand-button")).toBe("#442266");
     expect(theme.getPropertyValue("--brand-page")).toBe("#DCEFE2");
+    expect(theme.getPropertyValue("--brand-bottom-bar")).toBe("#F4ECE2");
+    expect(theme.getPropertyValue("--brand-dish-card")).toBe("#FFF2D8");
 
     act(() => fire("cafe:cafe-1", "cashier_presence"));
     await waitFor(() => expect(calls.some((c) => c.url.includes("/status"))).toBe(true));

@@ -704,6 +704,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogSaveColors => 'Save colors';
 
   @override
+  String get appearanceQrMenu => 'QR Menu';
+
+  @override
+  String get appearanceThemeColors => 'Theme colors';
+
+  @override
+  String get appearanceBottomBar => 'Bottom bar';
+
+  @override
+  String get appearanceDishCard => 'Dish card';
+
+  @override
+  String get appearancePosCard => 'Card color';
+
+  @override
+  String get appearancePosPreview => 'POS preview';
+
+  @override
+  String get appearanceQrPreview => 'QR menu preview';
+
+  @override
+  String get appearanceSavePos => 'Save POS colors';
+
+  @override
+  String get appearanceSaveQr => 'Save QR colors';
+
+  @override
+  String get appearanceSaved => 'Colors saved.';
+
+  @override
+  String get appearanceSaveFailed => 'Couldn\'t save the colors. Try again.';
+
+  @override
+  String get appearanceSampleDish => 'Cappuccino';
+
+  @override
+  String get appearanceAllDishes => 'All';
+
+  @override
+  String get appearanceViewOrder => 'View order';
+
+  @override
+  String get appearanceMenu => 'Menu';
+
+  @override
+  String get appearanceTableBill => 'Table Bill';
+
+  @override
+  String get appearanceContrastHint =>
+      'Some QR colors are adjusted for readable text.';
+
+  @override
   String get catalogResetColors => 'Reset to default';
 
   @override

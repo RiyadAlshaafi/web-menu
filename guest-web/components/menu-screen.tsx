@@ -276,7 +276,7 @@ function Spotlight({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
       onClick={onOpen}
       disabled={!item.available}
       aria-label={name}
-      className="press block w-full overflow-hidden rounded-[18px] bg-white text-start shadow-[0_2px_10px_rgba(27,58,75,0.08)]"
+      className="press block w-full overflow-hidden rounded-[18px] bg-dish-card text-start shadow-[0_2px_10px_rgba(27,58,75,0.08)]"
     >
       <div className="relative">
         <DishPhoto url={item.imageUrl} size={150} width={430} radius={0} priority />
@@ -301,7 +301,7 @@ function DishRow({ item, onOpen, priority }: { item: MenuItem; onOpen: () => voi
   const { lang, text } = useGuest();
   const name = dishName(item, lang);
   return (
-    <li className="mb-2.5 flex items-center rounded-2xl bg-white p-2.5">
+    <li className="mb-2.5 flex items-center rounded-2xl bg-dish-card p-2.5">
       <button
         type="button"
         onClick={onOpen}
@@ -332,7 +332,7 @@ function DishCard({ item, onOpen, priority }: { item: MenuItem; onOpen: () => vo
   const { lang, text } = useGuest();
   const name = dishName(item, lang);
   return (
-    <li className="relative flex flex-col overflow-hidden rounded-2xl bg-white">
+    <li className="relative flex flex-col overflow-hidden rounded-2xl bg-dish-card">
       <button type="button" onClick={onOpen} disabled={!item.available} className="press flex flex-1 flex-col text-start">
         <span className={`block w-full ${item.available ? "" : "opacity-50"}`}>
           <DishPhoto url={item.imageUrl} size={128} width={215} radius={0} priority={priority} />

@@ -8,6 +8,8 @@ import 'package:menu_web_v1/data/local_state_store.dart';
 import 'package:menu_web_v1/data/local_state_store_io.dart' show SqliteLocalStateStore, localDatabaseFileName;
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
+import 'package:menu_web_v1/theme/cafe_theme.dart';
+import 'package:menu_web_v1/theme/guest_palette.dart';
 import 'package:path/path.dart' as p;
 
 final db = AppDatabase.instance;
@@ -37,6 +39,21 @@ void main() {
 
   setUp(() async => db.initLocal(openMemoryLocalStateStore()));
   tearDown(() => db.closeLocal());
+
+  test('POS and QR theme writes preserve each other and retain legacy QR colors', () async {
+    await db.writeCafe({...db.cafe, 'headerColor': '#21463D', 'backgroundColor': '#DCEFE2'});
+    final store = CafeStore(db);
+    await store.savePosAppearance(CafeSurfaces.defaults.copyWith(card: CafeColors.peach));
+    expect(store.cafe['posCardColor'], CafeColors.toHex(CafeColors.peach));
+    expect(GuestPalette.fromCafe(store.cafe).toJson(), containsPair('header', '#21463D'));
+    expect(GuestPalette.fromCafe(store.cafe).toJson(), containsPair('background', '#DCEFE2'));
+
+    await store.saveQrAppearance(const GuestPalette(card: CafeColors.cream, bottomBar: CafeColors.creamDark).toJson());
+    expect(store.cafe['posCardColor'], CafeColors.toHex(CafeColors.peach));
+    expect(GuestPalette.fromCafe(db.cafe).card, CafeColors.cream);
+    expect(GuestPalette.fromCafe(db.cafe).bottomBar, CafeColors.creamDark);
+    store.dispose();
+  });
 
   group('first start', () {
     test('has the default payment methods and expense types, and no admin yet', () {

@@ -5,6 +5,7 @@ import 'package:menu_web_v1/features/app_feature.dart';
 import 'package:menu_web_v1/l10n/app_localizations.dart';
 import 'package:menu_web_v1/models/models.dart';
 import 'package:menu_web_v1/screens/admin_catalog_screens.dart';
+import 'package:menu_web_v1/screens/admin_brand_settings.dart';
 import 'package:menu_web_v1/state/cafe_store.dart';
 
 import 'support/admin_test_app.dart';
@@ -62,6 +63,20 @@ Finder inDialog(String label) => find.descendant(of: find.byType(Dialog), matchi
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('separate palettes expose the right colors and previews in each tab', (tester) async {
+    await pumpAdminScreen(tester, const SingleChildScrollView(child: AppearanceCard()), _SettingsStore(), size: const Size(375, 900));
+    expect(find.text(l10n.appearancePosCard), findsOneWidget);
+    expect(find.text(l10n.appearanceBottomBar), findsNothing);
+    expect(find.text(l10n.appearanceSavePos), findsOneWidget);
+
+    await tapVisible(tester, find.text(l10n.appearanceQrMenu));
+    expect(find.text(l10n.appearanceDishCard), findsOneWidget);
+    expect(find.text(l10n.appearanceBottomBar), findsOneWidget);
+    expect(find.text(l10n.appearancePosCard), findsNothing);
+    expect(find.text(l10n.appearanceTableBill), findsOneWidget);
+    expect(find.text(l10n.appearanceSaveQr), findsOneWidget);
+  });
 
   testWidgets('a cashier is saved only with a name and a 4-digit PIN', (tester) async {
     final store = _SettingsStore();

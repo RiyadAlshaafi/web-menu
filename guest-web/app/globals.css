@@ -21,6 +21,8 @@
 
 @theme inline {
   --color-page: var(--brand-page, #fdf9f2);
+  --color-bottom-bar: var(--brand-bottom-bar, #ffffff);
+  --color-dish-card: var(--brand-dish-card, #ffffff);
   --color-brand-header: var(--brand-header, #1b3a4b);
   --color-on-header: var(--brand-on-header, #ffffff);
   --color-brand: var(--brand-button, #ba5333);

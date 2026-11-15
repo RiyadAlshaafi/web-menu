@@ -11,6 +11,8 @@ import '../features/app_feature.dart';
 import '../l10n/l10n_ext.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
+import '../theme/guest_palette.dart';
+import '../widgets/cafe_widgets.dart';
 import '../widgets/tawla_ui.dart';
 
 /// Cafe name and logo.
@@ -117,7 +119,8 @@ class _CompanyInfoCardState extends State<CompanyInfoCard> {
 
 }
 
-/// The four theme colours with a small preview of the console.
+enum _AppearanceTarget { pos, qr }
+
 class AppearanceCard extends StatefulWidget {
   const AppearanceCard({super.key});
 
@@ -126,102 +129,114 @@ class AppearanceCard extends StatefulWidget {
 }
 
 class _AppearanceCardState extends State<AppearanceCard> {
-  late Color header;
-  late Color sidebar;
-  late Color background;
-  late Color button;
+  late CafeSurfaces pos;
+  late GuestPalette qr;
+  var target = _AppearanceTarget.pos;
+  bool saving = false;
 
   @override
   void initState() {
     super.initState();
-    final surfaces = CafeSurfaces.fromCafe(context.read<CafeStore>().cafe);
-    header = surfaces.header;
-    sidebar = surfaces.sidebar;
-    background = surfaces.background;
-    button = surfaces.button;
+    final cafe = context.read<CafeStore>().cafe;
+    pos = CafeSurfaces.fromCafe(cafe);
+    qr = GuestPalette.fromCafe(cafe);
+  }
+
+  Future<void> _save(CafeStore store, bool guest) async {
+    setState(() => saving = true);
+    try {
+      if (guest) {
+        await store.saveQrAppearance(qr.toJson());
+      } else {
+        await store.savePosAppearance(pos);
+      }
+      if (mounted) _showResult(context.l10n.appearanceSaved);
+    } catch (error, stackTrace) {
+      reportError('appearance', error, stackTrace);
+      if (mounted) _showResult(context.l10n.appearanceSaveFailed);
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  void _showResult(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CafeStore>();
-    final swatches = [
-      _swatch(context.l10n.catalogHeaderColor, header, (color) => setState(() => header = color)),
-      _swatch(context.l10n.catalogSidebarColor, sidebar, (color) => setState(() => sidebar = color)),
-      _swatch(context.l10n.catalogBackgroundColor, background, (color) => setState(() => background = color)),
-      _swatch(context.l10n.catalogButtonColor, button, (color) => setState(() => button = color)),
+    final l10n = context.l10n;
+    final guest = target == _AppearanceTarget.qr;
+    final colors = guest ? [
+      _swatch(l10n.catalogHeaderColor, qr.header, (value) => setState(() => qr = qr.copyWith(header: value))),
+      _swatch(l10n.catalogBackgroundColor, qr.background, (value) => setState(() => qr = qr.copyWith(background: value))),
+      _swatch(l10n.catalogButtonColor, qr.button, (value) => setState(() => qr = qr.copyWith(button: value))),
+      _swatch(l10n.appearanceBottomBar, qr.bottomBar, (value) => setState(() => qr = qr.copyWith(bottomBar: value))),
+      _swatch(l10n.appearanceDishCard, qr.card, (value) => setState(() => qr = qr.copyWith(card: value))),
+    ] : [
+      _swatch(l10n.catalogHeaderColor, pos.header, (value) => setState(() => pos = pos.copyWith(header: value))),
+      _swatch(l10n.catalogBackgroundColor, pos.background, (value) => setState(() => pos = pos.copyWith(background: value))),
+      _swatch(l10n.catalogButtonColor, pos.button, (value) => setState(() => pos = pos.copyWith(button: value))),
+      _swatch(l10n.catalogSidebarColor, pos.sidebar, (value) => setState(() => pos = pos.copyWith(sidebar: value))),
+      _swatch(l10n.appearancePosCard, pos.card, (value) => setState(() => pos = pos.copyWith(card: value))),
     ];
+    final controls = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PanelTitle(l10n.appearanceThemeColors),
+        const SizedBox(height: 10),
+        for (final color in colors) Padding(padding: const EdgeInsets.only(bottom: 8), child: color),
+      ],
+    );
+    final preview = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PanelTitle(guest ? l10n.appearanceQrPreview : l10n.appearancePosPreview),
+        const SizedBox(height: 10),
+        if (guest) _qrPreview(store) else _posPreview(store),
+      ],
+    );
+
     return TawlaPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PanelTitle(context.l10n.catalogAppearance, size: 18),
+          PanelTitle(l10n.catalogAppearance, size: 18),
           const SizedBox(height: 12),
+          SegmentedPills<_AppearanceTarget>(
+            options: [(_AppearanceTarget.pos, 'POS'), (_AppearanceTarget.qr, l10n.appearanceQrMenu)],
+            selected: target,
+            onSelected: (value) => setState(() => target = value),
+          ),
+          const Divider(height: 28),
           LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth < 420 ? constraints.maxWidth : (constraints.maxWidth - 10) / 2;
-              return Wrap(spacing: 10, runSpacing: 10, children: [for (final swatch in swatches) SizedBox(width: width, child: swatch)]);
-            },
+            builder: (context, constraints) => constraints.maxWidth >= 620
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [Expanded(child: controls), const SizedBox(width: 24), Expanded(child: preview)],
+                )
+              : Column(children: [controls, const SizedBox(height: 12), preview]),
           ),
-          const SizedBox(height: 12),
-          ExcludeSemantics(
-            child: Container(
-              height: 120,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: TawlaTokens.border)),
-              child: Column(
-                children: [
-                  Container(
-                    height: 30,
-                    color: header,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(store.cafeName, style: TextStyle(color: CafeColors.contrastOn(header), fontWeight: FontWeight.w800, fontSize: 11)),
-                  ),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(width: 70, color: sidebar),
-                        Expanded(
-                          child: ColoredBox(
-                            color: background,
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(color: button, borderRadius: BorderRadius.circular(6)),
-                                child: Text(context.l10n.catalogPreviewButton, style: TextStyle(color: CafeColors.contrastOn(button), fontWeight: FontWeight.w700, fontSize: 11)),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
+          const Divider(height: 28),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
               NavyButton(
-                label: context.l10n.catalogSaveColors,
-                onPressed: () => store.saveAppearance(header: header, sidebar: sidebar, background: background, button: button),
+                label: guest ? l10n.appearanceSaveQr : l10n.appearanceSavePos,
+                onPressed: saving ? null : () => _save(store, guest),
               ),
               OutlineAction(
-                label: context.l10n.catalogResetColors,
+                label: l10n.catalogResetColors,
                 height: 44,
-                onPressed: () async {
-                  await store.resetAppearance();
-                  if (!mounted) return;
-                  setState(() {
-                    header = CafeColors.defaultHeader;
-                    sidebar = CafeColors.defaultSidebar;
-                    background = CafeColors.defaultBackground;
-                    button = CafeColors.defaultButton;
-                  });
-                },
+                onPressed: saving ? null : () => setState(() {
+                  if (guest) {
+                    qr = const GuestPalette();
+                  } else {
+                    pos = CafeSurfaces.defaults;
+                  }
+                }),
               ),
             ],
           ),
@@ -230,13 +245,193 @@ class _AppearanceCardState extends State<AppearanceCard> {
     );
   }
 
+  Widget _posPreview(CafeStore store) {
+    final l10n = context.l10n;
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: ColoredBox(
+          color: pos.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _previewHeader(store.cafeName, pos.header),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Flexible(
+                      child: ColoredBox(
+                        color: pos.sidebar,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.waiterTables, style: TextStyle(color: pos.onSidebar, fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 8),
+                              Text(l10n.navSalesLog, style: TextStyle(color: pos.onSidebar, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.waiterTables, style: TextStyle(color: CafeColors.contrastOn(pos.background), fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                for (var i = 1; i <= 4; i++)
+                                  _previewLabel(l10n.adminTableNumber('$i'), pos.cardSurface),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _previewLabel(l10n.cashierNewOrder, pos.button),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _qrPreview(CafeStore store) {
+    final l10n = context.l10n;
+    final paint = qr.readable;
+    final dish = store.menuItems.where((item) => item.available && !item.soldOut).firstOrNull;
+    final name = dish == null
+        ? l10n.appearanceSampleDish
+        : store.locale == 'ar' && dish.nameIt.isNotEmpty ? dish.nameIt : dish.nameEn;
+    final price = store.currency.format(dish?.salePrice ?? 6);
+    final adjusted = paint.header != qr.header || paint.button != qr.button ||
+        paint.background != qr.background || paint.bottomBar != qr.bottomBar || paint.card != qr.card;
+    return Column(
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: paint.background,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: CafeColors.defaultHeader, width: 4),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _previewHeader(store.cafeName, paint.header),
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Align(alignment: AlignmentDirectional.centerStart, child: _previewLabel(l10n.appearanceAllDishes, paint.button)),
+                      const SizedBox(height: 8),
+                      DecoratedBox(
+                        decoration: BoxDecoration(color: paint.card, borderRadius: BorderRadius.circular(10)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              LayoutBuilder(
+                                builder: (context, box) => DishPhoto(
+                                  path: dish?.imageUrl ?? '',
+                                  size: 86,
+                                  width: box.maxWidth,
+                                  radius: 8,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, color: CafeColors.ink)),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(price, style: TextStyle(color: CafeColors.readableOn(paint.button, [paint.card])))),
+                                  _previewLabel('+', paint.button),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _previewLabel(l10n.appearanceViewOrder, paint.button),
+                    ],
+                  ),
+                ),
+                ColoredBox(
+                  color: paint.bottomBar,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _navSample(Icons.restaurant_menu, l10n.appearanceMenu, CafeColors.readableOn(paint.button, [paint.bottomBar])),
+                        _navSample(Icons.receipt_long_outlined, l10n.appearanceTableBill, TawlaTokens.muted),
+                        _navSample(Icons.notifications_none, l10n.cashierCallStaff, TawlaTokens.muted),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (adjusted) ...[
+          const SizedBox(height: 8),
+          Text(l10n.appearanceContrastHint, style: const TextStyle(fontSize: 12, color: TawlaTokens.muted), textAlign: TextAlign.center),
+        ],
+      ],
+    );
+  }
+
+  Widget _previewHeader(String name, Color color) => ColoredBox(
+    color: color,
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: CafeColors.contrastOn(color), fontWeight: FontWeight.w800)),
+    ),
+  );
+
+  Widget _previewLabel(String label, Color color) => DecoratedBox(
+    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      child: Text(label, style: TextStyle(fontSize: 12, color: CafeColors.contrastOn(color), fontWeight: FontWeight.w700)),
+    ),
+  );
+
+  Widget _navSample(IconData icon, String label, Color color) => Expanded(
+    child: Column(
+      children: [
+        Icon(icon, color: color, size: 17),
+        const SizedBox(height: 3),
+        Text(label, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700)),
+      ],
+    ),
+  );
+
   Widget _swatch(String label, Color color, ValueChanged<Color> onPick) {
     return Material(
       color: CafeColors.key,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () async {
+        onTap: saving ? null : () async {
           var next = color;
           final picked = await showDialog<Color>(
             context: context,
@@ -255,7 +450,7 @@ class _AppearanceCardState extends State<AppearanceCard> {
               ],
             ),
           );
-          if (picked != null) onPick(picked);
+          if (mounted && picked != null) onPick(picked);
         },
         child: Padding(
           padding: const EdgeInsets.all(12),

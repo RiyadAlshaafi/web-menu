@@ -386,7 +386,7 @@ class _TakeoutCategoryCard extends StatelessWidget {
       label: name,
       excludeSemantics: true,
       child: Material(
-        color: CafeColors.paper,
+        color: CafeSurfaces.of(context).cardSurface,
         elevation: 1,
         shadowColor: const Color(0x221B3A4B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -477,7 +477,7 @@ class _TakeoutDishButton extends StatelessWidget {
             ),
         },
         child: Material(
-        color: enabled ? CafeColors.paper : CafeColors.creamDark,
+        color: enabled ? surfaces.cardSurface : CafeColors.creamDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: picked ? BorderSide(color: surfaces.button, width: 1.5) : BorderSide.none,
