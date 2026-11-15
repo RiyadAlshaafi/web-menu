@@ -624,7 +624,7 @@ class AppDatabase {
     final restaurant = await client!
         .from('restaurants')
         .select(
-          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, auto_print_receipt, require_cashier_online, takeout_layout, guest_menu_layout, receipt_settings',
+          'name, locale, service_charge_rate, tax_rate, logo_url, public_menu_url, header_color, sidebar_color, background_color, button_color, pos_card_color, qr_theme, auto_print_receipt, require_cashier_online, takeout_layout, guest_menu_layout, receipt_settings',
         )
         .eq('id', id)
         .maybeSingle();
@@ -638,6 +638,8 @@ class AppDatabase {
       'sidebarColor': restaurant['sidebar_color'] ?? '',
       'backgroundColor': restaurant['background_color'] ?? '',
       'buttonColor': restaurant['button_color'] ?? '',
+      'posCardColor': restaurant['pos_card_color'] ?? '',
+      'qrTheme': restaurant['qr_theme'],
       'serviceChargeRate':
           (restaurant['service_charge_rate'] as num?)?.toDouble() ?? 0,
       'taxRate': (restaurant['tax_rate'] as num?)?.toDouble() ?? 0,
@@ -1256,6 +1258,50 @@ class AppDatabase {
         .eq('id', restaurantId!);
   }
 
+  Future<void> writePosAppearance({
+    required String header,
+    required String sidebar,
+    required String background,
+    required String button,
+    required String card,
+  }) async {
+    final connection = client;
+    final id = restaurantId;
+    if (connection != null && id != null) {
+      await connection.from('restaurants').update({
+        'header_color': header,
+        'sidebar_color': sidebar,
+        'background_color': background,
+        'button_color': button,
+        'pos_card_color': card,
+      }).eq('id', id);
+    }
+    _cafe = {
+      ..._cafe,
+      'qrTheme': _cafe['qrTheme'] ?? {
+        'header': _cafe['headerColor'] ?? '',
+        'background': _cafe['backgroundColor'] ?? '',
+        'button': _cafe['buttonColor'] ?? '',
+      },
+      'headerColor': header,
+      'sidebarColor': sidebar,
+      'backgroundColor': background,
+      'buttonColor': button,
+      'posCardColor': card,
+    };
+    _saveLocalSettingsIfLocal();
+  }
+
+  Future<void> writeQrAppearance(Map<String, String> theme) async {
+    final connection = client;
+    final id = restaurantId;
+    if (connection != null && id != null) {
+      await connection.from('restaurants').update({'qr_theme': theme}).eq('id', id);
+    }
+    _cafe = {..._cafe, 'qrTheme': theme};
+    _saveLocalSettingsIfLocal();
+  }
+
   Future<void> writeCafe(Map<String, dynamic> cafe) async {
     _cafe = Map<String, dynamic>.from(cafe);
     _saveLocalSettingsIfLocal();
@@ -1266,10 +1312,6 @@ class AppDatabase {
           'name': cafe['name'] ?? '',
           'logo_url': cafe['logoUrl'] ?? '',
           // public_menu_url is left out: only the developer changes it (dev_set_public_menu_url).
-          'header_color': cafe['headerColor'] ?? '',
-          'sidebar_color': cafe['sidebarColor'] ?? '',
-          'background_color': cafe['backgroundColor'] ?? '',
-          'button_color': cafe['buttonColor'] ?? '',
           'service_charge_rate': cafe['serviceChargeRate'] ?? 0,
           'tax_rate': cafe['taxRate'] ?? 0,
           'locale': _locale,

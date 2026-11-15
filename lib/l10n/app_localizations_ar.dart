@@ -709,6 +709,58 @@ class AppLocalizationsAr extends AppLocalizations {
   String get catalogSaveColors => 'حفظ الألوان';
 
   @override
+  String get appearanceQrMenu => 'قائمة QR';
+
+  @override
+  String get appearanceThemeColors => 'ألوان السمة';
+
+  @override
+  String get appearanceBottomBar => 'الشريط السفلي';
+
+  @override
+  String get appearanceDishCard => 'بطاقة الصنف';
+
+  @override
+  String get appearancePosCard => 'لون البطاقات';
+
+  @override
+  String get appearancePosPreview => 'معاينة نقطة البيع';
+
+  @override
+  String get appearanceQrPreview => 'معاينة قائمة QR';
+
+  @override
+  String get appearanceSavePos => 'حفظ ألوان نقطة البيع';
+
+  @override
+  String get appearanceSaveQr => 'حفظ ألوان قائمة QR';
+
+  @override
+  String get appearanceSaved => 'تم حفظ الألوان.';
+
+  @override
+  String get appearanceSaveFailed => 'تعذّر حفظ الألوان. حاول مرة أخرى.';
+
+  @override
+  String get appearanceSampleDish => 'كابتشينو';
+
+  @override
+  String get appearanceAllDishes => 'الكل';
+
+  @override
+  String get appearanceViewOrder => 'عرض الطلب';
+
+  @override
+  String get appearanceMenu => 'القائمة';
+
+  @override
+  String get appearanceTableBill => 'فاتورة الطاولة';
+
+  @override
+  String get appearanceContrastHint =>
+      'تُعدّل بعض ألوان قائمة QR لتسهيل قراءة النص.';
+
+  @override
   String get catalogResetColors => 'إعادة الضبط';
 
   @override

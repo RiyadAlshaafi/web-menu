@@ -71,24 +71,24 @@ extension CafeStoreSettings on CafeStore {
     notifyListeners();
   }
 
-  Future<void> saveAppearance({required Color header, required Color sidebar, required Color background, required Color button}) async {
-    cafe = {
-      ...cafe,
-      'headerColor': CafeColors.toHex(header),
-      'sidebarColor': CafeColors.toHex(sidebar),
-      'backgroundColor': CafeColors.toHex(background),
-      'buttonColor': CafeColors.toHex(button),
-    };
-    await db.writeCafe(cafe);
+  Future<void> savePosAppearance(CafeSurfaces colors) async {
+    await db.writePosAppearance(
+      header: CafeColors.toHex(colors.header),
+      sidebar: CafeColors.toHex(colors.sidebar),
+      background: CafeColors.toHex(colors.background),
+      button: CafeColors.toHex(colors.button),
+      card: CafeColors.toHex(colors.card),
+    );
+    cafe = db.cafe;
     notifyListeners();
   }
 
-  Future<void> resetAppearance() => saveAppearance(
-        header: CafeColors.defaultHeader,
-        sidebar: CafeColors.defaultSidebar,
-        background: CafeColors.defaultBackground,
-        button: CafeColors.defaultButton,
-      );
+  Future<void> saveQrAppearance(Map<String, String> colors) async {
+    await db.writeQrAppearance(colors);
+    cafe = db.cafe;
+    notifyListeners();
+  }
+
   /// The percent saved for the cafe, whether or not this install charges it.
   double get savedServiceChargeRate => (cafe['serviceChargeRate'] as num?)?.toDouble() ?? 0;
 
