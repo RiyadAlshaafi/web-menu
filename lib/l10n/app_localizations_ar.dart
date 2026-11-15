@@ -96,6 +96,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesDateTo => 'إلى';
 
   @override
+  String get datePickerClearDate => 'مسح التاريخ';
+
+  @override
+  String get datePickerBackToCalendar => 'العودة إلى التقويم';
+
+  @override
+  String get datePickerSelectMonth => 'اختر الشهر';
+
+  @override
   String get salesAllCashiers => 'كل الكاشيرية';
 
   @override

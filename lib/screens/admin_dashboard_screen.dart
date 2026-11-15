@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../core/ledger.dart';
+import '../core/money.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/models.dart';
 import '../state/cafe_store.dart';
 import '../theme/cafe_theme.dart';
 import '../core/time_format.dart';
 import '../widgets/tawla_ui.dart';
+import '../widgets/cafe_date_picker.dart';
 
 enum _Period { today, month, range }
 
@@ -34,19 +36,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       };
 
   Future<void> _pickRange(CafeStore store) async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
+    final now = DateUtils.dateOnly(toTripoli(DateTime.now()));
+    final picked = await showCafeDatePicker(
       context: context,
-      firstDate: DateTime(2020),
-      lastDate: now.add(const Duration(days: 1)),
-      initialDateRange: range ?? DateTimeRange(start: now.subtract(const Duration(days: 6)), end: now),
+      range: range ?? DateTimeRange(start: now.subtract(const Duration(days: 6)), end: now),
     );
-    if (picked == null) return;
+    if (!mounted || picked == null) return;
+    final selected = DateTimeRange(start: picked.start!, end: picked.end!);
     setState(() {
-      range = picked;
+      range = selected;
       period = _Period.range;
     });
-    store.alignSalesWindow(from: picked.start, to: picked.end);
+    store.alignSalesWindow(from: selected.start, to: selected.end);
   }
 
   @override

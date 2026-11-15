@@ -266,6 +266,24 @@ abstract class AppLocalizations {
   /// **'To'**
   String get salesDateTo;
 
+  /// No description provided for @datePickerClearDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get datePickerClearDate;
+
+  /// No description provided for @datePickerBackToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to calendar'**
+  String get datePickerBackToCalendar;
+
+  /// No description provided for @datePickerSelectMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Select month'**
+  String get datePickerSelectMonth;
+
   /// No description provided for @salesAllCashiers.
   ///
   /// In en, this message translates to:
